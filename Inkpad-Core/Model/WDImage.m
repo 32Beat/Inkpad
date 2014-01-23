@@ -152,10 +152,10 @@ NSString *WDImageDataKey = @"WDImageDataKey";
     lr = CGPointApplyAffineTransform(lr, transform_);
     ll = CGPointApplyAffineTransform(ll, transform_);
     
-    return (WDLineInRect(ul, ur, rect) ||
-            WDLineInRect(ur, lr, rect) ||
-            WDLineInRect(lr, ll, rect) ||
-            WDLineInRect(ll, ul, rect));
+    return (WDLineIntersectsRect(ul, ur, rect) ||
+            WDLineIntersectsRect(ur, lr, rect) ||
+            WDLineIntersectsRect(lr, ll, rect) ||
+            WDLineIntersectsRect(ll, ul, rect));
 }
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData

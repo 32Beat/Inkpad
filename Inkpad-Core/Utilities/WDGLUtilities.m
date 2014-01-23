@@ -164,7 +164,7 @@ void WDGLFlattenBezierSegment(WDBezierSegment seg, GLfloat **vertices, NSUIntege
         *index += 2;
     } else {
         WDBezierSegment L, R;
-        WDBezierSegmentSplit(seg, &L, &R);
+        WDBezierSegmentSplitAtT(seg, &L, &R, 0.5);
         
         WDGLFlattenBezierSegment(L, vertices, size, index);
         WDGLFlattenBezierSegment(R, vertices, size, index);

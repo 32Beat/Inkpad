@@ -152,8 +152,10 @@ NSString *WDClosedKey = @"WDClosedKey";
     
     if (closed_ && prevNode) {
         WDBezierNode *node = nodes[0];
-        CGPathAddCurveToPoint(pathRef_, NULL, prevNode.outPoint.x, prevNode.outPoint.y,
-                              node.inPoint.x, node.inPoint.y, node.anchorPoint.x, node.anchorPoint.y);
+        CGPathAddCurveToPoint(pathRef_, NULL,
+			prevNode.outPoint.x, prevNode.outPoint.y,
+			node.inPoint.x, node.inPoint.y,
+			node.anchorPoint.x, node.anchorPoint.y);
         
         CGPathCloseSubpath(pathRef_);
     }
@@ -173,7 +175,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     for (int i = 0; i < numNodes-1; i++) {
         WDBezierNode    *a = nodes[i];
         WDBezierNode    *b = nodes[i+1];
-        WDBezierSegment segment = WDBezierSegmentMake(a, b);
+        WDBezierSegment segment = WDBezierSegmentMakeWithNodes(a, b);
         WDBezierSegment L, R;
         
         if (WDBezierSegmentPointDistantFromPoint(segment, [arrowhead insetLength:butt] * scale, arrowTip, &result, &t)) {
@@ -616,7 +618,8 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.in_ = b.inPoint;
         segment.b_ = b.anchorPoint;
         
-        bbox = CGRectUnion(bbox, WDBezierSegmentBounds(segment));
+//        bbox = CGRectUnion(bbox, WDBezierSegmentBounds(segment));
+        bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
     }
 
     return bbox;
@@ -625,6 +628,11 @@ NSString *WDClosedKey = @"WDClosedKey";
 - (void) computeBounds
 {
     bounds_ = CGPathGetPathBoundingBox(self.pathRef);
+	CGRect R = [self getPathBoundingBox];
+	if (!CGRectEqualToRect(R, bounds_))
+	{
+		boundsDirty_ = NO;
+	}
     boundsDirty_ = NO;
 }
 
@@ -804,7 +812,7 @@ NSString *WDClosedKey = @"WDClosedKey";
             continue;
         }
         
-        seg = WDBezierSegmentMake(prev, node);
+        seg = WDBezierSegmentMakeWithNodes(prev, node);
         if (WDBezierSegmentIntersectsRect(seg, rect)) {
             return YES;
         }
@@ -813,7 +821,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     }
     
     if (self.closed) {
-        seg = WDBezierSegmentMake([nodes_ lastObject], nodes_[0]);
+        seg = WDBezierSegmentMakeWithNodes([nodes_ lastObject], nodes_[0]);
         if (WDBezierSegmentIntersectsRect(seg, rect)) {
             return YES;
         }
@@ -961,6 +969,12 @@ NSString *WDClosedKey = @"WDClosedKey";
     
     displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
     WDGLDrawLineStrip(vertices, index);
+
+#ifdef WD_DEBUG
+	CGRect R = [self getPathBoundingBox];
+	R = CGRectApplyAffineTransform(R, viewTransform);
+	WDGLStrokeRect(R);
+#endif
 }
 
 - (void) drawOpenGLAnchorsWithViewTransform:(CGAffineTransform)transform
@@ -1208,7 +1222,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     for (int i = 1; i < numNodes; i++, segmentIndex ++) {
         curr = nodes_[(i % nodes_.count)];
         
-        segment = WDBezierSegmentMake(prev, curr);
+        segment = WDBezierSegmentMakeWithNodes(prev, curr);
         
         if (!added && WDBezierSegmentFindPointOnSegment(segment, pt, kNodeSelectionTolerance / viewScale, NULL, &t)) {
             WDBezierSegmentSplitAtT(segment,  &segments[segmentIndex], &segments[segmentIndex+1], t);
@@ -1262,8 +1276,8 @@ NSString *WDClosedKey = @"WDClosedKey";
     for (int i = 1; i < numNodes; i++, segmentIndex += 2) {
         curr = nodes_[(i % nodes_.count)];
         
-        segment = WDBezierSegmentMake(prev, curr);
-        WDBezierSegmentSplit(segment, &segments[segmentIndex], &segments[segmentIndex+1]);
+        segment = WDBezierSegmentMakeWithNodes(prev, curr);
+        WDBezierSegmentSplitAtT(segment, &segments[segmentIndex], &segments[segmentIndex+1], 0.5);
         
         prev = curr;
     }
@@ -1705,7 +1719,7 @@ NSString *WDClosedKey = @"WDClosedKey";
         prev = nodes[0];
         for (int i = 1; i < nodes.count; i++, prev = curr) {
             curr = nodes[i];
-            segments[i-1] = WDBezierSegmentMake(prev, curr);
+            segments[i-1] = WDBezierSegmentMakeWithNodes(prev, curr);
         }
         
         erasePath = [erasePath pathByFlatteningPath];
