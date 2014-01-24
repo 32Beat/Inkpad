@@ -96,7 +96,8 @@ BOOL WDBezierSegmentFlattenWithBlock(WDBezierSegment S, \
 BOOL WDBezierSegmentIntersectsRect(WDBezierSegment seg, CGRect rect);
 BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
 
-
+CGRect WDBezierSegmentGetFlattenedBounds(WDBezierSegment S);
+CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S);
 
 BOOL WDBezierSegmentFindPointOnSegment(WDBezierSegment seg, CGPoint testPoint, float tolerance, CGPoint *nearestPoint, float *split);
 

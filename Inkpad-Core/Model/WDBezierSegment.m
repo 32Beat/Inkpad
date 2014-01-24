@@ -575,8 +575,8 @@ BOOL WDBezierSegmentFlattenWithBlock(WDBezierSegment S,
 		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
 
 		return
-		!WDBezierSegmentFlattenWithBlock(S, blockPtr)||
-		!WDBezierSegmentFlattenWithBlock(Sn, blockPtr);
+		WDBezierSegmentFlattenWithBlock(S, blockPtr)&&
+		WDBezierSegmentFlattenWithBlock(Sn, blockPtr);
 	}
 
 	// Call block for flat segment
@@ -594,8 +594,8 @@ BOOL WDBezierSegmentFlattenWithProc(WDBezierSegment S,
 		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
 
 		return
-		!WDBezierSegmentFlattenWithProc(S, procPtr, procData)||
-		!WDBezierSegmentFlattenWithProc(Sn, procPtr, procData);
+		WDBezierSegmentFlattenWithProc(S, procPtr, procData)&&
+		WDBezierSegmentFlattenWithProc(Sn, procPtr, procData);
 	}
 
 	return procPtr(S, procData);
@@ -613,7 +613,8 @@ BOOL WDBezierSegmentSplitWithBlock(WDBezierSegment S,
 		WDBezierSegment Sn;
 		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
 
-		WDBezierSegmentSplitWithBlock(S, blockPtr);
+		return
+		WDBezierSegmentSplitWithBlock(S, blockPtr)&&
 		WDBezierSegmentSplitWithBlock(Sn, blockPtr);
 	}
 
@@ -621,9 +622,27 @@ BOOL WDBezierSegmentSplitWithBlock(WDBezierSegment S,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect R)
+{
+	__block BOOL result = CGRectIncludesPoint(R, S.a_);
 
+	if (result == NO)
+	WDBezierSegmentSplitWithBlock(S,
+		^BOOL(WDBezierSegment splitSegment)
+		{
+			if (!CGRectIncludesPoint(R, splitSegment.b_))
+			{
+				result = YES;
+				return NO;
+			}
 
+			if (CGRectIntersectsRect(R, WDBezierSegmentGetControlBounds(flatSegment))
+		});
 
+	return result;
+}
+*/
 static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
 { return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
 
@@ -941,7 +960,9 @@ return sqrt(combined);
 * http://processingjs.nihongoresources.com/bezierinfo/
 *
 */
-float WDBezierSegmentLength(WDBezierSegment seg)
+
+
+float _WDBezierSegmentLength(WDBezierSegment seg)
 {
 //if (WDBezierSegmentIsStraight(seg)) {
 //	return WDDistance(seg.a_, seg.b_);
@@ -990,6 +1011,24 @@ for (int i = 0; i < 24; i++) {
 
 return z2 * sum;
 }
+
+
+
+float WDBezierSegmentLength(WDBezierSegment S)
+{
+	CGFloat L = WDBezierSegmentGetFlattenedLength(S);
+	CGFloat L2 = _WDBezierSegmentLength(S);
+
+	if (L != L2)
+	{
+		return L;
+	}
+
+	return L;
+}
+
+
+
 
 CGPoint WDBezierSegmentGetClosestPoint(WDBezierSegment seg, CGPoint test, float *error, float *distance)
 {

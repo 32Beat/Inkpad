@@ -115,6 +115,9 @@ NSString *WDPointArrayKey = @"WDPointArrayKey";
     [coder encodeBytes:(const uint8_t *)swapped length:(6 * sizeof(CFSwappedFloat32)) forKey:WDPointArrayKey];
 }
 
+static inline BOOL CGPointIsValid(CGPoint P)
+{ return !isnan(P.x) && !isnan(P.y); }
+
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super init];
@@ -129,7 +132,16 @@ NSString *WDPointArrayKey = @"WDPointArrayKey";
     anchorPoint_.y = CFConvertFloat32SwappedToHost(swapped[3]);
     outPoint_.x = CFConvertFloat32SwappedToHost(swapped[4]);
     outPoint_.y = CFConvertFloat32SwappedToHost(swapped[5]);
-    
+
+	if (!CGPointIsValid(anchorPoint_))
+	{ anchorPoint_ = CGPointZero; }
+
+	if (!CGPointIsValid(inPoint_))
+	{ inPoint_ = anchorPoint_; }
+
+	if (!CGPointIsValid(outPoint_))
+	{ outPoint_ = anchorPoint_; }
+
     return self; 
 }
 

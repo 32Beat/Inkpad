@@ -618,7 +618,7 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.in_ = b.inPoint;
         segment.b_ = b.anchorPoint;
         
-//        bbox = CGRectUnion(bbox, WDBezierSegmentBounds(segment));
+//        bbox = CGRectUnion(bbox, WDBezierSegmentGetFlattenedBounds(segment));
         bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
     }
 
@@ -924,9 +924,10 @@ NSString *WDClosedKey = @"WDClosedKey";
     
     static GLfloat      *vertices = NULL;
     static NSUInteger   size = 128;
-    NSUInteger          index = 0;
+ //   NSUInteger          index = 0;
     
-    if (!vertices) {
+
+	if (!vertices) {
         vertices = calloc(sizeof(GLfloat), size);
     }
     
@@ -958,17 +959,18 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.b_.x = currTx.a * currAnchor.x + currTx.c * currAnchor.y + currTx.tx;
         segment.b_.y = currTx.b * currAnchor.x + currTx.d * currAnchor.y + currTx.ty;
 
-        WDGLFlattenBezierSegment(segment, &vertices, &size, &index);
-        
+        //WDGLFlattenBezierSegment(segment, &vertices, &size, &index);
+		WDGLRenderBezierSegment(segment);
+
         // set up for the next iteration
         prevSelected = currSelected;
         prevOut = currOut;
         prevTx = currTx;
         segment.a_ = segment.b_;
     }
-    
-    displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
-    WDGLDrawLineStrip(vertices, index);
+
+//	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
+//	WDGLDrawLineStrip(vertices, index);
 
 #ifdef WD_DEBUG
 	CGRect R = [self getPathBoundingBox];

@@ -183,9 +183,8 @@ void WDGLRenderBezierSegment(WDBezierSegment S)
 	//index = 0; // If index is static, reset
 
     if (!vertices)
-	{ vertices = calloc(sizeof(GLfloat), size); }
+	{ vertices = malloc(size * sizeof(GLfloat)); }
 
-	// If index is global, it should be reset
 	vertices[index++] = S.a_.x;
 	vertices[index++] = S.a_.y;
 
@@ -195,7 +194,7 @@ void WDGLRenderBezierSegment(WDBezierSegment S)
 		{
 			// Test size
 			if (index == size)
-			{ vertices = realloc(vertices, (size += 128)); }
+			{ vertices = realloc(vertices, (size += 128)*sizeof(GLfloat)); }
 
 			// Add vector
 			vertices[index++] = flatSegment.b_.x;
