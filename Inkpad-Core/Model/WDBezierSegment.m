@@ -15,10 +15,90 @@
 #import "WDUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Utility function
+#pragma mark Utility functions
+////////////////////////////////////////////////////////////////////////////////
+/*
+	CGPointInterpolate
+	------------------
+	Linear interpolation of points (from P1 to P2 with ratio r)
+*/
 static inline CGPoint CGPointInterpolate(CGPoint P1, CGPoint P2, CGFloat r)
 { return (CGPoint){ P1.x + r * (P2.x - P1.x), P1.y + r * (P2.y - P1.y) }; }
+
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	CGRectIncludesPoint
+	-------------------
+	Determines if point is within or on rectangle bounds
+	
+	Note that this is not equivalent to CGRectContainsPoint 
+	which excludes the far edges.
+*/
+
+static inline BOOL CGRectIncludesPoint(CGRect R, CGPoint P)
+{
+	if (P.x < CGRectGetMinX(R)) return NO;
+	if (P.y < CGRectGetMinY(R)) return NO;
+	if (P.x > CGRectGetMaxX(R)) return NO;
+	if (P.y > CGRectGetMaxY(R)) return NO;
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDLineGetBounds
+	---------------
+	Compute normalized bounds encompassing line endpoints
+	
+	Will return a valid, empty rectangle for hor or ver line.
+	CGRectIntersectsRect can return YES for such rectangles, i.e.:
+
+	CGRect T1 = { 0, 0, 1, 0 };
+	CGRect T2 = { 0, 0, 1, 1 };
+	BOOL T = CGRectIntersectsRect(T1, T2);
+	
+	T will be YES...
+*/
+
+CGRect WDLineGetBounds(CGPoint p1, CGPoint p2)
+{
+	// Fetch bounds
+	CGFloat x = p1.x;
+	CGFloat y = p1.y;
+	CGFloat w = p2.x - x;
+	CGFloat h = p2.y - y;
+	// Reverse parameters if necessary
+	if (w < 0.0) { x -= (w = -w); }
+	if (h < 0.0) { y -= (h = -h); }
+	// Return CGRect
+	return (CGRect){ x, y, w, h };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R)
+{
+	// Test end points
+	if (CGRectIncludesPoint(R, a)||
+		CGRectIncludesPoint(R, b))
+		return YES;
+
+	if (CGRectIntersectsRect(R, WDLineGetBounds(a, b)))
+	{
+		// Split half way
+		CGPoint m = CGPointInterpolate(a, b, 0.5);
+
+		return
+		WDLineIntersectsRect(a, m, R)||
+		WDLineIntersectsRect(m, b, R);
+	}
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 
@@ -61,94 +141,77 @@ WDBezierSegmentMakeWithNodes(WDBezierNode *a, WDBezierNode *b)
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Operations
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDBezierSegmentPointAtT
-	-----------------------
-	Computation for bezier values can be rewritten as a polynomial:
-
-		// Compute polynomial co-efficients
-		double d = P0;
-		double c = 3*(P1-P0);
-		double b = 3*(P2-P1) - c;
-		double a = (P3-P0) - b - c;
-
-		// Compute polynomial result for t
-		return ((a * t + b) * t + c) * t + d;
+	WDBezierSegmentIsLineSegment
+	----------------------------
+	Test whether segment represents a line between endpoints
 	
-	However, on modern architecture, this is only fractionally 
-	faster than the code below.
-	
-	CGPointInterpolate is inlined, so doesn't need expanding out 
-	for performance. Note also, if a function appears in the same code file, 
-	the compiler will generally inline during optimization if allowed.
+	Technically a bezier segment is a line if controlpoints are colinear,
+	but that includes cases where controlpoints extend past the endpoints, 
+	and where t can traverse nonlinearly along the line.
 */
 
-CGPoint WDBezierSegmentPointAtT(WDBezierSegment S, CGFloat t)
+BOOL WDBezierSegmentIsLineSegment(WDBezierSegment S)
 {
 	const CGPoint *P = &S.a_;
-	CGPoint A = CGPointInterpolate(P[0], P[1], t);
-	CGPoint B = CGPointInterpolate(P[1], P[2], t);
-	CGPoint C = CGPointInterpolate(P[2], P[3], t);
-
-	CGPoint D = CGPointInterpolate(A, B, t);
-	CGPoint E = CGPointInterpolate(B, C, t);
-
-	return CGPointInterpolate(D, E, t);
+	if (P[1].x != P[0].x) return NO;
+	if (P[1].y != P[0].y) return NO;
+	if (P[2].x != P[3].x) return NO;
+	if (P[2].y != P[3].y) return NO;
+	return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDBezierSegmentTangetAtT
-	------------------------
-	Computation for first derivative at t
+	WDBezierSegmentIsCollinear
+	--------------------------
+	Test whether segment renders as an uncurved line
+	(but possibly extends beyond endpoints)
+	
+	Note the order of points tested: 
+	p0, p1, p3 && 
+	p0, p2, p3 would fail if p0 == p3
 */
 
-CGPoint WDBezierSegmentTangentAtT(WDBezierSegment S, CGFloat t)
+BOOL WDBezierSegmentIsCollinear(WDBezierSegment S)
 {
 	const CGPoint *P = &S.a_;
-	CGPoint A = CGPointInterpolate(P[0], P[1], t);
-	CGPoint B = CGPointInterpolate(P[1], P[2], t);
-	CGPoint C = CGPointInterpolate(P[2], P[3], t);
-
-	CGPoint D = CGPointInterpolate(A, B, t);
-	CGPoint E = CGPointInterpolate(B, C, t);
-
-	return (CGPoint){ E.x-D.x, E.y-D.y };
+	return
+	WDCollinear(P[0], P[1], P[2])&&
+	WDCollinear(P[1], P[2], P[3]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentIsContained
+	--------------------------
+	Test whether segment controlpoints fall within (or on the edge of) 
+	the rectangle defined by endpoints
+	
+	Note that S.a_ and S.b_ may represent inverse order
+*/
 
-CGPoint WDBezierSegmentSplitAtT
-(WDBezierSegment S, WDBezierSegment *L, WDBezierSegment *R, CGFloat t)
+BOOL WDBezierSegmentIsContained(WDBezierSegment S)
 {
-	/*
-		No need to check for straightness first,
-		Splitting is likely never called if straight,
-		so the conditional merely slows down processor.
-		
-		CGPointInterpolate is inlined, so doesn't need expanding out 
-		for performance. Note also, if in the same code file, 
-		the compiler will generally inline functions during optimization.
-	*/
-	const CGPoint *P = &S.a_;
-	CGPoint A = CGPointInterpolate(P[0], P[1], t);
-	CGPoint B = CGPointInterpolate(P[1], P[2], t);
-	CGPoint C = CGPointInterpolate(P[2], P[3], t);
+	CGRect R = WDLineGetBounds(S.a_, S.b_);
+	return
+	CGRectIncludesPoint(R, S.out_)&&
+	CGRectIncludesPoint(R, S.in_);
+}
 
-	CGPoint D = CGPointInterpolate(A, B, t);
-	CGPoint E = CGPointInterpolate(B, C, t);
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentIsLineSegmentShape
+	---------------------------------
+	Test whether segment renders like a straight line between endpoints
+*/
 
-	CGPoint F = CGPointInterpolate(D, E, t);
-
-	if (L != nil)
-	{ *L = WDBezierSegmentMake(S.a_, A, D, F); }
-
-	if (R != nil)
-	{ *R = WDBezierSegmentMake(F, E, C, S.b_); }
-
-	return F;
+BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S)
+{
+	return
+	WDBezierSegmentIsCollinear(S)&&
+	WDBezierSegmentIsContained(S);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,9 +235,6 @@ CGPoint WDBezierSegmentSplitAtT
 
 */
 
-const float kDefaultFlatness = 1.5; // 1.5 pixels both ways = 3
-
-
 BOOL WDBezierSegmentIsFlat(WDBezierSegment S, CGFloat deviceTolerance)
 {
 	const CGPoint *P = &S.a_;
@@ -183,6 +243,14 @@ BOOL WDBezierSegmentIsFlat(WDBezierSegment S, CGFloat deviceTolerance)
 	if (fabs(P[2].x - P[3].x) > deviceTolerance) return NO;
 	if (fabs(P[2].y - P[3].y) > deviceTolerance) return NO;
 	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const CGFloat kDefaultFlatness = 1.5; // 1.5 pixels both ways = 3
+
+void WDBezierSegmentSetDefaultFlatness(CGFloat f)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,7 +393,7 @@ CGRect WDBezierSegmentGetCurveBounds(WDBezierSegment S)
 	Compute smallest rectangle encompassing all 4 points in segment.
 	
 	This rectangle is guaranteed to also encompass the curve, 
-	but is generally larger than CurveBounds.
+	but might be larger than CurveBounds.
 */
 
 CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg)
@@ -353,26 +421,99 @@ CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg)
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Intersections
+#pragma mark Operations
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	CGRectIncludesPoint
-	-------------------
-	Determines if point is within or on rectangle bounds
+	WDBezierSegmentPointAtT
+	-----------------------
+	Computation for bezier values can be rewritten as a polynomial:
+
+		// Compute polynomial co-efficients
+		double d = P0;
+		double c = 3*(P1-P0);
+		double b = 3*(P2-P1) - c;
+		double a = (P3-P0) - b - c;
+
+		// Compute polynomial result for t
+		return ((a * t + b) * t + c) * t + d;
 	
-	Note that this is not equivalent to CGRectContainsPoint 
-	which excludes the far edges.
+	However, on modern architecture, this is only fractionally 
+	faster than the code below.
+	
+	CGPointInterpolate is inlined, so doesn't need expanding out 
+	for performance. Note also, if a function appears in the same code file, 
+	the compiler will generally inline during optimization if allowed.
 */
 
-static inline BOOL CGRectIncludesPoint(CGRect R, CGPoint P)
+CGPoint WDBezierSegmentPointAtT(WDBezierSegment S, CGFloat t)
 {
-	if (P.x < CGRectGetMinX(R)) return NO;
-	if (P.y < CGRectGetMinY(R)) return NO;
-	if (P.x > CGRectGetMaxX(R)) return NO;
-	if (P.y > CGRectGetMaxY(R)) return NO;
-	return YES;
+	const CGPoint *P = &S.a_;
+	CGPoint A = CGPointInterpolate(P[0], P[1], t);
+	CGPoint B = CGPointInterpolate(P[1], P[2], t);
+	CGPoint C = CGPointInterpolate(P[2], P[3], t);
+
+	CGPoint D = CGPointInterpolate(A, B, t);
+	CGPoint E = CGPointInterpolate(B, C, t);
+
+	return CGPointInterpolate(D, E, t);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentTangetAtT
+	------------------------
+	Computation for first derivative at t
+*/
+
+CGPoint WDBezierSegmentTangentAtT(WDBezierSegment S, CGFloat t)
+{
+	const CGPoint *P = &S.a_;
+	CGPoint A = CGPointInterpolate(P[0], P[1], t);
+	CGPoint B = CGPointInterpolate(P[1], P[2], t);
+	CGPoint C = CGPointInterpolate(P[2], P[3], t);
+
+	CGPoint D = CGPointInterpolate(A, B, t);
+	CGPoint E = CGPointInterpolate(B, C, t);
+
+	return (CGPoint){ E.x-D.x, E.y-D.y };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGPoint WDBezierSegmentSplitAtT
+(WDBezierSegment S, WDBezierSegment *L, WDBezierSegment *R, CGFloat t)
+{
+	/*
+		No need to check for straightness first,
+		Splitting is likely never called if straight,
+		so the conditional merely slows down processor.
+		
+		CGPointInterpolate is inlined, so doesn't need expanding out 
+		for performance. Note also, if in the same code file, 
+		the compiler will generally inline functions during optimization.
+	*/
+	const CGPoint *P = &S.a_;
+	CGPoint A = CGPointInterpolate(P[0], P[1], t);
+	CGPoint B = CGPointInterpolate(P[1], P[2], t);
+	CGPoint C = CGPointInterpolate(P[2], P[3], t);
+
+	CGPoint D = CGPointInterpolate(A, B, t);
+	CGPoint E = CGPointInterpolate(B, C, t);
+
+	CGPoint F = CGPointInterpolate(D, E, t);
+
+	if (L != nil)
+	{ *L = WDBezierSegmentMake(S.a_, A, D, F); }
+
+	if (R != nil)
+	{ *R = WDBezierSegmentMake(F, E, C, S.b_); }
+
+	return F;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Intersections
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	WDBezierSegmentIntersectsRect
@@ -405,41 +546,75 @@ BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect R)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentFlattenWithBlock
+	-------------------------------
+	Flatten segment recursively while calling block for each flattened segment
+	(flattened segments are guaranteed to pass in order from a_ to b_)
 
-CGRect WDLineGetBounds(CGPoint p1, CGPoint p2)
+	Usage:
+
+	__block localVar = ...
+
+	WDBezierSegmentFlattenWithBlock(S,
+		^BOOL(WDBezierSegment flatSegment)
+		{
+			1. Do something with flatSegment and localVar
+			2. return YES/NO depending on whether you want to continue
+			traversing more flat segments
+		});
+*/
+
+BOOL WDBezierSegmentFlattenWithBlock(WDBezierSegment S,
+					BOOL (^blockPtr)(WDBezierSegment))
 {
-	CGFloat x,y,w,h;
+	// If segment is not flat yet, then keep splitting
+	if (!WDBezierSegmentIsFlat(S, kDefaultFlatness))
+	{
+		WDBezierSegment Sn;
+		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
 
-	if (p1.x <= p2.x)
-	{ w = p2.x - (x = p1.x); }
-	else
-	{ w = p1.x - (x = p2.x); }
+		return
+		!WDBezierSegmentFlattenWithBlock(S, blockPtr)||
+		!WDBezierSegmentFlattenWithBlock(Sn, blockPtr);
+	}
 
-	if (p1.y <= p2.y)
-	{ h = p2.y - (y = p1.y); }
-	else
-	{ h = p1.y - (y = p2.y); }
-
-	return (CGRect){ x, y, w, h };
+	// Call block for flat segment
+	return blockPtr(S);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R)
+BOOL WDBezierSegmentFlattenWithProc(WDBezierSegment S,
+	WDBezierSegmentCallback *procPtr, void *procData)
 {
-	// Test end points
-	if (CGRectIncludesPoint(R, a)||
-		CGRectIncludesPoint(R, b))
-		return YES;
-
-	if (CGRectIntersectsRect(R, WDLineGetBounds(a, b)))
+	if (!WDBezierSegmentIsFlat(S, kDefaultFlatness))
 	{
-		// Split half way
-		CGPoint m = CGPointInterpolate(a, b, 0.5);
+		WDBezierSegment Sn;
+		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
 
 		return
-		WDLineIntersectsRect(a, m, R)||
-		WDLineIntersectsRect(m, b, R);
+		!WDBezierSegmentFlattenWithProc(S, procPtr, procData)||
+		!WDBezierSegmentFlattenWithProc(Sn, procPtr, procData);
+	}
+
+	return procPtr(S, procData);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// TODO: cleaned upto here
+
+BOOL WDBezierSegmentSplitWithBlock(WDBezierSegment S,
+					BOOL (^blockPtr)(WDBezierSegment))
+{
+	if (blockPtr(S))
+	{
+		WDBezierSegment Sn;
+		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
+
+		WDBezierSegmentSplitWithBlock(S, blockPtr);
+		WDBezierSegmentSplitWithBlock(Sn, blockPtr);
 	}
 
 	return NO;
@@ -447,7 +622,47 @@ BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO: cleaned upto here
+
+
+static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
+{ return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
+
+static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
+{ return (CGPoint){ MAX(a.x, b.x), MAX(a.y, b.y) }; }
+
+CGRect WDBezierSegmentGetFlattenedBounds(WDBezierSegment S)
+{
+	__block CGPoint min = S.a_;
+	__block CGPoint max = S.a_;
+
+	WDBezierSegmentFlattenWithBlock(S,
+		^(WDBezierSegment flatSegment)
+		{
+			min = CGPointMin(min, flatSegment.b_);
+			max = CGPointMax(max, flatSegment.b_);
+			return YES;
+		});
+
+	return (CGRect){ min, {max.x-min.x, max.y-min.y} };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S)
+{
+	__block CGFloat length = 0.0;
+
+	WDBezierSegmentFlattenWithBlock(S,
+		^(WDBezierSegment flatSegment)
+		{
+			length += WDDistance(flatSegment.a_, flatSegment.b_);
+			return YES;
+		});
+
+	return length;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -503,17 +718,8 @@ CGRect WDBezierSegmentAdjustBounds(WDBezierSegment S, CGRect B)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-inline BOOL WDBezierSegmentIsStraight(WDBezierSegment segment)
-{
-return WDCollinear(segment.a_, segment.out_, segment.b_) &&
-	   WDCollinear(segment.a_, segment.in_,  segment.b_);
-}
-
-
-static CGPoint      *vertices = NULL;
-static NSUInteger   size = 128;
+//static CGPoint      *vertices = NULL;
+//static NSUInteger   size = 128;
 
 float firstDerivative(float A, float B, float C, float D, float t);
 float secondDerivative(float A, float B, float C, float D, float t);
@@ -534,7 +740,7 @@ return 6*A*(1-t) - 12*B*(1-t) + 6*C*(1-t) + 6*B*t - 12*C*t + 6*D*t;
 
 inline float WDBezierSegmentCurvatureAtT(WDBezierSegment seg, float t)
 {
-if (WDBezierSegmentIsStraight(seg)) {
+if (WDBezierSegmentIsLineSegmentShape(seg)) {
 	return 0.0f;
 }
 
@@ -568,7 +774,7 @@ CGRect  bbox = CGRectInset(WDBezierSegmentGetControlBounds(seg), -tolerance / 2,
 
 if (!CGRectContainsPoint(bbox, testPoint)) {
 	return NO;
-} else if (WDBezierSegmentIsStraight(seg)) {
+} else if (WDBezierSegmentIsLineSegmentShape(seg)) {
 	CGPoint s = WDSubtractPoints(seg.b_, seg.a_);
 	CGPoint v = WDSubtractPoints(testPoint, seg.a_);
 	float   n = v.x * s.x + v.y * s.y;
@@ -668,7 +874,7 @@ return WDBezierSegmentFindPointOnSegment_R(seg, testPoint, tolerance, nearestPoi
 
 CGPoint WDBezierSegmentPointAndTangentAtDistance(WDBezierSegment seg, float distance, CGPoint *tangent, float *curvature)
 {
-if (WDBezierSegmentIsStraight(seg)) {
+if (WDBezierSegmentIsLineSegment(seg)) {
 	float t = distance / WDDistance(seg.a_, seg.b_);
 	CGPoint point = WDMultiplyPointScalar(WDSubtractPoints(seg.b_, seg.a_), t);
 	point = WDAddPoints(seg.a_, point);
@@ -714,54 +920,6 @@ for (float t = 0; t < (1.0f + delta); t += delta) {
 return CGPointZero;
 }
 
-void WDBezierSegmentFlatten(WDBezierSegment seg, CGPoint **vertices, NSUInteger *size, NSUInteger *index)
-{
-if (*size < *index + 4) {
-	*size *= 2;
-	*vertices = realloc(*vertices, sizeof(CGPoint) * *size);
-}
-
-if (WDBezierSegmentIsFlat(seg, kDefaultFlatness)) {
-	if (*index == 0) {
-		(*vertices)[*index] = seg.a_;
-		*index += 1;
-	}
-	
-	(*vertices)[*index] = seg.b_;
-	*index += 1;
-} else {
-	WDBezierSegment L, R;
-	WDBezierSegmentSplitAtT(seg, &L, &R, 0.5);
-	
-	WDBezierSegmentFlatten(L, vertices, size, index);
-	WDBezierSegmentFlatten(R, vertices, size, index);
-}
-}
-
-CGRect WDBezierSegmentBounds(WDBezierSegment seg)
-{
-NSUInteger  index = 0;
-
-if (!vertices) {
-	vertices = calloc(sizeof(CGPoint), size);
-}
-
-WDBezierSegmentFlatten(seg, &vertices, &size, &index);
-
-float   minX, maxX, minY, maxY;
-
-minX = maxX = vertices[0].x;
-minY = maxY = vertices[0].y;
-
-for (int i = 1; i < index; i++) {
-	minX = MIN(minX, vertices[i].x);
-	maxX = MAX(maxX, vertices[i].x);
-	minY = MIN(minY, vertices[i].y);
-	maxY = MAX(maxY, vertices[i].y);
-}
-
-return CGRectMake(minX, minY, maxX - minX, maxY - minY);
-}
 
 float base3(double t, double p1, double p2, double p3, double p4)
 {
@@ -785,9 +943,9 @@ return sqrt(combined);
 */
 float WDBezierSegmentLength(WDBezierSegment seg)
 {
-if (WDBezierSegmentIsStraight(seg)) {
-	return WDDistance(seg.a_, seg.b_);
-}
+//if (WDBezierSegmentIsStraight(seg)) {
+//	return WDDistance(seg.a_, seg.b_);
+//}
 
 float  z = 1.0f;
 float  z2 = z / 2.0f;

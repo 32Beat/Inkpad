@@ -145,6 +145,7 @@ inline void WDGLLineFromPointToPoint(CGPoint a, CGPoint b)
 #endif
 }
 
+
 void WDGLFlattenBezierSegment(WDBezierSegment seg, GLfloat **vertices, NSUInteger *size, NSUInteger *index)
 {
     if (*size < *index + 4) {
@@ -171,17 +172,40 @@ void WDGLFlattenBezierSegment(WDBezierSegment seg, GLfloat **vertices, NSUIntege
     }
 }
 
-void WDGLRenderBezierSegment(WDBezierSegment seg)
+void WDGLRenderBezierSegment(WDBezierSegment S)
 {
-    static GLfloat      *vertices = NULL;
-    static NSUInteger   size = 128;
-    NSUInteger          index = 0;
-    
-    if (!vertices) {
-        vertices = calloc(sizeof(GLfloat), size);
-    }
-    
-    WDGLFlattenBezierSegment(seg, &vertices, &size, &index);
+	// Statics are available in block
+    static NSUInteger size = 128;
+    static GLfloat *vertices = NULL;
+
+	// Locals need __block
+	__block NSUInteger index = 0;
+	//index = 0; // If index is static, reset
+
+    if (!vertices)
+	{ vertices = calloc(sizeof(GLfloat), size); }
+
+	// If index is global, it should be reset
+	vertices[index++] = S.a_.x;
+	vertices[index++] = S.a_.y;
+
+	// Loop flat segments recursively
+	WDBezierSegmentFlattenWithBlock(S,
+		^BOOL(WDBezierSegment flatSegment)
+		{
+			// Test size
+			if (index == size)
+			{ vertices = realloc(vertices, (size += 128)); }
+
+			// Add vector
+			vertices[index++] = flatSegment.b_.x;
+			vertices[index++] = flatSegment.b_.y;
+
+			// Keep looping
+			return YES;
+		});
+
+	// Transfer vertices to openGL
     WDGLDrawLineStrip(vertices, index);
 }
 

@@ -1878,39 +1878,36 @@ NSString *WDClosedKey = @"WDClosedKey";
     self.nodes = newNodes;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (NSMutableArray *) flattenedNodes
 {
-    NSMutableArray      *flatNodes = [NSMutableArray array];
-    NSInteger           numNodes = closed_ ? nodes_.count : nodes_.count - 1;
-    WDBezierSegment     segment;
-    static CGPoint      *vertices = NULL;
-    static NSUInteger   size = 128;
-    NSUInteger          index = 0;
-    
-    if (!vertices) {
-        vertices = calloc(sizeof(CGPoint), size);
-    }
-    
-    for (int i = 0; i < numNodes; i++) {
-        WDBezierNode *a = nodes_[i];
-        WDBezierNode *b = nodes_[(i+1) % nodes_.count];
-        
-        // reset the index for the current segment
-        index = 0;
-        
-        segment.a_ = a.anchorPoint;
-        segment.out_ = a.outPoint;
-        segment.in_ = b.inPoint;
-        segment.b_ = b.anchorPoint;
-        
-        WDBezierSegmentFlatten(segment, &vertices, &size, &index);
-        for (int v = 0; v < index; v++) {
-            [flatNodes addObject:[WDBezierNode bezierNodeWithAnchorPoint:vertices[v]]];
-        }
-    }
-    
-    return flatNodes;
+	NSMutableArray *flatNodes = [NSMutableArray array];
+
+	NSInteger numNodes = closed_ ? nodes_.count : nodes_.count - 1;
+
+	for (int i = 0; i < numNodes; i++)
+	{
+		WDBezierNode *a = nodes_[i];
+		WDBezierNode *b = nodes_[(i+1) % nodes_.count];
+		WDBezierSegment S = WDBezierSegmentMakeWithNodes(a, b);
+
+		[flatNodes addObject:
+		[WDBezierNode bezierNodeWithAnchorPoint:S.a_]];
+
+		WDBezierSegmentFlattenWithBlock(S,
+		^BOOL(WDBezierSegment flatSegment)
+		{
+			[flatNodes addObject:
+			[WDBezierNode bezierNodeWithAnchorPoint:flatSegment.b_]];
+			return YES;
+		});
+	}
+
+	return flatNodes;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) flatten
 {

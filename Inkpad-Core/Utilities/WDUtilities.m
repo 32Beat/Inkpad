@@ -291,6 +291,10 @@ CGRect WDRectFromPoint(CGPoint a, float width, float height)
 }
 
 BOOL WDCollinear(CGPoint a, CGPoint b, CGPoint c)
+{ return ((b.x-a.x)*(c.y-a.y)) == ((c.x-a.x)*(b.y-a.y)); }
+
+
+BOOL _WDCollinear(CGPoint a, CGPoint b, CGPoint c)
 {
     float temp, distances[3];
     
