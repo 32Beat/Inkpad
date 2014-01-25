@@ -46,6 +46,35 @@ static inline BOOL CGRectIncludesPoint(CGRect R, CGPoint P)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
+	CGRectExpandToPoint
+	-------------------
+	Expand rectangle to include point
+*/
+
+static inline CGRect CGRectExpandToPoint(CGRect R, CGPoint P)
+{
+	CGFloat minX = R.origin.x;
+	CGFloat minY = R.origin.y;
+	CGFloat maxX = R.origin.x+R.size.width;
+	CGFloat maxY = R.origin.y+R.size.height;
+
+	if (P.x < minX)
+	{ R.size.width = maxX - P.x; R.origin.x = P.x; }
+	else
+	if (P.x > maxX)
+	{ R.size.width = P.x - minX; }
+
+	if (P.y < minY)
+	{ R.size.height = maxY - P.y; R.origin.y = P.y; }
+	else
+	if (P.y > maxY)
+	{ R.size.height = P.y - minY; }
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
 	WDLineGetBounds
 	---------------
 	Compute normalized bounds encompassing line endpoints
@@ -73,6 +102,11 @@ CGRect WDLineGetBounds(CGPoint p1, CGPoint p2)
 	// Return CGRect
 	return (CGRect){ x, y, w, h };
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGPoint WDLineGetCenter(CGPoint a, CGPoint b)
+{ return (CGPoint){ 0.5*(a.x+b.x), 0.5*(a.y+b.y) }; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -420,6 +454,25 @@ CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentGetDiminishingLength
+	-----------------------------------
+	Compute length of control polygon (linestrip between segment points)
+	
+	Is guaranteed to be larger than actual curve length, 
+	and this difference diminishes with splitting.
+*/
+
+CGFloat WDBezierSegmentGetDiminishingLength(WDBezierSegment S)
+{
+	const CGPoint *P = &S.a_;
+	return
+	WDDistance(P[0], P[1])+
+	WDDistance(P[1], P[2])+
+	WDDistance(P[2], P[3]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Operations
 ////////////////////////////////////////////////////////////////////////////////
@@ -487,10 +540,6 @@ CGPoint WDBezierSegmentSplitAtT
 		No need to check for straightness first,
 		Splitting is likely never called if straight,
 		so the conditional merely slows down processor.
-		
-		CGPointInterpolate is inlined, so doesn't need expanding out 
-		for performance. Note also, if in the same code file, 
-		the compiler will generally inline functions during optimization.
 	*/
 	const CGPoint *P = &S.a_;
 	CGPoint A = CGPointInterpolate(P[0], P[1], t);
@@ -512,8 +561,92 @@ CGPoint WDBezierSegmentSplitAtT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static CGPoint WDBezierSegmentSplit
+(WDBezierSegment S, WDBezierSegment *L, WDBezierSegment *R)
+{
+	const CGPoint *P = &S.a_;
+
+	CGPoint A = WDLineGetCenter(P[0], P[1]);
+	CGPoint B = WDLineGetCenter(P[1], P[2]);
+	CGPoint C = WDLineGetCenter(P[2], P[3]);
+
+	CGPoint D = WDLineGetCenter(A, B);
+	CGPoint E = WDLineGetCenter(B, C);
+
+	CGPoint F = WDLineGetCenter(D, E);
+
+	*L = WDBezierSegmentMake(S.a_, A, D, F);
+	*R = WDBezierSegmentMake(F, E, C, S.b_);
+	return F;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Intersections
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentSplitWithBlock
+	-----------------------------
+	Split segment recursively while block returns YES
+	(sub segments are guaranteed to pass in order from a_ to b_)
+
+	Usage:
+
+	__block localVar = ...
+
+	WDBezierSegmentSplitWithBlock(S,
+		^BOOL(WDBezierSegment subSegment)
+		{
+			1. Do something with subSegment and localVar
+			2. return YES/NO depending on whether you want to continue
+			splitting the segment
+		});
+*/
+
+void WDBezierSegmentSplitWithBlock(WDBezierSegment S,
+					BOOL (^blockPtr)(WDBezierSegment))
+{
+	if (blockPtr(S))
+	{
+		WDBezierSegment Sn;
+		WDBezierSegmentSplit(S, &S, &Sn);
+
+		WDBezierSegmentSplitWithBlock(S, blockPtr);
+		WDBezierSegmentSplitWithBlock(Sn, blockPtr);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentFindCurveBounds
+	------------------------------
+	Find curve bounds by recursion. 
+
+	Primarily meant as example for SplitWithBlock,
+	WDBezierSegmentGetCurveBounds will compute bounds without recursion.
+*/
+
+CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S)
+{
+	__block CGRect R = { S.a_, {0,0}};
+
+	WDBezierSegmentSplitWithBlock(S,
+		^(WDBezierSegment subSegment)
+		{
+			// Splitting guarantees containment eventually
+			// If not contained yet, split further
+			if (!WDBezierSegmentIsContained(subSegment))
+			{ return YES; }
+
+			// Otherwise expand bounds
+			R = CGRectExpandToPoint(R, subSegment.b_);
+			// And stop splitting subSegment
+			return NO;
+		});
+
+	return R;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	WDBezierSegmentIntersectsRect
@@ -528,14 +661,14 @@ CGPoint WDBezierSegmentSplitAtT
 BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect R)
 {
 	// Test end points
-	if (CGRectIncludesPoint(R, S.a_)||
-		CGRectIncludesPoint(R, S.b_))
+	if (CGRectIncludesPoint(R, S.b_)||
+		CGRectIncludesPoint(R, S.a_))
 		return YES;
 
 	if (CGRectIntersectsRect(R, WDBezierSegmentGetControlBounds(S)))
 	{
 		WDBezierSegment Sn;
-		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
+		WDBezierSegmentSplit(S, &S, &Sn);
 
 		return
 		WDBezierSegmentIntersectsRect(Sn, R)||
@@ -546,135 +679,38 @@ BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect R)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	WDBezierSegmentFlattenWithBlock
-	-------------------------------
-	Flatten segment recursively while calling block for each flattened segment
-	(flattened segments are guaranteed to pass in order from a_ to b_)
-
-	Usage:
-
-	__block localVar = ...
-
-	WDBezierSegmentFlattenWithBlock(S,
-		^BOOL(WDBezierSegment flatSegment)
-		{
-			1. Do something with flatSegment and localVar
-			2. return YES/NO depending on whether you want to continue
-			traversing more flat segments
-		});
-*/
-
-BOOL WDBezierSegmentFlattenWithBlock(WDBezierSegment S,
-					BOOL (^blockPtr)(WDBezierSegment))
-{
-	// If segment is not flat yet, then keep splitting
-	if (!WDBezierSegmentIsFlat(S, kDefaultFlatness))
-	{
-		WDBezierSegment Sn;
-		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
-
-		return
-		WDBezierSegmentFlattenWithBlock(S, blockPtr)&&
-		WDBezierSegmentFlattenWithBlock(Sn, blockPtr);
-	}
-
-	// Call block for flat segment
-	return blockPtr(S);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-BOOL WDBezierSegmentFlattenWithProc(WDBezierSegment S,
-	WDBezierSegmentCallback *procPtr, void *procData)
-{
-	if (!WDBezierSegmentIsFlat(S, kDefaultFlatness))
-	{
-		WDBezierSegment Sn;
-		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
-
-		return
-		WDBezierSegmentFlattenWithProc(S, procPtr, procData)&&
-		WDBezierSegmentFlattenWithProc(Sn, procPtr, procData);
-	}
-
-	return procPtr(S, procData);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// TODO: cleaned upto here
-
-BOOL WDBezierSegmentSplitWithBlock(WDBezierSegment S,
-					BOOL (^blockPtr)(WDBezierSegment))
-{
-	if (blockPtr(S))
-	{
-		WDBezierSegment Sn;
-		WDBezierSegmentSplitAtT(S, &S, &Sn, 0.5);
-
-		return
-		WDBezierSegmentSplitWithBlock(S, blockPtr)&&
-		WDBezierSegmentSplitWithBlock(Sn, blockPtr);
-	}
-
-	return NO;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect R)
-{
-	__block BOOL result = CGRectIncludesPoint(R, S.a_);
-
-	if (result == NO)
-	WDBezierSegmentSplitWithBlock(S,
-		^BOOL(WDBezierSegment splitSegment)
-		{
-			if (!CGRectIncludesPoint(R, splitSegment.b_))
-			{
-				result = YES;
-				return NO;
-			}
-
-			if (CGRectIntersectsRect(R, WDBezierSegmentGetControlBounds(flatSegment))
-		});
-
-	return result;
-}
+	WDBezierSegmentComputeLength
+	----------------------------
+	Compute segment length based on controlpoints of subsegments
+	
+	The return value is not the exact length, but a reasonable 
+	approximation depending on scale
 */
-static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
-{ return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
 
-static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
-{ return (CGPoint){ MAX(a.x, b.x), MAX(a.y, b.y) }; }
-
-CGRect WDBezierSegmentGetFlattenedBounds(WDBezierSegment S)
+CGFloat WDBezierSegmentComputeLength(WDBezierSegment S, CGFloat scale)
 {
-	__block CGPoint min = S.a_;
-	__block CGPoint max = S.a_;
-
-	WDBezierSegmentFlattenWithBlock(S,
-		^(WDBezierSegment flatSegment)
-		{
-			min = CGPointMin(min, flatSegment.b_);
-			max = CGPointMax(max, flatSegment.b_);
-			return YES;
-		});
-
-	return (CGRect){ min, {max.x-min.x, max.y-min.y} };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S)
-{
+	// Initialize return value
 	__block CGFloat length = 0.0;
 
-	WDBezierSegmentFlattenWithBlock(S,
-		^(WDBezierSegment flatSegment)
+	CGFloat maxL = WDBezierSegmentGetDiminishingLength(S);
+	if (maxL <= 0.0) return 0.0;
+
+	WDBezierSegmentSplitWithBlock(S,
+		^(WDBezierSegment subSegment)
 		{
-			length += WDDistance(flatSegment.a_, flatSegment.b_);
+			CGFloat L = WDBezierSegmentGetDiminishingLength(subSegment);
+			// Test for small enough subsegment
+			if ((scale*L) < maxL)
+			{
+				// Add length
+				length += L;
+				// Stop splitting
+				return NO;
+			}
+			// Split subsegment further
 			return YES;
 		});
 
@@ -683,28 +719,36 @@ CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-static inline CGRect CGRectExpandToPoint(CGRect R, CGPoint P)
+CGFloat WDBezierSegmentFindLengthRatio(WDBezierSegment *S, CGFloat r)
 {
-	if (R.origin.x > P.x)
-		R.origin.x = P.x;
-	else
-	if (R.size.width < (P.x - R.origin.x))
-		R.size.width = (P.x - R.origin.x);
+	CGFloat targetD = r * WDBezierSegmentGetDiminishingLength(*S);
+	if (targetD > 0.0)
+	{
+		double t1 = 0.0;
+		double t2 = 1.0;
 
-	if (R.origin.y > P.y)
-		R.origin.y = P.y;
-	else
-	if (R.size.height < (P.y - R.origin.y))
-		R.size.height = (P.y - R.origin.y);
+		do
+		{
+			double t = 0.5*(t1+t2);
+			WDBezierSegment L, R;
+			WDBezierSegmentSplitAtT(*S, &L, &R, t);
 
-	return R;
+			double D = WDBezierSegmentGetDiminishingLength(L);
+			if (D < targetD)
+				t1 = t;
+			else
+				t2 = t;
+		}
+		while((t2-t1)>0.0001);
+
+		WDBezierSegmentSplitAtT(*S, S, nil, t2);
+		return t2;
+	}
+
+	return 0.0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 static inline BOOL CGRectExcludesPoint(CGRect R, CGPoint P)
 {
@@ -789,100 +833,110 @@ CGPoint *nearestPoint,
 float *split,
 double depth)
 {
-CGRect  bbox = CGRectInset(WDBezierSegmentGetControlBounds(seg), -tolerance / 2, -tolerance / 2);
+	CGRect  bbox = CGRectInset(WDBezierSegmentGetControlBounds(seg), -tolerance / 2, -tolerance / 2);
 
-if (!CGRectContainsPoint(bbox, testPoint)) {
-	return NO;
-} else if (WDBezierSegmentIsLineSegmentShape(seg)) {
-	CGPoint s = WDSubtractPoints(seg.b_, seg.a_);
-	CGPoint v = WDSubtractPoints(testPoint, seg.a_);
-	float   n = v.x * s.x + v.y * s.y;
-	float   d = s.x * s.x + s.y * s.y;
-	float   t = n/d;
-	BOOL    onSegment = NO;
-	
-	if (0.0f <= t && t <= 1.0f) {
-		CGPoint delta = WDSubtractPoints(seg.b_, seg.a_);
-		CGPoint p = WDAddPoints(seg.a_, WDMultiplyPointScalar(delta, t));
+	if (!CGRectContainsPoint(bbox, testPoint))
+		return NO;
+	else
+	if (WDBezierSegmentIsLineSegmentShape(seg))
+	{
+		CGPoint s = WDSubtractPoints(seg.b_, seg.a_);
+		CGPoint v = WDSubtractPoints(testPoint, seg.a_);
+		float   n = v.x * s.x + v.y * s.y;
+		float   d = s.x * s.x + s.y * s.y;
+		float   t = n/d;
+		BOOL    onSegment = NO;
 		
-		if (WDDistance(p, testPoint) < tolerance) {
-			if (nearestPoint) {
-				*nearestPoint = p;
+		if (0.0f <= t && t <= 1.0f) {
+			CGPoint delta = WDSubtractPoints(seg.b_, seg.a_);
+			CGPoint p = WDAddPoints(seg.a_, WDMultiplyPointScalar(delta, t));
+			
+			if (WDDistance(p, testPoint) < tolerance) {
+				if (nearestPoint) {
+					*nearestPoint = p;
+				}
+				if (split) {
+					*split += (t * depth);
+				}
+				onSegment = YES;
 			}
-			if (split) {
-				*split += (t * depth);
-			}
-			onSegment = YES;
+		}
+		
+		return onSegment;
+	}
+	else
+	if((CGRectGetWidth(bbox) < tolerance * 1.1) ||
+		(CGRectGetHeight(bbox) < tolerance * 1.1))
+	{
+		// Close enough! This should be more or less a straight line now...
+		CGPoint s = WDSubtractPoints(seg.b_, seg.a_);
+		CGPoint v = WDSubtractPoints(testPoint, seg.a_);
+		float n = v.x * s.x + v.y * s.y;
+		float d = s.x * s.x + s.y * s.y;
+		float t = WDClamp(0.0f, 1.0f, n/d);
+
+		if (nearestPoint) {
+			// make sure the found point is on the path and not just near it
+			*nearestPoint = WDBezierSegmentSplitAtT(seg, NULL, NULL, t);
+		}
+		if (split) {
+			*split += (t * depth);
+		}
+		
+		return YES;
+	}
+
+	// We know the point is inside our bounding box, but our bounding box is not yet
+	// small enough to consider it a hit. So, subdivide the path and recurse...
+
+	WDBezierSegment L, R;
+	BOOL            foundLeft = NO, foundRight = NO;
+	CGPoint         nearestLeftPoint, nearestRightPoint;
+	float           leftSplit = 0.0f, rightSplit = 0.0f;
+
+	WDBezierSegmentSplitAtT(seg, &L, &R, 0.5);
+
+	// look both ways before crossing
+	if (WDBezierSegmentFindPointOnSegment_R(L, testPoint, tolerance, &nearestLeftPoint, &leftSplit, depth / 2.0f)) {
+		foundLeft = YES;
+	}
+	if (WDBezierSegmentFindPointOnSegment_R(R, testPoint, tolerance, &nearestRightPoint, &rightSplit, depth / 2.0f)) {
+		foundRight = YES;
+	}
+
+	if (foundLeft && foundRight) {
+		// since both halves found the point, choose the one that's actually closest
+		float leftDistance = WDDistance(nearestLeftPoint, testPoint);
+		float rightDistance = WDDistance(nearestRightPoint, testPoint);
+		
+		foundLeft = (leftDistance <= rightDistance) ? YES : NO;
+		foundRight = !foundLeft;
+	}
+
+	if (foundLeft) {
+		if (nearestPoint) {
+			*nearestPoint = nearestLeftPoint;
+		}
+		if (split) {
+			*split += leftSplit;
+		}
+	} else if (foundRight) {
+		if (nearestPoint) {
+			*nearestPoint = nearestRightPoint;
+		}
+		if (split) {
+			*split += 0.5 * depth + rightSplit;
 		}
 	}
-	
-	return onSegment;
-} else if((CGRectGetWidth(bbox) < tolerance * 1.1) || (CGRectGetHeight(bbox) < tolerance * 1.1)) {
-	// Close enough! This should be more or less a straight line now...
-	CGPoint s = WDSubtractPoints(seg.b_, seg.a_);
-	CGPoint v = WDSubtractPoints(testPoint, seg.a_);
-	float n = v.x * s.x + v.y * s.y;
-	float d = s.x * s.x + s.y * s.y;
-	float t = WDClamp(0.0f, 1.0f, n/d);
 
-	if (nearestPoint) {
-		// make sure the found point is on the path and not just near it
-		*nearestPoint = WDBezierSegmentSplitAtT(seg, NULL, NULL, t);
-	}
-	if (split) {
-		*split += (t * depth);
-	}
-	
-	return YES;
+	return (foundLeft || foundRight);
 }
 
-// We know the point is inside our bounding box, but our bounding box is not yet
-// small enough to consider it a hit. So, subdivide the path and recurse...
-
-WDBezierSegment L, R;
-BOOL            foundLeft = NO, foundRight = NO;
-CGPoint         nearestLeftPoint, nearestRightPoint;
-float           leftSplit = 0.0f, rightSplit = 0.0f;
-
-WDBezierSegmentSplitAtT(seg, &L, &R, 0.5);
-
-// look both ways before crossing
-if (WDBezierSegmentFindPointOnSegment_R(L, testPoint, tolerance, &nearestLeftPoint, &leftSplit, depth / 2.0f)) {
-	foundLeft = YES;
-}
-if (WDBezierSegmentFindPointOnSegment_R(R, testPoint, tolerance, &nearestRightPoint, &rightSplit, depth / 2.0f)) {
-	foundRight = YES;
-}
-
-if (foundLeft && foundRight) {
-	// since both halves found the point, choose the one that's actually closest
-	float leftDistance = WDDistance(nearestLeftPoint, testPoint);
-	float rightDistance = WDDistance(nearestRightPoint, testPoint);
-	
-	foundLeft = (leftDistance <= rightDistance) ? YES : NO;
-	foundRight = !foundLeft;
-}
-
-if (foundLeft) {
-	if (nearestPoint) {
-		*nearestPoint = nearestLeftPoint;
-	}
-	if (split) {
-		*split += leftSplit;
-	}
-} else if (foundRight) {
-	if (nearestPoint) {
-		*nearestPoint = nearestRightPoint;
-	}
-	if (split) {
-		*split += 0.5 * depth + rightSplit;
-	}
-}
-
-return (foundLeft || foundRight);
-}
-
-BOOL WDBezierSegmentFindPointOnSegment(WDBezierSegment seg, CGPoint testPoint, float tolerance, CGPoint *nearestPoint, float *split)
+BOOL WDBezierSegmentFindPointOnSegment(
+	WDBezierSegment seg,
+	CGPoint testPoint,
+	float tolerance,
+	CGPoint *nearestPoint, float *split)
 {
 if (split) {
 	*split = 0.0f;
@@ -1016,15 +1070,8 @@ return z2 * sum;
 
 float WDBezierSegmentLength(WDBezierSegment S)
 {
-	CGFloat L = WDBezierSegmentGetFlattenedLength(S);
-	CGFloat L2 = _WDBezierSegmentLength(S);
-
-	if (L != L2)
-	{
-		return L;
-	}
-
-	return L;
+	return _WDBezierSegmentLength(S);
+	return WDBezierSegmentGetDiminishingLength(S);
 }
 
 

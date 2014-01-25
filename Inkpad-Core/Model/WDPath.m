@@ -617,9 +617,18 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.out_ = a.outPoint;
         segment.in_ = b.inPoint;
         segment.b_ = b.anchorPoint;
-        
-//        bbox = CGRectUnion(bbox, WDBezierSegmentGetFlattenedBounds(segment));
-        bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
+
+
+		CGRect R1 = WDBezierSegmentGetCurveBounds(segment);
+		CGRect R2 = WDBezierSegmentFindCurveBounds(segment);
+
+		if (!CGRectEqualToRect(R1, R2))
+		{
+			R1 = R2;
+		}
+
+        bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(segment));
+//        bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
     }
 
     return bbox;
@@ -631,6 +640,8 @@ NSString *WDClosedKey = @"WDClosedKey";
 	CGRect R = [self getPathBoundingBox];
 	if (!CGRectEqualToRect(R, bounds_))
 	{
+		CGRect R1 = bounds_;
+		R1 = R;
 		boundsDirty_ = NO;
 	}
     boundsDirty_ = NO;
@@ -865,14 +876,6 @@ NSString *WDClosedKey = @"WDClosedKey";
     CGPoint             currIn, currAnchor, currOut;
     WDBezierSegment     segment;
     
-    static GLfloat      *vertices = NULL;
-    static NSUInteger   size = 128;
-    NSUInteger          index = 0;
-    
-    if (!vertices) {
-        vertices = calloc(sizeof(GLfloat), size);
-    }
-    
     // pre-condition
     WDBezierNode *prev = nodes[0];
     [prev getInPoint:&prevIn anchorPoint:&prevAnchor outPoint:&prevOut selected:NULL];
@@ -893,7 +896,7 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.b_.x = viewTransform.a * currAnchor.x + viewTransform.c * currAnchor.y + viewTransform.tx;
         segment.b_.y = viewTransform.b * currAnchor.x + viewTransform.d * currAnchor.y + viewTransform.ty;
         
-        WDGLFlattenBezierSegment(segment, &vertices, &size, &index);
+        WDGLVertexBufferAddSegment(segment);
         
         // set up for the next iteration
         prevOut = currOut;
@@ -901,7 +904,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     }
     
     // assumes proper color set by caller
-    WDGLDrawLineStrip(vertices, index);
+	WDGLVertexBufferDrawPath(closed_ ? GL_LINE_LOOP : GL_LINE_STRIP);
 }
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
@@ -922,15 +925,8 @@ NSString *WDClosedKey = @"WDClosedKey";
     CGAffineTransform   prevTx, currTx;
     WDBezierSegment     segment;
     
-    static GLfloat      *vertices = NULL;
-    static NSUInteger   size = 128;
- //   NSUInteger          index = 0;
-    
+displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
 
-	if (!vertices) {
-        vertices = calloc(sizeof(GLfloat), size);
-    }
-    
     // pre-condition
     WDBezierNode *prev = nodes[0];
     [prev getInPoint:&prevIn anchorPoint:&prevAnchor outPoint:&prevOut selected:&prevSelected];
@@ -960,7 +956,7 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.b_.y = currTx.b * currAnchor.x + currTx.d * currAnchor.y + currTx.ty;
 
         //WDGLFlattenBezierSegment(segment, &vertices, &size, &index);
-		WDGLRenderBezierSegment(segment);
+		WDGLVertexBufferAddSegment(segment);
 
         // set up for the next iteration
         prevSelected = currSelected;
@@ -969,10 +965,12 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.a_ = segment.b_;
     }
 
+	WDGLVertexBufferDrawPath(closed ? GL_LINE_LOOP : GL_LINE_STRIP);
 //	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
 //	WDGLDrawLineStrip(vertices, index);
 
 #ifdef WD_DEBUG
+	glColor4f(1.0, 0.2, 0.2, .5);
 	CGRect R = [self getPathBoundingBox];
 	R = CGRectApplyAffineTransform(R, viewTransform);
 	WDGLStrokeRect(R);
@@ -1897,11 +1895,15 @@ NSString *WDClosedKey = @"WDClosedKey";
 		[flatNodes addObject:
 		[WDBezierNode bezierNodeWithAnchorPoint:S.a_]];
 
-		WDBezierSegmentFlattenWithBlock(S,
-		^BOOL(WDBezierSegment flatSegment)
+		WDBezierSegmentSplitWithBlock(S,
+		^BOOL(WDBezierSegment subSegment)
 		{
-			[flatNodes addObject:
-			[WDBezierNode bezierNodeWithAnchorPoint:flatSegment.b_]];
+			if (WDBezierSegmentIsFlat(subSegment, kDefaultFlatness))
+			{
+				[flatNodes addObject:
+				[WDBezierNode bezierNodeWithAnchorPoint:subSegment.b_]];
+				return NO;
+			}
 			return YES;
 		});
 	}

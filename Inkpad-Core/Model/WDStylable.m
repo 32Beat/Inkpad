@@ -166,21 +166,22 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     
     CGPoint start = fT.start;
     start = CGPointApplyAffineTransform(start, fT.transform);
-    start = WDRoundPoint(CGPointApplyAffineTransform(start, transform));
+    start = CGPointApplyAffineTransform(start, transform);
     
     CGPoint end = fT.end;
     end = CGPointApplyAffineTransform(end, fT.transform);
-    end = WDRoundPoint(CGPointApplyAffineTransform(end, transform));
+    end = CGPointApplyAffineTransform(end, transform);
     
     [self.layer.highlightColor openGLSet];
     WDGLLineFromPointToPoint(start, end);
-    
-    WDGLFillDiamond(start, kDiamondSize);
-    WDGLFillDiamond(end, kDiamondSize);
-    
+
     glColor4f(1, 1, 1, 1);
-    WDGLFillDiamond(start, kDiamondSize - 1);
-    WDGLFillDiamond(end, kDiamondSize - 1);
+    WDGLFillDiamondMarker(start);
+    WDGLFillDiamondMarker(end);
+
+    [self.layer.highlightColor openGLSet];
+    WDGLStrokeDiamondMarker(start);
+    WDGLStrokeDiamondMarker(end);
 }
 
 - (NSSet *) inspectableProperties

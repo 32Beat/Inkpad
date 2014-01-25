@@ -477,18 +477,26 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
         CTRunGetGlyphs(run, CFRangeMake(0, 0), buffer);
         CTRunGetPositions(run, CFRangeMake(0,0), positions);
         
-        for (CFIndex runGlyphIndex = 0; runGlyphIndex < runGlyphCount; runGlyphIndex++) {
-            CGPathRef baseGlyphPath = CTFontCreatePathForGlyph(runFont, buffer[runGlyphIndex], NULL);
+        for (CFIndex runGlyphIndex = 0;
+		runGlyphIndex < runGlyphCount; runGlyphIndex++)
+		{
+            CGPathRef baseGlyphPath =
+			CTFontCreatePathForGlyph(runFont, buffer[runGlyphIndex], NULL);
             
-            if (!baseGlyphPath) {
+            if (!baseGlyphPath)
                 continue;
-            } else if (CGPathIsEmpty(baseGlyphPath)) {
+			else
+			if (CGPathIsEmpty(baseGlyphPath))
+			{
                 CGPathRelease(baseGlyphPath);
                 continue;
             }
             
-            CGFloat glyphWidth = CTRunGetTypographicBounds(run, CFRangeMake(runGlyphIndex, 1), NULL, NULL, NULL);
-            BOOL fits = NO;
+            CGFloat glyphWidth =
+			CTRunGetTypographicBounds
+			(run, CFRangeMake(runGlyphIndex, 1), NULL, NULL, NULL);
+
+			BOOL fits = NO;
             
             while (!fits) {
                 start = startOffset_ + positions[runGlyphIndex].x + kern;
@@ -721,7 +729,6 @@ done:
     }
     
     CGPoint     overflowPoint;
-    CGRect      overflowRect;
     BOOL        selected = NO;
     UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
     
@@ -737,18 +744,16 @@ done:
         overflowPoint = CGPointApplyAffineTransform(startBarAttachment, CGAffineTransformConcat(transform_, viewTransform));
     }
     
-    overflowRect = CGRectMake(overflowPoint.x - kOverflowRadius, overflowPoint.y - kOverflowRadius,
-                                     kOverflowRadius * 2, kOverflowRadius * 2);
     if (selected) {
         [color openGLSet];
-        WDGLFillRect(overflowRect);
+        WDGLFillSquareMarker(overflowPoint);
         glColor4f(1, 1, 1, 1);
-        WDGLStrokeRect(overflowRect);
+        WDGLStrokeSquareMarker(overflowPoint);
     } else {
         glColor4f(1, 1, 1, 1);
-        WDGLFillRect(overflowRect);
+        WDGLFillSquareMarker(overflowPoint);
         [color openGLSet];
-        WDGLStrokeRect(overflowRect);
+        WDGLStrokeSquareMarker(overflowPoint);
     }
     
     // draw +
@@ -771,18 +776,16 @@ done:
     [self getStartKnobBase:&base andTop:&top viewScale:viewScale];
     
     base = CGPointApplyAffineTransform(base, viewTransform);
-    base = WDRoundPoint(base);
-    
+
     top = CGPointApplyAffineTransform(top, viewTransform);
-    top = WDRoundPoint(top);
     
     [color openGLSet];
     WDGLLineFromPointToPoint(base, top);
     
     [[UIColor whiteColor] openGLSet];
-    WDGLFillCircle(top, 4, 12);
+    WDGLFillCircleMarker(top);
     [color openGLSet];
-    WDGLStrokeCircle(top, 4, 12);
+    WDGLStrokeCircleMarker(top);
 }
 
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect

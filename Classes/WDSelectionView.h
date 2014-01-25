@@ -9,6 +9,8 @@
 //  Copyright (c) 2010-2013 Steve Sprang
 //
 
+//#import "WDGLKSelectionView.h"
+
 #import <UIKit/UIKit.h>
 #import <OpenGLES/EAGL.h>
 #import <OpenGLES/ES1/gl.h>
@@ -17,15 +19,15 @@
 @class WDCanvas;
 @class WDDrawing;
 
-@interface WDSelectionView : UIView {
-    
+@interface WDSelectionView : UIView
+{    
 @private
-    // The pixel dimensions of the backbuffer
-    GLint backingWidth;
-    GLint backingHeight;
-    
-    // OpenGL names for the renderbuffer and framebuffer used to render to this view
-    GLuint colorRenderbuffer, defaultFramebuffer;
+	// OpenGL reference for the renderbuffer and framebuffer
+	GLuint mFrameBufferID;
+	GLuint mRenderBufferID;
+	// The pixel dimensions of the backbuffer
+	GLint mBackingWidth;
+	GLint mBackingHeight;
 }
 
 @property (nonatomic, weak) WDCanvas *canvas;

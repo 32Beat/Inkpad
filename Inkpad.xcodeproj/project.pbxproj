@@ -309,6 +309,7 @@
 		6BF747931311C399000D9344 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6BF747921311C399000D9344 /* Entitlements.plist */; };
 		6BFA802C1249CEDB00D1749C /* WDLayerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA802B1249CEDB00D1749C /* WDLayerCell.m */; };
 		6BFBC4EB1335F4A000D5877F /* zoom_to_fit.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BFBC4EA1335F4A000D5877F /* zoom_to_fit.png */; };
+		BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -783,6 +784,8 @@
 		6BFA802B1249CEDB00D1749C /* WDLayerCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDLayerCell.m; sourceTree = "<group>"; };
 		6BFBC4EA1335F4A000D5877F /* zoom_to_fit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = zoom_to_fit.png; path = Images/zoom_to_fit.png; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Inkpad-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Inkpad-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
+		BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = WDGLVertexBuffer.c; sourceTree = "<group>"; };
+		BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDGLVertexBuffer.h; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1328,6 +1331,8 @@
 		6BABD951141ED30100F7E0A9 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */,
+				BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */,
 				6BABD952141ED30100F7E0A9 /* WDGLUtilities.h */,
 				6BABD953141ED30100F7E0A9 /* WDGLUtilities.m */,
 				6BABD954141ED30100F7E0A9 /* WDUtilities.h */,
@@ -1909,6 +1914,7 @@
 				6BABD9AE141ED30100F7E0A9 /* WDBezierNode.m in Sources */,
 				6B8416C217EFA8F000508CE7 /* UIBarButtonItem+Additions.m in Sources */,
 				6BABD9AF141ED30100F7E0A9 /* WDBezierSegment.m in Sources */,
+				BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */,
 				6BABD9B0141ED30100F7E0A9 /* WDColor.m in Sources */,
 				6BABD9B1141ED30100F7E0A9 /* WDCompoundPath.m in Sources */,
 				6BABD9B2141ED30100F7E0A9 /* WDCurveFit.m in Sources */,

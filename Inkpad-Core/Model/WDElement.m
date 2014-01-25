@@ -245,18 +245,16 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) drawOpenGLAnchorAtPoint:(CGPoint)pt transform:(CGAffineTransform)transform selected:(BOOL)selected
 {
-    CGPoint location = WDRoundPoint(CGPointApplyAffineTransform(pt, transform));
-    CGRect anchorRect = CGRectMake(location.x - kAnchorRadius, location.y - kAnchorRadius, kAnchorRadius * 2, kAnchorRadius * 2);
-    
+    CGPoint P = CGPointApplyAffineTransform(pt, transform);
+
     if (!selected) {
         glColor4f(1, 1, 1, 1);
-        WDGLFillRect(anchorRect);
+        WDGLFillSquareMarker(P);
         [self.layer.highlightColor openGLSet];
-        WDGLStrokeRect(anchorRect);
+        WDGLStrokeSquareMarker(P);
     } else {
-        anchorRect = CGRectInset(anchorRect, 1, 1);
         [self.layer.highlightColor openGLSet];
-        WDGLFillRect(anchorRect);
+        WDGLFillSquareMarker(P);
     }
 }
 

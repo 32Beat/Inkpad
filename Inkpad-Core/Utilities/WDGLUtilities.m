@@ -1,334 +1,748 @@
-//
-//  WDGLUtilities.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2011-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*  
+	WDGLUtilities
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2011-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import "WDGLUtilities.h"
-#import "WDUtilities.h"
 
-typedef struct {
-    GLfloat     *vertices;
-    NSUInteger  size;
-    NSUInteger  index;
-} glPathRenderData;
+////////////////////////////////////////////////////////////////////////////////
+/*
+	GLPixelVector
+	-------------
+	The code in this file is meant for rendering on a pixelgrid,
+	so our vertixes will be 2d vectors. Note that 
+	OpenGL will always render the vertices as modeldata, 
+	so we are never actually addressing pixels.
+*/
 
-void renderPathElement(void *info, const CGPathElement *element);
+#pragma align=packed
 
-inline void WDGLFillRect(CGRect rect)
+typedef struct
 {
-    rect.origin = WDRoundPoint(rect.origin);
-    rect.size = WDRoundSize(rect.size);
-    
-    const GLfloat quadVertices[] = {
-        CGRectGetMinX(rect), CGRectGetMinY(rect),
-        CGRectGetMaxX(rect), CGRectGetMinY(rect),
-        CGRectGetMinX(rect), CGRectGetMaxY(rect),
-        CGRectGetMaxX(rect), CGRectGetMaxY(rect)
-    };
-    
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, quadVertices);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-#else
-    glBegin(GL_QUADS); 
-    glVertex2d(quadVertices[0], quadVertices[1]);
-    glVertex2d(quadVertices[2], quadVertices[3]);
-    glVertex2d(quadVertices[6], quadVertices[7]);
-    glVertex2d(quadVertices[4], quadVertices[5]);
-    glEnd();
-#endif
+	GLfloat x;
+	GLfloat y;
+}
+GLPixelVector;
+
+#pragma align=reset
+////////////////////////////////////////////////////////////////////////////////
+/*
+	MakePixelVector
+	---------------
+	OpenGL uses a diamond-exit rule to determine pixel activation. 
+	In order to ensure correct pixel activation when drawing lines, 
+	we sometimes need to readjust the endpoints of a line to fit 
+	within the diamond of the desired pixel. This adjustment should 
+	preferably be as small as possible, so that rendering a flattened 
+	curve remains as smooth as possible.
+	
+	MakePixelVector creates an adjusted pixelvector from 2d coordinates.
+
+	Note that this code assumes the OpenGL matrix stack is setup so that
+	pixels fall between integral values. i.e.:
+	pixel center = (0.5, 0.5)
+	pixel bounds = (0.0, 0.0, 1.0, 1.0)
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+static inline GLPixelVector MakePixelVector(GLfloat x, GLfloat y)
+{
+//	return (GLPixelVector){floor(x),ceil(y)};
+
+	// Compute desired pixel center
+	CGFloat cx = floor(x)+0.5;
+	CGFloat cy = floor(y)+0.5;
+
+	// Compute offset to pixel center
+	CGFloat dx = x - cx;
+	CGFloat dy = y - cy;
+
+	// Diagonal = dx+dy = 0.5
+	CGFloat d = fabs(dx)+fabs(dy);
+
+	// If beyond diagonal, then adjust
+	if (d > (127.0/256.0))
+	{
+		CGFloat m = (127.0/256.0) / d;
+		x = cx + m * (x - cx);
+		y = cy + m * (y - cy);
+	}
+
+	return (GLPixelVector){x,y};
 }
 
-inline void WDGLStrokeRect(CGRect rect)
+////////////////////////////////////////////////////////////////////////////////
+/*
+	CopyVertexData
+	--------------
+	Transfer VertexData as 2D coordinates to OpenGL
+	
+		type
+		OpenGL begin mode, e.g. GL_POINTS, GL_LINES etc
+		
+		vertexData
+		Pointer to 2d vertices
+		
+		count
+		Number of 2d vertices
+*/
+
+static inline void CopyVertexData
+(GLenum type, const GLvoid *vertexData, GLsizei count)
 {
-    rect.origin = WDRoundPoint(rect.origin);
-    rect.size = WDRoundSize(rect.size);
-    
-    const GLfloat lineVertices[] = {
-        CGRectGetMinX(rect), CGRectGetMinY(rect),
-        CGRectGetMaxX(rect), CGRectGetMinY(rect),
-        
-        CGRectGetMinX(rect), CGRectGetMaxY(rect),
-        CGRectGetMaxX(rect), CGRectGetMaxY(rect),
-        
-        CGRectGetMinX(rect), CGRectGetMinY(rect),
-        CGRectGetMinX(rect), CGRectGetMaxY(rect) + 1 / [UIScreen mainScreen].scale,
-        
-        CGRectGetMaxX(rect), CGRectGetMinY(rect),
-        CGRectGetMaxX(rect), CGRectGetMaxY(rect)
-    };
-    
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, lineVertices);
-    glDrawArrays(GL_LINES, 0, 8);
-#else
-    glBegin(GL_LINES); 
-    for (int i = 0; i < 8; i++) {
-        glVertex2D(lineVertices[i*2], lineVertices[i*2+1]);
-    }
-    glEnd();
-#endif
+	glVertexPointer(2, GL_FLOAT, 0, vertexData);
+	glDrawArrays(type, 0, count);
 }
 
-inline void WDGLFillCircle(CGPoint center, float radius, int sides)
+#define mCopyVertexArray(t, array) \
+CopyVertexData(t, array, sizeof(array)/(2*sizeof(GLfloat)))
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark OpenGL Shape rendering
+////////////////////////////////////////////////////////////////////////////////
+/*
+	_WDGLFillRect
+	-------------
+	Fill rect bounds
+*/
+
+static inline void _WDGLFillRect(CGRect R)
 {
-    GLfloat *vertices = calloc(sizeof(GLfloat), (sides+1) * 4);
-    float   step = M_PI * 2 / sides;
-    
-    for (int i=0; i <= sides; i++) {
-        float angle = i*step;
-        vertices[i*4] = center.x + cos(angle)*radius;
-        vertices[i*4+1] = center.y + sin(angle)*radius;
-        vertices[i*4+2] = center.x;
-        vertices[i*4+3] = center.y;
-    }
-    
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, vertices);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, (sides+1)*2);
-#else
-    glBegin(GL_TRIANGLE_STRIP); 
-    for (int i = 0; i < (sides+1)*4; i+=2) {
-        glVertex2d(vertices[i], vertices[i+1]);
-    }
-    glEnd();
-#endif
-    
-    free(vertices);
+	// Fetch coordinates
+	CGFloat minX = CGRectGetMinX(R);
+	CGFloat minY = CGRectGetMinY(R);
+	CGFloat maxX = CGRectGetMaxX(R);
+	CGFloat maxY = CGRectGetMaxY(R);
+
+	// Prepare triangle fan
+	GLfloat vertexData[] = {
+		minX, minY,
+		maxX, minY,
+		maxX, maxY,
+		minX, maxY
+	};
+
+	// Tranfer to openGL
+	mCopyVertexArray(GL_TRIANGLE_FAN, vertexData);
 }
 
-inline void WDGLStrokeCircle(CGPoint center, float radius, int sides)
+////////////////////////////////////////////////////////////////////////////////
+/*
+	_WDGLStrokeRectWithSize
+	-----------------------
+	Stroke rect by drawing sized border inside rect bounds.
+	If partial overlap is desired, adjust rect prior to call.
+*/
+
+static inline void _WDGLStrokeRectWithSize(CGRect R, CGFloat size)
 {
-    GLfloat *vertices = calloc(sizeof(GLfloat), (sides+1) * 2);
-    float   step = M_PI * 2 / sides;
-    
-    for (int i=0; i <= sides; i++) {
-        float angle = i*step;
-        vertices[i*2] = center.x + cos(angle)*radius;
-        vertices[i*2+1] = center.y + sin(angle)*radius;
-    }
-    
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, vertices);
-    glDrawArrays(GL_LINE_LOOP, 0, (sides+1));
-#else
-    glBegin(GL_LINE_LOOP); 
-    for (int i = 0; i < (sides+1)*2; i+=2) {
-        glVertex2d(vertices[i], vertices[i+1]);
-    }
-    glEnd();
-#endif
-    
-    free(vertices);
+	// Fetch coordinates
+	CGFloat minX = CGRectGetMinX(R);
+	CGFloat minY = CGRectGetMinY(R);
+	CGFloat maxX = CGRectGetMaxX(R);
+	CGFloat maxY = CGRectGetMaxY(R);
+
+	// Prepare triangle strip
+	GLfloat vertexData[] = {
+		minX, minY,
+		minX+size, minY+size,
+		maxX, minY,
+		maxX-size, minY+size,
+		maxX, maxY,
+		maxX-size, maxY-size,
+		minX, maxY,
+		minX+size, maxY-size,
+		minX, minY,
+		minX+size, minY+size };
+
+	// Transfer to openGL
+	mCopyVertexArray(GL_TRIANGLE_STRIP, vertexData);
 }
 
-inline void WDGLLineFromPointToPoint(CGPoint a, CGPoint b)
+////////////////////////////////////////////////////////////////////////////////
+/*
+	_WDGLFillDiamond
+	----------------
+	Fill diamond by drawing triangles using rect edge
+*/
+
+static inline void _WDGLFillDiamond(CGRect R)
 {
-    const GLfloat lineVertices[] = {
-        a.x, a.y, b.x, b.y
-    };
-    
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, lineVertices);
-    glDrawArrays(GL_LINE_STRIP, 0, 2);
-#else
-    glBegin(GL_LINE_STRIP); 
-    glVertex2d(lineVertices[0], lineVertices[1]);
-    glVertex2d(lineVertices[2], lineVertices[3]);
-    glEnd();
-#endif
+	// Fetch center
+	CGFloat midX = CGRectGetMidX(R);
+	CGFloat midY = CGRectGetMidY(R);
+
+	// Fetch coordinates
+	CGFloat minX = CGRectGetMinX(R);
+	CGFloat minY = CGRectGetMinY(R);
+	CGFloat maxX = CGRectGetMaxX(R);
+	CGFloat maxY = CGRectGetMaxY(R);
+
+	// Prepare triangle fan
+	GLfloat vertexData[] = {
+		midX, maxY,
+		minX, midY,
+		midX, minY,
+		maxX, midY
+	};
+
+	// Transfer to openGL
+	mCopyVertexArray(GL_TRIANGLE_FAN, vertexData);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+	_WDGLStrokeDiamondWithSize
+	--------------------------
+	Stroke diamond by drawing sized border inside edge
+*/
 
-void WDGLFlattenBezierSegment(WDBezierSegment seg, GLfloat **vertices, NSUInteger *size, NSUInteger *index)
+static inline void _WDGLStrokeDiamondWithSize(CGRect R, CGFloat size)
 {
-    if (*size < *index + 4) {
-        *size *= 2;
-        *vertices = realloc(*vertices, sizeof(GLfloat) * *size);
-    }
-        
-    if (WDBezierSegmentIsFlat(seg, kDefaultFlatness)) {
-        if (*index == 0) {
-            (*vertices)[*index] = seg.a_.x;
-            (*vertices)[*index + 1] = seg.a_.y;
-            *index += 2;
-        }
-        
-        (*vertices)[*index] = seg.b_.x;
-        (*vertices)[*index + 1] = seg.b_.y;
-        *index += 2;
-    } else {
-        WDBezierSegment L, R;
-        WDBezierSegmentSplitAtT(seg, &L, &R, 0.5);
-        
-        WDGLFlattenBezierSegment(L, vertices, size, index);
-        WDGLFlattenBezierSegment(R, vertices, size, index);
-    }
+	// Fetch center
+	CGFloat midX = CGRectGetMidX(R);
+	CGFloat midY = CGRectGetMidY(R);
+	// Fetch coordinates
+	CGFloat minX = CGRectGetMinX(R);
+	CGFloat minY = CGRectGetMinY(R);
+	CGFloat maxX = CGRectGetMaxX(R);
+	CGFloat maxY = CGRectGetMaxY(R);
+
+	// Adjust for diagonal size
+	size *= 1.414213562373095;
+
+	// Prepare triangle strip
+	GLfloat vertexData[] = {
+		midX, maxY,
+		midX, maxY-size,
+		minX, midY,
+		minX+size, midY,
+		midX, minY,
+		midX, minY+size,
+		maxX, midY,
+		maxX-size, midY,
+		midX, maxY,
+		midX, maxY-size
+	};
+
+	// Tranfer to openGL
+	mCopyVertexArray(GL_TRIANGLE_STRIP, vertexData);
 }
 
-void WDGLRenderBezierSegment(WDBezierSegment S)
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+/*
+	We like a circle to be symmetric, so we compute the number of segments 
+	based on flatness constraint for a single quadrant:
+	1. Compute circumference = 2.0*M_PI*radius
+	2. Quadrant size = circumference / 4.0
+	3. Quadrant segments = Quadrant size / flatness
+	4. Total segments = 4 * Quadrant segments
+*/
+
+static inline GLsizei CircleSegmentsForRadius(float radius, float flatness)
 {
-	// Statics are available in block
-    static NSUInteger size = 128;
-    static GLfloat *vertices = NULL;
+	// Compute circumference
+	float c = 2.0*M_PI*radius;
+	// Compute number of segments
+	return 4.0 * round((c / 4.0) / flatness);
+}
 
-	// Locals need __block
-	__block NSUInteger index = 0;
-	//index = 0; // If index is static, reset
+////////////////////////////////////////////////////////////////////////////////
 
-    if (!vertices)
-	{ vertices = malloc(size * sizeof(GLfloat)); }
+static inline void CircleSetSegments
+(GLfloat *vertexData, CGPoint center, float radius, long n)
+{
+	// Compute step transform (use max precision)
+	double da = 2.0 * M_PI / n;
+	double dx = cos(da);
+	double dy = sin(da);
+	double x, nx = radius;
+	double y, ny = 0;
+	// Loop for all segments
+	for (; n!=0; n--)
+	{
+		// Set startpoint
+		*vertexData++ = center.x + (x = nx);
+		*vertexData++ = center.y + (y = ny);
+		// Compute next coordinates
+		nx = x*dx - y*dy;
+		ny = x*dy + y*dx;
+	}
+}
 
-	vertices[index++] = S.a_.x;
-	vertices[index++] = S.a_.y;
+////////////////////////////////////////////////////////////////////////////////
+/*
+	CircleSetSegmentsForSizedStroke
+	-------------------------------
+	Compute coordinates for trianglestrip inside circle edge
+*/
 
-	// Loop flat segments recursively
-	WDBezierSegmentFlattenWithBlock(S,
-		^BOOL(WDBezierSegment flatSegment)
+static inline void CircleSetSegmentsForSizedStroke
+(GLfloat *vertexData, CGPoint center, float radius, float size, long n)
+{
+	// Compute step transform (use max precision)
+	double da = 2.0 * M_PI / n;
+	double dx = cos(da);
+	double dy = sin(da);
+	double x, nx = radius;
+	double y, ny = 0;
+	double r = (radius-size)/radius;
+
+	GLfloat *dstPtr = vertexData;
+	// Loop for all segments
+	for (; n!=0; n--)
+	{
+		// Set top point
+		*dstPtr++ = center.x + (x = nx);
+		*dstPtr++ = center.y + (y = ny);
+		// Set bottom point
+		*dstPtr++ = center.x + r * x;
+		*dstPtr++ = center.y + r * y;
+
+		// Compute next coordinates
+		nx = x*dx - y*dy;
+		ny = x*dy + y*dx;
+	}
+
+	// Repeat start
+	*dstPtr++ = vertexData[0];
+	*dstPtr++ = vertexData[1];
+	*dstPtr++ = vertexData[2];
+	*dstPtr++ = vertexData[3];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline CGPoint CircleGetCenter(CGRect R)
+{ return (CGPoint){CGRectGetMidX(R), CGRectGetMidY(R)}; }
+
+static inline CGFloat CircleGetRadius(CGRect R)
+{ return 0.5 * MIN(R.size.width, R.size.height); }
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	_WDGLFillCircle
+	---------------
+	Fill circle by triangle fan using circle edge as boundary
+*/
+
+static inline void _WDGLFillCircle(CGRect R)
+{
+	CGPoint center = CircleGetCenter(R);
+	CGFloat radius = CircleGetRadius(R);
+
+	// Compute number of segments
+	GLsizei n = CircleSegmentsForRadius(radius, 3.0);
+
+	// (center + segments startcoordinates + closing coordinate of last segment)
+	GLsizei totalPoints = 1+n+1;
+
+	// Prepare triangle fan
+	GLfloat *vertexData = malloc(totalPoints*2*sizeof(GLfloat));
+
+	// Set center
+	vertexData[0] = center.x;
+	vertexData[1] = center.y;
+
+	// Set segment startpoints
+	CircleSetSegments(&vertexData[2], center, radius, n);
+
+	// Final segment endpoint = first segment startpoint
+	vertexData[2*(1+n)+0] = vertexData[2];
+	vertexData[2*(1+n)+1] = vertexData[3];
+
+	// Transfer trianglefan to openGL
+	CopyVertexData(GL_TRIANGLE_FAN, vertexData, totalPoints);
+
+	// Release memory
+    free(vertexData);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	_WDGLStrokeCircleWithSize
+	-------------------------
+	Stroke circle by drawing sized border inside circle edge
+*/
+
+static inline void _WDGLStrokeCircleWithSize(CGRect R, CGFloat size)
+{
+	CGPoint center = CircleGetCenter(R);
+	CGFloat radius = CircleGetRadius(R);
+
+	// Compute number of segments
+	GLsizei n = CircleSegmentsForRadius(radius, 3.0);
+
+	// 2 starting points for each segment + 2 closing points
+	GLsizei totalPoints = 2*(n+1);
+
+	// allocate memory
+	GLfloat *vertexData = malloc(totalPoints*2*sizeof(GLfloat));
+
+	// Prepare triangle strip
+	CircleSetSegmentsForSizedStroke(vertexData, center, radius, size, n);
+
+	// Transfer to openGL
+	CopyVertexData(GL_TRIANGLE_STRIP, vertexData, totalPoints);
+
+	// Release memory
+	free(vertexData);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLPrepareRect
+	---------------
+	Adjust cornerpoints to enclosing boundaries,
+
+	This is generally the desired behavior, specifically:
+	selection rectangles drag properly, and pagebounds show
+	inclusive pixels.
+*/
+
+static inline CGRect WDGLPrepareRect(CGRect R)
+{
+	CGFloat x = R.origin.x;
+	CGFloat y = R.origin.y;
+	CGFloat w = R.size.width;
+	CGFloat h = R.size.height;
+//*
+	w += x;
+	h += y;
+	x = floor(x);
+	y = floor(y);
+	w = ceil(w);
+	h = ceil(h);
+	w -= x;
+	h -= y;
+//*/
+	if (w < 1.0) w = 1.0;
+	if (h < 1.0) h = 1.0;
+
+	return (CGRect){ x, y, w, h };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline void WDGLFillRect(CGRect R)
+{ _WDGLFillRect(WDGLPrepareRect(R)); }
+
+inline void WDGLStrokeRect(CGRect R)
+{ _WDGLStrokeRectWithSize(WDGLPrepareRect(R), 1.0); }
+
+inline void WDGLStrokeRectWithSize(CGRect R, CGFloat size)
+{ _WDGLStrokeRectWithSize(WDGLPrepareRect(R), size); }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark OpenGL Markers
+////////////////////////////////////////////////////////////////////////////////
+/*
+	Markers are shapes meant to mark positions of points.
+	
+	To draw a marker we use a center point and a radius.
+	The center point is moved to the nearest pixelcenter, 
+	the radius is adjusted to pixelbounds.
+	
+	A radius is used because markers should preferably have odd pixelsize, 
+	this allows them to be placed symmetrically on the grid.
+	
+	A default radius and strokesize are available. They can be set to 
+	accommodate different scalefactors of the openGL backing layer.
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+#define kDefaultMarkerRadius 	5
+#define kDefaultMarkerStroke 	1
+
+static long gMarkerRadius = kDefaultMarkerRadius;
+static long gMarkerStroke = kDefaultMarkerStroke;
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLSetMarkerDefaultsForScale(CGFloat scale)
+{
+	gMarkerRadius = ceil(kDefaultMarkerRadius * scale);
+	gMarkerStroke = ceil(kDefaultMarkerStroke * scale);
+
+	glPointSize(gMarkerStroke);
+	glLineWidth(gMarkerStroke);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+long WDGLMarkerGetDefaultRadius(void)
+{ return gMarkerRadius; }
+
+void WDGLMarkerSetDefaultRadius(long pixels)
+{ gMarkerRadius = pixels > 0 ? pixels : kDefaultMarkerRadius; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+long WDGLMarkerGetDefaultStroke(void)
+{ return gMarkerStroke; }
+
+void WDGLMarkerSetDefaultStroke(long pixels)
+{ gMarkerStroke = pixels > 0 ? pixels : kDefaultMarkerStroke; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+/*
+	To accommodate even and odd strokesizes, 
+	centerpoint should actually be adjusted by:
+	1.0 - 0.5*(gMarkerStroke&0x01);
+	
+	This works fine for rectangles, but other markers would need
+	different drawing to fit even bounds symmetrically.
+*/
+
+static inline CGRect WDGLMarkerBounds(CGPoint P)
+{
+	CGFloat midX = floor(P.x) + 0.5;
+	CGFloat midY = floor(P.y) + 0.5;
+	CGFloat r = gMarkerRadius + 0.5;
+	return (CGRect){ midX-r, midY-r, r+r, r+r };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLFillSquareMarker(CGPoint P)
+{ _WDGLFillRect(WDGLMarkerBounds(P)); }
+
+void WDGLStrokeSquareMarker(CGPoint P)
+{ _WDGLStrokeRectWithSize(WDGLMarkerBounds(P), gMarkerStroke); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLFillDiamondMarker(CGPoint P)
+{ _WDGLFillDiamond(WDGLMarkerBounds(P)); }
+
+void WDGLStrokeDiamondMarker(CGPoint P)
+{ _WDGLStrokeDiamondWithSize(WDGLMarkerBounds(P), gMarkerStroke); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline void WDGLFillCircleMarker(CGPoint P)
+{ _WDGLFillCircle(WDGLMarkerBounds(P)); }
+//{ _WDGLStrokeCircleWithSize(WDGLMarkerBounds(P), gMarkerStroke); }
+
+inline void WDGLStrokeCircleMarker(CGPoint P)
+{ _WDGLStrokeCircleWithSize(WDGLMarkerBounds(P), gMarkerStroke); }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark OpenGL Path rendering with WDGLVertexBuffer
+////////////////////////////////////////////////////////////////////////////////
+
+#include "WDGLVertexBuffer.h"
+
+static WDGLVertexBuffer gVertexBuffer = WDGLVertexBufferNULL;
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLVertexBufferGetLastPoint
+	----------------------------
+	For our purposes we need a last-point strategy similar to Postscript
+	
+	The following two routines belong together:
+	GetLastPoint returns the last point.
+	DrawPath transfers the buffer to openGL and 
+	stores the last point for potential re-use.
+*/
+
+static inline
+CGPoint WDGLVertexBufferGetLastPoint(void)
+{
+	WDGLVertexBuffer *vertexBuffer = &gVertexBuffer;
+
+	if (vertexBuffer->data == NULL)
+	{ return CGPointZero; }
+
+	GLuint index = vertexBuffer->count;
+	if (index != 0) index -= 2;
+
+	return (CGPoint){
+	vertexBuffer->data[index+0],
+	vertexBuffer->data[index+1] };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLVertexBufferDrawPath(GLenum type)
+{
+	WDGLVertexBuffer *vertexBuffer = &gVertexBuffer;
+
+	GLuint count = vertexBuffer->count;
+	if (count != 0)
+	{
+		// Save last point
+		GLfloat x = vertexBuffer->data[count-2];
+		GLfloat y = vertexBuffer->data[count-1];
+
+		// Transfer to openGL
+		WDGLVertexBufferDraw(vertexBuffer, type);
+
+		// Store last point
+		vertexBuffer->data[0] = x;
+		vertexBuffer->data[1] = y;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLVertexBufferAddPoint
+	------------------------
+	Add CGPoint coordinates to vertexbuffer
+	
+	Note: not part of WDGLVertexBuffer file because:
+	a) would make it mac OS specific,
+	b) some locally specific processing
+*/
+
+void WDGLVertexBufferAddPoint(CGPoint P)
+{ WDGLVertexBufferAdd(&gVertexBuffer, P.x, P.y); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline void WDGLVertexBufferAddLine(CGPoint P0, CGPoint P1)
+{
+	// Check if startpoint is required
+	if (gVertexBuffer.count == 0)
+	{ WDGLVertexBufferAddPoint(P0); }
+	WDGLVertexBufferAddPoint(P1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLVertexBufferAddSegment
+	--------------------------
+	Add WDBezierSegment to vertexbuffer as flattened linestrip
+	
+	Uses _BezierSegmentIsLine to determine whether segment can be 
+	approximated by a straight line between anchorpoint a_ and b_,
+	otherwise recursively splits segment in left and right segments.
+	
+	Segment startpoint is added if and only if vertexbuffer is empty.
+	(This check has little consequence for processing time, but makes 
+	cleaner code at other locations)
+*/
+
+void WDGLVertexBufferAddSegment(WDBezierSegment S)
+{
+	// Check if startpoint is required
+	if (gVertexBuffer.count == 0)
+	{ WDGLVertexBufferAddPoint(S.a_); }
+
+	WDBezierSegmentSplitWithBlock(S,
+		^BOOL(WDBezierSegment subSegment)
 		{
-			// Test size
-			if (index == size)
-			{ vertices = realloc(vertices, (size += 128)*sizeof(GLfloat)); }
-
-			// Add vector
-			vertices[index++] = flatSegment.b_.x;
-			vertices[index++] = flatSegment.b_.y;
-
-			// Keep looping
+			if (WDBezierSegmentIsFlat(subSegment, kDefaultFlatness))
+			{
+				WDGLVertexBufferAddPoint(subSegment.b_);
+				return NO;
+			}
 			return YES;
 		});
-
-	// Transfer vertices to openGL
-    WDGLDrawLineStrip(vertices, index);
 }
 
-void renderPathElement(void *info, const CGPathElement *element)
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+static inline CGPoint _CGPointInterpolate(CGPoint p1, CGPoint p2, CGFloat r)
+{ return (CGPoint){ p1.x+r*(p2.x-p1.x), p1.y+r*(p2.y-p1.y) }; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void WDGLRenderCGPathElement
+	(void *info, const CGPathElement *element)
 {
-    glPathRenderData    *renderData = (glPathRenderData *) info;
-    WDBezierSegment     segment;
-    CGPoint             inPoint, outPoint;
-    static CGPoint      prevPt, moveTo;
-    
-    switch (element->type) {
-        case kCGPathElementMoveToPoint:
-            if (renderData->index) {
-                // starting a new subpath, so draw the current one
-                WDGLDrawLineStrip(renderData->vertices, renderData->index);
-                renderData->index = 0;
-            }
-            
-            prevPt = moveTo = element->points[0];
-            break;
-        case kCGPathElementAddLineToPoint:
-            if (renderData->index == 0) {
-                // index is 0, so we need to add the original moveTo
-                (renderData->vertices)[0] = prevPt.x;
-                (renderData->vertices)[1] = prevPt.y;
-                renderData->index = 2;
-            }
-            
-            // make sure we're not over-running the buffer
-            if (renderData->size < renderData->index + 2) {
-                renderData->size *= 2;
-                renderData->vertices = realloc(renderData->vertices, sizeof(GLfloat) * renderData->size);
-            }
-            
-            prevPt = element->points[0];
-            (renderData->vertices)[renderData->index] = prevPt.x;
-            (renderData->vertices)[renderData->index + 1] = prevPt.y;
-            renderData->index += 2;
-            break;
-        case kCGPathElementAddQuadCurveToPoint:
-            // convert quadratic to cubic: http://fontforge.sourceforge.net/bezier.html
-            outPoint.x = prevPt.x + (element->points[0].x - prevPt.x) * (2.0f / 3);
-            outPoint.y = prevPt.y + (element->points[0].y - prevPt.y) * (2.0f / 3);
-            
-            inPoint.x = element->points[1].x + (element->points[0].x - element->points[1].x) * (2.0f / 3);
-            inPoint.y = element->points[1].y + (element->points[0].y - element->points[1].y) * (2.0f / 3);
-            
-            segment.a_ = prevPt;
-            segment.out_ = outPoint;
-            segment.in_ = inPoint;
-            segment.b_ = element->points[1];
-            
-            WDGLFlattenBezierSegment(segment, &(renderData->vertices), &(renderData->size), &(renderData->index));
-            prevPt = element->points[1];
-            break;
-        case kCGPathElementAddCurveToPoint:
-            segment.a_ = prevPt;
-            segment.out_ = element->points[0];
-            segment.in_ = element->points[1];
-            segment.b_ = element->points[2];
-            
-            WDGLFlattenBezierSegment(segment, &(renderData->vertices), &(renderData->size), &(renderData->index));
-            prevPt = element->points[2];
-            break;
-        case kCGPathElementCloseSubpath:
-            // make sure we're not over-running the buffer
-            if (renderData->size < renderData->index + 2) {
-                renderData->size *= 2;
-                renderData->vertices = realloc(renderData->vertices, sizeof(GLfloat) * renderData->size);
-            }
-            
-            (renderData->vertices)[renderData->index] = moveTo.x;
-            (renderData->vertices)[renderData->index + 1] = moveTo.y;
-            renderData->index += 2;                          
-            break;
-    }
+	switch (element->type)
+	{
+		case kCGPathElementMoveToPoint:
+			// If there is something to draw, draw as open path
+			WDGLVertexBufferDrawPath(GL_LINE_STRIP);
+			WDGLVertexBufferAddPoint(element->points[0]);
+			break;
+
+		case kCGPathElementAddLineToPoint:
+			WDGLVertexBufferAddLine(
+				WDGLVertexBufferGetLastPoint(),
+				element->points[0]);
+			break;
+
+
+		case kCGPathElementAddQuadCurveToPoint:
+			WDGLVertexBufferAddSegment(
+				WDBezierSegmentMakeWithQuadPoints(
+					WDGLVertexBufferGetLastPoint(),
+					element->points[0],
+					element->points[1]));
+			break;
+
+		case kCGPathElementAddCurveToPoint:
+			WDGLVertexBufferAddSegment(
+				(WDBezierSegment){
+					WDGLVertexBufferGetLastPoint(),
+					element->points[0],
+					element->points[1],
+					element->points[2] });
+			break;
+
+
+		case kCGPathElementCloseSubpath:
+			WDGLVertexBufferAddPoint(
+				WDGLVertexBufferGetLastPoint());
+			break;
+	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void WDGLRenderCGPathRef(CGPathRef pathRef)
 {
-    static glPathRenderData renderData = { NULL, 128, 0 };
-    
-    if (renderData.vertices == NULL) {
-        renderData.vertices = calloc(sizeof(GLfloat), renderData.size);
-    }
-    
-    renderData.index = 0;
-    CGPathApply(pathRef, &renderData, &renderPathElement);
+	// Process path elements
+	CGPathApply(pathRef, nil, &WDGLRenderCGPathElement);
 
-    WDGLDrawLineStrip(renderData.vertices, renderData.index);
+	// Draw any data as open path
+	WDGLVertexBufferDrawPath(GL_LINE_STRIP);
 }
 
-inline void WDGLFillDiamond(CGPoint center, float dimension)
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark OpenGL Line rendering
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLLineFromPointToPoint
+	------------------------
+	Draw a single, individual line (not part of a segment)
+*/
+
+inline void WDGLLineFromPointToPoint(CGPoint a, CGPoint b)
 {
-    const GLfloat vertices[] = {
-        center.x, center.y + dimension,
-        center.x + dimension, center.y,
-        center.x, center.y - dimension,
-        center.x, center.y + dimension,
-        center.x - dimension, center.y
-    };
-    
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, vertices);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 5);
-#else
-    glBegin(GL_TRIANGLE_STRIP);
-    for (int i = 0; i < 5; i++) {
-        glVertex2f(vertices[i*2], vertices[i*2+1]);
-    }
-    glEnd();
-#endif
+	//glLineWidth(1.0);
+
+    GLPixelVector vertexData[] = {
+		MakePixelVector(a.x, a.y),
+		MakePixelVector(b.x, b.y) };
+
+	CopyVertexData(GL_LINES, &vertexData[0], 2);
 }
 
-void WDGLDrawLineStrip(GLfloat *vertices, NSUInteger count)
-{
-#if TARGET_OS_IPHONE
-    glVertexPointer(2, GL_FLOAT, 0, vertices);
-    glDrawArrays(GL_LINE_STRIP, 0, (int) count / 2);
-#else 
-    glBegin(GL_LINE_STRIP);
-    for (int i = 0; i < count; i+=2) {
-        glVertex2d(vertices[i], vertices[i+1]);
-    }
-    glEnd();
-#endif
-}
+////////////////////////////////////////////////////////////////////////////////
+
+

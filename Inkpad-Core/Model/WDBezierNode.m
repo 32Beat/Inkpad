@@ -309,9 +309,7 @@ static inline BOOL CGPointIsValid(CGPoint P)
     anchor = CGPointApplyAffineTransform(anchorPoint_, transform);
     inPoint = CGPointApplyAffineTransform(inPoint_, transform);
     outPoint = CGPointApplyAffineTransform(outPoint_, transform);
-    
-    CGRect anchorRect = CGRectMake(anchor.x - kAnchorRadius, anchor.y - kAnchorRadius, kAnchorRadius * 2, kAnchorRadius * 2);
-    
+        
     // draw the control handles
     if (mode == kWDBezierNodeRenderSelected) {
         [color openGLSet];
@@ -328,18 +326,17 @@ static inline BOOL CGPointIsValid(CGPoint P)
     // draw the anchor
     if (mode == kWDBezierNodeRenderClosed) {
         [color openGLSet];
-        anchorRect = CGRectInset(anchorRect, 1, 1);
-        WDGLFillRect(anchorRect);
+        WDGLFillSquareMarker(anchor);
     } else if (mode == kWDBezierNodeRenderSelected) {
         [color openGLSet];
-        WDGLFillRect(anchorRect);
+        WDGLFillSquareMarker(anchor);
         glColor4f(1, 1, 1, 1);
-        WDGLStrokeRect(anchorRect);
+        WDGLStrokeSquareMarker(anchor);
     } else {
         glColor4f(1, 1, 1, 1);
-        WDGLFillRect(anchorRect);
+        WDGLFillSquareMarker(anchor);
         [color openGLSet];
-        WDGLStrokeRect(anchorRect);
+        WDGLStrokeSquareMarker(anchor);
     }
     
     // draw the control handle knobs
@@ -347,13 +344,11 @@ static inline BOOL CGPointIsValid(CGPoint P)
         [color openGLSet];
         
         if ([self hasInPoint]) {
-            inPoint = WDRoundPoint(inPoint);
-            WDGLFillCircle(inPoint, kControlPointRadius, 10);
+            WDGLFillCircleMarker(inPoint);
         }
         
         if ([self hasOutPoint]) {
-            outPoint = WDRoundPoint(outPoint);
-            WDGLFillCircle(outPoint, kControlPointRadius, 10);
+            WDGLFillCircleMarker(outPoint);
         }
     }
 }

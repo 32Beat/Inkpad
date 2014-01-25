@@ -23,289 +23,439 @@
 #import "WDUtilities.h"
 #import "UIColor+Additions.h"
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDSelectionView
+////////////////////////////////////////////////////////////////////////////////
 
-@synthesize canvas = canvas_;
-@synthesize context;
+@synthesize canvas = mCanvas;
+@synthesize context = mContext;
+
+////////////////////////////////////////////////////////////////////////////////
 
 + (Class) layerClass
-{
-    return [CAEAGLLayer class];
+{ return [CAEAGLLayer class]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id)initWithFrame:(CGRect)frame
+{    
+	self = [super initWithFrame:frame];
+	if (!self) return nil;
+
+	/*
+		Document draws downward:
+		(0, 0) = top left corner
+		positive y values move down
+
+		OpenGL draws upward:
+		(0, 0) = bottom left
+		positive y values move up
+
+		For rounding (floor, round, ceil) to be synchronized 
+		between our pixel coordinates and the OpenGL engine,
+		we can NOT apply a flip transform to coordinates prior
+		to sending them to the OpenGL driver. 
+		
+		We will therefore draw "upside down" and let core animation 
+		apply a flip transform to the backingstore.
+	*/
+	[self setTransform:(CGAffineTransform){ 1, 0, 0, -1, 0, 0}];
+
+	// Prepare the GL layer
+	CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
+	eaglLayer.opaque = NO;
+	eaglLayer.drawableProperties =
+	@{kEAGLDrawablePropertyRetainedBacking: @NO,
+	kEAGLDrawablePropertyColorFormat:kEAGLColorFormatRGBA8};
+
+
+	// Prepare OpenGL context, actual backing will be allocated in -reshapeFramebuffer
+	mContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
+	if (!mContext || ![EAGLContext setCurrentContext:mContext]) {
+		return nil;
+	}
+	// Create OpenGL FrameBuffer & RenderBuffer references
+	glGenFramebuffersOES(1, &mFrameBufferID);
+	glGenRenderbuffersOES(1, &mRenderBufferID);
+	// Set as targets in current context
+	glBindFramebufferOES(GL_FRAMEBUFFER_OES, mFrameBufferID);
+	glBindRenderbufferOES(GL_RENDERBUFFER_OES, mRenderBufferID);
+	// Attach renderbuffer to framebuffer
+	glFramebufferRenderbufferOES
+	(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, mRenderBufferID);
+
+	glClearColor(0, 0, 0, 0);
+	glEnable(GL_BLEND);
+	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+///////////////////////////////
+/*
+	We just want fast, 
+	aliased outlines.
+*/
+///////////////////////////////
+/*
+	glEnable(GL_POINT_SMOOTH);
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_MULTISAMPLE);
+	glEnable(GL_DITHER);
+/*/
+	glDisable(GL_POINT_SMOOTH);
+	glDisable(GL_LINE_SMOOTH);
+	glDisable(GL_MULTISAMPLE);
+	glDisable(GL_DITHER);
+//*/
+///////////////////////////////
+
+	self.userInteractionEnabled = NO;
+	self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	self.contentMode = UIViewContentModeCenter;
+//	self.contentMode = UIViewContentModeRedraw;
+
+	// Adjust for screen
+	[self setContentScaleFactor:[UIScreen mainScreen].scale];
+//	[self setContentScaleFactor:1.0/16.0];
+//	[self setContentScaleFactor:1];
+
+	// Ensure zooming produces actual pixels
+	[[self layer] setMagnificationFilter:kCAFilterNearest];
+/*
+	To speed up rendering, we may set the layer scalefactor to 
+	a lower value than the screen scalefactor.
+
+	If the layer scalefactor is 1.0
+	and the screen scalefactor is 2.0,
+	the layer will be enlarged by CoreAnimation. 
+	
+	It will use smooth interpolation by default which is not 
+	the desired behavior. kCAFilterNearest tells it to use nearest neighbor.
+*/
+
+	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setContentScaleFactor:(CGFloat)r
+{
+	[super setContentScaleFactor:r];
+
+	// Adjust default marker radius
+	WDGLSetMarkerDefaultsForScale(r);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void)reshapeFramebuffer
+{
+	// Allocate color buffer backing based on the current layer size
+	[mContext renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer*)self.layer];
+
+	glGetRenderbufferParameterivOES
+	(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &mBackingWidth);
+	glGetRenderbufferParameterivOES
+	(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &mBackingHeight);
+
+	// Setup corresponding transforms
+	[EAGLContext setCurrentContext:mContext];
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	// Match model to view, since we provide pixelcoordinates
+	// Note: can not flip Y here because of rounding synchronization
+	glOrthof(0, mBackingWidth, 0, mBackingHeight, -1, 1);
+	glViewport(0, 0, mBackingWidth, mBackingHeight);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) convertRectFromCanvas:(CGRect)rect
+{
+	rect.origin = WDSubtractPoints(rect.origin, [mCanvas visibleRect].origin);
+	rect = CGRectApplyAffineTransform(rect, self.canvas.canvasTransform);
+
+	return rect;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (UIView *) hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
     return self.superview;
 }
 
-- (id)initWithFrame:(CGRect)frame
-{    
-    self = [super initWithFrame:frame];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    // Get the layer
-    CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
-    eaglLayer.opaque = NO;
-    eaglLayer.drawableProperties = @{kEAGLDrawablePropertyRetainedBacking: @NO,
-                                    kEAGLDrawablePropertyColorFormat: kEAGLColorFormatRGBA8};
-    
-    context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];        
-    if (!context || ![EAGLContext setCurrentContext:context]) {
-        return nil;
-    }
-    
-    // Create system framebuffer object. The backing will be allocated in -reshapeFramebuffer
-    glGenFramebuffersOES(1, &defaultFramebuffer);
-    glGenRenderbuffersOES(1, &colorRenderbuffer);
-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, defaultFramebuffer);
-    glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
-    
-    glClearColor(0, 0, 0, 0);
-    glEnable(GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
-    self.userInteractionEnabled = NO;
-    self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.contentMode = UIViewContentModeCenter;
-    self.contentScaleFactor = [UIScreen mainScreen].scale;
-    
-    return self;
-}
-
-- (CGRect) convertRectFromCanvas:(CGRect)rect
+- (void) renderMarqueWithTransform:(CGAffineTransform)T
 {
-    rect.origin = WDSubtractPoints(rect.origin, [canvas_ visibleRect].origin);
-    rect = CGRectApplyAffineTransform(rect, self.canvas.canvasTransform);
-    rect = WDFlipRectWithinRect(rect, self.frame);
-    
-    return rect;
+	CGRect R = [self.canvas.marquee CGRectValue];
+
+	R = CGRectApplyAffineTransform(R, T);
+
+	glColor4f(0, 0, 0, 0.333f);
+	WDGLFillRect(R);
+
+	glColor4f(0, 0, 0, 0.75f);
+	WDGLStrokeRect(R);
 }
 
-- (void) renderMarquee
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) pageRect
+{ return (CGRect){ {0,0}, mCanvas.drawing.dimensions }; }
+
+- (CGRect) pageRectWithTransform:(CGAffineTransform)T
 {
-    CGRect marquee = [self.canvas.marquee CGRectValue];
-    
-    marquee = [canvas_ convertRectToView:marquee];
-    marquee = CGRectIntegral(marquee);
-    marquee = WDFlipRectWithinRect(marquee, self.frame);
-    
-    glColor4f(0, 0, 0, 0.333f);
-    WDGLFillRect(marquee);
-    
-    glColor4f(0, 0, 0, 0.75f);
-    WDGLStrokeRect(marquee);
+	CGRect R = [self pageRect];
+	return CGRectApplyAffineTransform(R, T);
 }
 
-- (void) renderDocumentBorder
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) effectiveGridSpacing:(CGAffineTransform)T
 {
-    CGRect docBounds = CGRectMake(0, 0, canvas_.drawing.dimensions.width, canvas_.drawing.dimensions.height);
-    
-    docBounds = [canvas_ convertRectToView:docBounds];
-    docBounds = WDFlipRectWithinRect(docBounds, self.frame);
-    
-    float gray = [canvas_ effectiveBackgroundGray];
-    glClearColor(gray, gray, gray, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0, 0, 0, 0);
-    
-    glColor4f(1, 1, 1, 1);
-    WDGLFillRect(docBounds);
-    
-    glColor4f(0, 0, 0, 1);
-    WDGLStrokeRect(docBounds);
+	float srcSize = self.drawing.gridSpacing;
+	float dstSizeX = srcSize * T.a;
+	float dstSizeY = srcSize * T.d;
+
+	if (dstSizeX < 10.0)
+	{ dstSizeX *= ceil(10.0/dstSizeX); }
+	if (dstSizeY < 10.0)
+	{ dstSizeY *= ceil(10.0/dstSizeY); }
+
+	return (CGSize){ dstSizeX, dstSizeY };
 }
 
-- (float) effectiveGridSpacing
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderGridWithTransform:(CGAffineTransform)T
 {
-    float   gridSpacing = self.drawing.gridSpacing;
-    CGRect  testRect = CGRectMake(0, 0, gridSpacing, gridSpacing);
-    float   adjustmentFactor = 1;
-    
-    testRect = [canvas_ convertRectToView:testRect];
-    
-    float minSpacing = 10.0f / [UIScreen mainScreen].scale;
-    
-    if (CGRectGetWidth(testRect) < minSpacing) {
-        adjustmentFactor = minSpacing / CGRectGetWidth(testRect);
-    }
-    
-    return gridSpacing * adjustmentFactor;
+	CGSize gridSpacing = [self effectiveGridSpacing:T];
+	CGRect pageR = [self pageRectWithTransform:T];
+	CGRect viewR = [self bounds];
+
+	// Only draw lines in the portion of the document that's actually visible
+	CGRect visibleRect = CGRectIntersection(pageR, viewR);
+	if (CGRectIsEmpty(visibleRect)) {
+		// if there's no intersection, bail early
+		return;
+	}
+
+
+	double startX = visibleRect.origin.x - pageR.origin.x;
+	double startY = visibleRect.origin.y - pageR.origin.y;
+
+	startX = floor(startX/gridSpacing.width);
+	startY = floor(startY/gridSpacing.height);
+
+	startX = pageR.origin.x + startX * gridSpacing.width;
+	startY = pageR.origin.y + startY * gridSpacing.height;
+
+	CGPoint a, b;
+
+	GLfloat k = 0.8;
+	glColor4f(k, k, k, 1.0);
+
+	float minX = CGRectGetMinX(visibleRect);
+	float minY = CGRectGetMinY(visibleRect);
+	float maxX = CGRectGetMaxX(visibleRect);
+	float maxY = CGRectGetMaxY(visibleRect);
+
+	minX = floor(minX);
+	minY = floor(minY);
+	maxX = ceil(maxX);
+	maxY = ceil(maxY);
+
+	float x = startX;
+	while (x < maxX)
+	{
+		a.x = floor(x) + 0.5;
+		a.y = minY;
+		b.x = floor(x) + 0.5;
+		b.y = maxY;
+
+		WDGLLineFromPointToPoint(a, b);
+		x += gridSpacing.width;
+	}
+
+	float y = startY;
+	while (y < maxY)
+	{
+		a.x = minX;
+		a.y = floor(y) + 0.5;
+		b.x = maxX;
+		b.y = floor(y) + 0.5;
+
+		WDGLLineFromPointToPoint(a, b);
+		y += gridSpacing.height;
+	}
 }
 
-- (void) renderGrid
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderPageWithTransform:(CGAffineTransform)T
 {
-    WDDrawing   *drawing = self.drawing;
-    CGRect      docBounds = CGRectMake(0, 0, drawing.dimensions.width, drawing.dimensions.height);
-    CGRect      visibleRect = canvas_.visibleRect;
-    float       gridSpacing = [self effectiveGridSpacing];
-    CGPoint     a, b;
-    
-    // just draw lines in the portion of the document that's actually visible
-    visibleRect = CGRectIntersection(visibleRect, docBounds);
-    if (CGRectEqualToRect(visibleRect, CGRectNull)) {
-        // if there's no intersection, bail early
-        return;
-    }
-    
-    float startY = floor(CGRectGetMinY(visibleRect) / gridSpacing);
-    float startX = floor(CGRectGetMinX(visibleRect) / gridSpacing);
-    
-    startX *= gridSpacing;
-    startY *= gridSpacing;
-    
-    glColor4f(0, 0, 0, 0.333f);
-    
-    for (float y = startY; y <= CGRectGetMaxY(visibleRect); y += gridSpacing) {
-        a = CGPointMake(0, y);
-        b = CGPointMake(CGRectGetWidth(docBounds), y);
-        
-        a = [canvas_ convertPointFromDocumentSpace:a];
-        b = [canvas_ convertPointFromDocumentSpace:b];
+	CGRect pageR = [self pageRectWithTransform:T];
 
-        a = WDRoundPoint(a);
-        b = WDRoundPoint(b);
-        
-        a.y = CGRectGetHeight(self.frame) - a.y;
-        b.y = CGRectGetHeight(self.frame) - b.y;
-        
-        WDGLLineFromPointToPoint(a, b);
-    }
-    
-    for (float x = startX; x <= CGRectGetMaxX(visibleRect); x += gridSpacing) {
-        a = CGPointMake(x, 0);
-        b = CGPointMake(x, CGRectGetHeight(docBounds));
-                
-        a = [canvas_ convertPointFromDocumentSpace:a];
-        b = [canvas_ convertPointFromDocumentSpace:b];
-        
-        a = WDRoundPoint(a);
-        b = WDRoundPoint(b);
-        
-        a.y = CGRectGetHeight(self.frame) - a.y;
-        b.y = CGRectGetHeight(self.frame) - b.y;
+	pageR = CGRectInset(pageR, -1, -1);
 
-        WDGLLineFromPointToPoint(a, b);
-    }
+	float gray = [mCanvas effectiveBackgroundGray];
+	glClearColor(gray, gray, gray, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+//	glClearColor(0, 0, 0, 1);
+
+	glColor4f(1, 1, 1, 1);
+	WDGLFillRect(pageR);
+
+	if (self.canvas.drawing.showGrid)
+	{ [self renderGridWithTransform:T]; }
+
+	glColor4f(0, 0, 0, 1);
+	WDGLStrokeRect(pageR);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Replace the implementation of this method to do your own custom drawing
 - (void) drawView
 {
-    [EAGLContext setCurrentContext:context];
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-    
-    float scale = [UIScreen mainScreen].scale;
-    glOrthof(0, backingWidth / scale, 0, backingHeight / scale, -1, 1);
-    
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    // draw the selection highlights
-    CGAffineTransform flip = CGAffineTransformMakeTranslation(0, self.bounds.size.height);
-    flip = CGAffineTransformScale(flip, 1.0, -1.0);
-    
-    CGAffineTransform effective = self.canvas.canvasTransform;
-    effective = CGAffineTransformConcat(effective, flip);
-    
-    if (canvas_.isZooming) {
-        [self renderDocumentBorder];
-        
-        if (self.canvas.drawing.showGrid) {
-            [self renderGrid];
-        }
-        
-        CGRect visibleRect = self.canvas.visibleRect;
-        for (WDLayer *l in self.canvas.drawing.layers) {
-            if (l.hidden) {
-                continue;
-            }
-            
-            [l.highlightColor openGLSet];
-            
-            for (WDElement *e in [l elements]) {
-                [e drawOpenGLZoomOutlineWithViewTransform:effective visibleRect:visibleRect];
-            }
-        }
-        
-        [context presentRenderbuffer:GL_RENDERBUFFER_OES];
-        return;
-    }
-    
-    // marquee?
-    if (self.canvas.marquee) {
-        [self renderMarquee];
-    }   
-    
-    WDDrawingController *controller = self.canvas.drawingController;
-    WDElement           *singleSelection = [controller singleSelection];
-    
-    if (singleSelection && !self.canvas.transforming && !self.canvas.transformingNode) {
-        if ([[WDToolManager sharedInstance].activeTool isKindOfClass:[WDSelectionTool class]]) {
-            [singleSelection drawTextPathControlsWithViewTransform:effective viewScale:self.canvas.viewScale];
-        }
-    }
-    
-    // draw all object outlines, using the selection transform if applicable
-    for (WDElement *e in controller.selectedObjects) {
-        [e drawOpenGLHighlightWithTransform:self.canvas.selectionTransform viewTransform:effective];
-    }
-    
-    // if we're not transforming, draw filled anchors on all paths
-    if (!self.canvas.transforming && !singleSelection) {        
-        for (WDElement *e in controller.selectedObjects) {
-            [e drawOpenGLAnchorsWithViewTransform:effective];
-        }
-    }
-    
-    if (controller.tempDisplayNode) {
-        [controller.tempDisplayNode drawGLWithViewTransform:effective color:controller.drawing.activeLayer.highlightColor mode:kWDBezierNodeRenderSelected];
-    }
-    
-    if ((!self.canvas.transforming || self.canvas.transformingNode) && singleSelection) {
-        [singleSelection drawOpenGLHandlesWithTransform:self.canvas.selectionTransform viewTransform:effective];
-        
-        if ([[WDToolManager sharedInstance].activeTool isKindOfClass:[WDSelectionTool class]]) {
-            [singleSelection drawGradientControlsWithViewTransform:effective];
-        }
-    }
-    
-    if (self.canvas.shapeUnderConstruction) {
-        [self.canvas.shapeUnderConstruction drawOpenGLHighlightWithTransform:CGAffineTransformIdentity viewTransform:effective];
-    }
-    
-    [context presentRenderbuffer:GL_RENDERBUFFER_OES];
+#ifdef WD_DEBUG
+	NSDate *date = [NSDate date];
+#endif
+
+	[EAGLContext setCurrentContext:mContext];
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Fetch source rect
+	CGRect srcR = [self pageRect];
+	if (CGRectIsEmpty(srcR))
+	return;
+
+	// Get canvas transform
+	CGAffineTransform T = self.canvas.canvasTransform;
+
+	// Compute result rect (in view)
+	CGRect dstR = CGRectApplyAffineTransform(srcR, T);
+
+	// Scale for layer if necessary
+	float scaleFactor = [self contentScaleFactor];
+	if (scaleFactor != 1.0)
+	{
+		dstR.origin.x *= scaleFactor;
+		dstR.origin.y *= scaleFactor;
+		dstR.size.width *= scaleFactor;
+		dstR.size.height *= scaleFactor;
+	}
+
+	// dstR now represents pixelcoordinates: compute integral
+	dstR.origin.x = round(dstR.origin.x);
+	dstR.origin.y = round(dstR.origin.y);
+	dstR.size.width = round(dstR.size.width);
+	dstR.size.height = round(dstR.size.height);
+
+	// Recompute transform based on integral pixelgrid bounds
+	CGFloat sx = dstR.size.width / srcR.size.width;
+	CGFloat sy = dstR.size.height / srcR.size.height;
+	// Offset to top left in upside-down pixels
+	CGFloat tx = CGRectGetMinX(dstR);
+	CGFloat ty = mBackingHeight - CGRectGetMaxY(dstR);
+
+	T = (CGAffineTransform){ sx, 0, 0, sy, tx, ty };
+
+//	[self renderPageWithTransform:T];
+
+
+	if (mCanvas.isZooming) {
+		[self renderPageWithTransform:T];
+		
+		if (self.canvas.drawing.showGrid) {
+			[self renderGridWithTransform:T];
+		}
+		
+		CGRect visibleRect = self.canvas.visibleRect;
+		for (WDLayer *l in self.canvas.drawing.layers) {
+			if (l.hidden) {
+				continue;
+			}
+			
+			[l.highlightColor openGLSet];
+			
+			for (WDElement *e in [l elements]) {
+				[e drawOpenGLZoomOutlineWithViewTransform:T visibleRect:visibleRect];
+			}
+		}
+		
+		[mContext presentRenderbuffer:GL_RENDERBUFFER_OES];
+		return;
+	}
+
+
+	WDDrawingController *controller = self.canvas.drawingController;
+	WDElement           *singleSelection = [controller singleSelection];
+
+	if (singleSelection && !self.canvas.transforming && !self.canvas.transformingNode) {
+		if ([[WDToolManager sharedInstance].activeTool isKindOfClass:[WDSelectionTool class]]) {
+			[singleSelection drawTextPathControlsWithViewTransform:T viewScale:self.canvas.viewScale];
+		}
+	}
+
+	// draw all object outlines, using the selection transform if applicable
+	for (WDElement *e in controller.selectedObjects) {
+		[e drawOpenGLHighlightWithTransform:self.canvas.selectionTransform viewTransform:T];
+	}
+
+	// if we're not transforming, draw filled anchors on all paths
+	if (!self.canvas.transforming && !singleSelection) {        
+		for (WDElement *e in controller.selectedObjects) {
+			[e drawOpenGLAnchorsWithViewTransform:T];
+		}
+	}
+
+	if (controller.tempDisplayNode) {
+		[controller.tempDisplayNode drawGLWithViewTransform:T color:controller.drawing.activeLayer.highlightColor mode:kWDBezierNodeRenderSelected];
+	}
+
+	if ((!self.canvas.transforming || self.canvas.transformingNode) && singleSelection) {
+		[singleSelection drawOpenGLHandlesWithTransform:self.canvas.selectionTransform viewTransform:T];
+		
+		if ([[WDToolManager sharedInstance].activeTool isKindOfClass:[WDSelectionTool class]]) {
+			[singleSelection drawGradientControlsWithViewTransform:T];
+		}
+	}
+
+	if (self.canvas.shapeUnderConstruction) {
+		[self.canvas.shapeUnderConstruction drawOpenGLHighlightWithTransform:CGAffineTransformIdentity viewTransform:T];
+	}
+
+//	[self renderPageWithTransform:T];
+
+	// marquee?
+	if (self.canvas.marquee)
+	{ [self renderMarqueWithTransform:T]; }
+
+//	WDGLTestMarkers();
+
+#ifdef WD_DEBUG
+    NSLog(@"SelectionView preptime: %f", -[date timeIntervalSinceNow]);
+#endif
+
+    [mContext presentRenderbuffer:GL_RENDERBUFFER_OES];
 }
 
-- (void)reshapeFramebuffer
-{
-	// Allocate color buffer backing based on the current layer size
-    [context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer*)self.layer];
-    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
-    
-	glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backingWidth);
-    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backingHeight);
-    
-    [EAGLContext setCurrentContext:context];
-    glViewport(0, 0, backingWidth, backingHeight);
-}
 
 - (void)layoutSubviews
 {
-    [self reshapeFramebuffer];
-    [self drawView];
+	[self reshapeFramebuffer];
+//	[self drawView];
 }
 
 - (void)dealloc
 {        
-    if ([EAGLContext currentContext] == context) {
+    if ([EAGLContext currentContext] == mContext) {
         [EAGLContext setCurrentContext:nil];
     }
 }

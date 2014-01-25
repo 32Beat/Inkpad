@@ -73,6 +73,7 @@ void WDBezierSegmentSetDefaultFlatness(CGFloat f);
 
 CGRect WDBezierSegmentGetCurveBounds(WDBezierSegment S);
 CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg);
+CGFloat WDBezierSegmentGetDiminishingLength(WDBezierSegment S);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Operations
@@ -85,19 +86,15 @@ inline CGPoint WDBezierSegmentSplitAtT(WDBezierSegment S,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef BOOL (WDBezierSegmentCallback)(WDBezierSegment S, void *procData);
-BOOL WDBezierSegmentFlattenWithProc(WDBezierSegment S, \
-					WDBezierSegmentCallback *procPtr, void *procData);
-
-BOOL WDBezierSegmentFlattenWithBlock(WDBezierSegment S, \
-					BOOL (^blockPtr)(WDBezierSegment S));
+void WDBezierSegmentSplitWithBlock(WDBezierSegment S, \
+					BOOL (^blockPtr)(WDBezierSegment));
 
 
 BOOL WDBezierSegmentIntersectsRect(WDBezierSegment seg, CGRect rect);
 BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
 
-CGRect WDBezierSegmentGetFlattenedBounds(WDBezierSegment S);
-CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S);
+CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
+//CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S);
 
 BOOL WDBezierSegmentFindPointOnSegment(WDBezierSegment seg, CGPoint testPoint, float tolerance, CGPoint *nearestPoint, float *split);
 
