@@ -582,7 +582,7 @@ CGPoint WDGLVertexBufferGetLastPoint(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WDGLVertexBufferDrawPath(GLenum type)
+void WDGLVertexBufferDrawData(GLenum type)
 {
 	WDGLVertexBuffer *vertexBuffer = &gVertexBuffer;
 
@@ -607,13 +607,9 @@ void WDGLVertexBufferDrawPath(GLenum type)
 	WDGLVertexBufferAddPoint
 	------------------------
 	Add CGPoint coordinates to vertexbuffer
-	
-	Note: not part of WDGLVertexBuffer file because:
-	a) would make it mac OS specific,
-	b) some locally specific processing
 */
 
-void WDGLVertexBufferAddPoint(CGPoint P)
+static inline void WDGLVertexBufferAddPoint(CGPoint P)
 { WDGLVertexBufferAdd(&gVertexBuffer, P.x, P.y); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,6 +619,7 @@ static inline void WDGLVertexBufferAddLine(CGPoint P0, CGPoint P1)
 	// Check if startpoint is required
 	if (gVertexBuffer.count == 0)
 	{ WDGLVertexBufferAddPoint(P0); }
+	
 	WDGLVertexBufferAddPoint(P1);
 }
 
@@ -631,14 +628,6 @@ static inline void WDGLVertexBufferAddLine(CGPoint P0, CGPoint P1)
 	WDGLVertexBufferAddSegment
 	--------------------------
 	Add WDBezierSegment to vertexbuffer as flattened linestrip
-	
-	Uses _BezierSegmentIsLine to determine whether segment can be 
-	approximated by a straight line between anchorpoint a_ and b_,
-	otherwise recursively splits segment in left and right segments.
-	
-	Segment startpoint is added if and only if vertexbuffer is empty.
-	(This check has little consequence for processing time, but makes 
-	cleaner code at other locations)
 */
 
 void WDGLVertexBufferAddSegment(WDBezierSegment S)
@@ -647,25 +636,23 @@ void WDGLVertexBufferAddSegment(WDBezierSegment S)
 	if (gVertexBuffer.count == 0)
 	{ WDGLVertexBufferAddPoint(S.a_); }
 
+	// Start recursive segmentation
 	WDBezierSegmentSplitWithBlock(S,
 		^BOOL(WDBezierSegment subSegment)
 		{
-			if (WDBezierSegmentIsFlat(subSegment, kDefaultFlatness))
-			{
-				WDGLVertexBufferAddPoint(subSegment.b_);
-				return NO;
-			}
-			return YES;
+			// If not flat enough, split further
+			if (!WDBezierSegmentIsFlat(subSegment, kDefaultFlatness))
+			{ return YES; }
+
+			// Otherwise add line to point
+			WDGLVertexBufferAddPoint(subSegment.b_);
+			// Stop segmentation of subsegment
+			return NO;
 		});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-////////////////////////////////////////////////////////////////////////////////
-
-static inline CGPoint _CGPointInterpolate(CGPoint p1, CGPoint p2, CGFloat r)
-{ return (CGPoint){ p1.x+r*(p2.x-p1.x), p1.y+r*(p2.y-p1.y) }; }
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static void WDGLRenderCGPathElement
@@ -675,7 +662,7 @@ static void WDGLRenderCGPathElement
 	{
 		case kCGPathElementMoveToPoint:
 			// If there is something to draw, draw as open path
-			WDGLVertexBufferDrawPath(GL_LINE_STRIP);
+			WDGLVertexBufferDrawData(GL_LINE_STRIP);
 			WDGLVertexBufferAddPoint(element->points[0]);
 			break;
 
@@ -705,8 +692,7 @@ static void WDGLRenderCGPathElement
 
 
 		case kCGPathElementCloseSubpath:
-			WDGLVertexBufferAddPoint(
-				WDGLVertexBufferGetLastPoint());
+			WDGLVertexBufferDrawData(GL_LINE_LOOP);
 			break;
 	}
 }
@@ -719,7 +705,7 @@ void WDGLRenderCGPathRef(CGPathRef pathRef)
 	CGPathApply(pathRef, nil, &WDGLRenderCGPathElement);
 
 	// Draw any data as open path
-	WDGLVertexBufferDrawPath(GL_LINE_STRIP);
+	WDGLVertexBufferDrawData(GL_LINE_STRIP);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

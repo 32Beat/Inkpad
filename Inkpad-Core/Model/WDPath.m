@@ -618,15 +618,6 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.in_ = b.inPoint;
         segment.b_ = b.anchorPoint;
 
-
-		CGRect R1 = WDBezierSegmentGetCurveBounds(segment);
-		CGRect R2 = WDBezierSegmentFindCurveBounds(segment);
-
-		if (!CGRectEqualToRect(R1, R2))
-		{
-			R1 = R2;
-		}
-
         bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(segment));
 //        bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
     }
@@ -636,14 +627,8 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (void) computeBounds
 {
-    bounds_ = CGPathGetPathBoundingBox(self.pathRef);
-	CGRect R = [self getPathBoundingBox];
-	if (!CGRectEqualToRect(R, bounds_))
-	{
-		CGRect R1 = bounds_;
-		R1 = R;
-		boundsDirty_ = NO;
-	}
+//    bounds_ = CGPathGetPathBoundingBox(self.pathRef);
+	bounds_ = [self getPathBoundingBox];
     boundsDirty_ = NO;
 }
 
@@ -904,7 +889,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     }
     
     // assumes proper color set by caller
-	WDGLVertexBufferDrawPath(closed_ ? GL_LINE_LOOP : GL_LINE_STRIP);
+	WDGLVertexBufferDrawData(closed_ ? GL_LINE_LOOP : GL_LINE_STRIP);
 }
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
@@ -925,7 +910,6 @@ NSString *WDClosedKey = @"WDClosedKey";
     CGAffineTransform   prevTx, currTx;
     WDBezierSegment     segment;
     
-displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
 
     // pre-condition
     WDBezierNode *prev = nodes[0];
@@ -958,6 +942,11 @@ displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet]
         //WDGLFlattenBezierSegment(segment, &vertices, &size, &index);
 		WDGLVertexBufferAddSegment(segment);
 
+#ifdef WD_DEBUG
+	glColor4f(1.0, 0.2, 0.2, .5);
+	WDGLStrokeCircleMarker(WDBezierSegmentGetControlBoundsCenter(segment));
+#endif
+
         // set up for the next iteration
         prevSelected = currSelected;
         prevOut = currOut;
@@ -965,9 +954,8 @@ displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet]
         segment.a_ = segment.b_;
     }
 
-	WDGLVertexBufferDrawPath(closed ? GL_LINE_LOOP : GL_LINE_STRIP);
-//	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
-//	WDGLDrawLineStrip(vertices, index);
+	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
+	WDGLVertexBufferDrawData(closed ? GL_LINE_LOOP : GL_LINE_STRIP);
 
 #ifdef WD_DEBUG
 	glColor4f(1.0, 0.2, 0.2, .5);

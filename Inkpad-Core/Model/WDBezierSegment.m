@@ -26,6 +26,20 @@ static inline CGPoint CGPointInterpolate(CGPoint P1, CGPoint P2, CGFloat r)
 { return (CGPoint){ P1.x + r * (P2.x - P1.x), P1.y + r * (P2.y - P1.y) }; }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static inline CGFloat CGPointDistanceToPoint(CGPoint P1, CGPoint P2)
+{
+	CGFloat dx = (P2.x-P1.x);
+	CGFloat dy = (P2.y-P1.y);
+	return sqrt(dx*dx+dy*dy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline CGPoint CGRectGetCenter(CGRect R)
+{ return (CGPoint){ CGRectGetMidX(R), CGRectGetMidY(R) }; }
+
+////////////////////////////////////////////////////////////////////////////////
 /*
 	CGRectIncludesPoint
 	-------------------
@@ -38,8 +52,8 @@ static inline CGPoint CGPointInterpolate(CGPoint P1, CGPoint P2, CGFloat r)
 static inline BOOL CGRectIncludesPoint(CGRect R, CGPoint P)
 {
 	if (P.x < CGRectGetMinX(R)) return NO;
-	if (P.y < CGRectGetMinY(R)) return NO;
 	if (P.x > CGRectGetMaxX(R)) return NO;
+	if (P.y < CGRectGetMinY(R)) return NO;
 	if (P.y > CGRectGetMaxY(R)) return NO;
 	return YES;
 }
@@ -96,9 +110,11 @@ CGRect WDLineGetBounds(CGPoint p1, CGPoint p2)
 	CGFloat y = p1.y;
 	CGFloat w = p2.x - x;
 	CGFloat h = p2.y - y;
+
 	// Reverse parameters if necessary
-	if (w < 0.0) { x -= (w = -w); }
-	if (h < 0.0) { y -= (h = -h); }
+	if (w < 0.0) { x += w; w = -w; }
+	if (h < 0.0) { y += h; h = -h; }
+
 	// Return CGRect
 	return (CGRect){ x, y, w, h };
 }
@@ -223,7 +239,8 @@ BOOL WDBezierSegmentIsCollinear(WDBezierSegment S)
 	Test whether segment controlpoints fall within (or on the edge of) 
 	the rectangle defined by endpoints
 	
-	Note that S.a_ and S.b_ may represent inverse order
+	If a segment is contained, it is also guaranteed to be a slope, i.e. 
+	it doesn't have local min or max values.
 */
 
 BOOL WDBezierSegmentIsContained(WDBezierSegment S)
@@ -430,9 +447,9 @@ CGRect WDBezierSegmentGetCurveBounds(WDBezierSegment S)
 	but might be larger than CurveBounds.
 */
 
-CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg)
+CGRect WDBezierSegmentGetControlBounds(WDBezierSegment S)
 {
-	const CGPoint *P = &seg.a_;
+	const CGPoint *P = &S.a_;
 
 	CGFloat minX1 = MIN(P[0].x, P[1].x);
 	CGFloat minX2 = MIN(P[2].x, P[3].x);
@@ -451,6 +468,16 @@ CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg)
 	CGFloat maxY = MAX(maxY1, maxY2);
 
 	return (CGRect){ minX, minY, maxX-minX, maxY-minY };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGPoint WDBezierSegmentGetControlBoundsCenter(WDBezierSegment S)
+{
+	const CGPoint *P = &S.a_;
+	return (CGPoint){
+	0.25*(P[0].x+P[1].x+P[2].x+P[3].x),
+	0.25*(P[0].y+P[1].y+P[2].y+P[3].y) };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -617,6 +644,25 @@ void WDBezierSegmentSplitWithBlock(WDBezierSegment S,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#define SplitRangeL(r, t) ((CGPoint){ r.x, r.x+t*(r.y-r.x) })
+#define SplitRangeR(r, t) ((CGPoint){ r.x+t*(r.y-r.x), r.y })
+
+void WDBezierSegmentRangeSplitWithBlock(WDBezierSegment S, CGPoint range,
+					CGFloat(^blockPtr)(WDBezierSegment,CGPoint))
+{
+	CGFloat t = blockPtr(S, range);
+	if (t != 0.0)
+	{
+		WDBezierSegment Sn;
+		WDBezierSegmentSplitAtT(S, &S, &Sn, t);
+
+		WDBezierSegmentRangeSplitWithBlock(S, SplitRangeL(range, t), blockPtr);
+		WDBezierSegmentRangeSplitWithBlock(Sn, SplitRangeR(range, t), blockPtr);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /*
 	WDBezierSegmentFindCurveBounds
 	------------------------------
@@ -640,6 +686,7 @@ CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S)
 
 			// Otherwise expand bounds
 			R = CGRectExpandToPoint(R, subSegment.b_);
+
 			// And stop splitting subSegment
 			return NO;
 		});
@@ -730,6 +777,7 @@ CGFloat WDBezierSegmentFindLengthRatio(WDBezierSegment *S, CGFloat r)
 		do
 		{
 			double t = 0.5*(t1+t2);
+			
 			WDBezierSegment L, R;
 			WDBezierSegmentSplitAtT(*S, &L, &R, t);
 
@@ -750,36 +798,66 @@ CGFloat WDBezierSegmentFindLengthRatio(WDBezierSegment *S, CGFloat r)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline BOOL CGRectExcludesPoint(CGRect R, CGPoint P)
+CGPoint WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 {
-	return
-	P.x < CGRectGetMinX(R)||
-	P.x > CGRectGetMaxX(R)||
-	P.y < CGRectGetMinY(R)||
-	P.y > CGRectGetMaxY(R);
-}
+	CGFloat minT = 0.0;
+	CGFloat minD = CGPointDistanceToPoint(P, WDBezierSegmentPointAtT(S, minT));
 
+	CGFloat d = 0.5;
 
-CGRect WDBezierSegmentAdjustBounds(WDBezierSegment S, CGRect B)
-{
-	const CGPoint *P = &S.a_;
-	B = CGRectExpandToPoint(B, P[0]);
-	B = CGRectExpandToPoint(B, P[3]);
-
-	if (CGRectExcludesPoint(B, P[1])||
-		CGRectExcludesPoint(B, P[2]))
+	do
 	{
-		WDBezierSegment L, R;
-		WDBezierSegmentSplitAtT(S, &L, &R, 0.5);
+		CGFloat t = minT + d;
+		if (t < 0.0) t = 0.0;
+		if (t > 1.0) t = 1.0;
 
-		B = WDBezierSegmentAdjustBounds(L, B);
-		B = WDBezierSegmentAdjustBounds(R, B);
+		CGFloat D = CGPointDistanceToPoint(P, WDBezierSegmentPointAtT(S, t));
+		if (D < minD)
+		{
+			minT = t;
+			minD = D;
+		}
+		else
+		{ d = -0.5*d; }
 	}
+	while (fabs(d) > 0.0001);
 
-	return B;
+	return WDBezierSegmentPointAtT(S, minT);
+
+//	return (CGPoint){ minT, minD };
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
+CGPoint WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P)
+{
+	__block CGPoint range = { 0.0, 1.0 };
+	__block CGFloat minD = WDBezierSegmentGetDiminishingLength(S);
+
+	WDBezierSegmentRangeSplitWithBlock(S, range,
+		^(WDBezierSegment subSegment, CGPoint subRange)
+		{
+			// Subdivide until segment is contained
+			if (!WDBezierSegmentIsContained(subSegment))
+			{ return 0.5; }
+
+			// Find closest point on slope
+			CGFloat D = CGPointDistanceToPoint( \
+			WDBezierSegmentFindClosestPointOnSlope(subSegment, P), P);
+
+			// If shorter than previous, save range
+			if (D < minD)
+			{ minD = D; range = subRange; };
+
+			// Stop splitting
+			return 0.0;
+		});
+
+	return range;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 //static CGPoint      *vertices = NULL;
 //static NSUInteger   size = 128;
@@ -938,6 +1016,11 @@ BOOL WDBezierSegmentFindPointOnSegment(
 	float tolerance,
 	CGPoint *nearestPoint, float *split)
 {
+	CGPoint P = WDBezierSegmentFindClosestPoint(seg, testPoint);
+
+	if (P.x != P.y)
+	{ P.x = 0.0; }
+
 if (split) {
 	*split = 0.0f;
 }

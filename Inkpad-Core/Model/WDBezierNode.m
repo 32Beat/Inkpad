@@ -145,6 +145,57 @@ static inline BOOL CGPointIsValid(CGPoint P)
     return self; 
 }
 
+
+- (BOOL) readFromCoder:(NSCoder *)coder
+{
+//	int version = [coder decodeIntForKey:WDFileVersionID];
+
+	return YES;
+}
+
+- (BOOL) readFromCoder_v000:(NSCoder *)coder
+{
+    const uint8_t   *bytes = [coder decodeBytesForKey:WDPointArrayKey returnedLength:NULL];
+    
+    CFSwappedFloat32 *swapped = (CFSwappedFloat32 *) bytes;
+        
+    inPoint_.x = CFConvertFloat32SwappedToHost(swapped[0]);
+    inPoint_.y = CFConvertFloat32SwappedToHost(swapped[1]);
+    anchorPoint_.x = CFConvertFloat32SwappedToHost(swapped[2]);
+    anchorPoint_.y = CFConvertFloat32SwappedToHost(swapped[3]);
+    outPoint_.x = CFConvertFloat32SwappedToHost(swapped[4]);
+    outPoint_.y = CFConvertFloat32SwappedToHost(swapped[5]);
+
+	if (!CGPointIsValid(anchorPoint_))
+	{ anchorPoint_ = CGPointZero; }
+
+	if (!CGPointIsValid(inPoint_))
+	{ inPoint_ = anchorPoint_; }
+
+	if (!CGPointIsValid(outPoint_))
+	{ outPoint_ = anchorPoint_; }
+
+	return YES;
+}
+
+- (BOOL) readFromCoder_v100:(NSCoder *)coder
+{
+
+	if (!CGPointIsValid(anchorPoint_))
+	{ anchorPoint_ = CGPointZero; }
+
+	if (!CGPointIsValid(inPoint_))
+	{ inPoint_ = anchorPoint_; }
+
+	if (!CGPointIsValid(outPoint_))
+	{ outPoint_ = anchorPoint_; }
+
+	return YES;
+}
+
+
+
+
 - (NSString *) description
 {
     return [NSString stringWithFormat:@"%@: (%@) -- [%@] -- (%@)", [super description],

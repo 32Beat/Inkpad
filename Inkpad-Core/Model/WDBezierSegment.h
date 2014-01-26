@@ -61,22 +61,21 @@ inline BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern const CGFloat kDefaultFlatness;
+
 inline BOOL WDBezierSegmentIsFlat
 (WDBezierSegment S, CGFloat deviceTolerance);
 // Test whether segment can be approximated by line between endpoints
-
-extern const CGFloat kDefaultFlatness;
-
-void WDBezierSegmentSetDefaultFlatness(CGFloat f);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 CGRect WDBezierSegmentGetCurveBounds(WDBezierSegment S);
 CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg);
+CGPoint WDBezierSegmentGetControlBoundsCenter(WDBezierSegment S);
 CGFloat WDBezierSegmentGetDiminishingLength(WDBezierSegment S);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Operations
+// Bezier
 
 inline CGPoint WDBezierSegmentPointAtT(WDBezierSegment S, CGFloat t);
 inline CGPoint WDBezierSegmentTangentAtT(WDBezierSegment S, CGFloat t);
@@ -85,18 +84,32 @@ inline CGPoint WDBezierSegmentSplitAtT(WDBezierSegment S,
 										WDBezierSegment *R, CGFloat t);
 
 ////////////////////////////////////////////////////////////////////////////////
+// Recursion
 
 void WDBezierSegmentSplitWithBlock(WDBezierSegment S, \
 					BOOL (^blockPtr)(WDBezierSegment));
+void WDBezierSegmentRangeSplitWithBlock(WDBezierSegment S, CGPoint range, \
+					CGFloat(^blockPtr)(WDBezierSegment, CGPoint));
 
+////////////////////////////////////////////////////////////////////////////////
+
+CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
+// Same as WDBezierSegmentGetCurveBounds except it uses recursive search
 
 BOOL WDBezierSegmentIntersectsRect(WDBezierSegment seg, CGRect rect);
 BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
 
-CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
 //CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S);
+CGPoint WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P);
 
-BOOL WDBezierSegmentFindPointOnSegment(WDBezierSegment seg, CGPoint testPoint, float tolerance, CGPoint *nearestPoint, float *split);
+
+BOOL WDBezierSegmentFindPointOnSegment(
+	WDBezierSegment seg,
+	CGPoint testPoint,
+	float tolerance,
+	CGPoint *nearestPoint,
+	float *split);
+
 
 //CGRect WDBezierSegmentBounds(WDBezierSegment seg);
 //CGRect WDBezierSegmentGetSimpleBounds(WDBezierSegment seg);
@@ -112,3 +125,9 @@ BOOL WDBezierSegmentGetIntersection(WDBezierSegment seg, CGPoint a, CGPoint b, f
 
 float WDBezierSegmentOutAngle(WDBezierSegment seg);
 BOOL WDBezierSegmentPointDistantFromPoint(WDBezierSegment segment, float distance, CGPoint pt, CGPoint *result, float *t);
+
+
+
+
+
+

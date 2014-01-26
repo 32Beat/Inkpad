@@ -54,7 +54,7 @@ extern "C" {
 	Alternatively, initialization can be achieved as shown below
 	which allows global declarations:
 		
-		WDGLVertexBuffer vertexBuffer = mWDGLVertexBufferNULL;
+		WDGLVertexBuffer vertexBuffer = WDGLVertexBufferNULL;
 */
 
 typedef struct

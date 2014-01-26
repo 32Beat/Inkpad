@@ -44,9 +44,8 @@ void WDGLLineFromPointToPoint(CGPoint a, CGPoint b);
 void WDGLRenderCGPathRef(CGPathRef pathRef);
 
 #include "WDBezierSegment.h"
-void WDGLVertexBufferAddPoint(CGPoint P);
 void WDGLVertexBufferAddSegment(WDBezierSegment S);
-void WDGLVertexBufferDrawPath(GLenum type);
+void WDGLVertexBufferDrawData(GLenum type);
 
 ////////////////////////////////////////////////////////////////////////////////
 
