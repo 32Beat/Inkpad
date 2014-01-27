@@ -24,31 +24,46 @@
 
 - (void) beginWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
-    WDPickResult *result = [canvas.drawingController snappedPoint:event.location
-                                                        viewScale:canvas.viewScale
-                                                        snapFlags:(kWDSnapEdges | kWDSnapNodes)];
-    WDPath *path = (WDPath *) result.element;
-    
-    if (![path isKindOfClass:[WDPath class]]) {
-        return;
-    }
-    
-    WDDrawingController *dc = canvas.drawingController;
-    
-    if (result.snapped && result.type == kWDEdge) {
-        [dc selectNone:nil];
-        [dc selectObject:result.element];
-        
-        WDBezierNode *newestNode = [path addAnchorAtPoint:result.snappedPoint viewScale:canvas.viewScale];
-        [dc selectNode:newestNode];
-    }
-    
-    if (result.snapped && result.type == kWDAnchorPoint && [dc isSelected:path]) {
-        [dc deselectAllNodes];
-        [dc selectNode:result.node];
-        
-        [path deleteAnchor:result.node];
-    }
+	WDPickResult *result = [canvas.drawingController snappedPoint:event.location
+														viewScale:canvas.viewScale
+														snapFlags:(kWDSnapEdges | kWDSnapNodes)];
+	WDPath *path = (WDPath *) result.element;
+
+	if (![path isKindOfClass:[WDPath class]]) {
+		return;
+	}
+
+	WDDrawingController *dc = canvas.drawingController;
+
+	if (result.snapped)
+	{
+		if (result.type == kWDEdge)
+		{
+			[dc selectNone:nil];
+			[dc selectObject:result.element];
+			
+			WDBezierNode *newestNode =
+			[path addAnchorAtPoint:result.snappedPoint viewScale:canvas.viewScale];
+			[dc selectNode:newestNode];
+		}
+		else
+		if (result.type == kWDAnchorPoint)
+		{
+			// Select path before deleting anything,
+			// to ensure anchors are actually visible
+			if (![dc isSelected:path])
+			{
+				[dc selectNone:nil];
+				[dc selectObject:path];
+				[dc selectNode:result.node];
+			}
+			else
+			{
+				[dc deselectAllNodes];
+				[path deleteAnchor:result.node];
+			}
+		}
+	}
 }
 
 @end

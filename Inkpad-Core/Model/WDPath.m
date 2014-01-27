@@ -121,6 +121,9 @@ NSString *WDClosedKey = @"WDClosedKey";
 //- (id) nodes \
 { return nodes_ ? nodes_ : (nodes_ = [[NSMutableArray alloc] init]); }
 
+- (NSMutableArray *) mutableNodes
+{ return [[self nodes] mutableCopyWithZone:nil]; }
+
 - (NSMutableArray *) reversedNodes
 {
     NSMutableArray *reversed = [NSMutableArray array];
@@ -137,7 +140,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 - (NSArray *) closedNodes
 {
 	NSArray *nodes = [self orderedNodes];
-	return [nodes arrayByAddingObject:[nodes lastObject]];
+	return [nodes arrayByAddingObject:[nodes firstObject]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -652,39 +655,39 @@ static void CGPathAddSegmentWithNodes
     boundsDirty_ = YES;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // alternative to CGPathGetPathBoundingBox() which didn't exist before iOS 4
+
 - (CGRect) getPathBoundingBox
 {
-    NSInteger           numNodes = closed_ ? nodes_.count : nodes_.count - 1;
-    WDBezierSegment     segment;
-    CGRect              bbox = CGRectNull;
+	CGRect bbox = CGRectNull;
 
-    for (int i = 0; i < numNodes; i++) {
-        WDBezierNode *a = nodes_[i];
-        WDBezierNode *b = nodes_[(i+1) % nodes_.count];
-        
-        segment.a_ = a.anchorPoint;
-        segment.out_ = a.outPoint;
-        segment.in_ = b.inPoint;
-        segment.b_ = b.anchorPoint;
+	NSInteger numNodes = closed_ ? nodes_.count : nodes_.count - 1;
 
-		bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(segment));
-		//bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
-    }
+	for (long i = 0; i != numNodes; i++)
+	{
+		WDBezierNode *a = nodes_[i];
+		WDBezierNode *b = nodes_[(i+1) % nodes_.count];
+		WDBezierSegment S = WDBezierSegmentMakeWithNodes(a, b);
 
-    return bbox;
+		//bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(S));
+		bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(S));
+	}
+
+	return bbox;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) computeBounds
 {
-//    bounds_ = CGPathGetPathBoundingBox(self.pathRef);
+	//bounds_ = CGPathGetPathBoundingBox(self.pathRef);
 	bounds_ = [self getPathBoundingBox];
-    boundsDirty_ = NO;
+	boundsDirty_ = NO;
 }
 
-/* 
- * Bounding box of path geometry.
- */
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) bounds
 {
     if (boundsDirty_) {
@@ -694,40 +697,43 @@ static void CGPathAddSegmentWithNodes
     return bounds_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
+{ return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
+
+static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
+{ return (CGPoint){ MAX(a.x, b.x), MAX(a.y, b.y) }; }
+
 - (CGRect) controlBounds
 {
-    WDBezierNode     *initial = [nodes_ lastObject];
-    float           minX, maxX, minY, maxY;
-    
-    minX = maxX = initial.anchorPoint.x;
-    minY = maxY = initial.anchorPoint.y;
-    
-    for (WDBezierNode *node in nodes_) {
-        minX = MIN(minX, node.anchorPoint.x);
-        maxX = MAX(maxX, node.anchorPoint.x);
-        minY = MIN(minY, node.anchorPoint.y);
-        maxY = MAX(maxY, node.anchorPoint.y);
-        
-        minX = MIN(minX, node.inPoint.x);
-        maxX = MAX(maxX, node.inPoint.x);
-        minY = MIN(minY, node.inPoint.y);
-        maxY = MAX(maxY, node.inPoint.y);
-        
-        minX = MIN(minX, node.outPoint.x);
-        maxX = MAX(maxX, node.outPoint.x);
-        minY = MIN(minY, node.outPoint.y);
-        maxY = MAX(maxY, node.outPoint.y);
-    }
-      
-    CGRect bbox = CGRectMake(minX, minY, maxX - minX, maxY - minY);
-    
-    if (self.fillTransform) {
-        bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedStart);
-        bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedEnd);
-    }
-    
-    return bbox;
+	id nodes = [self nodes];
+
+	CGPoint min = ((WDBezierNode *)(nodes[0])).anchorPoint;
+	CGPoint max = ((WDBezierNode *)(nodes[0])).anchorPoint;
+
+	for (WDBezierNode *node in nodes)
+	{
+		min = CGPointMin(min, node.inPoint);
+		max = CGPointMax(max, node.inPoint);
+		min = CGPointMin(min, node.anchorPoint);
+		max = CGPointMax(max, node.anchorPoint);
+		min = CGPointMin(min, node.outPoint);
+		max = CGPointMax(max, node.outPoint);
+	}
+	  
+	CGRect bbox = CGRectMake(min.x, min.y, max.x - min.x, max.y - min.y);
+
+	if (self.fillTransform)
+	{
+		bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedStart);
+		bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedEnd);
+	}
+
+	return bbox;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) subselectionBounds
 {
@@ -1235,60 +1241,133 @@ static void CGPathAddSegmentWithNodes
     return [self splitAtNode:node];
 }
 
+
 - (WDBezierNode *) addAnchorAtPoint:(CGPoint)pt viewScale:(float)viewScale
 {
-    NSMutableArray      *newNodes = [NSMutableArray array];
-    NSInteger           numNodes = closed_ ? (nodes_.count + 1) : nodes_.count;
-    NSInteger           numSegments = numNodes; // includes an extra one for the one that gets split
-    WDBezierSegment     segments[numSegments];
-    WDBezierSegment     segment;
-    WDBezierNode        *prev, *curr, *node, *newestNode = nil;
-    NSUInteger          newestNodeSegmentIx = 0, segmentIndex = 0;
-    float               t;
-    BOOL                added = NO;
+	NSArray *nodes = closed_ ? [self closedNodes] : [self nodes];
 
-    prev = nodes_[0];
-    for (int i = 1; i < numNodes; i++, segmentIndex ++) {
-        curr = nodes_[(i % nodes_.count)];
-        
-        segment = WDBezierSegmentMakeWithNodes(prev, curr);
-        
-        if (!added && WDBezierSegmentFindPointOnSegment(segment, pt, kNodeSelectionTolerance / viewScale, NULL, &t)) {
-            WDBezierSegmentSplitAtT(segment,  &segments[segmentIndex], &segments[segmentIndex+1], t);
-            segmentIndex++;
-            newestNodeSegmentIx = segmentIndex;
-            added = YES;
-        } else {
-            segments[segmentIndex] = segment;
-        }
-        
-        prev = curr;
-    }
+	if (nodes.count <= 1) return nil;
 
-    // convert the segments back to nodes
-    for (int i = 0; i < numSegments; i++) {
-        if (i == 0) {
-            CGPoint inPoint = closed_ ? segments[numSegments - 1].in_ : [self firstNode].inPoint;
-            node = [WDBezierNode bezierNodeWithInPoint:inPoint anchorPoint:segments[i].a_ outPoint:segments[i].out_];
-        } else {
-            node = [WDBezierNode bezierNodeWithInPoint:segments[i-1].in_ anchorPoint:segments[i].a_ outPoint:segments[i].out_];
-        }
-        
-        [newNodes addObject:node];
-        
-        if (i == newestNodeSegmentIx) {
-            newestNode = node;
-        }
-        
-        if (i == (numSegments - 1) && !closed_) {
-            node = [WDBezierNode bezierNodeWithInPoint:segments[i].in_ anchorPoint:segments[i].b_ outPoint:[self lastNode].outPoint];
-            [newNodes addObject:node];
-        }
-    }
+	// Initialize 1 segment for every 2 nodes
+	NSUInteger numSegments = nodes.count-1;
 
-    self.nodes = newNodes;
+	// Attempt to find segment within tolerance
+	CGFloat tolerance = kNodeSelectionTolerance / viewScale;
+	long targetIndex = -1;
+	WDFindInfo targetInfo;
+	WDBezierSegment targetSegment;
 
-    return newestNode;
+	// Traverse segments
+	for (NSUInteger i=0; i!=numSegments; i++)
+	{
+		// Create test segment
+		WDBezierSegment testSegment =
+		WDBezierSegmentMakeWithNodes(nodes[i], nodes[i+1]);
+		// Test against incoming point
+		WDFindInfo info =
+		WDBezierSegmentFindClosestPoint(testSegment, pt);
+
+		if (info.D <= tolerance)
+		{
+			targetIndex = i;
+			targetSegment = testSegment;
+			targetInfo = info;
+		}
+	}
+
+	// Split target segment if found
+	if (targetIndex != -1)
+	{
+		WDBezierSegment L, R;
+		// Split target segment
+		WDBezierSegmentSplitAtT(targetSegment, &L, &R, targetInfo.t);
+
+		WDBezierNode *targetNode1 = nodes[targetIndex+0];
+		WDBezierNode *targetNode2 = nodes[targetIndex+1];
+
+		// Adjusting by reference would automatically propagate changes
+		//targetNode1->outPoint_ = L.out_;
+		//targetNode2->inPoint_ = R.in_;
+
+		// This shouldn't be necessary, as there is no need for immutable nodes
+		targetNode1 = [targetNode1 copyWithOutPoint:L.out_];
+		targetNode2 = [targetNode2 copyWithInPoint:R.in_];
+
+		NSMutableArray *newNodes = [[self nodes] mutableCopyWithZone:nil];
+
+		[newNodes replaceObjectAtIndex:(targetIndex+0)
+			withObject:targetNode1];
+		[newNodes replaceObjectAtIndex:(targetIndex+1)%newNodes.count
+			withObject:targetNode2];
+
+		CGPoint P[] = { L.in_, R.a_, R.out_ };
+		WDBezierNode *newNode = [WDBezierNode bezierNodeWithPoints:P];
+
+		[newNodes insertObject:newNode atIndex:targetIndex+1];
+
+		self.nodes = newNodes;
+
+		return newNode;
+	}
+
+	return nil;
+}
+
+
+- (WDBezierNode *) _addAnchorAtPoint:(CGPoint)pt viewScale:(float)viewScale
+{
+	NSMutableArray      *newNodes = [NSMutableArray array];
+	NSInteger           numNodes = closed_ ? (nodes_.count + 1) : nodes_.count;
+	NSInteger           numSegments = numNodes; // includes an extra one for the one that gets split
+	WDBezierSegment     segments[numSegments];
+	WDBezierSegment     segment;
+	WDBezierNode        *prev, *curr, *node, *newestNode = nil;
+	NSUInteger          newestNodeSegmentIx = 0, segmentIndex = 0;
+	float               t;
+	BOOL                added = NO;
+
+	prev = nodes_[0];
+	for (int i = 1; i < numNodes; i++, segmentIndex ++) {
+		curr = nodes_[(i % nodes_.count)];
+		
+		segment = WDBezierSegmentMakeWithNodes(prev, curr);
+		
+		if (!added && WDBezierSegmentFindPointOnSegment(segment, pt, kNodeSelectionTolerance / viewScale, NULL, &t)) {
+			WDBezierSegmentSplitAtT(segment,  &segments[segmentIndex], &segments[segmentIndex+1], t);
+			segmentIndex++;
+			newestNodeSegmentIx = segmentIndex;
+			added = YES;
+		} else {
+			segments[segmentIndex] = segment;
+		}
+		
+		prev = curr;
+	}
+
+	// convert the segments back to nodes
+	for (int i = 0; i < numSegments; i++) {
+		if (i == 0) {
+			CGPoint inPoint = closed_ ? segments[numSegments - 1].in_ : [self firstNode].inPoint;
+			node = [WDBezierNode bezierNodeWithInPoint:inPoint anchorPoint:segments[i].a_ outPoint:segments[i].out_];
+		} else {
+			node = [WDBezierNode bezierNodeWithInPoint:segments[i-1].in_ anchorPoint:segments[i].a_ outPoint:segments[i].out_];
+		}
+		
+		[newNodes addObject:node];
+		
+		if (i == newestNodeSegmentIx) {
+			newestNode = node;
+		}
+		
+		if (i == (numSegments - 1) && !closed_) {
+			node = [WDBezierNode bezierNodeWithInPoint:segments[i].in_ anchorPoint:segments[i].b_ outPoint:[self lastNode].outPoint];
+			[newNodes addObject:node];
+		}
+	}
+
+	self.nodes = newNodes;
+
+	return newestNode;
 }
 
 - (void) addAnchors

@@ -586,7 +586,18 @@ void WDGLQueueAddSegment(WDBezierSegment S)
 */
 
 void WDGLQueueFlush(GLenum type)
-{ WDGLVertexBufferDraw(&gVertexBuffer, type); }
+{
+	if (gVertexBuffer.count != 0)
+	{
+		WDGLVertexBufferDraw(&gVertexBuffer, type);
+
+		if (type == GL_LINE_LOOP)
+		{
+			gLastPoint.x = gVertexBuffer.data[0];
+			gLastPoint.y = gVertexBuffer.data[1];
+		}
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

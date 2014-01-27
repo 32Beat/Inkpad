@@ -70,9 +70,27 @@ inline BOOL WDBezierSegmentIsFlat
 ////////////////////////////////////////////////////////////////////////////////
 
 CGRect WDBezierSegmentGetCurveBounds(WDBezierSegment S);
+// Get bounds rectangle encompassing curve
+
 CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg);
+// Get bounds rectangle encompassing segment points
+
 CGPoint WDBezierSegmentGetControlBoundsCenter(WDBezierSegment S);
-CGFloat WDBezierSegmentGetDiminishingLength(WDBezierSegment S);
+// Get center of control bounds rectangle
+
+CGFloat WDBezierSegmentControlStripLength(WDBezierSegment S);
+// Compute length of control strip (linestrip between segment points)
+
+CGFloat WDBezierSegmentLineSegmentLength(WDBezierSegment S);
+// Compute length of line between endpoints
+
+////////////////////////////////////////////////////////////////////////////////
+
+BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect rect);
+// Test if curve intersects rect, edge inclusive
+
+BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
+// Currently required for WDImage...
 
 ////////////////////////////////////////////////////////////////////////////////
 // Bezier
@@ -82,6 +100,8 @@ inline CGPoint WDBezierSegmentTangentAtT(WDBezierSegment S, CGFloat t);
 inline CGPoint WDBezierSegmentSplitAtT(WDBezierSegment S,
 										WDBezierSegment *L,
 										WDBezierSegment *R, CGFloat t);
+inline CGPoint WDBezierSegmentSplit
+(WDBezierSegment S, WDBezierSegment *L, WDBezierSegment *R);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Recursion
@@ -96,11 +116,19 @@ void WDBezierSegmentRangeSplitWithBlock(WDBezierSegment S, CGPoint range, \
 CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
 // Same as WDBezierSegmentGetCurveBounds except it uses recursive search
 
-BOOL WDBezierSegmentIntersectsRect(WDBezierSegment seg, CGRect rect);
-BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
+////////////////////////////////////////////////////////////////////////////////
 
-//CGFloat WDBezierSegmentGetFlattenedLength(WDBezierSegment S);
-CGPoint WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P);
+typedef struct
+{
+	CGFloat t; 	// t of resultpoint
+	CGFloat D; 	// distance to targetpoint
+	CGPoint P; 	// resultpoint
+}
+WDFindInfo;
+
+
+WDFindInfo WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P);
+////////////////////////////////////////////////////////////////////////////////
 
 
 BOOL WDBezierSegmentFindPointOnSegment(
@@ -110,21 +138,26 @@ BOOL WDBezierSegmentFindPointOnSegment(
 	CGPoint *nearestPoint,
 	float *split);
 
+CGPoint WDBezierSegmentGetClosestPoint
+(WDBezierSegment seg, CGPoint test, float *error, float *distance);
 
-//CGRect WDBezierSegmentBounds(WDBezierSegment seg);
-//CGRect WDBezierSegmentGetSimpleBounds(WDBezierSegment seg);
 
-float WDBezierSegmentCurvatureAtT(WDBezierSegment seg, float t);
-CGPoint WDBezierSegmentPointAndTangentAtDistance(WDBezierSegment seg, float distance, CGPoint *tangent, float *curvature);
+CGPoint WDBezierSegmentPointAndTangentAtDistance
+(WDBezierSegment seg, float distance, CGPoint *tangent, float *curvature);
+
 float WDBezierSegmentLength(WDBezierSegment seg);
+float WDBezierSegmentCurvatureAtT(WDBezierSegment seg, float t);
 
-CGPoint WDBezierSegmentGetClosestPoint(WDBezierSegment seg, CGPoint test, float *error, float *distance);
-BOOL WDBezierSegmentsFormCorner(WDBezierSegment a, WDBezierSegment b);
 
-BOOL WDBezierSegmentGetIntersection(WDBezierSegment seg, CGPoint a, CGPoint b, float *tIntersect);
+BOOL WDBezierSegmentsFormCorner
+(WDBezierSegment a, WDBezierSegment b);
+
+BOOL WDBezierSegmentGetIntersection
+(WDBezierSegment seg, CGPoint a, CGPoint b, float *tIntersect);
 
 float WDBezierSegmentOutAngle(WDBezierSegment seg);
-BOOL WDBezierSegmentPointDistantFromPoint(WDBezierSegment segment, float distance, CGPoint pt, CGPoint *result, float *t);
+BOOL WDBezierSegmentPointDistantFromPoint
+(WDBezierSegment segment, float distance, CGPoint pt, CGPoint *result, float *t);
 
 
 

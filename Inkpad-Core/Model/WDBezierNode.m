@@ -258,6 +258,24 @@ static inline BOOL CGPointIsValid(CGPoint P)
     return transformed;
 }
 
+
+- (WDBezierNode *) copyWithInPoint:(CGPoint)P
+{
+	WDBezierNode *newNode = [self copyWithZone:nil];
+	newNode->inPoint_ = P;
+	return newNode;
+}
+
+- (WDBezierNode *) copyWithOutPoint:(CGPoint)P
+{
+	WDBezierNode *newNode = [self copyWithZone:nil];
+	newNode->outPoint_ = P;
+	return newNode;
+}
+
+
+
+
 - (WDBezierNode *) setInPoint:(CGPoint)pt reflectionMode:(WDBezierNodeReflectionMode)reflectionMode
 {
     CGPoint flippedPoint = WDAddPoints(anchorPoint_, WDSubtractPoints(anchorPoint_, pt));

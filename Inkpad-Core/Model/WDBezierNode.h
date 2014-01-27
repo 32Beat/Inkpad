@@ -60,6 +60,9 @@ typedef enum {
 - (WDBezierNode *) chopOutHandle;
 - (WDBezierNode *) chopInHandle;
 
+- (WDBezierNode *) copyWithInPoint:(CGPoint)P;
+- (WDBezierNode *) copyWithOutPoint:(CGPoint)P;
+
 - (WDBezierNode *) setInPoint:(CGPoint)pt reflectionMode:(WDBezierNodeReflectionMode)reflectionMode;
 - (WDBezierNode *) moveControlHandle:(WDPickResultType)pointToTransform toPoint:(CGPoint)pt reflectionMode:(WDBezierNodeReflectionMode)reflectionMode;
 
