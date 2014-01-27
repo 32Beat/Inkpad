@@ -739,9 +739,11 @@ done:
         selected = lastNode.selected;
     } else {
         CGPoint tangent;
-        CGPoint startBarAttachment = [self getPointOnPathAtDistance:startOffset_ tangentVector:&tangent transformed:YES];
+        CGPoint startBarAttachment =
+		[self getPointOnPathAtDistance:startOffset_ tangentVector:&tangent transformed:YES];
         
-        overflowPoint = CGPointApplyAffineTransform(startBarAttachment, CGAffineTransformConcat(transform_, viewTransform));
+        overflowPoint =
+		CGPointApplyAffineTransform(startBarAttachment, CGAffineTransformConcat(transform_, viewTransform));
     }
     
     if (selected) {
@@ -757,14 +759,7 @@ done:
     }
     
     // draw +
-    overflowPoint = WDRoundPoint(overflowPoint);
-    float fudge = ([UIScreen mainScreen].scale == 1.0) ? 2.0f : 2.5f;
-
-    WDGLLineFromPointToPoint(CGPointMake(overflowPoint.x - 3, overflowPoint.y),
-                             CGPointMake(overflowPoint.x + fudge, overflowPoint.y));
-    
-    WDGLLineFromPointToPoint(CGPointMake(overflowPoint.x, overflowPoint.y - fudge),
-                             CGPointMake(overflowPoint.x, overflowPoint.y + 3));
+	WDGLDrawOverflowMarker(overflowPoint);
 }
 
 - (void) drawTextPathControlsWithViewTransform:(CGAffineTransform)viewTransform viewScale:(float)viewScale
@@ -780,7 +775,7 @@ done:
     top = CGPointApplyAffineTransform(top, viewTransform);
     
     [color openGLSet];
-    WDGLLineFromPointToPoint(base, top);
+    WDGLStrokeLine(base, top);
     
     [[UIColor whiteColor] openGLSet];
     WDGLFillCircleMarker(top);

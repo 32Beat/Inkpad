@@ -18,7 +18,8 @@
 @class WDCompoundPath;
 @class WDFillTransform;
 
-@interface WDPath : WDAbstractPath <NSCoding, NSCopying> {
+@interface WDPath : WDAbstractPath <NSCoding, NSCopying>
+{
     NSMutableArray      *nodes_;
     BOOL                closed_;
     BOOL                reversed_;

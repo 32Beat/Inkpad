@@ -50,6 +50,7 @@ typedef enum {
 
 + (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)pt;
 + (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint;
++ (WDBezierNode *) bezierNodeWithPoints:(const CGPoint *)P;
 
 - (id) initWithAnchorPoint:(CGPoint)pt;
 - (id) initWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint;

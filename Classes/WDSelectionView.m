@@ -277,7 +277,7 @@
 		b.x = floor(x) + 0.5;
 		b.y = maxY;
 
-		WDGLLineFromPointToPoint(a, b);
+		WDGLStrokeLine(a, b);
 		x += gridSpacing.width;
 	}
 
@@ -289,7 +289,7 @@
 		b.x = maxX;
 		b.y = floor(y) + 0.5;
 
-		WDGLLineFromPointToPoint(a, b);
+		WDGLStrokeLine(a, b);
 		y += gridSpacing.height;
 	}
 }

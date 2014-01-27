@@ -40,13 +40,19 @@ NSString *WDPointArrayKey = @"WDPointArrayKey";
 
 + (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)pt
 {
-    return [[WDBezierNode alloc] initWithAnchorPoint:pt];
+    return [[self alloc] initWithAnchorPoint:pt];
 }
 
 + (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint
 {
-    return [[WDBezierNode alloc] initWithInPoint:inPoint anchorPoint:pt outPoint:outPoint];
+    return [[self alloc] initWithInPoint:inPoint anchorPoint:pt outPoint:outPoint];
 }
+
++ (WDBezierNode *) bezierNodeWithPoints:(const CGPoint *)P
+{ return [self bezierNodeWithInPoint:P[0] anchorPoint:P[1] outPoint:P[2]]; }
+
+
+
 
 - (id) copyWithZone:(NSZone *)zone
 {
@@ -59,6 +65,8 @@ NSString *WDPointArrayKey = @"WDPointArrayKey";
 
     return node;
 }
+
+
 
 - (id) initWithAnchorPoint:(CGPoint)pt
 {
@@ -353,55 +361,58 @@ static inline BOOL CGPointIsValid(CGPoint P)
 
 @implementation WDBezierNode (GLRendering)
 
-- (void) drawGLWithViewTransform:(CGAffineTransform)transform color:(UIColor *)color mode:(WDBezierNodeRenderMode)mode
+- (void) drawGLWithViewTransform:(CGAffineTransform)transform
+	color:(UIColor *)color mode:(WDBezierNodeRenderMode)mode
 {
-    CGPoint anchor, inPoint, outPoint;
-    
-    anchor = CGPointApplyAffineTransform(anchorPoint_, transform);
-    inPoint = CGPointApplyAffineTransform(inPoint_, transform);
-    outPoint = CGPointApplyAffineTransform(outPoint_, transform);
-        
-    // draw the control handles
-    if (mode == kWDBezierNodeRenderSelected) {
-        [color openGLSet];
-        
-        if ([self hasInPoint]) {
-            WDGLLineFromPointToPoint(inPoint, anchor);
-        }
-        
-        if ([self hasOutPoint]) {
-            WDGLLineFromPointToPoint(outPoint, anchor);
-        }
-    }
-    
-    // draw the anchor
-    if (mode == kWDBezierNodeRenderClosed) {
-        [color openGLSet];
-        WDGLFillSquareMarker(anchor);
-    } else if (mode == kWDBezierNodeRenderSelected) {
-        [color openGLSet];
-        WDGLFillSquareMarker(anchor);
-        glColor4f(1, 1, 1, 1);
-        WDGLStrokeSquareMarker(anchor);
-    } else {
-        glColor4f(1, 1, 1, 1);
-        WDGLFillSquareMarker(anchor);
-        [color openGLSet];
-        WDGLStrokeSquareMarker(anchor);
-    }
-    
-    // draw the control handle knobs
-    if (mode == kWDBezierNodeRenderSelected) {
-        [color openGLSet];
-        
-        if ([self hasInPoint]) {
-            WDGLFillCircleMarker(inPoint);
-        }
-        
-        if ([self hasOutPoint]) {
-            WDGLFillCircleMarker(outPoint);
-        }
-    }
+	CGPoint A = CGPointApplyAffineTransform(anchorPoint_, transform);
+	CGPoint L = CGPointApplyAffineTransform(inPoint_, transform);
+	CGPoint R = CGPointApplyAffineTransform(outPoint_, transform);
+		
+	// draw the control handles
+	if (mode == kWDBezierNodeRenderSelected)
+	{
+		[color openGLSet];
+		
+		if ([self hasInPoint])
+		{ WDGLStrokeLine(L, A); }
+
+		if ([self hasOutPoint])
+		{ WDGLStrokeLine(R, A); }
+	}
+
+	// draw the anchor
+	if (mode == kWDBezierNodeRenderClosed)
+	{
+		[color openGLSet];
+		WDGLFillSquareMarker(A);
+	}
+	else
+	if (mode == kWDBezierNodeRenderSelected)
+	{
+		[color openGLSet];
+		WDGLFillSquareMarker(A);
+		glColor4f(1, 1, 1, 1);
+		WDGLStrokeSquareMarker(A);
+	}
+	else
+	{
+		glColor4f(1, 1, 1, 1);
+		WDGLFillSquareMarker(A);
+		[color openGLSet];
+		WDGLStrokeSquareMarker(A);
+	}
+
+	// draw the control handle knobs
+	if (mode == kWDBezierNodeRenderSelected)
+	{
+		[color openGLSet];
+		
+		if ([self hasInPoint])
+		{ WDGLFillCircleMarker(L); }
+		
+		if ([self hasOutPoint])
+		{ WDGLFillCircleMarker(R); }
+	}
 }
 
 @end

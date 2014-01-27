@@ -89,7 +89,7 @@ inline CGPoint WDBezierSegmentSplitAtT(WDBezierSegment S,
 void WDBezierSegmentSplitWithBlock(WDBezierSegment S, \
 					BOOL (^blockPtr)(WDBezierSegment));
 void WDBezierSegmentRangeSplitWithBlock(WDBezierSegment S, CGPoint range, \
-					CGFloat(^blockPtr)(WDBezierSegment, CGPoint));
+					CGFloat (^blockPtr)(WDBezierSegment, CGPoint));
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -606,10 +606,10 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     // draw outline
     [self.layer.highlightColor openGLSet];
     
-    WDGLLineFromPointToPoint(ul, ur);
-    WDGLLineFromPointToPoint(ur, lr);
-    WDGLLineFromPointToPoint(lr, ll);
-    WDGLLineFromPointToPoint(ll, ul);
+    WDGLStrokeLine(ul, ur);
+    WDGLStrokeLine(ur, lr);
+    WDGLStrokeLine(lr, ll);
+    WDGLStrokeLine(ll, ul);
     
     if (!CGAffineTransformIsIdentity(transform) || cachingWidth_) {
         [self drawOpenGLTextOutlinesWithTransform:transform viewTransform:viewTransform];

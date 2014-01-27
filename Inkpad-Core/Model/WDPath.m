@@ -24,7 +24,12 @@
 #import "WDUtilities.h"
 
 const float kMiterLimit  = 10;
-const float circleFactor = 0.5522847498307936;
+
+// Fit t = 0.5
+//const float circleFactor = 0.5522847498307936;
+
+// Minimize deviation http://spencermortensen.com/articles/bezier-circle/
+const float circleFactor = 0.551915024494;
 
 NSString *WDReversedPathKey = @"WDReversedPathKey";
 NSString *WDSuperpathKey = @"WDSuperpathKey";
@@ -45,33 +50,30 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (id) init
 {
-    self = [super init];
-    
-    nodes_ = [[NSMutableArray alloc] init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    boundsDirty_ = YES;
-    
-    return self;
+	self = [super init];
+	if (self != nil)
+	{
+		nodes_ = [[NSMutableArray alloc] init];
+		boundsDirty_ = YES;
+	}
+
+	return self;
 }
 
 - (id) initWithNode:(WDBezierNode *)node
 {
-    self = [super init];
-    
-    nodes_ = [[NSMutableArray alloc] initWithObjects:node, nil];
-    
-    if (!self) {
-        return nil;
-    }
+    self = [self init];
+    if (self != nil)
+	{
+		[nodes_ addObject:node];
+		boundsDirty_ = YES;
+	}
 
-    boundsDirty_ = YES;
-    
-    return self;
+	return self;
 }
+
+
+
 
 - (void) dealloc
 {
@@ -99,67 +101,105 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (id)initWithCoder:(NSCoder *)coder
 {
-    self = [super initWithCoder:coder];
-    
-    nodes_ = [coder decodeObjectForKey:WDNodesKey];
-    closed_ = [coder decodeBoolForKey:WDClosedKey];
-    reversed_ = [coder decodeBoolForKey:WDReversedPathKey];
-    superpath_ = [coder decodeObjectForKey:WDSuperpathKey];
-    
-    boundsDirty_ = YES;
-    
-    return self; 
+	self = [super initWithCoder:coder];
+	if (self != nil)
+	{
+		nodes_ = [coder decodeObjectForKey:WDNodesKey];
+		closed_ = [coder decodeBoolForKey:WDClosedKey];
+		reversed_ = [coder decodeBoolForKey:WDReversedPathKey];
+		superpath_ = [coder decodeObjectForKey:WDSuperpathKey];
+
+		nodes_ = [nodes_ mutableCopyWithZone:nil];
+
+		boundsDirty_ = YES;
+	}
+
+	return self;
 }
+
+
+//- (id) nodes \
+{ return nodes_ ? nodes_ : (nodes_ = [[NSMutableArray alloc] init]); }
 
 - (NSMutableArray *) reversedNodes
 {
-    NSMutableArray  *reversed = [NSMutableArray array];
+    NSMutableArray *reversed = [NSMutableArray array];
     
-    for (WDBezierNode *node in [nodes_ reverseObjectEnumerator]) {
-        [reversed addObject:[node flippedNode]];
-    }
+    for (WDBezierNode *node in [[self nodes] reverseObjectEnumerator])
+	{ [reversed addObject:[node flippedNode]]; }
     
     return reversed;
 }
 
-- (void) strokeStyleChanged
+- (NSArray *) orderedNodes
+{ return reversed_ ? [self reversedNodes] : [self nodes]; }
+
+- (NSArray *) closedNodes
 {
-    [self invalidatePath];
+	NSArray *nodes = [self orderedNodes];
+	return [nodes arrayByAddingObject:[nodes lastObject]];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void CGPathAddSegmentWithNodes
+(CGMutablePathRef pathRef, WDBezierNode *N1, WDBezierNode *N2)
+{
+	if (N2 == nil)
+		CGPathMoveToPoint(pathRef, NULL,
+			N1.anchorPoint.x,
+			N1.anchorPoint.y);
+	else
+	if (N1.hasOutPoint || N2.hasInPoint)
+		CGPathAddCurveToPoint(pathRef, NULL,
+			N1.outPoint.x,
+			N1.outPoint.y,
+			N2.inPoint.x,
+			N2.inPoint.y,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+	else
+		CGPathAddLineToPoint(pathRef, NULL,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) computePathRef
 {
-    NSArray *nodes = reversed_ ? [self reversedNodes] : nodes_;
-    
-    // construct the path ref from the node list
-    WDBezierNode                *prevNode = nil;
-    BOOL                        firstTime = YES;
-    
-    pathRef_ = CGPathCreateMutable();
-    
-    for (WDBezierNode *node in nodes) {
-        if (firstTime) {
-            CGPathMoveToPoint(pathRef_, NULL, node.anchorPoint.x, node.anchorPoint.y);
-            firstTime = NO;
-        } else if ([prevNode hasOutPoint] || [node hasInPoint]) {
-            CGPathAddCurveToPoint(pathRef_, NULL, prevNode.outPoint.x, prevNode.outPoint.y,
-                                  node.inPoint.x, node.inPoint.y, node.anchorPoint.x, node.anchorPoint.y);
-        } else {
-            CGPathAddLineToPoint(pathRef_, NULL, node.anchorPoint.x, node.anchorPoint.y);
-        }
-        prevNode = node;
-    }
-    
-    if (closed_ && prevNode) {
-        WDBezierNode *node = nodes[0];
-        CGPathAddCurveToPoint(pathRef_, NULL,
-			prevNode.outPoint.x, prevNode.outPoint.y,
-			node.inPoint.x, node.inPoint.y,
-			node.anchorPoint.x, node.anchorPoint.y);
-        
-        CGPathCloseSubpath(pathRef_);
-    }
+	if (pathRef_ != nil)
+	{ CGPathRelease(pathRef_); }
+	pathRef_ = [self createPathRef];
 }
+
+- (CGMutablePathRef) createPathRef
+{ return [self createPathRefWithNodes:[self orderedNodes]]; }
+
+- (CGMutablePathRef) createPathRefWithNodes:(NSArray *)nodes
+{
+	CGMutablePathRef pathRef = CGPathCreateMutable();
+	if (pathRef != nil)
+	{
+		if (nodes.count != 0)
+		{
+			CGPathAddSegmentWithNodes(pathRef, nodes[0], NULL);
+
+			for (NSUInteger n=1; n!=nodes.count; n++)
+			{ CGPathAddSegmentWithNodes(pathRef, nodes[n-1], nodes[n]); }
+
+			if (closed_) 
+			{
+				CGPathAddSegmentWithNodes(pathRef, nodes.lastObject, nodes.firstObject);
+				CGPathCloseSubpath(pathRef);
+			}
+		}
+	}
+
+	return pathRef;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSArray *) insetForArrowhead:(WDArrowhead *)arrowhead nodes:(NSArray *)nodes attachment:(CGPoint *)attachment angle:(float *)angle
 {
@@ -299,11 +339,17 @@ NSString *WDClosedKey = @"WDClosedKey";
     return pathRef_;
 }
 
-+ (WDPath *) pathWithRect:(CGRect)rect
++ (WDPath *) pathWithRect:(CGRect)R
+{ return [[self alloc] initWithRect:R]; }
+
+
+
+
+- (void) strokeStyleChanged
 {
-    WDPath *path = [[WDPath alloc] initWithRect:rect];
-    return path;
+    [self invalidatePath];
 }
+
 
 + (WDPath *) pathWithRoundedRect:(CGRect)rect cornerRadius:(float)radius
 {
@@ -312,10 +358,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 }
 
 + (WDPath *) pathWithOvalInRect:(CGRect)rect
-{
-    WDPath *path = [[WDPath alloc] initWithOvalInRect:rect];
-    return path;
-}
+{ return [[self alloc] initWithOvalInRect:rect]; }
 
 + (WDPath *) pathWithStart:(CGPoint)start end:(CGPoint)end
 {
@@ -323,26 +366,31 @@ NSString *WDClosedKey = @"WDClosedKey";
     return path;
 }
 
-- (id) initWithRect:(CGRect)rect
+- (id) initWithRect:(CGRect)R
 {
-    self = [self init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    // instantiate nodes for each corner
-    
-    [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:CGPointMake(CGRectGetMinX(rect), CGRectGetMinY(rect))]];
-    [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:CGPointMake(CGRectGetMaxX(rect), CGRectGetMinY(rect))]];
-    [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect))]];
-    [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:CGPointMake(CGRectGetMinX(rect), CGRectGetMaxY(rect))]];
-    
-    self.closed = YES;
-    bounds_ = rect;
-    
-    return self;
+	self = [super init];
+	if (self != nil)
+	{
+		[self prepareWithRect:R];
+	}
+
+	return self;
 }
+
+- (void) prepareWithRect:(CGRect)R
+{
+	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMinX(R), CGRectGetMinY(R) }];
+	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMaxX(R), CGRectGetMinY(R) }];
+	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMaxX(R), CGRectGetMaxY(R) }];
+	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMinX(R), CGRectGetMaxY(R) }];
+	self.closed = YES;
+
+	bounds_ = R;
+	boundsDirty_ = YES;
+}
+
+
+
 
 - (id) initWithRoundedRect:(CGRect)rect cornerRadius:(float)radius
 {
@@ -465,7 +513,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:start]];
     [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:end]];
     
-    boundsDirty_ = YES;
+ //   boundsDirty_ = YES;
     
     return self;
 }
@@ -528,11 +576,13 @@ NSString *WDClosedKey = @"WDClosedKey";
     return closed_;
 }
 
+- (void) addNodeWithAnchorPoint:(CGPoint)P
+{ [self addNode:[WDBezierNode bezierNodeWithAnchorPoint:P]]; }
+
 - (void) addNode:(WDBezierNode *)node
 {
-    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
-    [newNodes addObject:node];
-    self.nodes = newNodes;
+	if (node != nil)
+	[self.nodes addObject:node];
 }
 
 - (void) replaceFirstNodeWithNode:(WDBezierNode *)node
@@ -618,8 +668,8 @@ NSString *WDClosedKey = @"WDClosedKey";
         segment.in_ = b.inPoint;
         segment.b_ = b.anchorPoint;
 
-        bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(segment));
-//        bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
+		bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(segment));
+		//bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(segment));
     }
 
     return bbox;
@@ -839,123 +889,112 @@ NSString *WDClosedKey = @"WDClosedKey";
     return nodesInRect;
 }
 
-/**************************************************************************
- *
- * Optimized version of -drawOpenGLHighlightWithTransform:viewTransform:
- *
- **************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray *) nodesWithTransform:(CGAffineTransform)T
+{
+	// TODO: Why would closed be different for display?
+	BOOL closed = displayNodes_ ? displayClosed_ : closed_;
+	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
+
+    if (!nodes || nodes.count == 0) return nil;
+
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:nodes.count+1];
+
+	for (WDBezierNode *node in nodes)
+	{
+		CGPoint P[3] = {
+			CGPointApplyAffineTransform(node.inPoint, T),
+			CGPointApplyAffineTransform(node.anchorPoint, T),
+			CGPointApplyAffineTransform(node.outPoint, T) };
+
+		[result addObject:[WDBezierNode bezierNodeWithPoints:P]];
+	}
+
+	if (closed)
+	[result addObject:[result firstObject]];
+
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray *) nodesWithTransform:(CGAffineTransform)viewTransform
+				adjustmentTransform:(CGAffineTransform)adjustmentTransform
+{
+	// TODO: Why would closed be different for display?
+	BOOL closed = displayNodes_ ? displayClosed_ : closed_;
+	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
+
+    if (!nodes || nodes.count == 0) return nil;
+
+	BOOL transformAll = ![self anyNodesSelected];
+	CGAffineTransform combined =
+	CGAffineTransformConcat(adjustmentTransform, viewTransform);
+
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:nodes.count+1];
+
+	for (WDBezierNode *node in nodes)
+	{
+		// Apply relevant transform
+		CGAffineTransform T =
+		([node selected] || transformAll) ? combined : viewTransform;
+
+		CGPoint P[3] = {
+			CGPointApplyAffineTransform(node.inPoint, T),
+			CGPointApplyAffineTransform(node.anchorPoint, T),
+			CGPointApplyAffineTransform(node.outPoint, T) };
+
+		[result addObject:[WDBezierNode bezierNodeWithPoints:P]];
+	}
+
+	if (closed)
+	[result addObject:[result firstObject]];
+
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderGLOutlineWithNodes:(NSArray *)nodes
+{
+	// A single point is never visible in GL outline mode
+	if (nodes.count > 1)
+	{
+		// Build bezier segments for every 2 nodes
+		long n, total = nodes.count;
+		for (n=1; n!=total; n++)
+		{
+			WDBezierSegment segment =
+			WDBezierSegmentMakeWithNodes(nodes[n-1], nodes[n]);
+
+			WDGLQueueAddSegment(segment);
+		}
+
+		// Transfer vertexdata to openGL
+		WDGLQueueFlush(GL_LINE_STRIP);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
-    if (!CGRectIntersectsRect(self.bounds, visibleRect)) {
-        return;
-    }    
-    
-    if (!nodes_ || nodes_.count == 0) {
-        return;
-    }
-    
-    NSArray             *nodes = nodes_;
-    NSInteger           numNodes = closed_ ? nodes.count : nodes.count - 1;
-    CGPoint             prevIn, prevAnchor, prevOut;
-    CGPoint             currIn, currAnchor, currOut;
-    WDBezierSegment     segment;
-    
-    // pre-condition
-    WDBezierNode *prev = nodes[0];
-    [prev getInPoint:&prevIn anchorPoint:&prevAnchor outPoint:&prevOut selected:NULL];
-    
-    segment.a_.x = viewTransform.a * prevAnchor.x + viewTransform.c * prevAnchor.y + viewTransform.tx;
-    segment.a_.y = viewTransform.b * prevAnchor.x + viewTransform.d * prevAnchor.y + viewTransform.ty;
-    
-    for (int i = 1; i <= numNodes; i++) {
-        WDBezierNode *curr = nodes[i % nodes.count];
-        [curr getInPoint:&currIn anchorPoint:&currAnchor outPoint:&currOut selected:NULL];
-        
-        segment.out_.x = viewTransform.a * prevOut.x + viewTransform.c * prevOut.y + viewTransform.tx;
-        segment.out_.y = viewTransform.b * prevOut.x + viewTransform.d * prevOut.y + viewTransform.ty;
-        
-        segment.in_.x = viewTransform.a * currIn.x + viewTransform.c * currIn.y + viewTransform.tx;
-        segment.in_.y = viewTransform.b * currIn.x + viewTransform.d * currIn.y + viewTransform.ty;
-        
-        segment.b_.x = viewTransform.a * currAnchor.x + viewTransform.c * currAnchor.y + viewTransform.tx;
-        segment.b_.y = viewTransform.b * currAnchor.x + viewTransform.d * currAnchor.y + viewTransform.ty;
-        
-        WDGLVertexBufferAddSegment(segment);
-        
-        // set up for the next iteration
-        prevOut = currOut;
-        segment.a_ = segment.b_;
-    }
-    
-    // assumes proper color set by caller
-	WDGLVertexBufferDrawData(closed_ ? GL_LINE_LOOP : GL_LINE_STRIP);
+	if (CGRectIntersectsRect(self.bounds, visibleRect))
+	{
+		[self renderGLOutlineWithNodes:
+		[self nodesWithTransform:viewTransform]];
+	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
-{    
-    NSArray             *nodes = displayNodes_ ? displayNodes_ : nodes_;
-    
-    if (!nodes || nodes.count == 0) {
-        return;
-    }
-    
-    BOOL                transformAll = ![self anyNodesSelected];
-    BOOL                closed = displayNodes_ ? displayClosed_ : closed_;
-    NSInteger           numNodes = closed ? nodes.count : nodes.count - 1;
-    CGAffineTransform   combined = CGAffineTransformConcat(transform, viewTransform);
-    CGPoint             prevIn, prevAnchor, prevOut;
-    CGPoint             currIn, currAnchor, currOut;
-    BOOL                prevSelected, currSelected;
-    CGAffineTransform   prevTx, currTx;
-    WDBezierSegment     segment;
-    
-
-    // pre-condition
-    WDBezierNode *prev = nodes[0];
-    [prev getInPoint:&prevIn anchorPoint:&prevAnchor outPoint:&prevOut selected:&prevSelected];
-    
-    prevTx = (prevSelected || transformAll) ? combined : viewTransform;
-    
-    // segment.a_ = CGPointApplyAffineTransform(prevAnchor, (prevSelected || transformAll) ? combined : viewTransform);
-    segment.a_.x = prevTx.a * prevAnchor.x + prevTx.c * prevAnchor.y + prevTx.tx;
-    segment.a_.y = prevTx.b * prevAnchor.x + prevTx.d * prevAnchor.y + prevTx.ty;
-    
-    for (int i = 1; i <= numNodes; i++) {
-        WDBezierNode *curr = nodes[i % nodes.count];
-        [curr getInPoint:&currIn anchorPoint:&currAnchor outPoint:&currOut selected:&currSelected];
-        
-        // segment.out_ = CGPointApplyAffineTransform(prevOut, (prevSelected || transformAll) ? combined : viewTransform);
-        segment.out_.x = prevTx.a * prevOut.x + prevTx.c * prevOut.y + prevTx.tx;
-        segment.out_.y = prevTx.b * prevOut.x + prevTx.d * prevOut.y + prevTx.ty;
-        
-        currTx = (currSelected || transformAll) ? combined : viewTransform;
-        
-        // segment.in_ = CGPointApplyAffineTransform(currIn, (currSelected || transformAll) ? combined : viewTransform);
-        segment.in_.x = currTx.a * currIn.x + currTx.c * currIn.y + currTx.tx;
-        segment.in_.y = currTx.b * currIn.x + currTx.d * currIn.y + currTx.ty;
-        
-        //segment.b_ = CGPointApplyAffineTransform(currAnchor, (currSelected || transformAll) ? combined : viewTransform);
-        segment.b_.x = currTx.a * currAnchor.x + currTx.c * currAnchor.y + currTx.tx;
-        segment.b_.y = currTx.b * currAnchor.x + currTx.d * currAnchor.y + currTx.ty;
-
-        //WDGLFlattenBezierSegment(segment, &vertices, &size, &index);
-		WDGLVertexBufferAddSegment(segment);
-
-#ifdef WD_DEBUG
-	glColor4f(1.0, 0.2, 0.2, .5);
-	WDGLStrokeCircleMarker(WDBezierSegmentGetControlBoundsCenter(segment));
-#endif
-
-        // set up for the next iteration
-        prevSelected = currSelected;
-        prevOut = currOut;
-        prevTx = currTx;
-        segment.a_ = segment.b_;
-    }
-
+{
 	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
-	WDGLVertexBufferDrawData(closed ? GL_LINE_LOOP : GL_LINE_STRIP);
+
+	[self renderGLOutlineWithNodes:
+	[self nodesWithTransform:viewTransform adjustmentTransform:transform]];
 
 #ifdef WD_DEBUG
 	glColor4f(1.0, 0.2, 0.2, .5);
@@ -964,6 +1003,8 @@ NSString *WDClosedKey = @"WDClosedKey";
 	WDGLStrokeRect(R);
 #endif
 }
+
+
 
 - (void) drawOpenGLAnchorsWithViewTransform:(CGAffineTransform)transform
 {

@@ -286,6 +286,8 @@ BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S)
 
 */
 
+const CGFloat kDefaultFlatness = 1.5; // 1.5 pixels both ways = 3
+
 BOOL WDBezierSegmentIsFlat(WDBezierSegment S, CGFloat deviceTolerance)
 {
 	const CGPoint *P = &S.a_;
@@ -294,14 +296,6 @@ BOOL WDBezierSegmentIsFlat(WDBezierSegment S, CGFloat deviceTolerance)
 	if (fabs(P[2].x - P[3].x) > deviceTolerance) return NO;
 	if (fabs(P[2].y - P[3].y) > deviceTolerance) return NO;
 	return YES;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const CGFloat kDefaultFlatness = 1.5; // 1.5 pixels both ways = 3
-
-void WDBezierSegmentSetDefaultFlatness(CGFloat f)
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -835,7 +829,7 @@ CGPoint WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P)
 	__block CGFloat minD = WDBezierSegmentGetDiminishingLength(S);
 
 	WDBezierSegmentRangeSplitWithBlock(S, range,
-		^(WDBezierSegment subSegment, CGPoint subRange)
+		^CGFloat(WDBezierSegment subSegment, CGPoint subRange)
 		{
 			// Subdivide until segment is contained
 			if (!WDBezierSegmentIsContained(subSegment))
@@ -1016,10 +1010,9 @@ BOOL WDBezierSegmentFindPointOnSegment(
 	float tolerance,
 	CGPoint *nearestPoint, float *split)
 {
-	CGPoint P = WDBezierSegmentFindClosestPoint(seg, testPoint);
+//	CGPoint P = WDBezierSegmentFindClosestPoint(seg, testPoint);
 
-	if (P.x != P.y)
-	{ P.x = 0.0; }
+//	if (P.x != P.y){ P.x = 0.0; }
 
 if (split) {
 	*split = 0.0f;

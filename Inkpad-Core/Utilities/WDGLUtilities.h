@@ -26,6 +26,8 @@ void WDGLFillRect(CGRect R);
 void WDGLStrokeRect(CGRect R);
 void WDGLStrokeRectWithSize(CGRect R, CGFloat size);
 
+void WDGLStrokeLine(CGPoint a, CGPoint b);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void WDGLSetMarkerDefaultsForScale(CGFloat scale);
@@ -37,15 +39,15 @@ void WDGLStrokeCircleMarker(CGPoint P);
 void WDGLFillDiamondMarker(CGPoint P);
 void WDGLStrokeDiamondMarker(CGPoint P);
 
+void WDGLDrawOverflowMarker(CGPoint);
+
 ////////////////////////////////////////////////////////////////////////////////
 
-void WDGLLineFromPointToPoint(CGPoint a, CGPoint b);
+#include "WDBezierSegment.h"
+void WDGLQueueAddSegment(WDBezierSegment S);
+void WDGLQueueFlush(GLenum type);
 
 void WDGLRenderCGPathRef(CGPathRef pathRef);
-
-#include "WDBezierSegment.h"
-void WDGLVertexBufferAddSegment(WDBezierSegment S);
-void WDGLVertexBufferDrawData(GLenum type);
 
 ////////////////////////////////////////////////////////////////////////////////
 

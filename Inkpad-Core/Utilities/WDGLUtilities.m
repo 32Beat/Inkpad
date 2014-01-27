@@ -15,72 +15,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	GLPixelVector
-	-------------
-	The code in this file is meant for rendering on a pixelgrid,
-	so our vertixes will be 2d vectors. Note that 
-	OpenGL will always render the vertices as modeldata, 
-	so we are never actually addressing pixels.
-*/
-
-#pragma align=packed
-
-typedef struct
-{
-	GLfloat x;
-	GLfloat y;
-}
-GLPixelVector;
-
-#pragma align=reset
-////////////////////////////////////////////////////////////////////////////////
-/*
-	MakePixelVector
-	---------------
-	OpenGL uses a diamond-exit rule to determine pixel activation. 
-	In order to ensure correct pixel activation when drawing lines, 
-	we sometimes need to readjust the endpoints of a line to fit 
-	within the diamond of the desired pixel. This adjustment should 
-	preferably be as small as possible, so that rendering a flattened 
-	curve remains as smooth as possible.
-	
-	MakePixelVector creates an adjusted pixelvector from 2d coordinates.
-
-	Note that this code assumes the OpenGL matrix stack is setup so that
-	pixels fall between integral values. i.e.:
-	pixel center = (0.5, 0.5)
-	pixel bounds = (0.0, 0.0, 1.0, 1.0)
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-static inline GLPixelVector MakePixelVector(GLfloat x, GLfloat y)
-{
-//	return (GLPixelVector){floor(x),ceil(y)};
-
-	// Compute desired pixel center
-	CGFloat cx = floor(x)+0.5;
-	CGFloat cy = floor(y)+0.5;
-
-	// Compute offset to pixel center
-	CGFloat dx = x - cx;
-	CGFloat dy = y - cy;
-
-	// Diagonal = dx+dy = 0.5
-	CGFloat d = fabs(dx)+fabs(dy);
-
-	// If beyond diagonal, then adjust
-	if (d > (127.0/256.0))
-	{
-		CGFloat m = (127.0/256.0) / d;
-		x = cx + m * (x - cx);
-		y = cy + m * (y - cy);
-	}
-
-	return (GLPixelVector){x,y};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
 	CopyVertexData
 	--------------
 	Transfer VertexData as 2D coordinates to OpenGL
@@ -447,6 +381,17 @@ inline void WDGLStrokeRectWithSize(CGRect R, CGFloat size)
 { _WDGLStrokeRectWithSize(WDGLPrepareRect(R), size); }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void WDGLStrokeLine(CGPoint a, CGPoint b)
+{
+	GLfloat vertexData[] = {
+		a.x, a.y,
+		b.x, b.y };
+
+	CopyVertexData(GL_LINES, &vertexData[0], 2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark OpenGL Markers
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,6 +489,25 @@ inline void WDGLStrokeCircleMarker(CGPoint P)
 { _WDGLStrokeCircleWithSize(WDGLMarkerBounds(P), gMarkerStroke); }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void WDGLDrawOverflowMarker(CGPoint P)
+{
+	CGFloat r = gMarkerRadius + 0.5 - 2*gMarkerStroke;
+	P.x = floor(P.x) + 0.5;
+	P.y = floor(P.y) + 0.5;
+
+	GLfloat vertexData[] = {
+		P.x-r, P.y,
+		P.x+r, P.y,
+		P.x, P.y-r,
+		P.x, P.y+r };
+
+	glLineWidth(1.0);
+	mCopyVertexArray(GL_LINES, vertexData);
+	glLineWidth(gMarkerStroke);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark OpenGL Path rendering with WDGLVertexBuffer
 ////////////////////////////////////////////////////////////////////////////////
@@ -551,90 +515,53 @@ inline void WDGLStrokeCircleMarker(CGPoint P)
 #include "WDGLVertexBuffer.h"
 
 static WDGLVertexBuffer gVertexBuffer = WDGLVertexBufferNULL;
+static CGPoint gLastPoint = (CGPoint){0.0, 0.0};
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDGLVertexBufferGetLastPoint
-	----------------------------
-	For our purposes we need a last-point strategy similar to Postscript
+	WDGLQueueAddPoint
+	-----------------
+	Add CGPoint coordinates to global vertex queue
+*/
+
+void WDGLQueueAddPoint(CGPoint P)
+{
+	WDGLVertexBufferAdd(&gVertexBuffer, P.x, P.y);
+	gLastPoint = P;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLQueueAddLine
+	----------------
+	Add line coordinates to global vertex queue
 	
-	The following two routines belong together:
-	GetLastPoint returns the last point.
-	DrawPath transfers the buffer to openGL and 
-	stores the last point for potential re-use.
+	Adds startpoint if and only if queue is empty
 */
 
-static inline
-CGPoint WDGLVertexBufferGetLastPoint(void)
-{
-	WDGLVertexBuffer *vertexBuffer = &gVertexBuffer;
-
-	if (vertexBuffer->data == NULL)
-	{ return CGPointZero; }
-
-	GLuint index = vertexBuffer->count;
-	if (index != 0) index -= 2;
-
-	return (CGPoint){
-	vertexBuffer->data[index+0],
-	vertexBuffer->data[index+1] };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WDGLVertexBufferDrawData(GLenum type)
-{
-	WDGLVertexBuffer *vertexBuffer = &gVertexBuffer;
-
-	GLuint count = vertexBuffer->count;
-	if (count != 0)
-	{
-		// Save last point
-		GLfloat x = vertexBuffer->data[count-2];
-		GLfloat y = vertexBuffer->data[count-1];
-
-		// Transfer to openGL
-		WDGLVertexBufferDraw(vertexBuffer, type);
-
-		// Store last point
-		vertexBuffer->data[0] = x;
-		vertexBuffer->data[1] = y;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	WDGLVertexBufferAddPoint
-	------------------------
-	Add CGPoint coordinates to vertexbuffer
-*/
-
-static inline void WDGLVertexBufferAddPoint(CGPoint P)
-{ WDGLVertexBufferAdd(&gVertexBuffer, P.x, P.y); }
-
-////////////////////////////////////////////////////////////////////////////////
-
-static inline void WDGLVertexBufferAddLine(CGPoint P0, CGPoint P1)
+void WDGLQueueAddLine(CGPoint P0, CGPoint P1)
 {
 	// Check if startpoint is required
 	if (gVertexBuffer.count == 0)
-	{ WDGLVertexBufferAddPoint(P0); }
-	
-	WDGLVertexBufferAddPoint(P1);
+	{ WDGLQueueAddPoint(P0); }
+
+	WDGLQueueAddPoint(P1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDGLVertexBufferAddSegment
-	--------------------------
-	Add WDBezierSegment to vertexbuffer as flattened linestrip
+	WDGLQueueAddSegment
+	-------------------
+	Add WDBezierSegment to global vertexbuffer as flattened linestrip
+	
+	Adds startpoint if and only if queue is empty
 */
 
-void WDGLVertexBufferAddSegment(WDBezierSegment S)
+void WDGLQueueAddSegment(WDBezierSegment S)
 {
 	// Check if startpoint is required
 	if (gVertexBuffer.count == 0)
-	{ WDGLVertexBufferAddPoint(S.a_); }
+	{ WDGLQueueAddPoint(S.a_); }
 
 	// Start recursive segmentation
 	WDBezierSegmentSplitWithBlock(S,
@@ -645,11 +572,21 @@ void WDGLVertexBufferAddSegment(WDBezierSegment S)
 			{ return YES; }
 
 			// Otherwise add line to point
-			WDGLVertexBufferAddPoint(subSegment.b_);
+			WDGLQueueAddPoint(subSegment.b_);
 			// Stop segmentation of subsegment
 			return NO;
 		});
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGLQueueFlush
+	--------------
+	Transfer queued vertexdata to openGL
+*/
+
+void WDGLQueueFlush(GLenum type)
+{ WDGLVertexBufferDraw(&gVertexBuffer, type); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -662,29 +599,29 @@ static void WDGLRenderCGPathElement
 	{
 		case kCGPathElementMoveToPoint:
 			// If there is something to draw, draw as open path
-			WDGLVertexBufferDrawData(GL_LINE_STRIP);
-			WDGLVertexBufferAddPoint(element->points[0]);
+			WDGLQueueFlush(GL_LINE_STRIP);
+			WDGLQueueAddPoint(element->points[0]);
 			break;
 
 		case kCGPathElementAddLineToPoint:
-			WDGLVertexBufferAddLine(
-				WDGLVertexBufferGetLastPoint(),
+			WDGLQueueAddLine(
+				gLastPoint,
 				element->points[0]);
 			break;
 
 
 		case kCGPathElementAddQuadCurveToPoint:
-			WDGLVertexBufferAddSegment(
+			WDGLQueueAddSegment(
 				WDBezierSegmentMakeWithQuadPoints(
-					WDGLVertexBufferGetLastPoint(),
+					gLastPoint,
 					element->points[0],
 					element->points[1]));
 			break;
 
 		case kCGPathElementAddCurveToPoint:
-			WDGLVertexBufferAddSegment(
+			WDGLQueueAddSegment(
 				(WDBezierSegment){
-					WDGLVertexBufferGetLastPoint(),
+					gLastPoint,
 					element->points[0],
 					element->points[1],
 					element->points[2] });
@@ -692,7 +629,7 @@ static void WDGLRenderCGPathElement
 
 
 		case kCGPathElementCloseSubpath:
-			WDGLVertexBufferDrawData(GL_LINE_LOOP);
+			WDGLQueueFlush(GL_LINE_LOOP);
 			break;
 	}
 }
@@ -705,28 +642,7 @@ void WDGLRenderCGPathRef(CGPathRef pathRef)
 	CGPathApply(pathRef, nil, &WDGLRenderCGPathElement);
 
 	// Draw any data as open path
-	WDGLVertexBufferDrawData(GL_LINE_STRIP);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark OpenGL Line rendering
-////////////////////////////////////////////////////////////////////////////////
-/*
-	WDGLLineFromPointToPoint
-	------------------------
-	Draw a single, individual line (not part of a segment)
-*/
-
-inline void WDGLLineFromPointToPoint(CGPoint a, CGPoint b)
-{
-	//glLineWidth(1.0);
-
-    GLPixelVector vertexData[] = {
-		MakePixelVector(a.x, a.y),
-		MakePixelVector(b.x, b.y) };
-
-	CopyVertexData(GL_LINES, &vertexData[0], 2);
+	WDGLQueueFlush(GL_LINE_STRIP);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

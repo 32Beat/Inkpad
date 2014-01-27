@@ -249,14 +249,14 @@ NSString *WDImageDataKey = @"WDImageDataKey";
     // draw outline
     [self.layer.highlightColor openGLSet];
     
-    WDGLLineFromPointToPoint(ul, ur);
-    WDGLLineFromPointToPoint(ur, lr);
-    WDGLLineFromPointToPoint(lr, ll);
-    WDGLLineFromPointToPoint(ll, ul);
+    WDGLStrokeLine(ul, ur);
+    WDGLStrokeLine(ur, lr);
+    WDGLStrokeLine(lr, ll);
+    WDGLStrokeLine(ll, ul);
     
     // draw 'X'
-    WDGLLineFromPointToPoint(ul, lr);
-    WDGLLineFromPointToPoint(ll, ur);
+    WDGLStrokeLine(ul, lr);
+    WDGLStrokeLine(ll, ur);
 }
 
 - (WDPickResult *) hitResultForPoint:(CGPoint)point viewScale:(float)viewScale snapFlags:(int)flags
