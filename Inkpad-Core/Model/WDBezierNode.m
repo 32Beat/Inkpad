@@ -22,10 +22,17 @@
 #import "WDGLUtilities.h"
 #import "WDUtilities.h"
 
-#define kAnchorRadius 4
-#define kControlPointRadius 3.5
 
-NSString *WDPointArrayKey = @"WDPointArrayKey";
+
+static NSString *WDBezierNodeVersionKey = @"WDBezierNodeVersion";
+
+static NSInteger WDBezierNodeVersion = 100;
+static NSString *WDBezierNodeAnchorPointKey = @"WDBezierNodeAnchorPoint";
+static NSString *WDBezierNodeOutPointKey = @"WDBezierNodeOutPoint";
+static NSString *WDBezierNodeInPointKey = @"WDBezierNodeInPoint";
+
+static NSInteger WDBezierNodeVersion0 = 0;
+static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 
 /**************************
  * WDBezierNode
@@ -38,90 +45,122 @@ NSString *WDPointArrayKey = @"WDPointArrayKey";
 @synthesize outPoint = outPoint_;
 @synthesize selected = selected_;
 
-+ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)pt
+
+////////////////////////////////////////////////////////////////////////////////
+// Deprecated
++ (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)A
+							anchorPoint:(CGPoint)B
+							outPoint:(CGPoint)C
+{ return [self bezierNodeWithAnchorPoint:B outPoint:C inPoint:A]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
++ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)anchorPoint
 {
-    return [[self alloc] initWithAnchorPoint:pt];
+	return [[self alloc] initWithAnchorPoint:anchorPoint];
 }
 
-+ (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint
++ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)anchorPoint
+									outPoint:(CGPoint)outPoint
 {
-    return [[self alloc] initWithInPoint:inPoint anchorPoint:pt outPoint:outPoint];
+	return [[self alloc] initWithAnchorPoint:anchorPoint
+									outPoint:outPoint];
 }
 
-+ (WDBezierNode *) bezierNodeWithPoints:(const CGPoint *)P
-{ return [self bezierNodeWithInPoint:P[0] anchorPoint:P[1] outPoint:P[2]]; }
++ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)anchorPoint
+									outPoint:(CGPoint)outPoint
+									 inPoint:(CGPoint)inPoint
+{
+	return [[self alloc] initWithAnchorPoint:anchorPoint
+									outPoint:outPoint
+									inPoint:inPoint];
+}
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+/*
+	If WDBezierNodes are truly immutable, which the read-only vars suggest, 
+	then we can simply return "self" in copyWithZone, and only create a true
+	copy if an immutable version is requested.
+*/
 
 - (id) copyWithZone:(NSZone *)zone
 {
-    WDBezierNode *node = [[WDBezierNode alloc] init];
-    
-    node->inPoint_ = inPoint_;
-    node->anchorPoint_ = anchorPoint_;
-    node->outPoint_ = outPoint_;
-    node->selected_ = selected_;
+	return self;
 
-    return node;
+//	return [self mutableCopyWithZone:zone];
 }
 
+- (id) mutableCopyWithZone:(NSZone *)zone
+{
+	WDBezierNode *node = [WDBezierNode new];
 
+	node->inPoint_ = inPoint_;
+	node->anchorPoint_ = anchorPoint_;
+	node->outPoint_ = outPoint_;
+	node->selected_ = selected_;
+
+	return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithAnchorPoint:(CGPoint)pt
+{ return [self initWithAnchorPoint:pt outPoint:pt]; }
+
+- (id) initWithAnchorPoint:(CGPoint)anchorPoint outPoint:(CGPoint)outPoint
 {
-    self = [super init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    inPoint_ = anchorPoint_ = outPoint_ = pt;
-    
-    return self;
+	// Mirror outPoint
+	CGPoint inPoint = {
+	anchorPoint.x - (outPoint.x - anchorPoint.x),
+	anchorPoint.y - (outPoint.y - anchorPoint.y) };
+
+	return [self initWithAnchorPoint:anchorPoint outPoint:outPoint inPoint:inPoint];
 }
 
-- (id) initWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint
+- (id) initWithAnchorPoint:(CGPoint)anchorPoint
+				  outPoint:(CGPoint)outPoint
+				   inPoint:(CGPoint)inPoint
 {
-    self = [super init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    inPoint_ = inPoint;
-    anchorPoint_ = pt;
-    outPoint_ = outPoint;
-    
-    return self;
+	self = [super init];
+	if (self != nil)
+	{
+		anchorPoint_ = anchorPoint;
+		outPoint_ = outPoint;
+		inPoint_ = inPoint;
+		selected_ = NO;
+	}
+
+	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) isEqual:(WDBezierNode *)node
 {
-    if (node == self) {
-        return YES;
-    }
-    
-    if (![node isKindOfClass:[WDBezierNode class]]) {
-        return NO;
-    }
-    
-    return (CGPointEqualToPoint(self.inPoint, node.inPoint) &&
-            CGPointEqualToPoint(self.anchorPoint, node.anchorPoint) &&
-            CGPointEqualToPoint(self.outPoint, node.outPoint));
+	if (node == self)
+	{ return YES; }
+
+	return [node isKindOfClass:[self class]]&&
+	CGPointEqualToPoint(self->inPoint_, node->inPoint_) &&
+	CGPointEqualToPoint(self->anchorPoint_, node->anchorPoint_) &&
+	CGPointEqualToPoint(self->outPoint_, node->outPoint_);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-    CFSwappedFloat32    swapped[6];
-    float               points[6] = { inPoint_.x, inPoint_.y, anchorPoint_.x, anchorPoint_.y, outPoint_.x, outPoint_.y };
-    
-    for (NSUInteger ix = 0; ix < 6; ix++) {
-        swapped[ix] = CFConvertFloat32HostToSwapped(points[ix]);
-    }
-    
-    [coder encodeBytes:(const uint8_t *)swapped length:(6 * sizeof(CFSwappedFloat32)) forKey:WDPointArrayKey];
+	id A = NSStringFromCGPoint(anchorPoint_);
+	id B = NSStringFromCGPoint(outPoint_);
+	id C = NSStringFromCGPoint(inPoint_);
+
+	[coder encodeInteger:WDBezierNodeVersion forKey:WDBezierNodeVersionKey];
+	[coder encodeObject:A forKey:WDBezierNodeAnchorPointKey];
+	[coder encodeObject:B forKey:WDBezierNodeOutPointKey];
+	[coder encodeObject:C forKey:WDBezierNodeInPointKey];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 static inline BOOL CGPointIsValid(CGPoint P)
 { return !isnan(P.x) && !isnan(P.y); }
@@ -129,41 +168,62 @@ static inline BOOL CGPointIsValid(CGPoint P)
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super init];
-    
-    const uint8_t   *bytes = [coder decodeBytesForKey:WDPointArrayKey returnedLength:NULL];
-    
-    CFSwappedFloat32 *swapped = (CFSwappedFloat32 *) bytes;
-        
-    inPoint_.x = CFConvertFloat32SwappedToHost(swapped[0]);
-    inPoint_.y = CFConvertFloat32SwappedToHost(swapped[1]);
-    anchorPoint_.x = CFConvertFloat32SwappedToHost(swapped[2]);
-    anchorPoint_.y = CFConvertFloat32SwappedToHost(swapped[3]);
-    outPoint_.x = CFConvertFloat32SwappedToHost(swapped[4]);
-    outPoint_.y = CFConvertFloat32SwappedToHost(swapped[5]);
+	if (!self) return nil;
+
+	NSInteger version =
+	[coder decodeIntegerForKey:WDBezierNodeVersionKey];
+
+	if (version == WDBezierNodeVersion)
+		[self readFromCoder:coder];
+	else
+	if (version == WDBezierNodeVersion0)
+		[self readFromCoder0:coder];
+
+#ifdef WD_DEBUG
+	NSLog(@"%@",[self description]);
+#endif
 
 	if (!CGPointIsValid(anchorPoint_))
 	{ anchorPoint_ = CGPointZero; }
 
-	if (!CGPointIsValid(inPoint_))
-	{ inPoint_ = anchorPoint_; }
-
 	if (!CGPointIsValid(outPoint_))
 	{ outPoint_ = anchorPoint_; }
+
+	if (!CGPointIsValid(inPoint_))
+	{ inPoint_ = anchorPoint_; }
 
     return self; 
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) readFromCoder:(NSCoder *)coder
 {
-//	int version = [coder decodeIntForKey:WDFileVersionID];
+	NSString *P;
+
+	P = [coder decodeObjectForKey:WDBezierNodeAnchorPointKey];
+	if (P != nil)
+	{
+		anchorPoint_ =
+		outPoint_ =
+		inPoint_ = CGPointFromString(P);
+	}
+
+	P = [coder decodeObjectForKey:WDBezierNodeOutPointKey];
+	if (P != nil) { outPoint_ = CGPointFromString(P); }
+
+	P = [coder decodeObjectForKey:WDBezierNodeInPointKey];
+	if (P != nil) { inPoint_ = CGPointFromString(P); }
 
 	return YES;
 }
 
-- (BOOL) readFromCoder_v000:(NSCoder *)coder
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) readFromCoder0:(NSCoder *)coder
 {
-    const uint8_t   *bytes = [coder decodeBytesForKey:WDPointArrayKey returnedLength:NULL];
+    const uint8_t *bytes =
+	[coder decodeBytesForKey:WDBezierNodePointArrayKey returnedLength:NULL];
     
     CFSwappedFloat32 *swapped = (CFSwappedFloat32 *) bytes;
         
@@ -174,17 +234,10 @@ static inline BOOL CGPointIsValid(CGPoint P)
     outPoint_.x = CFConvertFloat32SwappedToHost(swapped[4]);
     outPoint_.y = CFConvertFloat32SwappedToHost(swapped[5]);
 
-	if (!CGPointIsValid(anchorPoint_))
-	{ anchorPoint_ = CGPointZero; }
-
-	if (!CGPointIsValid(inPoint_))
-	{ inPoint_ = anchorPoint_; }
-
-	if (!CGPointIsValid(outPoint_))
-	{ outPoint_ = anchorPoint_; }
-
 	return YES;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) readFromCoder_v100:(NSCoder *)coder
 {
@@ -201,14 +254,18 @@ static inline BOOL CGPointIsValid(CGPoint P)
 	return YES;
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSString *) description
 {
-    return [NSString stringWithFormat:@"%@: (%@) -- [%@] -- (%@)", [super description],
-            NSStringFromCGPoint(inPoint_), NSStringFromCGPoint(anchorPoint_), NSStringFromCGPoint(outPoint_)];
+	return [NSString stringWithFormat:@"%@:\r%@\r%@\r%@\r", \
+	[super description], \
+	NSStringFromCGPoint(inPoint_), \
+	NSStringFromCGPoint(anchorPoint_), \
+	NSStringFromCGPoint(outPoint_)];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDBezierNodeReflectionMode) reflectionMode
 {
@@ -247,33 +304,65 @@ static inline BOOL CGPointIsValid(CGPoint P)
     return !WDCollinear(inPoint_, anchorPoint_, outPoint_);
 }
 
-- (WDBezierNode *) transform:(CGAffineTransform)transform
+
+
+/*
+	Oddly enough this is the behavior for UIBezierPath
+	but this is not consistent with immutability. 
+	
+	returning an (autoreleased) mutable copy would be more appropriate
+*/
+- (void) applyTransform:(CGAffineTransform)T
 {
-    CGPoint tXIn = CGPointApplyAffineTransform(inPoint_, transform);
-    CGPoint tXAnchor = CGPointApplyAffineTransform(anchorPoint_, transform);
-    CGPoint tXOut = CGPointApplyAffineTransform(outPoint_, transform);
-    
-    WDBezierNode *transformed = [[WDBezierNode alloc] initWithInPoint:tXIn anchorPoint:tXAnchor outPoint:tXOut];
-    
-    return transformed;
+	inPoint_ = CGPointApplyAffineTransform(inPoint_, T);
+	anchorPoint_ = CGPointApplyAffineTransform(anchorPoint_, T);
+	outPoint_ = CGPointApplyAffineTransform(outPoint_, T);
 }
 
 
+/*
+	This would be appropriate, indicating a private method
+*/
+- (void) _applyTransform:(CGAffineTransform)T
+{
+	inPoint_ = CGPointApplyAffineTransform(inPoint_, T);
+	anchorPoint_ = CGPointApplyAffineTransform(anchorPoint_, T);
+	outPoint_ = CGPointApplyAffineTransform(outPoint_, T);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDBezierNode *) copyWithTransform:(CGAffineTransform)T
+{
+	WDBezierNode *node = [self mutableCopy];
+
+	if (node != nil)
+	{ [node _applyTransform:T]; }
+
+	return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (WDBezierNode *) copyWithInPoint:(CGPoint)P
 {
-	WDBezierNode *newNode = [self copyWithZone:nil];
+	// If CGPointEqualToPoint(self->inPoint_, P) return self
+	
+	WDBezierNode *newNode = [self mutableCopy];
 	newNode->inPoint_ = P;
 	return newNode;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (WDBezierNode *) copyWithOutPoint:(CGPoint)P
 {
-	WDBezierNode *newNode = [self copyWithZone:nil];
+	WDBezierNode *newNode = [self mutableCopy];
 	newNode->outPoint_ = P;
 	return newNode;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
 
 
 - (WDBezierNode *) setInPoint:(CGPoint)pt reflectionMode:(WDBezierNodeReflectionMode)reflectionMode
@@ -283,31 +372,36 @@ static inline BOOL CGPointIsValid(CGPoint P)
     return [self moveControlHandle:kWDInPoint toPoint:flippedPoint reflectionMode:reflectionMode];
 }
 
+
 - (WDBezierNode *) chopHandles
 {
-    if (self.hasInPoint || self.hasOutPoint) {
-        return [WDBezierNode bezierNodeWithAnchorPoint:anchorPoint_];
-    } else {
-        return self;
-    }
+    if (!self.hasInPoint && !self.hasOutPoint)
+	{ return self; }
+
+	return [WDBezierNode
+	bezierNodeWithAnchorPoint:anchorPoint_];
 }
 
 - (WDBezierNode *) chopOutHandle
 {
-    if (self.hasOutPoint) {
-        return [WDBezierNode bezierNodeWithInPoint:inPoint_ anchorPoint:anchorPoint_ outPoint:anchorPoint_];
-    } else {
-        return self;
-    }
+	if (!self.hasOutPoint)
+	{ return self; }
+
+	return [WDBezierNode
+	bezierNodeWithAnchorPoint:anchorPoint_
+					 outPoint:anchorPoint_
+					  inPoint:inPoint_];
 }
 
 - (WDBezierNode *) chopInHandle
 {
-    if (self.hasInPoint) {
-        return [WDBezierNode bezierNodeWithInPoint:anchorPoint_ anchorPoint:anchorPoint_ outPoint:outPoint_];
-    } else {
-        return self;
-    }
+	if (!self.hasInPoint)
+	{ return self; }
+
+	return [WDBezierNode
+	bezierNodeWithAnchorPoint:anchorPoint_
+					 outPoint:outPoint_
+					  inPoint:anchorPoint_];
 }
 
 - (WDBezierNode *) moveControlHandle:(WDPickResultType)pointToTransform toPoint:(CGPoint)pt reflectionMode:(WDBezierNodeReflectionMode)reflectionMode
@@ -356,23 +450,36 @@ static inline BOOL CGPointIsValid(CGPoint P)
         }
     }
     
-    return [[WDBezierNode alloc] initWithInPoint:inPoint anchorPoint:anchorPoint_ outPoint:outPoint];
+//    return [[WDBezierNode alloc] initWithInPoint:inPoint anchorPoint:anchorPoint_ outPoint:outPoint];
+
+	return [WDBezierNode
+	bezierNodeWithAnchorPoint:anchorPoint_
+					outPoint:outPoint
+					inPoint:inPoint];
 }
 
 - (WDBezierNode *) flippedNode
 {
-    return [WDBezierNode bezierNodeWithInPoint:self.outPoint anchorPoint:self.anchorPoint outPoint:self.inPoint];
+	return [WDBezierNode
+	bezierNodeWithAnchorPoint:self->anchorPoint_
+					outPoint:self->inPoint_
+					inPoint:self->outPoint_];
 }
     
-- (void) getInPoint:(CGPoint *)inPoint anchorPoint:(CGPoint *)anchorPoint outPoint:(CGPoint *)outPoint selected:(BOOL *)selected
+- (void) getAnchorPoint:(CGPoint *)anchorPoint
+				outPoint:(CGPoint *)outPoint
+				inPoint:(CGPoint *)inPoint
+				selected:(BOOL *)selected
 {
-    *inPoint = inPoint_;
-    *anchorPoint = anchorPoint_;
-    *outPoint = outPoint_;
-    
-    if (selected) {
-        *selected = selected_;
-    }
+	if (anchorPoint)
+	*anchorPoint = self->anchorPoint_;
+	if (outPoint)
+	*outPoint = self->outPoint_;
+	if (inPoint)
+	*inPoint = self->inPoint_;
+
+	if (selected)
+	{ *selected = self->selected_; }
 }
 
 @end

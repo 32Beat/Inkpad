@@ -338,9 +338,9 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
     float               length = 0;
     CGAffineTransform   inverse = transformed ? CGAffineTransformInvert(transform_) : CGAffineTransformIdentity;
     
-    prev = [nodes[0] transform:inverse];
+    prev = [nodes[0] copyWithTransform:inverse];
     for (int i = 1; i < numNodes; i++) {
-        curr = [nodes[(i % nodes.count)] transform:inverse];
+        curr = [nodes[(i % nodes.count)] copyWithTransform:inverse];
         
         segment = WDBezierSegmentMakeWithNodes(prev, curr);
         length = WDBezierSegmentLength(segment);
@@ -371,9 +371,9 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
     CGAffineTransform   inverse = transform ? CGAffineTransformInvert(transform_) : CGAffineTransformIdentity;
     float               totalLength = 0.0f;
     
-    prev = [nodes[0] transform:inverse];
+    prev = [nodes[0] copyWithTransform:inverse];
     for (int i = 1; i < numNodes; i++) {
-        curr = [nodes[(i % nodes.count)] transform:inverse];
+        curr = [nodes[(i % nodes.count)] copyWithTransform:inverse];
         
         segments[i-1] = WDBezierSegmentMakeWithNodes(prev, curr);
         lengths[i-1] = WDBezierSegmentLength(segments[i-1]);

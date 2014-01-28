@@ -185,7 +185,8 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
             CGPoint P2 = WDSubtractPoints(P3, WDMultiplyPointScalar(CGPointMake(xPrime, yPrime), deltaT));
             CGPoint P1 = WDAddPoints(P3, WDMultiplyPointScalar(CGPointMake(xPrime, yPrime), deltaT));
             
-            [nodes addObject:[WDBezierNode bezierNodeWithInPoint:P2 anchorPoint:P3 outPoint:P1]];
+            [nodes addObject:[WDBezierNode
+			bezierNodeWithAnchorPoint:P3 outPoint:P1 inPoint:P2]];
         }
         
         WDPath *path = [[WDPath alloc] init];

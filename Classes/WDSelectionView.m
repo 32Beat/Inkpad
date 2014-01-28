@@ -450,7 +450,7 @@
 - (void)layoutSubviews
 {
 	[self reshapeFramebuffer];
-//	[self drawView];
+	[self drawView];
 }
 
 - (void)dealloc

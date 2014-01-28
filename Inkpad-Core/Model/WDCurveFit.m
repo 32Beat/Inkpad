@@ -53,62 +53,67 @@
 //
 // construct a node array from a sequence of bezier segments
 //
-+ (WDPath *) pathFromSegments:(WDBezierSegment *)segments numSegments:(NSUInteger)numSegments closePath:(BOOL)closePath
++ (WDPath *) pathFromSegments:(WDBezierSegment *)segments
+				  numSegments:(NSUInteger)numSegments
+				    closePath:(BOOL)closePath
 {
-    NSMutableArray  *nodes = [NSMutableArray array];
-    WDBezierNode    *node;
-    
-    for (int i = 0; i < numSegments; i++) {
-        if (i == 0) {
-            // need to take the last node's in control handle if we're closed
-            node = [WDBezierNode bezierNodeWithInPoint:(closePath ? segments[numSegments - 1].in_ : segments[0].a_)
-                                           anchorPoint:segments[0].a_
-                                              outPoint:segments[0].out_];
-        } else {
-            node = [WDBezierNode bezierNodeWithInPoint:segments[i-1].in_
-                                           anchorPoint:segments[i].a_
-                                              outPoint:segments[i].out_];
-        }
-        [nodes addObject:node];
-        
-        if (i == (numSegments - 1) && !closePath) {
-            node = [WDBezierNode bezierNodeWithInPoint:segments[i].in_
-                                           anchorPoint:segments[i].b_
-                                              outPoint:segments[i].b_];
-            [nodes addObject:node];
-        }
-    }
-    
-    if (nodes.count < 2) {
-        // degenerate path
-        return nil;
-    }
-    
-    if (closePath) {
-        node = nodes[0];
-        
-        // fix up the control handles on the start/end node...
-        // we want them to be collinear but preserve the original magnitudes
-        
-        CGPoint outDelta = WDSubtractPoints(node.outPoint, node.anchorPoint);
-        CGPoint inDelta = WDSubtractPoints(node.inPoint, node.anchorPoint);
-        
-        CGPoint newIn = WDAveragePoints(inDelta, WDMultiplyPointScalar(outDelta, -1));
-        newIn = WDScaleVector(newIn, WDMagnitude(inDelta));
-        
-        CGPoint newOut = WDAveragePoints(outDelta, WDMultiplyPointScalar(inDelta, -1));
-        newOut = WDScaleVector(newOut, WDMagnitude(outDelta));
-        
-        nodes[0] = [WDBezierNode bezierNodeWithInPoint:WDAddPoints(node.anchorPoint, newIn)
-                                           anchorPoint:node.anchorPoint
-                                              outPoint:WDAddPoints(node.anchorPoint, newOut)];
-    }
-    
-    WDPath *path = [[WDPath alloc] init];
-    path.nodes = nodes;
-    path.closed = closePath;
-    
-    return path;
+	NSMutableArray *nodes = [NSMutableArray array];
+
+	WDBezierNode *node = [WDBezierNode
+	bezierNodeWithAnchorPoint:segments[0].a_
+					outPoint:segments[0].out_];
+
+	if (closePath)
+	node = [WDBezierNode
+	bezierNodeWithAnchorPoint:segments[0].a_
+					 outPoint:segments[0].out_
+					 inPoint:segments[numSegments-1].in_];
+
+	if (node != nil)
+	[nodes addObject:node];
+
+	for (int i = 1; i != numSegments; i++)
+	{
+		node = [WDBezierNode
+		bezierNodeWithAnchorPoint:segments[i].a_
+						outPoint:segments[i].out_
+						inPoint:segments[i-1].in_];
+
+		if (node != nil)
+		[nodes addObject:node];
+	}
+
+	if (nodes.count < 2) {
+		// degenerate path
+		return nil;
+	}
+
+	if (closePath) {
+		node = nodes[0];
+		
+		// fix up the control handles on the start/end node...
+		// we want them to be collinear but preserve the original magnitudes
+		
+		CGPoint outDelta = WDSubtractPoints(node.outPoint, node.anchorPoint);
+		CGPoint inDelta = WDSubtractPoints(node.inPoint, node.anchorPoint);
+		
+		CGPoint newIn = WDAveragePoints(inDelta, WDMultiplyPointScalar(outDelta, -1));
+		newIn = WDScaleVector(newIn, WDMagnitude(inDelta));
+		
+		CGPoint newOut = WDAveragePoints(outDelta, WDMultiplyPointScalar(inDelta, -1));
+		newOut = WDScaleVector(newOut, WDMagnitude(outDelta));
+		
+		nodes[0] = [WDBezierNode
+		bezierNodeWithAnchorPoint:node.anchorPoint
+						 outPoint:WDAddPoints(node.anchorPoint, newOut)
+						  inPoint:WDAddPoints(node.anchorPoint, newIn)];
+	}
+
+	WDPath *path = [[WDPath alloc] init];
+	path.nodes = nodes;
+	path.closed = closePath;
+
+	return path;
 }
 
 @end

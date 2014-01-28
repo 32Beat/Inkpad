@@ -51,7 +51,7 @@ inline BOOL WDBezierSegmentIsLineSegment(WDBezierSegment S);
 // Test whether segment represents a line between endpoints
 
 inline BOOL WDBezierSegmentIsCollinear(WDBezierSegment S);
-// Test whether segment points are collinear
+// Test whether segment points form a line
 
 inline BOOL WDBezierSegmentIsContained(WDBezierSegment S);
 // Test whether controlpoints fall within endpoints
@@ -69,13 +69,28 @@ inline BOOL WDBezierSegmentIsFlat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CGRect WDBezierSegmentGetCurveBounds(WDBezierSegment S);
+typedef struct
+{
+	CGFloat min;
+	CGFloat max;
+}
+WDRange;
+
+////////////////////////////////////////////////////////////////////////////////
+
+WDRange WDBezierSegmentRangeX(WDBezierSegment S);
+// Get range of x coordinates of curve
+
+WDRange WDBezierSegmentRangeY(WDBezierSegment S);
+// Get range of y coordinates of curve
+
+CGRect WDBezierSegmentCurveBounds(WDBezierSegment S);
 // Get bounds rectangle encompassing curve
 
-CGRect WDBezierSegmentGetControlBounds(WDBezierSegment seg);
+CGRect WDBezierSegmentControlBounds(WDBezierSegment seg);
 // Get bounds rectangle encompassing segment points
 
-CGPoint WDBezierSegmentGetControlBoundsCenter(WDBezierSegment S);
+CGPoint WDBezierSegmentControlBoundsCenter(WDBezierSegment S);
 // Get center of control bounds rectangle
 
 CGFloat WDBezierSegmentControlStripLength(WDBezierSegment S);
@@ -86,8 +101,14 @@ CGFloat WDBezierSegmentLineSegmentLength(WDBezierSegment S);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect rect);
-// Test if curve intersects rect, edge inclusive
+BOOL WDBezierSegmentControlBoundsIntersectsRect(WDBezierSegment S, CGRect R);
+// Test if control bounds intersects rect, edge exclusive
+
+BOOL WDBezierSegmentCurveBoundsIntersectsRect(WDBezierSegment S, CGRect R);
+// Test if curve bounds intersects rect, edge exclusive
+
+BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect rect);
+// Test if curve intersects rect, edge exclusive
 
 BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
 // Currently required for WDImage...
@@ -108,13 +129,13 @@ inline CGPoint WDBezierSegmentSplit
 
 void WDBezierSegmentSplitWithBlock(WDBezierSegment S, \
 					BOOL (^blockPtr)(WDBezierSegment));
-void WDBezierSegmentRangeSplitWithBlock(WDBezierSegment S, CGPoint range, \
-					CGFloat (^blockPtr)(WDBezierSegment, CGPoint));
+void WDBezierSegmentRangeSplitWithBlock(WDBezierSegment S, WDRange range, \
+					CGFloat (^blockPtr)(WDBezierSegment, WDRange));
 
 ////////////////////////////////////////////////////////////////////////////////
 
 CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
-// Same as WDBezierSegmentGetCurveBounds except it uses recursive search
+// Same as WDBezierSegmentCurveBounds except it uses recursive search
 
 ////////////////////////////////////////////////////////////////////////////////
 

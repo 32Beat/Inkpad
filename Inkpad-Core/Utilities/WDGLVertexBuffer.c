@@ -117,20 +117,6 @@ void WDGLVertexBufferDraw(WDGLVertexBuffer *vertexBuffer, GLenum type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WDGLVertexBufferFlush(WDGLVertexBuffer *vertexBuffer)
-{
-	if (vertexBuffer->count != 0)
-	{
-		// Save last vector for potential re-use.
-		vertexBuffer->data[0] = vertexBuffer->data[vertexBuffer->count-2];
-		vertexBuffer->data[1] = vertexBuffer->data[vertexBuffer->count-1];
-		// Reset count
-		vertexBuffer->count = 0;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 
 

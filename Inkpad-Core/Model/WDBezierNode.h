@@ -28,7 +28,7 @@ typedef enum {
     kWDBezierNodeRenderSelected
 } WDBezierNodeRenderMode;
 
-@interface WDBezierNode : NSObject <NSCoding, NSCopying> {
+@interface WDBezierNode : NSObject <NSCoding, NSCopying, NSMutableCopying> {
     CGPoint     inPoint_;
     CGPoint     anchorPoint_;
     CGPoint     outPoint_;
@@ -48,14 +48,27 @@ typedef enum {
 // some helper state... not strictly part of the model, but makes many operations simpler
 @property (nonatomic, assign) BOOL selected;
 
-+ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)pt;
-+ (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint;
-+ (WDBezierNode *) bezierNodeWithPoints:(const CGPoint *)P;
+
++ (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)A
+							anchorPoint:(CGPoint)B
+							outPoint:(CGPoint)C;
+
+
++ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)anchorPoint;
++ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)anchorPoint
+									outPoint:(CGPoint)outPoint;
++ (WDBezierNode *) bezierNodeWithAnchorPoint:(CGPoint)anchorPoint
+									outPoint:(CGPoint)outPoint
+									 inPoint:(CGPoint)inPoint;
 
 - (id) initWithAnchorPoint:(CGPoint)pt;
-- (id) initWithInPoint:(CGPoint)inPoint anchorPoint:(CGPoint)pt outPoint:(CGPoint)outPoint;
+- (id) initWithAnchorPoint:(CGPoint)anchorPoint
+				  outPoint:(CGPoint)outPoint;
+- (id) initWithAnchorPoint:(CGPoint)anchorPoint
+				  outPoint:(CGPoint)outPoint
+				   inPoint:(CGPoint)inPoint;
 
-- (WDBezierNode *) transform:(CGAffineTransform)transform;
+- (WDBezierNode *) copyWithTransform:(CGAffineTransform)transform;
 - (WDBezierNode *) chopHandles;
 - (WDBezierNode *) chopOutHandle;
 - (WDBezierNode *) chopInHandle;
@@ -68,7 +81,10 @@ typedef enum {
 
 - (WDBezierNode *) flippedNode;
 
-- (void) getInPoint:(CGPoint *)inPoint anchorPoint:(CGPoint *)anchorPoint outPoint:(CGPoint *)outPoint selected:(BOOL *)selected;
+- (void) getAnchorPoint:(CGPoint *)anchorPoint
+				outPoint:(CGPoint *)outPoint
+				inPoint:(CGPoint *)inPoint
+				selected:(BOOL *)selected;
 
 @end
 

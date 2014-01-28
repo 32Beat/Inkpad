@@ -429,22 +429,29 @@ void WDPathApplyAccumulateElement(void *info, const CGPathElement *element)
             CGPoint inPoint = WDAddPoints(element->points[1], WDMultiplyPointScalar(WDSubtractPoints(element->points[0], element->points[1]), 2.0f / 3));
             
             // update and replace previous node
-            node = [[WDBezierNode alloc] initWithInPoint:prev.inPoint anchorPoint:prev.anchorPoint outPoint:outPoint];
+            node = [prev copyWithOutPoint:outPoint];
             [path.nodes removeLastObject];
             [path.nodes addObject:node];
             
-            node = [[WDBezierNode alloc] initWithInPoint:inPoint anchorPoint:element->points[1] outPoint:element->points[1]];
+            node = [WDBezierNode
+			bezierNodeWithAnchorPoint:element->points[1]
+							outPoint:element->points[1]
+							inPoint:inPoint];
+
             [path.nodes addObject:node];
             break;
         case kCGPathElementAddCurveToPoint:
             prev = [path lastNode];
             
             // update and replace previous node
-            node = [[WDBezierNode alloc] initWithInPoint:prev.inPoint anchorPoint:prev.anchorPoint outPoint:element->points[0]];
+            node = [prev copyWithOutPoint:element->points[0]];
             [path.nodes removeLastObject];
             [path.nodes addObject:node];
             
-            node = [[WDBezierNode alloc] initWithInPoint:element->points[1] anchorPoint:element->points[2] outPoint:element->points[2]];
+            node = [WDBezierNode
+			bezierNodeWithAnchorPoint:element->points[1]
+							outPoint:element->points[2]
+							inPoint:element->points[1]];
             [path.nodes addObject:node];
             break;
         case kCGPathElementCloseSubpath:

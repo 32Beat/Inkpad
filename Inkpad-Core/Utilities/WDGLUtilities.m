@@ -589,6 +589,7 @@ void WDGLQueueFlush(GLenum type)
 {
 	if (gVertexBuffer.count != 0)
 	{
+		//type = GL_POINTS;
 		WDGLVertexBufferDraw(&gVertexBuffer, type);
 
 		if (type == GL_LINE_LOOP)

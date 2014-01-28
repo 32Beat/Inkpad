@@ -143,15 +143,18 @@ NSString *WDClosedKey = @"WDClosedKey";
 	return [nodes arrayByAddingObject:[nodes firstObject]];
 }
 
+- (NSArray *) segmentNodes
+{ return closed_ ? [self closedNodes] : [self orderedNodes]; }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void CGPathAddSegmentWithNodes
 (CGMutablePathRef pathRef, WDBezierNode *N1, WDBezierNode *N2)
 {
-	if (N2 == nil)
+	if (N1 == nil)
 		CGPathMoveToPoint(pathRef, NULL,
-			N1.anchorPoint.x,
-			N1.anchorPoint.y);
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
 	else
 	if (N1.hasOutPoint || N2.hasInPoint)
 		CGPathAddCurveToPoint(pathRef, NULL,
@@ -177,26 +180,24 @@ static void CGPathAddSegmentWithNodes
 }
 
 - (CGMutablePathRef) createPathRef
-{ return [self createPathRefWithNodes:[self orderedNodes]]; }
+{ return [self createPathRefWithNodes:[self segmentNodes]]; }
 
 - (CGMutablePathRef) createPathRefWithNodes:(NSArray *)nodes
 {
 	CGMutablePathRef pathRef = CGPathCreateMutable();
 	if (pathRef != nil)
 	{
-		if (nodes.count != 0)
+		WDBezierNode *lastNode = nil;
+
+		for (WDBezierNode *nextNode in nodes)
 		{
-			CGPathAddSegmentWithNodes(pathRef, nodes[0], NULL);
-
-			for (NSUInteger n=1; n!=nodes.count; n++)
-			{ CGPathAddSegmentWithNodes(pathRef, nodes[n-1], nodes[n]); }
-
-			if (closed_) 
-			{
-				CGPathAddSegmentWithNodes(pathRef, nodes.lastObject, nodes.firstObject);
-				CGPathCloseSubpath(pathRef);
-			}
+			CGPathAddSegmentWithNodes(pathRef, lastNode, nextNode);
+			lastNode = nextNode;
 		}
+
+		// For closed path, objectptr is copied
+		if (nodes.firstObject==nodes.lastObject)
+		{ CGPathCloseSubpath(pathRef); }
 	}
 
 	return pathRef;
@@ -204,7 +205,10 @@ static void CGPathAddSegmentWithNodes
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSArray *) insetForArrowhead:(WDArrowhead *)arrowhead nodes:(NSArray *)nodes attachment:(CGPoint *)attachment angle:(float *)angle
+- (NSArray *) insetForArrowhead:(WDArrowhead *)arrowhead
+				nodes:(NSArray *)nodes
+				attachment:(CGPoint *)attachment
+				angle:(float *)angle
 {
     NSMutableArray  *newNodes = [NSMutableArray array];
     NSInteger       numNodes = nodes.count;
@@ -221,11 +225,17 @@ static void CGPathAddSegmentWithNodes
         WDBezierSegment segment = WDBezierSegmentMakeWithNodes(a, b);
         WDBezierSegment L, R;
         
-        if (WDBezierSegmentPointDistantFromPoint(segment, [arrowhead insetLength:butt] * scale, arrowTip, &result, &t)) {
+        if (WDBezierSegmentPointDistantFromPoint
+			(segment, [arrowhead insetLength:butt] * scale, arrowTip, &result, &t))
+		{
             WDBezierSegmentSplitAtT(segment, &L, &R, t);
-            [newNodes addObject:[WDBezierNode bezierNodeWithInPoint:result anchorPoint:result outPoint:R.out_]];
-            [newNodes addObject:[WDBezierNode bezierNodeWithInPoint:R.in_ anchorPoint:b.anchorPoint outPoint:b.outPoint]];
-            
+            [newNodes addObject:[WDBezierNode
+			bezierNodeWithAnchorPoint:result
+							outPoint:R.out_
+							inPoint:result]];
+
+            [newNodes addObject:[b copyWithInPoint:R.in_]];
+
             for (int n = i+2; n < numNodes; n++) {
                 [newNodes addObject:nodes[n % numNodes]];
             }
@@ -395,114 +405,133 @@ static void CGPathAddSegmentWithNodes
 
 
 
-- (id) initWithRoundedRect:(CGRect)rect cornerRadius:(float)radius
+- (id) initWithRoundedRect:(CGRect)rect cornerRadius:(CGFloat)radius
 {
-    radius = MIN(radius, MIN(CGRectGetHeight(rect) * 0.5f, CGRectGetWidth(rect) * 0.5f));
-    
-    if (radius <= 0.0f) {
-        return [self initWithRect:rect];
-    }
-    
-    self = [self init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    CGPoint     ul, ur, lr, ll;
-    CGPoint     hInset = CGPointMake(radius, 0.0f);
-    CGPoint     vInset = CGPointMake(0.0f, radius);
-    CGPoint     current;
-    CGPoint     xDelta =  CGPointMake(radius * circleFactor, 0);
-    CGPoint     yDelta =  CGPointMake(0, radius * circleFactor);
-    
-    ul = rect.origin;
-    ur = CGPointMake(CGRectGetMaxX(rect), CGRectGetMinY(rect));
-    lr = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
-    ll = CGPointMake(CGRectGetMinX(rect), CGRectGetMaxY(rect));
-    
-    // top edge
-    current = WDAddPoints(ul, hInset);
-    WDBezierNode *node = [WDBezierNode bezierNodeWithInPoint:WDSubtractPoints(current, xDelta) anchorPoint:current outPoint:current];
-    [nodes_ addObject:node];
-    
-    current = WDSubtractPoints(ur, hInset);
-    node = [WDBezierNode bezierNodeWithInPoint:current anchorPoint:current outPoint:WDAddPoints(current, xDelta)];
-    [nodes_ addObject:node];
-    
-    // right edge
-    current = WDAddPoints(ur, vInset);
-    node = [WDBezierNode bezierNodeWithInPoint:WDSubtractPoints(current, yDelta) anchorPoint:current outPoint:current];
-    [nodes_ addObject:node];
-    
-    current = WDSubtractPoints(lr, vInset);
-    node = [WDBezierNode bezierNodeWithInPoint:current anchorPoint:current outPoint:WDAddPoints(current, yDelta)];
-    [nodes_ addObject:node];
-    
-    // bottom edge
-    current = WDSubtractPoints(lr, hInset);
-    node = [WDBezierNode bezierNodeWithInPoint:WDAddPoints(current, xDelta) anchorPoint:current outPoint:current];
-    [nodes_ addObject:node];
-    
-    current = WDAddPoints(ll, hInset);
-    node = [WDBezierNode bezierNodeWithInPoint:current anchorPoint:current outPoint:WDSubtractPoints(current, xDelta)];
-    [nodes_ addObject:node];
-    
-    // left edge
-    current = WDSubtractPoints(ll, vInset);
-    node = [WDBezierNode bezierNodeWithInPoint:WDAddPoints(current, yDelta) anchorPoint:current outPoint:current];
-    [nodes_ addObject:node];
-    
-    current = WDAddPoints(ul, vInset);
-    node = [WDBezierNode bezierNodeWithInPoint:current anchorPoint:current outPoint:WDSubtractPoints(current, yDelta)];
-    [nodes_ addObject:node];
-    
-    self.closed = YES;
-    bounds_ = rect;
-    
-    return self;
+	CGFloat W = CGRectGetWidth(rect);
+	CGFloat H = CGRectGetHeight(rect);
+	CGFloat maxRadius = 0.5 * MIN(W, H);
+
+	if (radius > maxRadius)
+	{ radius = maxRadius; }
+
+	if (radius <= 0.0f)
+	{ return [self initWithRect:rect]; }
+
+	self = [self init];
+	if (!self) return nil;
+
+	W -= 2*radius;
+	H -= 2*radius;
+
+
+	CGPoint C, A = rect.origin;
+
+	A.x += radius;
+	C = A;
+	C.x -= radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	A.x += W;
+	C = A;
+	C.x += radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	A.x += radius;
+	A.y += radius;
+	C = A;
+	C.y -= radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	A.y += H;
+	C = A;
+	C.y += radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	A.x -= radius;
+	A.y += radius;
+	C = A;
+	C.x += radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	A.x -= W;
+	C = A;
+	C.x -= radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	A.x -= radius;
+	A.y -= radius;
+	C = A;
+	C.y += radius * circleFactor;
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:A inPoint:C]];
+
+	self.closed = YES;
+	bounds_ = rect;
+
+	return self;
 }
 
 - (id) initWithOvalInRect:(CGRect)rect
 {
-    self = [self init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    // instantiate nodes for each corner
-    float minX = CGRectGetMinX(rect);
-    float midX = CGRectGetMidX(rect);
-    float maxX = CGRectGetMaxX(rect);
-    
-    float minY = CGRectGetMinY(rect);
-    float midY = CGRectGetMidY(rect);
-    float maxY = CGRectGetMaxY(rect);
-    
-    CGPoint xDelta =  CGPointMake((maxX - midX) * circleFactor, 0);
-    CGPoint yDelta =  CGPointMake(0, (maxY - midY) * circleFactor);
-    
-    CGPoint anchor = CGPointMake(minX, midY);
-    WDBezierNode *node = [WDBezierNode bezierNodeWithInPoint:WDAddPoints(anchor, yDelta) anchorPoint:anchor outPoint:WDSubtractPoints(anchor, yDelta)];
-    [nodes_ addObject:node];
-      
-    anchor = CGPointMake(midX, minY);
-    node = [WDBezierNode bezierNodeWithInPoint:WDSubtractPoints(anchor, xDelta) anchorPoint:anchor outPoint:WDAddPoints(anchor, xDelta)];
-    [nodes_ addObject:node];
-    
-    anchor = CGPointMake(maxX, midY);
-    node = [WDBezierNode bezierNodeWithInPoint:WDSubtractPoints(anchor, yDelta) anchorPoint:anchor outPoint:WDAddPoints(anchor, yDelta)];
-    [nodes_ addObject:node];
-    
-    anchor = CGPointMake(midX, maxY);
-    node = [WDBezierNode bezierNodeWithInPoint:WDAddPoints(anchor, xDelta) anchorPoint:anchor outPoint:WDSubtractPoints(anchor, xDelta)];
-    [nodes_ addObject:node];
-    
-    self.closed = YES;
-    bounds_ = rect;
-    
-    return self;
+	self = [self init];
+	
+	if (!self) {
+		return nil;
+	}
+
+	CGPoint M = { CGRectGetMidX(rect), CGRectGetMidY(rect) };
+	CGFloat rx = M.x - rect.origin.x;
+	CGFloat ry = M.y - rect.origin.y;
+	CGFloat cx = rx * circleFactor;
+	CGFloat cy = ry * circleFactor;
+
+	CGPoint A, B, C;
+
+	A = (CGPoint){ M.x+rx, M.y };
+	B = (CGPoint){ M.x+rx, M.y+cy };
+	C = (CGPoint){ M.x+rx, M.y-cy };
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
+
+	A = (CGPoint){ M.x,    M.y+ry };
+	B = (CGPoint){ M.x-cx, M.y+ry };
+	C = (CGPoint){ M.x+cx, M.y+ry };
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
+
+	A = (CGPoint){ M.x-rx, M.y };
+	B = (CGPoint){ M.x-rx, M.y-cy };
+	C = (CGPoint){ M.x-rx, M.y+cy };
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
+
+	A = (CGPoint){ M.x,    M.y-ry };
+	B = (CGPoint){ M.x+cx, M.y-ry };
+	C = (CGPoint){ M.x-cx, M.y-ry };
+
+	[nodes_ addObject:[WDBezierNode
+	bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
+
+	self.closed = YES;
+	bounds_ = rect;
+	
+	return self;
 }
 
 - (id) initWithStart:(CGPoint)start end:(CGPoint)end
@@ -533,8 +562,9 @@ static void CGPathAddSegmentWithNodes
         WDBezierNode *first = [self firstNode];
         WDBezierNode *last = [self lastNode];
         if (CGPointEqualToPoint(first.anchorPoint, last.anchorPoint)) {
-            WDBezierNode *closedNode = [WDBezierNode bezierNodeWithInPoint:last.inPoint anchorPoint:first.anchorPoint outPoint:first.outPoint];
-            
+            WDBezierNode *closedNode =
+			[first copyWithInPoint:last.inPoint];
+
             NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
             newNodes[0] = closedNode;
             [newNodes removeLastObject];
@@ -671,7 +701,7 @@ static void CGPathAddSegmentWithNodes
 		WDBezierSegment S = WDBezierSegmentMakeWithNodes(a, b);
 
 		//bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(S));
-		bbox = CGRectUnion(bbox, WDBezierSegmentGetCurveBounds(S));
+		bbox = CGRectUnion(bbox, WDBezierSegmentCurveBounds(S));
 	}
 
 	return bbox;
@@ -845,42 +875,38 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     return [self expandStyleBounds:styleBounds];
 }
 
-- (BOOL) intersectsRect:(CGRect)rect
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) intersectsRect:(CGRect)R
 {
-    WDBezierNode 		*prev = nil;
-    WDBezierSegment 	seg;
-    
-    if (nodes_.count == 1) {
-        return CGRectContainsPoint(rect, [self firstNode].anchorPoint);
-    }
-    
-    if (!CGRectIntersectsRect(self.bounds, rect)) {
-        return NO;
-    }
-    
-    for (WDBezierNode *node in nodes_) {
-        if (!prev) {
-            prev = node;
-            continue;
-        }
-        
-        seg = WDBezierSegmentMakeWithNodes(prev, node);
-        if (WDBezierSegmentIntersectsRect(seg, rect)) {
-            return YES;
-        }
-        
-        prev = node;
-    }
-    
-    if (self.closed) {
-        seg = WDBezierSegmentMakeWithNodes([nodes_ lastObject], nodes_[0]);
-        if (WDBezierSegmentIntersectsRect(seg, rect)) {
-            return YES;
-        }
-    }
-    
-    return NO;
+	NSArray *nodes = [self segmentNodes];
+
+	if (nodes.count == 0)
+	{ return NO; }
+
+	if (nodes.count == 1)
+	{ return CGRectContainsPoint(R, [self firstNode].anchorPoint); }
+
+	WDBezierNode *lastNode = nil;
+
+	for (WDBezierNode *nextNode in nodes)
+	{
+		if (lastNode != nil)
+		{
+			WDBezierSegment S =
+			WDBezierSegmentMakeWithNodes(lastNode, nextNode);
+
+			if (WDBezierSegmentCurveIntersectsRect(S, R))
+			{ return YES; }
+		}
+
+		lastNode = nextNode;
+	}
+
+	return NO;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSSet *) nodesInRect:(CGRect)rect
 {
@@ -909,12 +935,9 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 	for (WDBezierNode *node in nodes)
 	{
-		CGPoint P[3] = {
-			CGPointApplyAffineTransform(node.inPoint, T),
-			CGPointApplyAffineTransform(node.anchorPoint, T),
-			CGPointApplyAffineTransform(node.outPoint, T) };
-
-		[result addObject:[WDBezierNode bezierNodeWithPoints:P]];
+		id newNode = [node copyWithTransform:T];
+		if (newNode != nil)
+		{ [result addObject:newNode]; }
 	}
 
 	if (closed)
@@ -946,12 +969,9 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 		CGAffineTransform T =
 		([node selected] || transformAll) ? combined : viewTransform;
 
-		CGPoint P[3] = {
-			CGPointApplyAffineTransform(node.inPoint, T),
-			CGPointApplyAffineTransform(node.anchorPoint, T),
-			CGPointApplyAffineTransform(node.outPoint, T) };
-
-		[result addObject:[WDBezierNode bezierNodeWithPoints:P]];
+		WDBezierNode *newNode = [node copyWithTransform:T];
+		if (newNode != nil)
+		{ [result addObject:newNode]; }
 	}
 
 	if (closed)
@@ -1095,7 +1115,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
                     break;
             }
             
-            WDBezierNode *alignedNode = [node transform:translate];
+            WDBezierNode *alignedNode = [node copyWithTransform:translate];
             [newNodes addObject:alignedNode];
             [exchangedNodes addObject:alignedNode];
         } else {
@@ -1133,7 +1153,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     
     for (WDBezierNode *node in nodes_) {
         if (transformAll || node.selected) {
-            WDBezierNode *transformed = [node transform:transform];
+            WDBezierNode *transformed = [node copyWithTransform:transform];
             [newNodes addObject:transformed];
             
             if (node.selected) {
@@ -1300,8 +1320,9 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 		[newNodes replaceObjectAtIndex:(targetIndex+1)%newNodes.count
 			withObject:targetNode2];
 
-		CGPoint P[] = { L.in_, R.a_, R.out_ };
-		WDBezierNode *newNode = [WDBezierNode bezierNodeWithPoints:P];
+//		CGPoint P[] = { L.in_, R.a_, R.out_ };
+		WDBezierNode *newNode = [WDBezierNode
+		bezierNodeWithAnchorPoint:R.a_ outPoint:R.out_ inPoint:L.in_];
 
 		[newNodes insertObject:newNode atIndex:targetIndex+1];
 
@@ -1346,11 +1367,19 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 	// convert the segments back to nodes
 	for (int i = 0; i < numSegments; i++) {
-		if (i == 0) {
+		if (i == 0)
+		{
 			CGPoint inPoint = closed_ ? segments[numSegments - 1].in_ : [self firstNode].inPoint;
-			node = [WDBezierNode bezierNodeWithInPoint:inPoint anchorPoint:segments[i].a_ outPoint:segments[i].out_];
-		} else {
-			node = [WDBezierNode bezierNodeWithInPoint:segments[i-1].in_ anchorPoint:segments[i].a_ outPoint:segments[i].out_];
+
+			node = [WDBezierNode
+			bezierNodeWithAnchorPoint:segments[i].a_
+			outPoint:segments[i].out_ inPoint:inPoint];
+		}
+		else
+		{
+			node = [WDBezierNode
+			bezierNodeWithAnchorPoint:segments[i].a_
+			outPoint:segments[i].out_ inPoint:segments[i-1].in_];
 		}
 		
 		[newNodes addObject:node];
@@ -1359,8 +1388,11 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 			newestNode = node;
 		}
 		
-		if (i == (numSegments - 1) && !closed_) {
-			node = [WDBezierNode bezierNodeWithInPoint:segments[i].in_ anchorPoint:segments[i].b_ outPoint:[self lastNode].outPoint];
+		if (i == (numSegments - 1) && !closed_)
+		{
+			node = [WDBezierNode
+			bezierNodeWithAnchorPoint:segments[i].b_
+			outPoint:[self lastNode].outPoint inPoint:segments[i].in_];
 			[newNodes addObject:node];
 		}
 	}
@@ -1490,7 +1522,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     CGAffineTransform transform = CGAffineTransformMakeTranslation(delta.x, delta.y);
     
     // add the shared node (combine the handles appropriately)
-    firstNode = [firstNode transform:transform];
+    firstNode = [firstNode copyWithTransform:transform];
     [newNodes addObject:[WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:firstNode.anchorPoint outPoint:firstNode.outPoint]];
     
     // add the incoming path's nodes

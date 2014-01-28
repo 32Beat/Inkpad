@@ -88,17 +88,21 @@
             
             CGPoint outPoint = CGPointMake((path->descr_data+i)->d.c.stDx,(path->descr_data+i)->d.c.stDy);
             outPoint = WDMultiplyPointScalar(outPoint, (1.0f / 3));
-            [nodes addObject:[WDBezierNode bezierNodeWithInPoint:lastObject.inPoint
-                                                     anchorPoint:lastObject.anchorPoint
-                                                        outPoint:WDAddPoints(lastObject.anchorPoint, outPoint)]];
-            
+            [nodes addObject:[WDBezierNode
+			bezierNodeWithAnchorPoint:lastObject.anchorPoint
+							outPoint:WDAddPoints(lastObject.anchorPoint, outPoint)
+							inPoint:lastObject.inPoint]];
+
             CGPoint anchorPoint = CGPointMake((path->descr_data+i)->d.c.x,(path->descr_data+i)->d.c.y);
             CGPoint inPoint = CGPointMake((path->descr_data+i)->d.c.enDx,(path->descr_data+i)->d.c.enDy);
             inPoint = WDMultiplyPointScalar(inPoint, (1.0f / -3));
-            [nodes addObject:[WDBezierNode bezierNodeWithInPoint:WDAddPoints(anchorPoint, inPoint)
-                                                     anchorPoint:anchorPoint
-                                                        outPoint:anchorPoint]];
-		} else if ( ty == descr_close ) {
+            [nodes addObject:[WDBezierNode
+			bezierNodeWithAnchorPoint:anchorPoint
+							outPoint:anchorPoint
+							inPoint:WDAddPoints(anchorPoint, inPoint)]];
+		}
+		else
+		if ( ty == descr_close ) {
             currentPath.nodes = nodes;
             currentPath.closed = YES;
             nodes = [NSMutableArray array];
