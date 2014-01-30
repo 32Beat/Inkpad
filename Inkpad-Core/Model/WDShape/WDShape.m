@@ -37,6 +37,9 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 ////////////////////////////////////////////////////////////////////////////////
 
++ (id) shapeWithBounds:(CGRect)bounds
+{ return [[self alloc] initWithBounds:bounds]; }
+
 - (id) initWithBounds:(CGRect)bounds
 {
 	self = [super init];

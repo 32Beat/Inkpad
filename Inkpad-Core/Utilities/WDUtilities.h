@@ -116,13 +116,14 @@ static inline float WDIntDistance(int x1, int y1, int x2, int y2) {
     return sqrt(xd * xd + yd * yd);
 }
 
-static inline CGPoint WDAddPoints(CGPoint a, CGPoint b) {
-    return CGPointMake(a.x + b.x, a.y + b.y);
-}
+static inline CGPoint WDAddPoints(CGPoint a, CGPoint b)
+{ return (CGPoint){ a.x + b.x, a.y + b.y }; }
 
-static inline CGPoint WDSubtractPoints(CGPoint a, CGPoint b) {
-    return CGPointMake(a.x - b.x, a.y - b.y);
-}
+static inline CGPoint WDSubtractPoints(CGPoint a, CGPoint b)
+{ return (CGPoint){ a.x - b.x, a.y - b.y }; }
+
+static inline CGPoint WDMultiplyPoints(CGPoint a, CGPoint b)
+{ return (CGPoint){ a.x*b.x,a.y*b.y }; }
 
 static inline CGPoint WDInterpolatePoints(CGPoint a, CGPoint b, CGFloat r)
 { return (CGPoint){ a.x+r*(b.x-a.x),a.y+r*(b.y-a.y) }; }

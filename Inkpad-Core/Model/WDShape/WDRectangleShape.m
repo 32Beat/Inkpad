@@ -92,6 +92,23 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) adjustRadius:(CGFloat)radius
+{
+	// Record current radius for undo
+	[[self.undoManager prepareWithInvocationTarget:self] adjustRadius:mRadius];
+
+	// Store update areas
+	[self cacheDirtyBounds];
+
+	// Set new radius
+	[self setRadius:radius];
+
+	// Notify drawingcontroller
+	[self postDirtyBoundsChange];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

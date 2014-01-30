@@ -23,6 +23,7 @@
 
 #import "WDShape.h"
 #import "WDRectangleShape.h"
+#import "WDOvalShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
 NSString *WDShapeToolStarPointCount = @"WDShapeToolStarPointCount";
@@ -138,18 +139,17 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 {
 	CGPoint initialPoint = self.initialEvent.snappedLocation;
 
-	if (shapeMode_ == WDShapeModeOval)
-	{
-		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDPath pathWithOvalInRect:rect];
-	}
-	else
 	if (shapeMode_ == WDShapeModeRectangle)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-
 		return [WDRectangleShape shapeWithBounds:rect radius:rectCornerRadius_];
-		//return [WDPath pathWithRoundedRect:rect cornerRadius:rectCornerRadius_];
+	}
+	else
+	if (shapeMode_ == WDShapeModeOval)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDOvalShape shapeWithBounds:rect];
+//		return [WDPath pathWithOvalInRect:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeLine)

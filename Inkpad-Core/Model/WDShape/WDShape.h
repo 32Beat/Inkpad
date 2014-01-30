@@ -48,6 +48,7 @@ WDShapeType;
 	NSMutableArray *mNodes;
 }
 
++ (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
 - (id) nodes;
 - (void) resetPath;
