@@ -1897,13 +1897,13 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
             continue;
         }
         
-        for (WDElement *element in [layer.elements reverseObjectEnumerator]) {
-            pickResult = [element hitResultForPoint:pt viewScale:viewScale snapFlags:(int)flags];
-            
-            if (pickResult.type != kWDEther) {
-                return pickResult;
-            }
-        }
+		for (WDElement *element in [layer.elements reverseObjectEnumerator])
+		{
+			pickResult = [element hitResultForPoint:pt viewScale:viewScale snapFlags:(int)flags];
+			
+			if (pickResult && pickResult.type != kWDEther)
+			{ return pickResult; }
+		}
     }
     
     return [WDPickResult pickResult];

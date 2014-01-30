@@ -156,32 +156,64 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     [self.maskedElements makeObjectsPerformSelector:@selector(setLayer:) withObject:layer];
 }    
 
+
+- (WDPickResult *) hitResultForPoint:(CGPoint)hitPoint viewScale:(float)viewScale snapFlags:(int)flags
+{
+	if (flags & kWDSnapNodes)
+	{
+		// look for fill control points
+		if (self.fillTransform)
+		{
+			CGFloat hitRadius = kNodeSelectionTolerance / viewScale;
+			CGRect hitArea = WDRectFromPoint(hitPoint, hitRadius, hitRadius);
+			if (CGRectContainsPoint(hitArea, [self.fillTransform transformedStart]))
+			{
+				WDPickResult *result = [WDPickResult pickResult];
+				result.type = kWDFillStartPoint;
+				result.element = self;
+				return result;
+			}
+			else
+			if (CGRectContainsPoint(hitArea, [self.fillTransform transformedEnd]))
+			{
+				WDPickResult *result = [WDPickResult pickResult];
+				result.type = kWDFillEndPoint;
+				result.element = self;
+				return result;
+			}
+		}
+	}
+
+	// Allow others to handle event
+	return nil;
+}
+
+
+
 - (void) drawGradientControlsWithViewTransform:(CGAffineTransform)transform
 {
-    if (![self fillTransform]) {
-        return;
-    }
-    
-    WDFillTransform *fT = displayFillTransform_ ? displayFillTransform_ : [self fillTransform];
-    
-    CGPoint start = fT.start;
-    start = CGPointApplyAffineTransform(start, fT.transform);
-    start = CGPointApplyAffineTransform(start, transform);
-    
-    CGPoint end = fT.end;
-    end = CGPointApplyAffineTransform(end, fT.transform);
-    end = CGPointApplyAffineTransform(end, transform);
-    
-    [self.layer.highlightColor openGLSet];
-    WDGLStrokeLine(start, end);
+	if (![self fillTransform]) { return; }
 
-    glColor4f(1, 1, 1, 1);
-    WDGLFillDiamondMarker(start);
-    WDGLFillDiamondMarker(end);
+	WDFillTransform *fT = displayFillTransform_ ? displayFillTransform_ : [self fillTransform];
 
-    [self.layer.highlightColor openGLSet];
-    WDGLStrokeDiamondMarker(start);
-    WDGLStrokeDiamondMarker(end);
+	CGPoint start = fT.start;
+	start = CGPointApplyAffineTransform(start, fT.transform);
+	start = CGPointApplyAffineTransform(start, transform);
+
+	CGPoint end = fT.end;
+	end = CGPointApplyAffineTransform(end, fT.transform);
+	end = CGPointApplyAffineTransform(end, transform);
+
+	[self.layer.highlightColor openGLSet];
+	WDGLStrokeLine(start, end);
+
+	[[UIColor whiteColor] openGLSet];
+	WDGLFillDiamondMarker(start);
+	WDGLFillDiamondMarker(end);
+
+	[self.layer.highlightColor openGLSet];
+	WDGLStrokeDiamondMarker(start);
+	WDGLStrokeDiamondMarker(end);
 }
 
 - (NSSet *) inspectableProperties

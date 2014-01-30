@@ -13,13 +13,29 @@
 
 #import "WDShape.h"
 #import "WDBezierNode.h"
+#import "WDUtilities.h"
+#import "WDGLUtilities.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static NSString *WDShapeVersionKey = @"WDShapeVersion";
+
+static NSInteger WDShapeVersion = 1;
+static NSString *WDShapeTypeKey = @"WDShapeType";
+static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDShape
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (id) shapeWithBounds:(CGRect)bounds
-{ return [[self alloc] initWithBounds:bounds]; }
+- (void) dealloc
+{
+	if (mPathRef != nil)
+	{ CGPathRelease(mPathRef); }
+	mPathRef = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithBounds:(CGRect)bounds
 {
@@ -34,16 +50,157 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) dealloc
+- (id) copyWithZone:(NSZone *)zone
 {
-	if (mPathRef != nil)
-	{ CGPathRelease(mPathRef); }
+	WDShape *shape = [super copyWithZone:zone];
+	if (shape != nil)
+	{
+		shape->mBounds = self->mBounds;
+	}
+
+	return shape;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *) shapeTypeName
+{
+	return @"WDShapeTypeRectangle";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[super encodeWithCoder:coder];
+	
+	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
+
+	NSString *T = [self shapeTypeName];
+	[coder encodeObject:T forKey:WDShapeTypeKey];
+
+	NSString *B = NSStringFromCGRect(mBounds);
+	[coder encodeObject:B forKey:WDShapeBoundsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithCoder:(NSCoder *)coder
+{
+	self = [super initWithCoder:coder];
+	if (self != nil)
+	{
+		NSString *B = [coder decodeObjectForKey:WDShapeBoundsKey];
+		if (B != nil) { mBounds = CGRectFromString(B); }
+	}
+
+	return self;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) bounds
 { return mBounds; }
+
+- (void) setBounds:(CGRect)bounds
+{
+	mBounds = bounds;
+	[self resetPath];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) adjustBounds:(CGRect)bounds
+{
+	// Record current bounds for undo
+	[[self.undoManager prepareWithInvocationTarget:self] adjustBounds:mBounds];
+
+	// Store update areas
+	[self cacheDirtyBounds];
+
+	// Set new bounds
+	[self setBounds:bounds];
+
+	// Notify drawingcontroller
+	[self postDirtyBoundsChange];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
+							viewTransform:(CGAffineTransform)viewTransform
+{
+	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
+
+	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
+	CGPathRef pathRef = CGPathCreateCopyByTransformingPath([self pathRef], &T);
+	if (pathRef != nil)
+	{
+		WDGLRenderCGPathRef(pathRef);
+		CGPathRelease(pathRef);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDPickResult *) hitResultForPoint:(CGPoint)point viewScale:(float)viewScale snapFlags:(int)flags
+{
+	// Test for Stylable hits (particularly gradient anchors)
+	WDPickResult *result =
+	[super hitResultForPoint:point viewScale:viewScale snapFlags:flags];
+	if (result != nil) return result;
+
+	CGFloat hitRadius = kNodeSelectionTolerance / viewScale;
+	CGRect hitArea = WDRectFromPoint(point, hitRadius, hitRadius);
+
+	if (CGRectIntersectsRect(hitArea, [self bounds]))
+	{
+		if ((flags & kWDSnapNodes) || (flags & kWDSnapEdges)) {
+			result = WDSnapToRectangle([self bounds], nil, point, viewScale, flags);
+			if (result.snapped) {
+				result.element = self;
+				return result;
+			}
+		}
+
+		if (flags & kWDSnapFills) {
+			if (CGPathContainsPoint(self.pathRef, NULL, point, true)) {
+				result.element = self;
+				result.type = kWDObjectFill;
+				return result;
+			}
+		}
+	}
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// TODO: rename to applyTransform:
+
+- (NSSet *) transform:(CGAffineTransform)T
+{
+	[super transform:T];
+	// Set new bounds
+	[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark Cached Parameters
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) resetPath
+{
+	CGPathRelease(mPathRef);
+	mPathRef = nil;
+	mNodes = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (id) nodes
 { return mNodes ? mNodes : (mNodes=[self createNodes]); }

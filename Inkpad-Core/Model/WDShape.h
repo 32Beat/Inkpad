@@ -39,15 +39,16 @@ WDShapeType;
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDShape : WDAbstractPath
 {
+	// Model
+	long mType;
 	CGRect mBounds;
 
-	NSMutableArray *mNodes;
+	// Cache
 	CGPathRef mPathRef;
+	NSMutableArray *mNodes;
 }
 
-+ (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
-
 - (id) nodes;
 
 @end

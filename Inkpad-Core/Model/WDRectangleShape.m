@@ -14,6 +14,9 @@
 #import "WDRectangleShape.h"
 #import "WDBezierNode.h"
 
+static NSString *WDShapeTypeNameRectangle = @"WDShapeTypeRectangle";
+static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
+
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDRectangleShape
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +29,54 @@
 	self = [super initWithBounds:bounds];
 	if (self != nil)
 	{
+		mType = WDShapeTypeRectangle;
 		mRadius = radius;
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) copyWithZone:(NSZone *)zone
+{
+	WDRectangleShape *shape = [super copyWithZone:zone];
+	if (shape != nil)
+	{
+		shape->mRadius = self->mRadius;
+	}
+
+	return shape;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *) shapeTypeName
+{ return WDShapeTypeNameRectangle; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define NSStringFromCGFloat(v) (sizeof(v)>32)? \
+[[NSNumber numberWithDouble:v] stringValue]:\
+[[NSNumber numberWithFloat:v] stringValue]
+
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[super encodeWithCoder:coder];
+
+	NSString *R = NSStringFromCGFloat(mRadius);
+	[coder encodeObject:R forKey:WDShapeCornerRadiusKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithCoder:(NSCoder *)coder
+{
+	self = [super initWithCoder:coder];
+	if (self != nil)
+	{
+		NSString *R = [coder decodeObjectForKey:WDShapeCornerRadiusKey];
+		if (R != nil) { mRadius = [R doubleValue]; }
 	}
 
 	return self;
@@ -37,9 +87,9 @@
 - (void) setRadius:(CGFloat)radius
 {
 	mRadius = radius;
-	mNodes = nil;
 	CGPathRelease(mPathRef);
 	mPathRef = nil;
+	mNodes = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

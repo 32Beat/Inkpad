@@ -159,6 +159,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (self.shadow)
 	{ R = [self.shadow expandStyleBounds:R]; }
 
+    if (self.group)
+	{ R = [self.group expandStyleBounds:R]; }
+
 	return R;
 }
 
@@ -308,7 +311,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) cacheDirtyBounds
 {
-    dirtyBounds_ = self.styleBounds;
+    dirtyBounds_ = self.renderedBounds;
 }
 
 - (void) postDirtyBoundsChange
@@ -320,8 +323,11 @@ NSString *WDShadowKey = @"WDShadowKey";
     // the layer should dirty its thumbnail
     [self.layer invalidateThumbnail];
     
-    NSArray *rects = @[[NSValue valueWithCGRect:dirtyBounds_], [NSValue valueWithCGRect:self.styleBounds]];
-    
+//	NSArray *rects = @[[NSValue valueWithCGRect:dirtyBounds_], [NSValue valueWithCGRect:self.styleBounds]];
+	NSArray *rects =
+	@[[NSValue valueWithCGRect:dirtyBounds_],
+	[NSValue valueWithCGRect:self.renderedBounds]];
+
     NSDictionary *userInfo = @{@"rects": rects};
     [[NSNotificationCenter defaultCenter] postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
 }

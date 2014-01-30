@@ -18,6 +18,7 @@
 #import "WDUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+
 static NSString *WDBezierNodeVersionKey = @"WDBezierNodeVersion";
 
 static NSInteger WDBezierNodeVersion = 1;
@@ -68,34 +69,6 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	If WDBezierNodes are truly immutable, which the read-only vars suggest, 
-	then we can simply return "self" in copyWithZone, and only create a true
-	copy if a mutable version is requested.
-*/
-
-- (id) copyWithZone:(NSZone *)zone
-{
-	return self;
-
-//	return [self mutableCopyWithZone:zone];
-}
-
-- (id) mutableCopyWithZone:(NSZone *)zone
-{
-	WDBezierNode *node = [WDBezierNode new];
-	if (node != nil)
-	{
-		node->anchorPoint_ = self->anchorPoint_;
-		node->outPoint_ = self->outPoint_;
-		node->inPoint_ = self->inPoint_;
-		node->selected_ = self->selected_;
-	}
-
-	return node;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithAnchorPoint:(CGPoint)pt
 { return [self initWithAnchorPoint:pt outPoint:pt]; }
@@ -124,6 +97,34 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 	}
 
 	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	If WDBezierNodes are truly immutable, which the read-only vars suggest, 
+	then we can simply return "self" in copyWithZone, and only create a true
+	copy if a mutable version is requested.
+*/
+
+- (id) copyWithZone:(NSZone *)zone
+{
+	return self;
+
+//	return [self mutableCopyWithZone:zone];
+}
+
+- (id) mutableCopyWithZone:(NSZone *)zone
+{
+	WDBezierNode *node = [WDBezierNode new];
+	if (node != nil)
+	{
+		node->anchorPoint_ = self->anchorPoint_;
+		node->outPoint_ = self->outPoint_;
+		node->inPoint_ = self->inPoint_;
+		node->selected_ = self->selected_;
+	}
+
+	return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,14 +269,14 @@ NSLog(@"%@",[self description]);
 
 - (BOOL) readFromCoder:(NSCoder *)coder
 {
-	// Read anchorPoint first, assign to all
+	// Read anchorPoint first, must be present
 	NSString *P = [coder decodeObjectForKey:WDBezierNodeAnchorPointKey];
-	if (P != nil)
-	{
-		anchorPoint_ =
-		outPoint_ =
-		inPoint_ = CGPointFromString(P);
-	}
+	if (P == nil) { return NO; } 
+
+	// Assign to all
+	anchorPoint_ =
+	outPoint_ =
+	inPoint_ = CGPointFromString(P);
 
 	// Assign outPoint if available
 	P = [coder decodeObjectForKey:WDBezierNodeOutPointKey];
@@ -292,19 +293,25 @@ NSLog(@"%@",[self description]);
 
 - (BOOL) readFromCoder0:(NSCoder *)coder
 {
+	NSUInteger length = 0;
     const uint8_t *bytes =
-	[coder decodeBytesForKey:WDBezierNodePointArrayKey returnedLength:NULL];
-    
-    CFSwappedFloat32 *swapped = (CFSwappedFloat32 *) bytes;
-        
-    inPoint_.x = CFConvertFloat32SwappedToHost(swapped[0]);
-    inPoint_.y = CFConvertFloat32SwappedToHost(swapped[1]);
-    anchorPoint_.x = CFConvertFloat32SwappedToHost(swapped[2]);
-    anchorPoint_.y = CFConvertFloat32SwappedToHost(swapped[3]);
-    outPoint_.x = CFConvertFloat32SwappedToHost(swapped[4]);
-    outPoint_.y = CFConvertFloat32SwappedToHost(swapped[5]);
+	[coder decodeBytesForKey:WDBezierNodePointArrayKey returnedLength:&length];
 
-	return YES;
+    if ((bytes != nil) && (length >= 6*sizeof(CFSwappedFloat32)))
+	{
+		CFSwappedFloat32 *swapped = (CFSwappedFloat32 *) bytes;
+			
+		inPoint_.x = CFConvertFloat32SwappedToHost(swapped[0]);
+		inPoint_.y = CFConvertFloat32SwappedToHost(swapped[1]);
+		anchorPoint_.x = CFConvertFloat32SwappedToHost(swapped[2]);
+		anchorPoint_.y = CFConvertFloat32SwappedToHost(swapped[3]);
+		outPoint_.x = CFConvertFloat32SwappedToHost(swapped[4]);
+		outPoint_.y = CFConvertFloat32SwappedToHost(swapped[5]);
+
+		return YES;
+	}
+
+	return NO;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
