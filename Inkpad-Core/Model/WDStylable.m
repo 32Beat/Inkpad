@@ -156,6 +156,28 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     [self.maskedElements makeObjectsPerformSelector:@selector(setLayer:) withObject:layer];
 }    
 
+/*
+	Apply minimum default stroke expansion: 0.5*strokeSize
+*/
+- (CGRect) styleBounds
+{
+	CGRect R = [self bounds];
+
+	WDStrokeStyle *strokeStyle = [self strokeStyle];
+	if ([strokeStyle willRender])
+	{ R = [strokeStyle expandStyleBounds:R]; }
+
+	return R;
+}
+
+- (CGRect)___expandStyleBounds:(CGRect)R
+{
+	WDStrokeStyle *strokeStyle = [self strokeStyle];
+	if ([strokeStyle willRender])
+	{ R = [strokeStyle expandStyleBounds:R]; }
+
+	return R;
+}
 
 - (WDPickResult *) hitResultForPoint:(CGPoint)hitPoint viewScale:(float)viewScale snapFlags:(int)flags
 {

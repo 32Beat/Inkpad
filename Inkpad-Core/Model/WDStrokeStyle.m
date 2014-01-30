@@ -12,6 +12,7 @@
 #import "WDStrokeStyle.h"
 #import "WDColor.h"
 #import "WDXMLElement.h"
+#import "WDUtilities.h"
 
 NSString *WDColorKey = @"WDColorKey";
 NSString *WDWeightKey = @"WDWeightKey";
@@ -347,6 +348,29 @@ NSString * WDSVGStringForCGLineCap(CGLineCap cap)
     
     CGContextSetLineDash(ctx, 0.0f, lengths, dashes.count);
 }
+
+/*
+	Minimum: 
+	- angled path endings at bounds may expand result
+	- miterlimit may expand result even more
+	
+	But this is the most likely default for most cases
+*/
+- (CGRect)expandStyleBounds:(CGRect)R
+{
+	// Expand by half the stroke width
+	float w = 0.5 * self.width;
+
+	R = CGRectInset(R, -w, -w);
+
+	return R;
+}
+
+- (CGRect) styleBoundsForPath:(CGPathRef)pathRef
+{
+	return WDStrokeBoundsForPath(pathRef, self);
+}
+
 
 - (void) applyInContext:(CGContextRef)ctx
 {

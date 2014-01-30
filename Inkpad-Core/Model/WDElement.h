@@ -61,10 +61,12 @@ typedef enum {
 
 - (CGRect) bounds;
 - (CGRect) styleBounds;
+- (CGRect) shadowBounds;
+- (CGRect) renderedBounds;
 - (WDShadow *) shadowForStyleBounds;
 
 
-- (CGRect) expandStyleBounds:(CGRect)rect; 
+//- (CGRect) expandStyleBounds:(CGRect)rect;
 //- (CGRect) styleBoundsForRect:(CGRect)rect;
 
 

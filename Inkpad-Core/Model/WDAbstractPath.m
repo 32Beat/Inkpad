@@ -53,9 +53,15 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 
 - (CGPathRef) strokePathRef
 {
-    // implemented by subclasses
-    return NULL;
+	return [self pathRef];
 }
+
+- (CGRect) styleBounds
+{
+	WDStrokeStyle *strokeStyle = [self strokeStyle];
+	return [strokeStyle styleBoundsForPath:[self strokePathRef]];
+}
+
 
 - (BOOL) containsPoint:(CGPoint)pt
 {
@@ -69,38 +75,48 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 	CGContextStrokePath(ctx);
 }
 
+- (void) renderOutlineInContext:(CGContextRef)ctx
+			metaData:(WDRenderingMetaData)metaData
+{
+	CGContextAddPath(ctx, self.pathRef);
+	CGContextStrokePath(ctx);
+}
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-    if (metaData.flags & WDRenderOutlineOnly) {
-        CGContextAddPath(ctx, self.pathRef);
-        CGContextStrokePath(ctx);
-    } else if ([self.strokeStyle willRender] || self.fill || self.maskedElements) {
-        [self beginTransparencyLayer:ctx metaData:metaData];
-        
-        if (self.fill) {
-            [self.fill paintPath:self inContext:ctx];
-        }
-        
-        if (self.maskedElements) {
-            CGContextSaveGState(ctx);
-            // clip to the mask boundary
-            CGContextAddPath(ctx, self.pathRef);
-            CGContextClip(ctx);
-            
-            // draw all the elements inside the mask
-            for (WDElement *element in self.maskedElements) {
-                [element renderInContext:ctx metaData:metaData];
-            }
-            
-            CGContextRestoreGState(ctx);
-        }
-        
-        if (self.strokeStyle && [self.strokeStyle willRender]) {
-            [self renderStrokeInContext:ctx];
-        }
-        
-        [self endTransparencyLayer:ctx metaData:metaData];
-    }
+	if (metaData.flags & WDRenderOutlineOnly)
+	{
+		[self renderOutlineInContext:ctx metaData:metaData];
+	}
+	else
+	if ([self.strokeStyle willRender] || self.fill || self.maskedElements)
+	{
+		[self beginTransparencyLayer:ctx metaData:metaData];
+		
+		if (self.fill) {
+			[self.fill paintPath:self inContext:ctx];
+		}
+		
+		if (self.maskedElements) {
+			CGContextSaveGState(ctx);
+			// clip to the mask boundary
+			CGContextAddPath(ctx, self.pathRef);
+			CGContextClip(ctx);
+			
+			// draw all the elements inside the mask
+			for (WDElement *element in self.maskedElements) {
+				[element renderInContext:ctx metaData:metaData];
+			}
+			
+			CGContextRestoreGState(ctx);
+		}
+		
+		if (self.strokeStyle && [self.strokeStyle willRender]) {
+			[self renderStrokeInContext:ctx];
+		}
+		
+		[self endTransparencyLayer:ctx metaData:metaData];
+	}
 }
 
 - (NSString *) nodeSVGRepresentation {

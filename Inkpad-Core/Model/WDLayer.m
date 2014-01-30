@@ -43,7 +43,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 @synthesize visible = visible_;
 @synthesize locked = locked_;
 @synthesize opacity = opacity_;
-@synthesize styleBounds = styleBounds_;
+//@synthesize styleBounds = styleBounds_;
 @synthesize thumbnail = thumbnail_;
 
 + (WDLayer *) layer
@@ -102,11 +102,15 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 #if TARGET_OS_IPHONE
     self.highlightColor = [coder decodeObjectForKey:WDHighlightColorKey];
 #endif
-    
-    if ([coder containsValueForKey:WDOpacityKey]) {
-        self.opacity = [coder decodeFloatForKey:WDOpacityKey];
-    } else {
-        self.opacity = 1.0f;
+
+	// Set silently at this stage
+    if ([coder containsValueForKey:WDOpacityKey])
+	{
+        self->opacity_ = [coder decodeFloatForKey:WDOpacityKey];
+    }
+	else
+	{
+        self->opacity_ = 1.0f;
     }
     
     if (!self.highlightColor) {
@@ -141,7 +145,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     }
     
     for (WDElement *element in elements_) {
-        if (CGRectIntersectsRect([element styleBounds], clip)) {
+        if (CGRectIntersectsRect([element renderedBounds], clip)) {
             [element renderInContext:ctx metaData:metaData];
         }
     }
@@ -164,7 +168,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:self.styleBounds]};
+                                  @"rect": [NSValue valueWithCGRect:self.renderedBounds]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerOpacityChanged
                                                             object:self.drawing
@@ -340,7 +344,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     }
 }
 
-- (CGRect) styleBounds 
+- (CGRect) ____styleBounds
 {
     CGRect styleBounds = CGRectNull;
     
@@ -349,6 +353,17 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     }
     
     return styleBounds;
+}
+
+- (CGRect) renderedBounds
+{
+    CGRect renderedBounds = CGRectNull;
+    
+    for (WDElement *element in elements_) {
+        renderedBounds = CGRectUnion(renderedBounds, element.renderedBounds);
+    }
+    
+    return renderedBounds;
 }
 
 - (void) notifyThumbnailChanged:(id)obj
@@ -382,7 +397,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 - (UIImage *) previewInRect:(CGRect)dest
 {
-    CGRect  contentBounds = [self styleBounds];
+    CGRect  contentBounds = [self renderedBounds];
     float   contentAspect = CGRectGetWidth(contentBounds) / CGRectGetHeight(contentBounds);
     float   destAspect = CGRectGetWidth(dest)  / CGRectGetHeight(dest);
     float   scaleFactor = 1.0f;
@@ -459,7 +474,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:self.styleBounds]};
+                                  @"rect": [NSValue valueWithCGRect:self.renderedBounds]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerVisibilityChanged
                                                             object:self.drawing

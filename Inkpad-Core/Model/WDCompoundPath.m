@@ -155,14 +155,16 @@ NSString *WDSubpathsKey = @"WDSubpathsKey";
 
 - (CGRect) styleBounds
 {
-    CGRect bounds = CGRectNull;
-    
-    for (WDPath *path in subpaths_) {
-        bounds = CGRectUnion([path styleBounds], bounds);
-    }
-    
-    return [self expandStyleBounds:bounds];
+	CGRect bounds = CGRectNull;
+
+	for (WDPath *path in subpaths_)
+	{ bounds = CGRectUnion([path styleBounds], bounds); }
+
+	return bounds;
 }
+
+
+
 
 - (NSSet *) transform:(CGAffineTransform)transform
 {

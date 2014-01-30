@@ -824,81 +824,78 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
  */
 - (CGRect) styleBounds
 {
-    WDStrokeStyle *strokeStyle = [self effectiveStrokeStyle];
-    
-    if (![strokeStyle willRender]) {
-        return [self expandStyleBounds:self.bounds];
-    }
-        
-    float halfWidth =  strokeStyle.width / 2.0f;
-    float outset = sqrt((halfWidth * halfWidth) * 2);
-        
-    // expand by half the stroke width to find the basic bounding box
-    CGRect styleBounds = CGRectInset(self.bounds, -outset, -outset);
-    
-    // include miter joins on corners
-    if (nodes_.count > 2 && strokeStyle.join == kCGLineJoinMiter) {
-        NSInteger       nodeCount = closed_ ? nodes_.count + 1 : nodes_.count;
-        WDBezierNode    *prev = nodes_[0];
-        WDBezierNode    *curr = nodes_[1];
-        WDBezierNode    *next;
-        CGPoint         inPoint, outPoint, inVec, outVec;
-        float           miterLength, angle;
-        
-        for (int i = 1; i < nodeCount; i++) {
-            next = nodes_[(i+1) % nodes_.count];
-            
-            inPoint = [curr hasInPoint] ? curr.inPoint : prev.outPoint;
-            outPoint = [curr hasOutPoint] ? curr.outPoint : next.inPoint;
-            
-            inVec = WDSubtractPoints(inPoint, curr.anchorPoint);
-            outVec = WDSubtractPoints(outPoint, curr.anchorPoint);
-            
-            inVec = WDNormalizePoint(inVec);
-            outVec = WDNormalizePoint(outVec);
-            
-            angle = acos(inVec.x * outVec.x + inVec.y * outVec.y);
-            miterLength = strokeStyle.width / sin(angle / 2.0f);
-            
-            if ((miterLength / strokeStyle.width) < kMiterLimit) {
-                CGPoint avg = WDAveragePoints(inVec, outVec);
-                CGPoint directed = WDMultiplyPointScalar(WDNormalizePoint(avg), -miterLength / 2.0f);
-                
-                styleBounds = WDGrowRectToPoint(styleBounds, WDAddPoints(curr.anchorPoint, directed));
-            }
-            
-            prev = curr;
-            curr = next;
-        }
-    }
-    
-    // add in arrowheads, if any
-    if ([strokeStyle hasArrow] && self.nodes && self.nodes.count) {
-        float               scale = strokeStyle.width;
-        CGRect              arrowBounds;
-        WDArrowhead         *arrow;
-        
-        // make sure this computed
-        [self strokePathRef];
-        
-        // start arrow
-        if ([strokeStyle hasStartArrow]) {
-            arrow = [WDArrowhead arrowheads][strokeStyle.startArrow];
-            arrowBounds = [arrow boundingBoxAtPosition:arrowStartAttachment_ scale:scale angle:arrowStartAngle_
-                                     useAdjustment:(strokeStyle.cap == kCGLineCapButt)];
-            styleBounds = CGRectUnion(styleBounds, arrowBounds);
-        }
-        
-        // end arrow
-        if ([strokeStyle hasEndArrow]) {
-            arrow = [WDArrowhead arrowheads][strokeStyle.endArrow];
-            arrowBounds = [arrow boundingBoxAtPosition:arrowEndAttachment_ scale:scale angle:arrowEndAngle_
-                                     useAdjustment:(strokeStyle.cap == kCGLineCapButt)];
-            styleBounds = CGRectUnion(styleBounds, arrowBounds);
-        }
-    }
-    
-    return [self expandStyleBounds:styleBounds];
+	CGRect R = [self bounds];
+
+	WDStrokeStyle *strokeStyle = [self effectiveStrokeStyle];
+	if (![strokeStyle willRender])
+	{ return R; }
+
+	R = [strokeStyle expandStyleBounds:R];
+
+	// include miter joins on corners
+	if (nodes_.count > 2 && strokeStyle.join == kCGLineJoinMiter) {
+		NSInteger       nodeCount = closed_ ? nodes_.count + 1 : nodes_.count;
+		WDBezierNode    *prev = nodes_[0];
+		WDBezierNode    *curr = nodes_[1];
+		WDBezierNode    *next;
+		CGPoint         inPoint, outPoint, inVec, outVec;
+		float           miterLength, angle;
+		
+		for (int i = 1; i < nodeCount; i++) {
+			next = nodes_[(i+1) % nodes_.count];
+			
+			inPoint = [curr hasInPoint] ? curr.inPoint : prev.outPoint;
+			outPoint = [curr hasOutPoint] ? curr.outPoint : next.inPoint;
+			
+			inVec = WDSubtractPoints(inPoint, curr.anchorPoint);
+			outVec = WDSubtractPoints(outPoint, curr.anchorPoint);
+			
+			inVec = WDNormalizePoint(inVec);
+			outVec = WDNormalizePoint(outVec);
+			
+			angle = acos(inVec.x * outVec.x + inVec.y * outVec.y);
+			miterLength = strokeStyle.width / sin(angle / 2.0f);
+			
+			if ((miterLength / strokeStyle.width) < kMiterLimit) {
+				CGPoint avg = WDAveragePoints(inVec, outVec);
+				CGPoint directed = WDMultiplyPointScalar(WDNormalizePoint(avg), -miterLength / 2.0f);
+				
+				R = WDGrowRectToPoint(R, WDAddPoints(curr.anchorPoint, directed));
+			}
+			
+			prev = curr;
+			curr = next;
+		}
+	}
+
+	// add in arrowheads, if any
+	if ([strokeStyle hasArrow] && self.nodes && self.nodes.count) {
+		float               scale = strokeStyle.width;
+		CGRect              arrowBounds;
+		WDArrowhead         *arrow;
+		
+		// make sure this computed
+		[self strokePathRef];
+		
+		// start arrow
+		if ([strokeStyle hasStartArrow]) {
+			arrow = [WDArrowhead arrowheads][strokeStyle.startArrow];
+			arrowBounds = [arrow boundingBoxAtPosition:arrowStartAttachment_ scale:scale angle:arrowStartAngle_
+									 useAdjustment:(strokeStyle.cap == kCGLineCapButt)];
+			R = CGRectUnion(R, arrowBounds);
+		}
+		
+		// end arrow
+		if ([strokeStyle hasEndArrow]) {
+			arrow = [WDArrowhead arrowheads][strokeStyle.endArrow];
+			arrowBounds = [arrow boundingBoxAtPosition:arrowEndAttachment_ scale:scale angle:arrowEndAngle_
+									 useAdjustment:(strokeStyle.cap == kCGLineCapButt)];
+			R = CGRectUnion(R, arrowBounds);
+		}
+	}
+
+	return R;
+	//    return [self expandStyleBounds:styleBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1043,22 +1040,13 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
+	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
+	
 	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
 
 	[self renderGLOutlineWithNodes:
 	[self nodesWithTransform:viewTransform adjustmentTransform:transform]];
 
-#ifdef WD_DEBUG
-	glColor4f(0.0, 0.5, 0.0, .9);
-	CGRect R = [self getPathBoundingBox];
-	R = CGRectApplyAffineTransform(R, viewTransform);
-	WDGLStrokeRect(R);
-
-	glColor4f(0.5, 0.0, 0.0, .9);
-	R = [self styleBounds];
-	R = CGRectApplyAffineTransform(R, viewTransform);
-	WDGLStrokeRect(R);
-#endif
 }
 
 

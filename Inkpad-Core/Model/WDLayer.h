@@ -27,7 +27,8 @@
 @property (nonatomic, assign) BOOL locked;
 @property (nonatomic, assign) float opacity;
 @property (nonatomic, readonly) BOOL editable;
-@property (nonatomic, readonly) CGRect styleBounds;
+//@property (nonatomic, readonly) CGRect styleBounds;
+@property (nonatomic, readonly) CGRect renderedBounds;
 @property (weak, nonatomic, readonly) UIImage *thumbnail;
 @property (nonatomic, readonly) BOOL isSuppressingNotifications;
 

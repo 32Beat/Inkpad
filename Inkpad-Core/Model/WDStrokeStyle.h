@@ -62,6 +62,8 @@ typedef enum {
 - (BOOL) hasEndArrow;
 
 - (void) applyInContext:(CGContextRef)ctx;
+- (CGRect)expandStyleBounds:(CGRect)R;
+- (CGRect) styleBoundsForPath:(CGPathRef)pathRef;
 
 - (void) randomize;
 

@@ -126,7 +126,9 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
 - (CGRect) styleBounds 
 {
     [self layout];
-    return CGRectUnion([self expandStyleBounds:styleBounds_], self.bounds);
+	return styleBounds_;
+//    return CGRectUnion(styleBounds_, self.bounds);
+//    return CGRectUnion([self expandStyleBounds:styleBounds_], self.bounds);
 }
 
 - (BOOL) hasEditableText

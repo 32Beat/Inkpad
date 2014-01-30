@@ -927,7 +927,7 @@
         for (int i = 0; i < [drawing_.layers count]; ++i) {
             WDLayer *layer = (drawing_.layers)[i];
             if ([layer.elements count] > 0) {
-                CGRect bounds = [layer styleBounds];
+                CGRect bounds = [layer renderedBounds];
                 if (CGRectGetMaxX(bounds) > drawing_.width) {
                     drawing_.width = CGRectGetMaxX(bounds);
                 } 

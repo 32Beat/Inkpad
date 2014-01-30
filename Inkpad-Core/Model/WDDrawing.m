@@ -304,7 +304,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 {
     return CGRectMake(0, 0, dimensions_.width, dimensions_.height);
 }
-
+/*
 - (CGRect) styleBounds
 {
     CGRect styleBounds = CGRectNull;
@@ -315,6 +315,19 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
     
     return styleBounds;
 }
+*/
+- (CGRect) renderedBounds
+{
+    CGRect renderedBounds = CGRectNull;
+    
+    for (WDLayer *layer in layers_) {
+        renderedBounds = CGRectUnion(renderedBounds, layer.renderedBounds);
+    }
+    
+    return renderedBounds;
+}
+
+
 
 #pragma mark - Image Data
 
@@ -416,7 +429,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
     [[undoManager_ prepareWithInvocationTarget:self] insertLayer:layer atIndex:[layers_ indexOfObject:layer]];
     
     NSUInteger index = [layers_ indexOfObject:layer];
-    NSValue *dirtyRect = [NSValue valueWithCGRect:layer.styleBounds];
+    NSValue *dirtyRect = [NSValue valueWithCGRect:layer.renderedBounds];
     [layers_ removeObject:layer];
     
     if (!self.isSuppressingNotifications) {
@@ -432,7 +445,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
     [layers_ insertObject:layer atIndex:index];
     
     if (!self.isSuppressingNotifications) {
-        NSDictionary *userInfo = @{@"layer": layer, @"rect": [NSValue valueWithCGRect:layer.styleBounds]};
+        NSDictionary *userInfo = @{@"layer": layer, @"rect": [NSValue valueWithCGRect:layer.renderedBounds]};
         [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:WDLayerAddedNotification object:self userInfo:userInfo]];
     }
 }
@@ -571,7 +584,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
         return [self pixelImage];
     }
     
-    CGRect styleBounds = [self styleBounds];
+    CGRect styleBounds = [self renderedBounds];
     CGRect docBounds = CGRectMake(0, 0, dimensions_.width, dimensions_.height);
     
     if (CGRectEqualToRect(styleBounds, CGRectNull)) {

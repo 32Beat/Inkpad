@@ -143,41 +143,67 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) glDrawBoundsWithViewTransform:(CGAffineTransform)viewTransform
+{
+#ifdef WD_DEBUG
+	glColor4f(0.0, 0.0, 1.0, .9);
+	CGRect R = [self bounds];
+	R = CGRectApplyAffineTransform(R, viewTransform);
+	WDGLStrokeRect(R);
+
+	glColor4f(0.0, 0.5, 0.0, .9);
+	R = [self styleBounds];
+	R = CGRectApplyAffineTransform(R, viewTransform);
+	WDGLStrokeRect(R);
+
+	glColor4f(1.0, 0.0, 0.0, .9);
+	R = [self renderedBounds];
+	R = CGRectApplyAffineTransform(R, viewTransform);
+	WDGLStrokeRect(R);
+#endif
+}
+
 - (CGRect) bounds
 { return CGRectZero; }
 
 - (CGRect) styleBounds
+{ return [self bounds]; }
+
+- (CGRect) shadowBounds
 {
-	return [self bounds];
-//	return [self expandStyleBounds:[self bounds]];
+	// Fetch dry style bounds
+	CGRect R = [self styleBounds];
+
+	// Expand for shadow
+	if (self.shadow)
+	{ R = [self.shadow expandStyleBounds:R]; }
+
+	// Shadows render as pixels
+	return CGRectIntegral(R);
 }
 
 - (CGRect) renderedBounds
 {
-	CGRect R = [self styleBounds];
+	// Fetch shadow bounds
+	CGRect R = [self shadowBounds];
 
+	// Expand for group shadow
+	if (self.group)
+	{ R = [self.group expandStyleBounds:R]; }
+
+	// Return integral enlargement
+	return CGRectIntegral(R);
+}
+
+- (CGRect) expandStyleBounds:(CGRect)R
+{
 	if (self.shadow)
 	{ R = [self.shadow expandStyleBounds:R]; }
 
-    if (self.group)
+	if (self.group)
 	{ R = [self.group expandStyleBounds:R]; }
 
-	return R;
-}
-
-- (CGRect) expandStyleBounds:(CGRect)rect
-{
-    WDShadow *shadow = [self shadowForStyleBounds];
-
-	if (shadow)
-//	if (self.shadow)
-	{ rect = [shadow expandStyleBounds:rect]; }
-    
-    // if we're in a group which has its own shadow, we need to further expand our coverage
-    if (self.group)
-	{ rect = [self.group expandStyleBounds:rect]; }
-    
-    return rect;
+	return CGRectIntegral(R);
 }
 
 
@@ -282,6 +308,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[self.layer.highlightColor openGLSet];
 	WDGLStrokeRect(B);
+
+	[self glDrawBoundsWithViewTransform:viewTransform];
 }
 
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
@@ -329,7 +357,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[NSValue valueWithCGRect:self.renderedBounds]];
 
     NSDictionary *userInfo = @{@"rects": rects};
-    [[NSNotificationCenter defaultCenter] postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
+    [[NSNotificationCenter defaultCenter]
+	postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
 }
 
 - (NSSet *) alignToRect:(CGRect)rect alignment:(WDAlignment)align
@@ -640,8 +669,15 @@ NSString *WDShadowKey = @"WDShadowKey";
         CGContextSetBlendMode(ctx, blendMode_);
     }
     
-    if ([self needsTransparencyLayer:metaData.scale]) {     
-        CGContextBeginTransparencyLayer(ctx, NULL);
+    if ([self needsTransparencyLayer:metaData.scale])
+	{
+		CGRect C = CGContextGetClipBoundingBox(ctx);
+		CGRect R = [self renderedBounds];
+
+		R = CGRectIntersection(R, C);
+
+		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
+//		CGContextBeginTransparencyLayer(ctx, NULL);
     }
 }
 

@@ -10,6 +10,7 @@
 //
 
 #import "WDGroup.h"
+#import "WDShadow.h"
 #import "WDPickResult.h"
 
 NSString *WDGroupElements = @"WDGroupElements";
@@ -119,6 +120,10 @@ NSString *WDGroupElements = @"WDGroupElements";
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) bounds
 {
     CGRect bounds = CGRectNull;
@@ -130,16 +135,38 @@ NSString *WDGroupElements = @"WDGroupElements";
     return bounds;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) styleBounds
 {
-    CGRect bounds = CGRectNull;
-    
-    for (WDElement *element in elements_) {
-        bounds = CGRectUnion([element styleBounds], bounds);
-    }
-    
-    return [self expandStyleBounds:bounds];
+	CGRect bounds = CGRectNull;
+
+	for (WDElement *element in elements_)
+	{ bounds = CGRectUnion([element styleBounds], bounds); }
+
+	return bounds;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) shadowBounds
+{
+	CGRect bounds = CGRectNull;
+
+	for (WDElement *element in elements_)
+	{ bounds = CGRectUnion([element shadowBounds], bounds); }
+
+	if (self.shadow)
+	{ bounds = [self.shadow expandStyleBounds:bounds]; }
+
+	return bounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 - (BOOL) intersectsRect:(CGRect)rect
 {

@@ -76,7 +76,7 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	
 	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
 
-	NSString *T = [self shapeTypeName];
+	NSString *T = [[NSNumber numberWithLong:mType] stringValue];
 	[coder encodeObject:T forKey:WDShapeTypeKey];
 
 	NSString *B = NSStringFromCGRect(mBounds);
@@ -90,13 +90,34 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		NSString *B = [coder decodeObjectForKey:WDShapeBoundsKey];
-		if (B != nil) { mBounds = CGRectFromString(B); }
+		NSInteger version =
+		[coder decodeIntegerForKey:WDShapeVersionKey];
+
+		if (version == WDShapeVersion)
+			[self readFromCoder:coder];
 	}
 
 	return self;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) readFromCoder:(NSCoder *)coder
+{
+	//NSString *T = [coder decodeObjectForKey:WDShapeTypeKey];
+	//if (T != nil) { mType = [T integerValue]; }
+
+	NSString *B = [coder decodeObjectForKey:WDShapeBoundsKey];
+	if (B == nil) return NO;
+
+	mBounds = CGRectFromString(B);
+
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Parameters
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) bounds
@@ -128,19 +149,15 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
+// TODO: rename to applyTransform:
 
-- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
-							viewTransform:(CGAffineTransform)viewTransform
+- (NSSet *) transform:(CGAffineTransform)T
 {
-	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
+	[super transform:T];
+	// Set new bounds
+	[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
 
-	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
-	CGPathRef pathRef = CGPathCreateCopyByTransformingPath([self pathRef], &T);
-	if (pathRef != nil)
-	{
-		WDGLRenderCGPathRef(pathRef);
-		CGPathRelease(pathRef);
-	}
+	return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,18 +195,23 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: rename to applyTransform:
 
-- (NSSet *) transform:(CGAffineTransform)T
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
+							viewTransform:(CGAffineTransform)viewTransform
 {
-	[super transform:T];
-	// Set new bounds
-	[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
+	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
 
-	return nil;
+	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
+	CGPathRef pathRef = CGPathCreateCopyByTransformingPath([self pathRef], &T);
+	if (pathRef != nil)
+	{
+		WDGLRenderCGPathRef(pathRef);
+		CGPathRelease(pathRef);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 #pragma mark Cached Parameters
 ////////////////////////////////////////////////////////////////////////////////
 

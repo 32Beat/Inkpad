@@ -200,7 +200,7 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 - (CGRect) styleBounds
 {
     [self layout];
-    return CGRectUnion([self expandStyleBounds:styleBounds_], self.bounds);
+    return styleBounds_;
 }
 
 - (CGRect) controlBounds
