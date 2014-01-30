@@ -1,32 +1,26 @@
-//
-//  WDBezierNode.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2010-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierNode.h
+	Inkpad
 
-#if TARGET_OS_IPHONE
-#import <OpenGLES/ES1/gl.h>
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#else
-#import <UIKit/UIKit.h>
-#import <OpenGL/gl.h>
-#endif
+	Project Copyright (c) 2009-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+#import "WDBezierNode.h"
 
 #import "UIColor+Additions.h"
-#import "WDBezierNode.h"
 #import "WDGLUtilities.h"
 #import "WDUtilities.h"
 
-
-
+////////////////////////////////////////////////////////////////////////////////
 static NSString *WDBezierNodeVersionKey = @"WDBezierNodeVersion";
 
-static NSInteger WDBezierNodeVersion = 100;
+static NSInteger WDBezierNodeVersion = 1;
 static NSString *WDBezierNodeAnchorPointKey = @"WDBezierNodeAnchorPoint";
 static NSString *WDBezierNodeOutPointKey = @"WDBezierNodeOutPoint";
 static NSString *WDBezierNodeInPointKey = @"WDBezierNodeInPoint";
@@ -34,24 +28,21 @@ static NSString *WDBezierNodeInPointKey = @"WDBezierNodeInPoint";
 static NSInteger WDBezierNodeVersion0 = 0;
 static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 
-/**************************
- * WDBezierNode
- *************************/
-
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDBezierNode
+////////////////////////////////////////////////////////////////////////////////
 
-@synthesize inPoint = inPoint_;
 @synthesize anchorPoint = anchorPoint_;
 @synthesize outPoint = outPoint_;
+@synthesize inPoint = inPoint_;
 @synthesize selected = selected_;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Deprecated
-+ (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)A
-							anchorPoint:(CGPoint)B
-							outPoint:(CGPoint)C
-{ return [self bezierNodeWithAnchorPoint:B outPoint:C inPoint:A]; }
++ (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)C
+							anchorPoint:(CGPoint)A
+							outPoint:(CGPoint)B
+{ return [self bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +71,7 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 /*
 	If WDBezierNodes are truly immutable, which the read-only vars suggest, 
 	then we can simply return "self" in copyWithZone, and only create a true
-	copy if an immutable version is requested.
+	copy if a mutable version is requested.
 */
 
 - (id) copyWithZone:(NSZone *)zone
@@ -93,11 +84,13 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 - (id) mutableCopyWithZone:(NSZone *)zone
 {
 	WDBezierNode *node = [WDBezierNode new];
-
-	node->inPoint_ = inPoint_;
-	node->anchorPoint_ = anchorPoint_;
-	node->outPoint_ = outPoint_;
-	node->selected_ = selected_;
+	if (node != nil)
+	{
+		node->anchorPoint_ = self->anchorPoint_;
+		node->outPoint_ = self->outPoint_;
+		node->inPoint_ = self->inPoint_;
+		node->selected_ = self->selected_;
+	}
 
 	return node;
 }
@@ -141,23 +134,9 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 	{ return YES; }
 
 	return [node isKindOfClass:[self class]]&&
-	CGPointEqualToPoint(self->inPoint_, node->inPoint_) &&
 	CGPointEqualToPoint(self->anchorPoint_, node->anchorPoint_) &&
-	CGPointEqualToPoint(self->outPoint_, node->outPoint_);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-	id A = NSStringFromCGPoint(anchorPoint_);
-	id B = NSStringFromCGPoint(outPoint_);
-	id C = NSStringFromCGPoint(inPoint_);
-
-	[coder encodeInteger:WDBezierNodeVersion forKey:WDBezierNodeVersionKey];
-	[coder encodeObject:A forKey:WDBezierNodeAnchorPointKey];
-	[coder encodeObject:B forKey:WDBezierNodeOutPointKey];
-	[coder encodeObject:C forKey:WDBezierNodeInPointKey];
+	CGPointEqualToPoint(self->outPoint_, node->outPoint_)&&
+	CGPointEqualToPoint(self->inPoint_, node->inPoint_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,10 +144,99 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 static inline BOOL CGPointIsValid(CGPoint P)
 { return !isnan(P.x) && !isnan(P.y); }
 
+- (BOOL) isValid
+{
+	return
+	CGPointIsValid(self->anchorPoint_)&&
+	CGPointIsValid(self->outPoint_)&&
+	CGPointIsValid(self->inPoint_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) recoverContents
+{
+	long bitMask =
+	CGPointIsValid(self->anchorPoint_)+
+	2*CGPointIsValid(self->outPoint_)+
+	4*CGPointIsValid(self->inPoint_);
+
+	// Test for valid anchorpoint, recover handles if necessary
+	if (bitMask & 0x01)
+	{
+		if ((bitMask & 0x02) == 0)
+		{ self->outPoint_ = self->anchorPoint_; }
+		if ((bitMask & 0x04) == 0)
+		{ self->inPoint_ = self->anchorPoint_; }
+	}
+	else
+	// Test for 2 valid handles, must recover anchor
+	if (bitMask == 6)
+	{
+		self->anchorPoint_ =
+		WDInterpolatePoints(self->inPoint_, self->outPoint_, 0.5);
+	}
+	else
+	// Must recover anchor & out
+	if (bitMask == 4)
+	{
+		self->anchorPoint_ = self->inPoint_;
+		self->outPoint_ = self->inPoint_;
+	}
+	else
+	// Must recover anchor & in
+	if (bitMask == 2)
+	{
+		self->anchorPoint_ = self->outPoint_;
+		self->inPoint_ = self->outPoint_;
+	}
+	else
+	{
+		self->anchorPoint_ =
+		self->outPoint_ =
+		self->inPoint_ = CGPointZero;
+	}
+
+	// Invert bitMask: bits then indicate recovered values
+	self->state_ = bitMask^0x07;
+
+	// Report recoverability
+	return bitMask != 7;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+	// Save format version
+	[coder encodeInteger:WDBezierNodeVersion forKey:WDBezierNodeVersionKey];
+
+	// Save Anchorpoint
+	NSString *A = NSStringFromCGPoint(anchorPoint_);
+	[coder encodeObject:A forKey:WDBezierNodeAnchorPointKey];
+
+	// Save outPoint if necessary
+	if ([self hasOutPoint])
+	{
+		NSString *B = NSStringFromCGPoint(outPoint_);
+		[coder encodeObject:B forKey:WDBezierNodeOutPointKey];
+	}
+
+	// Save inPoint if necessary
+	if ([self hasInPoint])
+	{
+		NSString *C = NSStringFromCGPoint(inPoint_);
+		[coder encodeObject:C forKey:WDBezierNodeInPointKey];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super init];
 	if (!self) return nil;
+
 
 	NSInteger version =
 	[coder decodeIntegerForKey:WDBezierNodeVersionKey];
@@ -179,29 +247,29 @@ static inline BOOL CGPointIsValid(CGPoint P)
 	if (version == WDBezierNodeVersion0)
 		[self readFromCoder0:coder];
 
+	// Test for valid node
+	if ([self isValid])
+	{ return self; }
+
+
 #ifdef WD_DEBUG
-	NSLog(@"%@",[self description]);
+NSLog(@"%@",[self description]);
 #endif
 
-	if (!CGPointIsValid(anchorPoint_))
-	{ anchorPoint_ = CGPointZero; }
+	// Test for recoverability
+	if ([self recoverContents])
+	{ return self; }
 
-	if (!CGPointIsValid(outPoint_))
-	{ outPoint_ = anchorPoint_; }
-
-	if (!CGPointIsValid(inPoint_))
-	{ inPoint_ = anchorPoint_; }
-
-    return self; 
+	//TODO: corrupt file notification stategy
+    return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) readFromCoder:(NSCoder *)coder
 {
-	NSString *P;
-
-	P = [coder decodeObjectForKey:WDBezierNodeAnchorPointKey];
+	// Read anchorPoint first, assign to all
+	NSString *P = [coder decodeObjectForKey:WDBezierNodeAnchorPointKey];
 	if (P != nil)
 	{
 		anchorPoint_ =
@@ -209,9 +277,11 @@ static inline BOOL CGPointIsValid(CGPoint P)
 		inPoint_ = CGPointFromString(P);
 	}
 
+	// Assign outPoint if available
 	P = [coder decodeObjectForKey:WDBezierNodeOutPointKey];
 	if (P != nil) { outPoint_ = CGPointFromString(P); }
 
+	// Assign inPoint if available
 	P = [coder decodeObjectForKey:WDBezierNodeInPointKey];
 	if (P != nil) { inPoint_ = CGPointFromString(P); }
 
@@ -239,51 +309,40 @@ static inline BOOL CGPointIsValid(CGPoint P)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) readFromCoder_v100:(NSCoder *)coder
-{
-
-	if (!CGPointIsValid(anchorPoint_))
-	{ anchorPoint_ = CGPointZero; }
-
-	if (!CGPointIsValid(inPoint_))
-	{ inPoint_ = anchorPoint_; }
-
-	if (!CGPointIsValid(outPoint_))
-	{ outPoint_ = anchorPoint_; }
-
-	return YES;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (NSString *) description
 {
-	return [NSString stringWithFormat:@"%@:\r%@\r%@\r%@\r", \
+	return [NSString stringWithFormat:@"%@:\r\tA:%@\r\to:%@\r\ti:%@\r", \
 	[super description], \
-	NSStringFromCGPoint(inPoint_), \
 	NSStringFromCGPoint(anchorPoint_), \
-	NSStringFromCGPoint(outPoint_)];
+	NSStringFromCGPoint(outPoint_), \
+	NSStringFromCGPoint(inPoint_)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Perhaps another reflectionMode:
+	1. Adjusting outPoint always adjusts inPoint (preserve angle)
+	2. Adjusting inPoint always independent
+*/
 
 - (WDBezierNodeReflectionMode) reflectionMode
 {
-    // determine whether the points are colinear
-    
-    // normalize the handle points first
-    CGPoint     a = WDAddPoints(anchorPoint_, WDNormalizePoint(WDSubtractPoints(inPoint_, anchorPoint_)));
-    CGPoint     b = WDAddPoints(anchorPoint_, WDNormalizePoint(WDSubtractPoints(outPoint_, anchorPoint_)));
-    
-    // then compute the area of the triangle
-    float triangleArea = fabs(anchorPoint_.x * (a.y - b.y) + a.x * (b.y - anchorPoint_.y) + b.x * (anchorPoint_.y - a.y));
-    
-    if (triangleArea < 1.0e-3 && !CGPointEqualToPoint(inPoint_, outPoint_)) {
-        return WDReflectIndependent;
-    }
-    
-    return WDIndependent;
+	if ([self hasInPoint]&&[self hasOutPoint])
+	{
+		if (!CGPointEqualToPoint(outPoint_, inPoint_))
+		{
+			CGFloat r = WDCollinearity(anchorPoint_, outPoint_, inPoint_);
+			CGFloat d = WDDistance(outPoint_, inPoint_);
+
+			if ((r/d) < 1.0e-3)
+			{ return WDReflectIndependent; }
+		}
+	}
+
+	return WDIndependent;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) hasInPoint
 {
@@ -312,54 +371,52 @@ static inline BOOL CGPointIsValid(CGPoint P)
 	
 	returning an (autoreleased) mutable copy would be more appropriate
 */
-- (void) applyTransform:(CGAffineTransform)T
+- (id) applyTransform:(CGAffineTransform)T
 {
-	inPoint_ = CGPointApplyAffineTransform(inPoint_, T);
-	anchorPoint_ = CGPointApplyAffineTransform(anchorPoint_, T);
-	outPoint_ = CGPointApplyAffineTransform(outPoint_, T);
+	return [[self mutableCopy] _applyTransform:T];
 }
 
 
 /*
 	This would be appropriate, indicating a private method
 */
-- (void) _applyTransform:(CGAffineTransform)T
+- (id) _applyTransform:(CGAffineTransform)T
 {
-	inPoint_ = CGPointApplyAffineTransform(inPoint_, T);
 	anchorPoint_ = CGPointApplyAffineTransform(anchorPoint_, T);
 	outPoint_ = CGPointApplyAffineTransform(outPoint_, T);
+	inPoint_ = CGPointApplyAffineTransform(inPoint_, T);
+	return self;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDBezierNode *) copyWithTransform:(CGAffineTransform)T
 {
-	WDBezierNode *node = [self mutableCopy];
+	return [[self mutableCopy] _applyTransform:T];
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDBezierNode *) copyWithNewOutPoint:(CGPoint)P
+{
+	WDBezierNode *node = [self mutableCopy];
 	if (node != nil)
-	{ [node _applyTransform:T]; }
+	{ node->outPoint_ = P; }
 
 	return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDBezierNode *) copyWithInPoint:(CGPoint)P
+- (WDBezierNode *) copyWithNewInPoint:(CGPoint)P
 {
 	// If CGPointEqualToPoint(self->inPoint_, P) return self
 	
-	WDBezierNode *newNode = [self mutableCopy];
-	newNode->inPoint_ = P;
-	return newNode;
-}
+	WDBezierNode *node = [self mutableCopy];
+	if (node != nil)
+	{ node->inPoint_ = P; }
 
-////////////////////////////////////////////////////////////////////////////////
-
-- (WDBezierNode *) copyWithOutPoint:(CGPoint)P
-{
-	WDBezierNode *newNode = [self mutableCopy];
-	newNode->outPoint_ = P;
-	return newNode;
+	return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -472,11 +529,11 @@ static inline BOOL CGPointIsValid(CGPoint P)
 				selected:(BOOL *)selected
 {
 	if (anchorPoint)
-	*anchorPoint = self->anchorPoint_;
+	{ *anchorPoint = self->anchorPoint_; }
 	if (outPoint)
-	*outPoint = self->outPoint_;
+	{ *outPoint = self->outPoint_; }
 	if (inPoint)
-	*inPoint = self->inPoint_;
+	{ *inPoint = self->inPoint_; }
 
 	if (selected)
 	{ *selected = self->selected_; }
@@ -516,12 +573,12 @@ static inline BOOL CGPointIsValid(CGPoint P)
 	{
 		[color openGLSet];
 		WDGLFillSquareMarker(A);
-		glColor4f(1, 1, 1, 1);
+		[[UIColor whiteColor] openGLSet];
 		WDGLStrokeSquareMarker(A);
 	}
 	else
 	{
-		glColor4f(1, 1, 1, 1);
+		[[UIColor whiteColor] openGLSet];
 		WDGLFillSquareMarker(A);
 		[color openGLSet];
 		WDGLStrokeSquareMarker(A);

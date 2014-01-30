@@ -64,9 +64,9 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 
 - (void) renderStrokeInContext:(CGContextRef)ctx
 {
-    CGContextAddPath(ctx, self.strokePathRef);
-    [self.strokeStyle applyInContext:ctx];
-    CGContextStrokePath(ctx);
+	[self.strokeStyle applyInContext:ctx];
+	CGContextAddPath(ctx, self.strokePathRef);
+	CGContextStrokePath(ctx);
 }
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData

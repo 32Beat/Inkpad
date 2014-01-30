@@ -135,44 +135,49 @@ NSString *WDShadowKey = @"WDShadowKey";
     group_ = group;
 }
 
-- (CGRect) bounds
-{
-    return CGRectZero;
-}
-
-- (CGRect) styleBounds
-{
-    return [self expandStyleBounds:[self bounds]];
-}
-
 - (WDShadow *) shadowForStyleBounds
 {
     return self.shadow;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) bounds
+{ return CGRectZero; }
+
+- (CGRect) styleBounds
+{
+	return [self bounds];
+//	return [self expandStyleBounds:[self bounds]];
+}
+
+- (CGRect) renderedBounds
+{
+	CGRect R = [self styleBounds];
+
+	if (self.shadow)
+	{ R = [self.shadow expandStyleBounds:R]; }
+
+	return R;
+}
+
 - (CGRect) expandStyleBounds:(CGRect)rect
 {
     WDShadow *shadow = [self shadowForStyleBounds];
-    
-    if (!shadow) {
-        return (self.group) ? [self.group expandStyleBounds:rect] : rect;
-    }
-    
-    // expand by the shadow radius
-    CGRect shadowRect = CGRectInset(rect, -shadow.radius, -shadow.radius);
-    
-    // offset
-    float x = cos(shadow.angle) * shadow.offset;
-    float y = sin(shadow.angle) * shadow.offset;
-    shadowRect = CGRectOffset(shadowRect, x, y);
+
+	if (shadow)
+//	if (self.shadow)
+	{ rect = [shadow expandStyleBounds:rect]; }
     
     // if we're in a group which has its own shadow, we need to further expand our coverage
-    if (self.group) {
-        shadowRect = [self.group expandStyleBounds:shadowRect];
-    }
+    if (self.group)
+	{ rect = [self.group expandStyleBounds:rect]; }
     
-    return CGRectUnion(shadowRect, rect);
+    return rect;
 }
+
+
 
 - (CGRect) subselectionBounds
 {
@@ -265,8 +270,15 @@ NSString *WDShadowKey = @"WDShadowKey";
     }
 }
 
-- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
+							viewTransform:(CGAffineTransform)viewTransform
 {
+	CGRect B = [self bounds];
+	B = CGRectApplyAffineTransform(B, transform);
+	B = CGRectApplyAffineTransform(B, viewTransform);
+
+	[self.layer.highlightColor openGLSet];
+	WDGLStrokeRect(B);
 }
 
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
@@ -275,6 +287,15 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) drawOpenGLAnchorsWithViewTransform:(CGAffineTransform)transform
 {
+	CGRect B = [self bounds];
+	CGPoint L = { CGRectGetMinX(B), CGRectGetMidY(B) };
+	CGPoint R = { CGRectGetMaxX(B), CGRectGetMidY(B) };
+
+//	L = CGPointApplyAffineTransform(L, viewTransform);
+//	R = CGPointApplyAffineTransform(R, viewTransform);
+
+	[self drawOpenGLAnchorAtPoint:L transform:transform selected:NO];
+	[self drawOpenGLAnchorAtPoint:R transform:transform selected:NO];
 }
 
 - (void) drawGradientControlsWithViewTransform:(CGAffineTransform)transform

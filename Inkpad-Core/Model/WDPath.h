@@ -18,6 +18,10 @@
 @class WDCompoundPath;
 @class WDFillTransform;
 
+
+
+
+
 @interface WDPath : WDAbstractPath <NSCoding, NSCopying>
 {
     NSMutableArray      *nodes_;
@@ -28,7 +32,9 @@
     CGMutablePathRef    strokePathRef_;
     CGRect              bounds_;
     BOOL                boundsDirty_;
-    
+
+	// TODO: put in arrowhead object!
+
     // arrowheads
     CGPoint             arrowStartAttachment_;
     float               arrowStartAngle_;

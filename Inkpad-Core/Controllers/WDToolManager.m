@@ -49,25 +49,14 @@ NSString *WDActiveToolDidChange = @"WDActiveToolDidChange";
         
         WDFreehandTool *closedFreehand = (WDFreehandTool *) [WDFreehandTool tool];
         closedFreehand.closeShape = YES;
-        
-        WDShapeTool *oval = (WDShapeTool *) [WDShapeTool tool];
-        oval.shapeMode = WDShapeOval;
-        
-        WDShapeTool *rect = (WDShapeTool *) [WDShapeTool tool];
-        rect.shapeMode = WDShapeRectangle;
-        
-        WDShapeTool *star = (WDShapeTool *) [WDShapeTool tool];
-        star.shapeMode = WDShapeStar;
-        
-        WDShapeTool *poly = (WDShapeTool *) [WDShapeTool tool];
-        poly.shapeMode = WDShapePolygon;
-        
-        WDShapeTool *line = (WDShapeTool *) [WDShapeTool tool];
-        line.shapeMode = WDShapeLine;
-        
-        WDShapeTool *spiral = (WDShapeTool *) [WDShapeTool tool];
-        spiral.shapeMode = WDShapeSpiral;
-        
+/*
+		WDShapeTool *rect = [WDShapeTool rectangleTool];
+		WDShapeTool *oval = [WDShapeTool ovalTool];
+		WDShapeTool *star = [WDShapeTool starTool];
+		WDShapeTool *poly = [WDShapeTool polygonTool];
+		WDShapeTool *spiral = [WDShapeTool spiralTool];
+		WDShapeTool *line = [WDShapeTool lineTool];
+*/
         tools_ = @[[WDSelectionTool tool],
                    groupSelect,
                    [WDPenTool tool],
@@ -75,7 +64,7 @@ NSString *WDActiveToolDidChange = @"WDActiveToolDidChange";
                    [WDScissorTool tool],
                    @[[WDFreehandTool tool], closedFreehand],
                    [WDEraserTool tool],
-                   @[rect, oval, star, poly, spiral, line],
+                   [WDShapeTool tools],
                    [WDTextTool tool],
                    [WDEyedropperTool tool],
                    [WDScaleTool tool],

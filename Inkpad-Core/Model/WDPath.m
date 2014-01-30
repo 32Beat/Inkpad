@@ -31,6 +31,14 @@ const float kMiterLimit  = 10;
 // Minimize deviation http://spencermortensen.com/articles/bezier-circle/
 const float circleFactor = 0.551915024494;
 
+static NSString *WDPathVersionKey = @"WDPathVersion";
+
+//static NSInteger WDPathVersion = 100;
+static NSString *WDPathReversedKey = @"WDPathReversed";
+static NSString *WDPathClosedKey = @"WDPathClosed";
+static NSString *WDPathNodesKey = @"WDPathNodes";
+
+//static NSInteger WDPathVersion0 = 0;
 NSString *WDReversedPathKey = @"WDReversedPathKey";
 NSString *WDSuperpathKey = @"WDSuperpathKey";
 NSString *WDNodesKey = @"WDNodesKey";
@@ -234,7 +242,7 @@ static void CGPathAddSegmentWithNodes
 							outPoint:R.out_
 							inPoint:result]];
 
-            [newNodes addObject:[b copyWithInPoint:R.in_]];
+            [newNodes addObject:[b copyWithNewInPoint:R.in_]];
 
             for (int n = i+2; n < numNodes; n++) {
                 [newNodes addObject:nodes[n % numNodes]];
@@ -366,8 +374,9 @@ static void CGPathAddSegmentWithNodes
 
 + (WDPath *) pathWithRoundedRect:(CGRect)rect cornerRadius:(float)radius
 {
-    WDPath *path = [[WDPath alloc] initWithRoundedRect:rect cornerRadius:radius];
-    return path;
+//	if (rect.size.width && rect.size.height)
+	{ return [[WDPath alloc] initWithRoundedRect:rect cornerRadius:radius]; }
+	return nil;
 }
 
 + (WDPath *) pathWithOvalInRect:(CGRect)rect
@@ -390,16 +399,29 @@ static void CGPathAddSegmentWithNodes
 	return self;
 }
 
-- (void) prepareWithRect:(CGRect)R
+- (BOOL) prepareWithBounds:(CGRect)B
 {
-	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMinX(R), CGRectGetMinY(R) }];
-	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMaxX(R), CGRectGetMinY(R) }];
-	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMaxX(R), CGRectGetMaxY(R) }];
-	[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMinX(R), CGRectGetMaxY(R) }];
-	self.closed = YES;
-
-	bounds_ = R;
+	nodes_ = [[NSMutableArray alloc] init];
+	bounds_ = B;
 	boundsDirty_ = YES;
+
+	return nodes_ != nil;
+}
+
+- (BOOL) prepareWithRect:(CGRect)R
+{
+	if ([self prepareWithBounds:R])
+	{
+		[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMinX(R), CGRectGetMinY(R) }];
+		[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMaxX(R), CGRectGetMinY(R) }];
+		[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMaxX(R), CGRectGetMaxY(R) }];
+		[self addNodeWithAnchorPoint:(CGPoint){ CGRectGetMinX(R), CGRectGetMaxY(R) }];
+		self.closed = YES;
+
+		return YES;
+	}
+
+	return NO;
 }
 
 
@@ -563,7 +585,7 @@ static void CGPathAddSegmentWithNodes
         WDBezierNode *last = [self lastNode];
         if (CGPointEqualToPoint(first.anchorPoint, last.anchorPoint)) {
             WDBezierNode *closedNode =
-			[first copyWithInPoint:last.inPoint];
+			[first copyWithNewInPoint:last.inPoint];
 
             NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
             newNodes[0] = closedNode;
@@ -692,16 +714,20 @@ static void CGPathAddSegmentWithNodes
 {
 	CGRect bbox = CGRectNull;
 
-	NSInteger numNodes = closed_ ? nodes_.count : nodes_.count - 1;
+	NSArray *segmentNodes = [self segmentNodes];
 
-	for (long i = 0; i != numNodes; i++)
+	WDBezierNode *lastNode = nil;
+	for (WDBezierNode *nextNode in segmentNodes)
 	{
-		WDBezierNode *a = nodes_[i];
-		WDBezierNode *b = nodes_[(i+1) % nodes_.count];
-		WDBezierSegment S = WDBezierSegmentMakeWithNodes(a, b);
-
-		//bbox = CGRectUnion(bbox, WDBezierSegmentFindCurveBounds(S));
-		bbox = CGRectUnion(bbox, WDBezierSegmentCurveBounds(S));
+		if (lastNode != nil)
+		{
+			//bbox = CGRectUnion(bbox,
+			bbox = CGRectUnion(bbox,
+				WDBezierSegmentCurveBounds(
+				WDBezierSegmentMakeWithNodes(lastNode, nextNode)));
+		}
+		
+		lastNode = nextNode;
 	}
 
 	return bbox;
@@ -1023,8 +1049,13 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	[self nodesWithTransform:viewTransform adjustmentTransform:transform]];
 
 #ifdef WD_DEBUG
-	glColor4f(1.0, 0.2, 0.2, .5);
+	glColor4f(0.0, 0.5, 0.0, .9);
 	CGRect R = [self getPathBoundingBox];
+	R = CGRectApplyAffineTransform(R, viewTransform);
+	WDGLStrokeRect(R);
+
+	glColor4f(0.5, 0.0, 0.0, .9);
+	R = [self styleBounds];
 	R = CGRectApplyAffineTransform(R, viewTransform);
 	WDGLStrokeRect(R);
 #endif
@@ -1310,8 +1341,8 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 		//targetNode2->inPoint_ = R.in_;
 
 		// This shouldn't be necessary, as there is no need for immutable nodes
-		targetNode1 = [targetNode1 copyWithOutPoint:L.out_];
-		targetNode2 = [targetNode2 copyWithInPoint:R.in_];
+		targetNode1 = [targetNode1 copyWithNewOutPoint:L.out_];
+		targetNode2 = [targetNode2 copyWithNewInPoint:R.in_];
 
 		NSMutableArray *newNodes = [[self nodes] mutableCopyWithZone:nil];
 

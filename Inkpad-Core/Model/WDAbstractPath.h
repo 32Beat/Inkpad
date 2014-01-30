@@ -24,6 +24,10 @@ typedef enum {
     kWDEvenOddFillRule          = 1
 } WDFillRule;
 
+
+
+
+
 @interface WDAbstractPath : WDStylable <NSCoding, NSCopying>
 
 @property (nonatomic, assign) WDFillRule fillRule;

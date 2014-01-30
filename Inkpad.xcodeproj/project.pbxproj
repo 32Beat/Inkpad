@@ -310,6 +310,8 @@
 		6BFA802C1249CEDB00D1749C /* WDLayerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA802B1249CEDB00D1749C /* WDLayerCell.m */; };
 		6BFBC4EB1335F4A000D5877F /* zoom_to_fit.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BFBC4EA1335F4A000D5877F /* zoom_to_fit.png */; };
 		BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */; };
+		BE2EB05018994BFC000E53C9 /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2EB04F18994BFC000E53C9 /* WDShape.m */; };
+		BEF3FF15189972F0005B812C /* WDRectangleShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BEF3FF14189972F0005B812C /* WDRectangleShape.m */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -786,6 +788,10 @@
 		8D1107310486CEB800E47090 /* Inkpad-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Inkpad-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = WDGLVertexBuffer.c; sourceTree = "<group>"; };
 		BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDGLVertexBuffer.h; sourceTree = "<group>"; };
+		BE2EB04E18994BFC000E53C9 /* WDShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShape.h; sourceTree = "<group>"; };
+		BE2EB04F18994BFC000E53C9 /* WDShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShape.m; sourceTree = "<group>"; };
+		BEF3FF13189972F0005B812C /* WDRectangleShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDRectangleShape.h; sourceTree = "<group>"; };
+		BEF3FF14189972F0005B812C /* WDRectangleShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDRectangleShape.m; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1248,6 +1254,10 @@
 				6BABD90F141ED30100F7E0A9 /* WDRulerUnit.m */,
 				6BABD910141ED30100F7E0A9 /* WDShadow.h */,
 				6BABD911141ED30100F7E0A9 /* WDShadow.m */,
+				BE2EB04E18994BFC000E53C9 /* WDShape.h */,
+				BE2EB04F18994BFC000E53C9 /* WDShape.m */,
+				BEF3FF13189972F0005B812C /* WDRectangleShape.h */,
+				BEF3FF14189972F0005B812C /* WDRectangleShape.m */,
 				6BABD912141ED30100F7E0A9 /* WDStrokeStyle.h */,
 				6BABD913141ED30100F7E0A9 /* WDStrokeStyle.m */,
 				6BABD914141ED30100F7E0A9 /* WDStylable.h */,
@@ -1877,6 +1887,7 @@
 				6BB7F94513AB1F5A004081B3 /* WDHueShifter.m in Sources */,
 				6B308FB713B56A8A000665C3 /* WDColorAdjustmentController.m in Sources */,
 				6B308FBA13B56B59000665C3 /* WDColorBalanceController.m in Sources */,
+				BEF3FF15189972F0005B812C /* WDRectangleShape.m in Sources */,
 				5D348D891386FDA200BB0047 /* WDImportController.m in Sources */,
 				5D1CF74D138C7BAB008979B3 /* DBMetadata+Additions.m in Sources */,
 				6B23AA5F13BBECD800C9B5F0 /* WDModalTitleBar.m in Sources */,
@@ -1917,6 +1928,7 @@
 				BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */,
 				6BABD9B0141ED30100F7E0A9 /* WDColor.m in Sources */,
 				6BABD9B1141ED30100F7E0A9 /* WDCompoundPath.m in Sources */,
+				BE2EB05018994BFC000E53C9 /* WDShape.m in Sources */,
 				6BABD9B2141ED30100F7E0A9 /* WDCurveFit.m in Sources */,
 				6BABD9B3141ED30100F7E0A9 /* WDDrawing.m in Sources */,
 				6BABD9B4141ED30100F7E0A9 /* WDElement.m in Sources */,

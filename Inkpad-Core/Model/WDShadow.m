@@ -81,6 +81,28 @@ NSString *WDShadowAngleKey = @"WDShadowAngleKey";
     return ((radius_ == shadow.radius) && (offset_ == shadow.offset) && (angle_ == shadow.angle) && [color_ isEqual:shadow.color]);
 }
 
+
+- (CGVector) offsetVector
+{
+	CGVector V = (CGVector){
+	self.offset * cos(self.angle),
+	self.offset * sin(self.angle) };
+
+	return V;
+}
+
+- (CGRect) expandStyleBounds:(CGRect)srcR
+{
+	// Move by offset
+	CGVector V = [self offsetVector];
+	CGRect R = CGRectOffset(srcR, V.dx, V.dy);
+	// Expand by blur radius
+	R = CGRectInset(R, -self.radius, -self.radius);
+
+	return CGRectUnion(srcR, R);
+}
+
+
 - (void) applyInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
     float x = cos(angle_) * offset_ * metaData.scale;

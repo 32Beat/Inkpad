@@ -25,6 +25,7 @@
 + (WDShadow *) shadowWithColor:(WDColor *)color radius:(float)radius offset:(float)offset angle:(float)angle;
 - (id) initWithColor:(WDColor *)color radius:(float)radius offset:(float)offset angle:(float)angle;
 
+- (CGRect) expandStyleBounds:(CGRect)R;
 - (void) applyInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 - (WDShadow *) adjustColor:(WDColor * (^)(WDColor *color))adjustment;

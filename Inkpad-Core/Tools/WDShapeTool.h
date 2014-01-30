@@ -11,17 +11,21 @@
 
 #import "WDTool.h"
 
-enum {
-    WDShapeRectangle = 0,
-    WDShapeOval,
-    WDShapeStar,
-    WDShapePolygon,
-    WDShapeLine,
-    WDShapeSpiral
-};
+typedef enum WDShapeMode
+{
+	WDShapeModeRectangle = 0,
+	WDShapeModeOval,
+	WDShapeModeStar,
+	WDShapeModePolygon,
+	WDShapeModeLine,
+	WDShapeModeSpiral
+}
+WDShapeMode;
+
+
 
 @interface WDShapeTool : WDTool {
-    int                 shapeMode_;
+    WDShapeMode                 shapeMode_;
     
 #if TARGET_OS_IPHONE
     IBOutlet UIView     *optionsView_;
@@ -47,7 +51,18 @@ enum {
     int                 decay_;
 }
 
-@property (nonatomic, assign) int shapeMode;
+@property (nonatomic, assign) WDShapeMode shapeMode;
+
++ (id) tools;
++ (id) rectangleTool;
++ (id) ovalTool;
++ (id) starTool;
++ (id) polygonTool;
++ (id) lineTool;
++ (id) spiralTool;
+
++ (id) shapeToolWithMode:(WDShapeMode)mode;
+- (id) initWithMode:(WDShapeMode)mode;
 
 - (IBAction) increment:(id)sender;
 - (IBAction) decrement:(id)sender;

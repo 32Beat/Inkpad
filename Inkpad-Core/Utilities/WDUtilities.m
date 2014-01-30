@@ -293,6 +293,9 @@ CGRect WDRectFromPoint(CGPoint a, float width, float height)
 BOOL WDCollinear(CGPoint a, CGPoint b, CGPoint c)
 { return ((b.x-a.x)*(c.y-a.y)) == ((c.x-a.x)*(b.y-a.y)); }
 
+CGFloat WDCollinearity(CGPoint a, CGPoint b, CGPoint c)
+{ return fabs(((b.x-a.x)*(c.y-a.y)) - ((c.x-a.x)*(b.y-a.y))); }
+
 
 BOOL _WDCollinear(CGPoint a, CGPoint b, CGPoint c)
 {
@@ -429,7 +432,7 @@ void WDPathApplyAccumulateElement(void *info, const CGPathElement *element)
             CGPoint inPoint = WDAddPoints(element->points[1], WDMultiplyPointScalar(WDSubtractPoints(element->points[0], element->points[1]), 2.0f / 3));
             
             // update and replace previous node
-            node = [prev copyWithOutPoint:outPoint];
+            node = [prev copyWithNewOutPoint:outPoint];
             [path.nodes removeLastObject];
             [path.nodes addObject:node];
             
@@ -444,7 +447,7 @@ void WDPathApplyAccumulateElement(void *info, const CGPathElement *element)
             prev = [path lastNode];
             
             // update and replace previous node
-            node = [prev copyWithOutPoint:element->points[0]];
+            node = [prev copyWithNewOutPoint:element->points[0]];
             [path.nodes removeLastObject];
             [path.nodes addObject:node];
             

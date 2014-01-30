@@ -63,6 +63,7 @@ CGPoint WDConstrainPoint(CGPoint pt);
 
 CGRect WDRectFromPoint(CGPoint a, float width, float height);
 
+CGFloat WDCollinearity(CGPoint a, CGPoint b, CGPoint c);
 BOOL WDCollinear(CGPoint a, CGPoint b, CGPoint c);
 
 BOOL WDLineSegmentsIntersectWithValues(CGPoint A, CGPoint B, CGPoint C, CGPoint D, float *r, float *s);
@@ -122,6 +123,9 @@ static inline CGPoint WDAddPoints(CGPoint a, CGPoint b) {
 static inline CGPoint WDSubtractPoints(CGPoint a, CGPoint b) {
     return CGPointMake(a.x - b.x, a.y - b.y);
 }
+
+static inline CGPoint WDInterpolatePoints(CGPoint a, CGPoint b, CGFloat r)
+{ return (CGPoint){ a.x+r*(b.x-a.x),a.y+r*(b.y-a.y) }; }
 
 static inline float WDDistance(CGPoint a, CGPoint b) {
     float xd = (a.x - b.x);
