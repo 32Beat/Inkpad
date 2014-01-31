@@ -149,7 +149,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:self.renderedBounds]};
+                                  @"rect": [NSValue valueWithCGRect:self.resultArea]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerOpacityChanged
                                                             object:self.drawing
@@ -426,7 +426,9 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 - (UIImage *) previewInRect:(CGRect)dest
 {
-    CGRect  contentBounds = [self renderedBounds];
+    CGRect  contentBounds = [self resultArea];
+	if (CGRectIsEmpty(contentBounds)) return nil;
+
     float   contentAspect = CGRectGetWidth(contentBounds) / CGRectGetHeight(contentBounds);
     float   destAspect = CGRectGetWidth(dest)  / CGRectGetHeight(dest);
     float   scaleFactor = 1.0f;
@@ -503,7 +505,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:self.renderedBounds]};
+                                  @"rect": [NSValue valueWithCGRect:self.resultArea]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerVisibilityChanged
                                                             object:self.drawing

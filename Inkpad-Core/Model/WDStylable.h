@@ -46,3 +46,7 @@
 - (void) setStrokeStyleQuiet:(WDStrokeStyle *)strokeStyle;
 
 @end
+
+
+
+

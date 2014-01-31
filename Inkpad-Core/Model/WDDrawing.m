@@ -316,12 +316,13 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
     return styleBounds;
 }
 */
+
 - (CGRect) renderedBounds
 {
     CGRect renderedBounds = CGRectNull;
     
     for (WDLayer *layer in layers_) {
-        renderedBounds = CGRectUnion(renderedBounds, layer.renderedBounds);
+        renderedBounds = CGRectUnion(renderedBounds, layer.resultArea);
     }
     
     return renderedBounds;
@@ -429,7 +430,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
     [[undoManager_ prepareWithInvocationTarget:self] insertLayer:layer atIndex:[layers_ indexOfObject:layer]];
     
     NSUInteger index = [layers_ indexOfObject:layer];
-    NSValue *dirtyRect = [NSValue valueWithCGRect:layer.renderedBounds];
+    NSValue *dirtyRect = [NSValue valueWithCGRect:layer.resultArea];
     [layers_ removeObject:layer];
     
     if (!self.isSuppressingNotifications) {
@@ -445,7 +446,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
     [layers_ insertObject:layer atIndex:index];
     
     if (!self.isSuppressingNotifications) {
-        NSDictionary *userInfo = @{@"layer": layer, @"rect": [NSValue valueWithCGRect:layer.renderedBounds]};
+        NSDictionary *userInfo = @{@"layer": layer, @"rect": [NSValue valueWithCGRect:layer.resultArea]};
         [[NSNotificationCenter defaultCenter] postNotification:[NSNotification notificationWithName:WDLayerAddedNotification object:self userInfo:userInfo]];
     }
 }

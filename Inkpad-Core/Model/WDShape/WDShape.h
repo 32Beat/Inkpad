@@ -42,7 +42,8 @@ WDShapeType;
 	// Model
 	long mType;
 	CGRect mBounds;
-
+	CGAffineTransform mTransform;
+	
 	// Cache
 	CGPathRef mPathRef;
 	NSMutableArray *mNodes;

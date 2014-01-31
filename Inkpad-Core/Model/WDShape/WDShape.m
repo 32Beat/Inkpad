@@ -23,6 +23,7 @@ static NSString *WDShapeVersionKey = @"WDShapeVersion";
 static NSInteger WDShapeVersion = 1;
 static NSString *WDShapeTypeKey = @"WDShapeType";
 static NSString *WDShapeBoundsKey = @"WDShapeBounds";
+static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDShape
@@ -45,7 +46,17 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	self = [super init];
 	if (self != nil)
 	{
+		mTransform =
+		(CGAffineTransform)
+		{ 1.0, 0.0, 0.0, 1.0,
+		CGRectGetMidX(bounds),
+		CGRectGetMidY(bounds) };
+
+		bounds.origin.x = -CGRectGetMidX(bounds);
+		bounds.origin.y = -CGRectGetMidY(bounds);
+
 		mBounds = bounds;
+//		mTransform = CGAffineTransformIdentity;
 	}
 
 	return self;
@@ -59,6 +70,7 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	if (shape != nil)
 	{
 		shape->mBounds = self->mBounds;
+		shape->mTransform = self->mTransform;
 	}
 
 	return shape;
@@ -78,12 +90,9 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	[super encodeWithCoder:coder];
 	
 	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
-
-	NSString *T = [[NSNumber numberWithLong:mType] stringValue];
-	[coder encodeObject:T forKey:WDShapeTypeKey];
-
-	NSString *B = NSStringFromCGRect(mBounds);
-	[coder encodeObject:B forKey:WDShapeBoundsKey];
+	[coder encodeInteger:mType forKey:WDShapeTypeKey];
+	[coder encodeCGRect:mBounds forKey:WDShapeBoundsKey];
+	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +102,8 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
+		mTransform = CGAffineTransformIdentity;
+
 		NSInteger version =
 		[coder decodeIntegerForKey:WDShapeVersionKey];
 
@@ -110,10 +121,10 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	//NSString *T = [coder decodeObjectForKey:WDShapeTypeKey];
 	//if (T != nil) { mType = [T integerValue]; }
 
-	NSString *B = [coder decodeObjectForKey:WDShapeBoundsKey];
-	if (B == nil) return NO;
-
-	mBounds = CGRectFromString(B);
+	if ([coder containsValueForKey:WDShapeBoundsKey])
+	{ mBounds = [coder decodeCGRectForKey:WDShapeBoundsKey]; }
+	if ([coder containsValueForKey:WDShapeTransformKey])
+	{ mTransform = [coder decodeCGAffineTransformForKey:WDShapeTransformKey]; }
 
 	return YES;
 }
@@ -124,11 +135,22 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) bounds
-{ return mBounds; }
+{ return CGRectApplyAffineTransform(mBounds, mTransform); }
 
 - (void) setBounds:(CGRect)bounds
 {
 	mBounds = bounds;
+	[self resetPath];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGAffineTransform) transform
+{ return mTransform; }
+
+- (void) setTransform:(CGAffineTransform)T
+{
+	mTransform = T;
 	[self resetPath];
 }
 
@@ -150,6 +172,23 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) adjustTransform:(CGAffineTransform)T
+{
+	// Record current bounds for undo
+	[[self.undoManager prepareWithInvocationTarget:self] adjustTransform:mTransform];
+
+	// Store update areas
+	[self cacheDirtyBounds];
+
+	// Set new bounds
+	[self setTransform:T];
+
+	// Notify drawingcontroller
+	[self postDirtyBoundsChange];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 // TODO: rename to applyTransform:
@@ -157,8 +196,11 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 - (NSSet *) transform:(CGAffineTransform)T
 {
 	[super transform:T];
+
+	T = CGAffineTransformConcat(mTransform, T);
+	[self adjustTransform:T];
 	// Set new bounds
-	[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
+	//[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
 
 	return nil;
 }
@@ -222,7 +264,7 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 {
 	CGPathRelease(mPathRef);
 	mPathRef = nil;
-	mNodes = nil;
+//	mNodes = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,10 +317,10 @@ static void CGPathAddSegmentWithNodes
 - (NSArray *) segmentNodes
 { return [[self nodes] arrayByAddingObject:[[self nodes] firstObject]]; }
 
-- (CGMutablePathRef) createPathRef
+- (CGPathRef) createPathRef
 { return [self createPathRefWithNodes:[self segmentNodes]]; }
 
-- (CGMutablePathRef) createPathRefWithNodes:(NSArray *)nodes
+- (CGPathRef) createPathRefWithNodes:(NSArray *)nodes
 {
 	CGMutablePathRef pathRef = CGPathCreateMutable();
 	if (pathRef != nil)
@@ -295,7 +337,9 @@ static void CGPathAddSegmentWithNodes
 		{ CGPathCloseSubpath(pathRef); }
 	}
 
-	return pathRef;
+	CGPathRef t =  CGPathCreateCopyByTransformingPath(pathRef, &mTransform);
+	CGPathRelease(pathRef);
+	return t;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

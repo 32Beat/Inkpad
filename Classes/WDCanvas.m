@@ -373,22 +373,26 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 - (void) drawDocumentBorder:(CGContextRef)ctx
 {
-    // draw the document border
-    CGRect docBounds = CGRectMake(0, 0, drawing_.dimensions.width, drawing_.dimensions.height);
-    docBounds = CGContextConvertRectToDeviceSpace(ctx, docBounds);
-    docBounds = CGRectIntegral(docBounds);
-    docBounds = CGRectInset(docBounds, 0.5f, 0.5f);
+	// draw the document border
+	CGRect docBounds =
+	CGRectMake(0, 0, drawing_.dimensions.width, drawing_.dimensions.height);
+	docBounds = CGContextConvertRectToDeviceSpace(ctx, docBounds);
+	docBounds = CGRectIntegral(docBounds);
+	docBounds = CGRectInset(docBounds, -0.5f, -0.5f);
+
     docBounds = CGContextConvertRectToUserSpace(ctx, docBounds);
     
     CGContextAddRect(ctx, [self visibleRect]);
     CGContextAddRect(ctx, docBounds);
-    CGContextSetGrayFillColor(ctx, [self backgroundGrayLevel], [self backgroundOpacity]);
+    CGContextSetGrayFillColor
+	(ctx, [self backgroundGrayLevel], [self backgroundOpacity]);
     CGContextEOFillPath(ctx);
     
     CGContextSetRGBStrokeColor(ctx, 0, 0, 0, 1);
     CGContextSetLineWidth(ctx, 1.0f / (viewScale_ * [UIScreen mainScreen].scale));
     CGContextStrokeRect(ctx, docBounds);
-}    
+
+}
 
 // don't draw gridlines too close together
 - (float) effectiveGridSpacing:(CGContextRef)ctx

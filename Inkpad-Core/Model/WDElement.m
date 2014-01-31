@@ -738,8 +738,9 @@ NSString *WDShadowKey = @"WDShadowKey";
     
     if ([self needsTransparencyLayer:metaData.scale])
 	{
-		CGContextBeginTransparencyLayer(ctx, NULL);
-//		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
+//		CGContextBeginTransparencyLayer(ctx, NULL);
+		CGRect R = [self renderBounds]; \
+		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
     }
 }
 
