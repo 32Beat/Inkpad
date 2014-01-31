@@ -43,8 +43,14 @@ typedef enum {
 @class WDShadow;
 @class WDXMLElement;
 
-@interface WDElement : NSObject <NSCoding, NSCopying> {
-    CGRect      dirtyBounds_;
+@interface WDElement : NSObject <NSCoding, NSCopying>
+{
+	// Cached info
+	CGRect mStyleBounds;
+	CGRect mShadowBounds;
+	CGRect mRenderBounds;
+
+	CGRect dirtyBounds_;
 }
 
 @property (nonatomic, weak) WDLayer *layer;
@@ -59,16 +65,20 @@ typedef enum {
 
 - (void) awakeFromEncoding;
 
+
 - (CGRect) bounds;
 - (CGRect) styleBounds;
+- (CGRect) computeStyleBounds;
 - (CGRect) shadowBounds;
-- (CGRect) renderedBounds;
-- (WDShadow *) shadowForStyleBounds;
+- (CGRect) computeShadowBounds;
+- (CGRect) renderBounds;
+- (CGRect) computeRenderBounds;
 
+- (CGRect) expandRenderArea:(CGRect)R;
 
-//- (CGRect) expandStyleBounds:(CGRect)rect;
-//- (CGRect) styleBoundsForRect:(CGRect)rect;
-
+- (void) invalidateBounds;
+- (void) invalidateStyleBounds;
+- (void) invalidateShadowBounds;
 
 
 - (CGRect) subselectionBounds;

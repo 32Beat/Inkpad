@@ -32,7 +32,7 @@ NSString *WDDropboxWasUnlinkedNotification = @"WDDropboxWasUnlinkedNotification"
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
     #if !WD_DEBUG
-    #warning "Set appropriate Dropbox keys before submitting to the app store"
+    //#warning "Set appropriate Dropbox keys before submitting to the app store"
     #endif
     
     NSLog(@"No Dropbox Keys!");

@@ -142,6 +142,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Bounds
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) glDrawBoundsWithViewTransform:(CGAffineTransform)viewTransform
 {
@@ -157,55 +160,141 @@ NSString *WDShadowKey = @"WDShadowKey";
 	WDGLStrokeRect(R);
 
 	glColor4f(1.0, 0.0, 0.0, .9);
-	R = [self renderedBounds];
+	R = [self renderBounds];
 	R = CGRectApplyAffineTransform(R, viewTransform);
 	WDGLStrokeRect(R);
 #endif
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) bounds
 { return CGRectZero; }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) styleBounds
+{
+	if (CGRectIsEmpty(mStyleBounds))
+	{ mStyleBounds = [self computeStyleBounds]; }
+	return mStyleBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeStyleBounds
 { return [self bounds]; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) shadowBounds
 {
-	// Fetch dry style bounds
+	if (CGRectIsEmpty(mShadowBounds))
+	{ mShadowBounds = [self computeShadowBounds]; }
+	return mShadowBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeShadowBounds
+{
 	CGRect R = [self styleBounds];
-
-	// Expand for shadow
-	if (self.shadow)
-	{ R = [self.shadow expandStyleBounds:R]; }
-
-	// Shadows render as pixels
-	return CGRectIntegral(R);
+	if (self.shadow != nil)
+	{ R = [self.shadow expandRenderArea:R]; }
+	return R;
 }
 
-- (CGRect) renderedBounds
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) renderBounds
 {
-	// Fetch shadow bounds
+	// Can not cache this, since we don't know changes in group
+	return [self computeRenderBounds];
+
+	if (CGRectIsEmpty(mRenderBounds))
+	{ mRenderBounds = [self computeRenderBounds]; }
+	return mRenderBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeRenderBounds
+{
 	CGRect R = [self shadowBounds];
-
-	// Expand for group shadow
-	if (self.group)
-	{ R = [self.group expandStyleBounds:R]; }
-
-	// Return integral enlargement
-	return CGRectIntegral(R);
+	if (self.group != nil)
+	{ R = [self.group expandRenderArea:R]; }
+	return R;
 }
 
-- (CGRect) expandStyleBounds:(CGRect)R
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) expandRenderArea:(CGRect)R
 {
 	if (self.shadow)
-	{ R = [self.shadow expandStyleBounds:R]; }
+	{ R = [self.shadow expandRenderArea:R]; }
 
 	if (self.group)
-	{ R = [self.group expandStyleBounds:R]; }
+	{ R = [self.group expandRenderArea:R]; }
 
-	return CGRectIntegral(R);
+	return R;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) invalidateBounds
+{
+	[self invalidateStyleBounds];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) invalidateStyleBounds
+{
+	mStyleBounds = CGRectNull;
+	[self invalidateShadowBounds];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) invalidateShadowBounds
+{
+	mShadowBounds = CGRectNull;
+	mRenderBounds = CGRectNull;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) cacheDirtyBounds
+{
+	dirtyBounds_ = [self renderBounds];
+
+	// We are appearantly going to affect bounds
+	[self invalidateBounds];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) postDirtyBoundsChange
+{
+	if (!self.drawing) {
+		return;
+	}
+
+	// the layer should dirty its thumbnail
+	[self.layer invalidateThumbnail];
+
+	CGRect resultArea = [self renderBounds];
+
+	NSArray *rects = @[
+	[NSValue valueWithCGRect:dirtyBounds_],
+	[NSValue valueWithCGRect:resultArea]];
+
+	NSDictionary *userInfo = @{@"rects": rects};
+	[[NSNotificationCenter defaultCenter]
+	postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
+
+	dirtyBounds_ = CGRectNull;
+}
 
 
 - (CGRect) subselectionBounds
@@ -337,29 +426,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 }
 
-- (void) cacheDirtyBounds
-{
-    dirtyBounds_ = self.renderedBounds;
-}
 
-- (void) postDirtyBoundsChange
-{
-    if (!self.drawing) {
-        return;
-    }
-    
-    // the layer should dirty its thumbnail
-    [self.layer invalidateThumbnail];
-    
-//	NSArray *rects = @[[NSValue valueWithCGRect:dirtyBounds_], [NSValue valueWithCGRect:self.styleBounds]];
-	NSArray *rects =
-	@[[NSValue valueWithCGRect:dirtyBounds_],
-	[NSValue valueWithCGRect:self.renderedBounds]];
-
-    NSDictionary *userInfo = @{@"rects": rects};
-    [[NSNotificationCenter defaultCenter]
-	postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
-}
 
 - (NSSet *) alignToRect:(CGRect)rect alignment:(WDAlignment)align
 {
@@ -671,13 +738,8 @@ NSString *WDShadowKey = @"WDShadowKey";
     
     if ([self needsTransparencyLayer:metaData.scale])
 	{
-		CGRect C = CGContextGetClipBoundingBox(ctx);
-		CGRect R = [self renderedBounds];
-
-		R = CGRectIntersection(R, C);
-
-		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
-//		CGContextBeginTransparencyLayer(ctx, NULL);
+		CGContextBeginTransparencyLayer(ctx, NULL);
+//		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
     }
 }
 

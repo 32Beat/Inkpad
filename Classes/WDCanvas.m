@@ -878,36 +878,38 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 - (void) invalidateFromNotification:(NSNotification *)aNotification
 {
-    NSValue     *rectValue = [aNotification userInfo][@"rect"];
-    NSArray     *rects = [aNotification userInfo][@"rects"];
-    CGRect      dirtyRect;
-    float       fudge = (-1.0f) / viewScale_;
-    
-    if (rectValue) {
-        dirtyRect = [rectValue CGRectValue];
-        
-        if (!CGRectEqualToRect(dirtyRect, CGRectNull)) {
-            dirtyRect = CGRectApplyAffineTransform(dirtyRect, self.canvasTransform);
-            if (drawing_.outlineMode) {
-                dirtyRect = CGRectInset(dirtyRect, fudge, fudge);
-            }
-            [self setNeedsDisplayInRect:dirtyRect];
-        }
-    } else if (rects) {
-        for (NSValue *rectValue in rects) {
-            dirtyRect = [rectValue CGRectValue];
-            
-            if (!CGRectEqualToRect(dirtyRect, CGRectNull)) {
-                dirtyRect = CGRectApplyAffineTransform(dirtyRect, self.canvasTransform);
-                if (drawing_.outlineMode) {
-                    dirtyRect = CGRectInset(dirtyRect, fudge, fudge);
-                }
-                [self setNeedsDisplayInRect:dirtyRect];
-            }
-        }
-    } else {
-        [self setNeedsDisplay];
-    }
+	NSValue *rectValue = [aNotification userInfo][@"rect"];
+	if (rectValue != nil)
+	{
+		[self invalidateRect:[rectValue CGRectValue]];
+	}
+	else
+	{
+		NSArray *rectArray = [aNotification userInfo][@"rects"];
+		if (rectArray != nil)
+		{
+			for (NSValue *rectEntry in rectArray)
+			{ [self invalidateRect:[rectEntry CGRectValue]]; }
+		}
+		else
+		{
+			[self setNeedsDisplay];
+		}
+	}
+}
+
+- (void) invalidateRect:(CGRect)dirtyRect
+{
+	if (!CGRectIsNull(dirtyRect))
+	{
+		dirtyRect = CGRectApplyAffineTransform(dirtyRect, self.canvasTransform);
+		// Addressing pixels
+		dirtyRect = CGRectIntegral(dirtyRect);
+		if (drawing_.outlineMode)
+		{ dirtyRect = CGRectInset(dirtyRect, -1, -1); }
+
+		[self setNeedsDisplayInRect:dirtyRect];
+	}
 }
 
 - (void) setPivot:(CGPoint)pivot

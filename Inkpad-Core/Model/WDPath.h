@@ -31,7 +31,7 @@
     CGMutablePathRef    pathRef_;
     CGMutablePathRef    strokePathRef_;
     CGRect              bounds_;
-    BOOL                boundsDirty_;
+//    BOOL                boundsDirty_;
 
 	// TODO: put in arrowhead object!
 
@@ -61,12 +61,12 @@
 @property (nonatomic, assign) BOOL displayClosed;
 
 + (WDPath *) pathWithRect:(CGRect)rect;
-+ (WDPath *) pathWithRoundedRect:(CGRect)rect cornerRadius:(float)radius;
++ (WDPath *) pathWithRoundedRect:(CGRect)rect cornerRadius:(CGFloat)radius;
 + (WDPath *) pathWithOvalInRect:(CGRect)rect;
 + (WDPath *) pathWithStart:(CGPoint)start end:(CGPoint)end;
 
 - (id) initWithRect:(CGRect)rect;
-- (id) initWithRoundedRect:(CGRect)rect cornerRadius:(float)radius;
+- (id) initWithRoundedRect:(CGRect)rect cornerRadius:(CGFloat)radius;
 - (id) initWithOvalInRect:(CGRect)rect;
 - (id) initWithStart:(CGPoint)start end:(CGPoint)end;
 - (id) initWithNode:(WDBezierNode *)node;
@@ -99,7 +99,7 @@
 - (WDBezierNode *) convertNode:(WDBezierNode *)node whichPoint:(WDPickResultType)whichPoint;
 
 - (CGRect) controlBounds;
-- (void) computeBounds;
+- (CGRect) computeBounds;
 
 - (NSString *) nodeSVGRepresentation;
 

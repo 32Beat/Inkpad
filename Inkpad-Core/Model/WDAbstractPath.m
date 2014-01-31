@@ -56,7 +56,7 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 	return [self pathRef];
 }
 
-- (CGRect) styleBounds
+- (CGRect) computeStyleBounds
 {
 	WDStrokeStyle *strokeStyle = [self strokeStyle];
 	return [strokeStyle styleBoundsForPath:[self strokePathRef]];

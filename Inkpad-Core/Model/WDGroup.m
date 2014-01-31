@@ -81,7 +81,7 @@ NSString *WDGroupElements = @"WDGroupElements";
         [element transform:transform];
     }
     
-    [self postDirtyBoundsChange];
+    //[self postDirtyBoundsChange];
     return nil;
 }
 
@@ -126,18 +126,17 @@ NSString *WDGroupElements = @"WDGroupElements";
 
 - (CGRect) bounds
 {
-    CGRect bounds = CGRectNull;
-    
-    for (WDElement *element in elements_) {
-        bounds = CGRectUnion([element bounds], bounds);
-    }
-    
-    return bounds;
+	CGRect bounds = CGRectNull;
+
+	for (WDElement *element in elements_)
+	{ bounds = CGRectUnion([element bounds], bounds); }
+
+	return bounds;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGRect) styleBounds
+- (CGRect) computeStyleBounds
 {
 	CGRect bounds = CGRectNull;
 
@@ -151,17 +150,32 @@ NSString *WDGroupElements = @"WDGroupElements";
 
 - (CGRect) shadowBounds
 {
-	CGRect bounds = CGRectNull;
+	CGRect R = CGRectNull;
 
+	// Combine result bounds of elements
 	for (WDElement *element in elements_)
-	{ bounds = CGRectUnion([element shadowBounds], bounds); }
+	{ R = CGRectUnion([element shadowBounds], R); }
 
-	if (self.shadow)
-	{ bounds = [self.shadow expandStyleBounds:bounds]; }
+	// Add expansion for shadow
+	if (self.shadow != nil)
+	{ R = [self.shadow expandRenderArea:R]; }
 
-	return bounds;
+	return R;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+- (CGRect) renderBounds
+{
+	CGRect R = CGRectNull;
+
+	// Combine result bounds of elements
+	for (WDElement *element in elements_)
+	{ R = CGRectUnion([element renderBounds], R); }
+
+	return [self expandRenderArea:R];
+}
+*/
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////

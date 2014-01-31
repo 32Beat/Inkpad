@@ -9,10 +9,12 @@
 //  Copyright (c) 2010-2013 Steve Sprang
 //
 
-#import "UIColor+Additions.h"
-#import "WDDrawing.h"
-#import "WDElement.h"
 #import "WDLayer.h"
+#import "WDDrawing.h"
+#import "WDGroup.h"
+#import "WDElement.h"
+
+#import "UIColor+Additions.h"
 #import "WDSVGHelper.h"
 #import "WDUtilities.h"
 
@@ -65,12 +67,12 @@ NSString *WDOpacityKey = @"WDOpacityKey";
         return nil;
     }
     
-    elements_ = elements;
+    self->highlightColor_ = [UIColor saturatedRandomColor];
+    self->visible_ = YES;
+    self->opacity_ = 1.0f;
+    self->elements_ = elements;
     [elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self];
-    self.highlightColor = [UIColor saturatedRandomColor];
-    self.visible = YES;
-    opacity_ = 1.0f;
-    
+
     return self;
 }
 
@@ -134,27 +136,6 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     return NO;
 }
 
-- (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData
-{
-    BOOL useTransparencyLayer = (!WDRenderingMetaDataOutlineOnly(metaData) && opacity_ != 1.0f) ? YES : NO;
-    
-    if (useTransparencyLayer) {
-        CGContextSaveGState(ctx);
-        CGContextSetAlpha(ctx, opacity_);
-        CGContextBeginTransparencyLayer(ctx, NULL);
-    }
-    
-    for (WDElement *element in elements_) {
-        if (CGRectIntersectsRect([element renderedBounds], clip)) {
-            [element renderInContext:ctx metaData:metaData];
-        }
-    }
-    
-    if (useTransparencyLayer) {
-        CGContextEndTransparencyLayer(ctx);
-        CGContextRestoreGState(ctx);
-    }
-}
 
 - (void) setOpacity:(float)opacity
 {
@@ -344,27 +325,75 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     }
 }
 
-- (CGRect) ____styleBounds
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+#pragma mark Render Area
+////////////////////////////////////////////////////////////////////////////////
+/*
+	resultArea
+	----------
+	Compute total area affected by all elements in layer
+*/
+
+- (CGRect) resultArea
 {
-    CGRect styleBounds = CGRectNull;
-    
-    for (WDElement *element in elements_) {
-        styleBounds = CGRectUnion(styleBounds, element.styleBounds);
-    }
-    
-    return styleBounds;
+	CGRect area = CGRectNull;
+
+	for (WDElement *element in elements_)
+	{ area = CGRectUnion(area, [element renderBounds]); }
+
+	return area;
 }
 
-- (CGRect) renderedBounds
+////////////////////////////////////////////////////////////////////////////////
+/*
+	resultAreaForElement
+	--------------------
+	Compute total area affected by a single element in layer
+*/
+
+- (CGRect) resultAreaForElement:(WDElement *)element
 {
-    CGRect renderedBounds = CGRectNull;
-    
-    for (WDElement *element in elements_) {
-        renderedBounds = CGRectUnion(renderedBounds, element.renderedBounds);
-    }
-    
-    return renderedBounds;
+	CGRect area = [element renderBounds];
+
+	// Expand rendered area recursively tree-up
+	while (element.group != nil)
+	{
+		area = [element.group expandRenderArea:area];
+		element = element.group;
+	}
+
+	return area;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData
+{
+	BOOL useTransparencyLayer =
+	(!WDRenderingMetaDataOutlineOnly(metaData) && opacity_ != 1.0f) ? YES : NO;
+
+	if (useTransparencyLayer)
+	{
+		CGContextSaveGState(ctx);
+		CGContextSetAlpha(ctx, opacity_);
+		CGContextBeginTransparencyLayer(ctx, NULL);
+	}
+
+	for (WDElement *element in elements_) {
+		if (CGRectIntersectsRect([element renderBounds], clip)) {
+			[element renderInContext:ctx metaData:metaData];
+		}
+	}
+
+	if (useTransparencyLayer) {
+		CGContextEndTransparencyLayer(ctx);
+		CGContextRestoreGState(ctx);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 - (void) notifyThumbnailChanged:(id)obj
 {

@@ -37,6 +37,8 @@
 - (id) initWithElements:(NSMutableArray *)elements;
 - (void) awakeFromEncoding;
 
+- (CGRect) resultArea;
+- (CGRect) resultAreaForElement:(WDElement *)element;
 - (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData;
 
 - (void) addObject:(id)obj;

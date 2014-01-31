@@ -62,7 +62,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 	if (self != nil)
 	{
 		nodes_ = [[NSMutableArray alloc] init];
-		boundsDirty_ = YES;
+//		boundsDirty_ = YES;
 	}
 
 	return self;
@@ -74,7 +74,7 @@ NSString *WDClosedKey = @"WDClosedKey";
     if (self != nil)
 	{
 		[nodes_ addObject:node];
-		boundsDirty_ = YES;
+//		boundsDirty_ = YES;
 	}
 
 	return self;
@@ -119,7 +119,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 		nodes_ = [nodes_ mutableCopyWithZone:nil];
 
-		boundsDirty_ = YES;
+//		boundsDirty_ = YES;
 	}
 
 	return self;
@@ -372,7 +372,7 @@ static void CGPathAddSegmentWithNodes
 }
 
 
-+ (WDPath *) pathWithRoundedRect:(CGRect)rect cornerRadius:(float)radius
++ (WDPath *) pathWithRoundedRect:(CGRect)rect cornerRadius:(CGFloat)radius
 {
 //	if (rect.size.width && rect.size.height)
 	{ return [[WDPath alloc] initWithRoundedRect:rect cornerRadius:radius]; }
@@ -403,7 +403,7 @@ static void CGPathAddSegmentWithNodes
 {
 	nodes_ = [[NSMutableArray alloc] init];
 	bounds_ = B;
-	boundsDirty_ = YES;
+//	boundsDirty_ = YES;
 
 	return nodes_ != nil;
 }
@@ -703,10 +703,15 @@ static void CGPathAddSegmentWithNodes
     if (self.superpath) {
         [self.superpath invalidatePath];
     }
-    
-    boundsDirty_ = YES;
+
+	
+    bounds_ = CGRectNull;
+	[self invalidateBounds];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+#pragma mark Bounds
 ////////////////////////////////////////////////////////////////////////////////
 // alternative to CGPathGetPathBoundingBox() which didn't exist before iOS 4
 
@@ -735,85 +740,22 @@ static void CGPathAddSegmentWithNodes
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) computeBounds
-{
-	//bounds_ = CGPathGetPathBoundingBox(self.pathRef);
-	bounds_ = [self getPathBoundingBox];
-	boundsDirty_ = NO;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (CGRect) bounds
 {
-    if (boundsDirty_) {
-        [self computeBounds];
-    }
-    
-    return bounds_;
+	if (CGRectIsEmpty(bounds_))
+	{ bounds_ = [self computeBounds]; }
+
+	return bounds_;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
-{ return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
-
-static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
-{ return (CGPoint){ MAX(a.x, b.x), MAX(a.y, b.y) }; }
-
-- (CGRect) controlBounds
+- (CGRect) computeBounds
 {
-	id nodes = [self nodes];
-
-	CGPoint min = ((WDBezierNode *)(nodes[0])).anchorPoint;
-	CGPoint max = ((WDBezierNode *)(nodes[0])).anchorPoint;
-
-	for (WDBezierNode *node in nodes)
-	{
-		min = CGPointMin(min, node.inPoint);
-		max = CGPointMax(max, node.inPoint);
-		min = CGPointMin(min, node.anchorPoint);
-		max = CGPointMax(max, node.anchorPoint);
-		min = CGPointMin(min, node.outPoint);
-		max = CGPointMax(max, node.outPoint);
-	}
-	  
-	CGRect bbox = CGRectMake(min.x, min.y, max.x - min.x, max.y - min.y);
-
-	if (self.fillTransform)
-	{
-		bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedStart);
-		bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedEnd);
-	}
-
-	return bbox;
+	return CGPathGetPathBoundingBox(self.pathRef);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) subselectionBounds
-{
-    if (![self anyNodesSelected]) {
-        return [self bounds];
-    }
-    
-    NSArray *selected = [self selectedNodes];
-    WDBezierNode *initial = [selected lastObject];
-    float   minX, maxX, minY, maxY;
-    
-    minX = maxX = initial.anchorPoint.x;
-    minY = maxY = initial.anchorPoint.y;
-    
-    for (WDBezierNode *node in selected) {
-        minX = MIN(minX, node.anchorPoint.x);
-        maxX = MAX(maxX, node.anchorPoint.x);
-        minY = MIN(minY, node.anchorPoint.y);
-        maxY = MAX(maxY, node.anchorPoint.y);
-    }
-    
-    return CGRectMake(minX, minY, maxX - minX, maxY - minY);
-}
-
 - (WDShadow *) shadowForStyleBounds
 {
     return self.superpath ? self.superpath.shadow : self.shadow;;
@@ -822,7 +764,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 /* 
  * Bounding box of path with its style applied.
  */
-- (CGRect) styleBounds
+- (CGRect) computeStyleBounds
 {
 	CGRect R = [self bounds];
 
@@ -899,6 +841,66 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
+{ return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
+
+static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
+{ return (CGPoint){ MAX(a.x, b.x), MAX(a.y, b.y) }; }
+
+- (CGRect) controlBounds
+{
+	id nodes = [self nodes];
+
+	CGPoint min = ((WDBezierNode *)(nodes[0])).anchorPoint;
+	CGPoint max = ((WDBezierNode *)(nodes[0])).anchorPoint;
+
+	for (WDBezierNode *node in nodes)
+	{
+		min = CGPointMin(min, node.inPoint);
+		max = CGPointMax(max, node.inPoint);
+		min = CGPointMin(min, node.anchorPoint);
+		max = CGPointMax(max, node.anchorPoint);
+		min = CGPointMin(min, node.outPoint);
+		max = CGPointMax(max, node.outPoint);
+	}
+	  
+	CGRect bbox = CGRectMake(min.x, min.y, max.x - min.x, max.y - min.y);
+
+	if (self.fillTransform)
+	{
+		bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedStart);
+		bbox = WDGrowRectToPoint(bbox, self.fillTransform.transformedEnd);
+	}
+
+	return bbox;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) subselectionBounds
+{
+    if (![self anyNodesSelected]) {
+        return [self bounds];
+    }
+    
+    NSArray *selected = [self selectedNodes];
+    WDBezierNode *initial = [selected lastObject];
+    float   minX, maxX, minY, maxY;
+    
+    minX = maxX = initial.anchorPoint.x;
+    minY = maxY = initial.anchorPoint.y;
+    
+    for (WDBezierNode *node in selected) {
+        minX = MIN(minX, node.anchorPoint.x);
+        maxX = MAX(maxX, node.anchorPoint.x);
+        minY = MIN(minY, node.anchorPoint.y);
+        maxY = MAX(maxY, node.anchorPoint.y);
+    }
+    
+    return CGRectMake(minX, minY, maxX - minX, maxY - minY);
+}
+
 
 - (BOOL) intersectsRect:(CGRect)R
 {
@@ -2130,7 +2132,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     path->nodes_ = [nodes_ mutableCopy];
     path->closed_ = closed_;
     path->reversed_ = reversed_;
-    path->boundsDirty_ = YES;
+ //   path->boundsDirty_ = YES;
 
     return path;
 }

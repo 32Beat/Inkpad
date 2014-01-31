@@ -159,7 +159,7 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
 /*
 	Apply minimum default stroke expansion: 0.5*strokeSize
 */
-- (CGRect) styleBounds
+- (CGRect) computeStyleBounds
 {
 	CGRect R = [self bounds];
 
@@ -290,6 +290,7 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
 {
     // can be overriden by subclasses
     // useful when caching style bounds
+
 }
 
 - (void) setStrokeStyleQuiet:(WDStrokeStyle *)strokeStyle

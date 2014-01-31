@@ -91,7 +91,26 @@ NSString *WDShadowAngleKey = @"WDShadowAngleKey";
 	return V;
 }
 
-- (CGRect) expandStyleBounds:(CGRect)srcR
+- (CGRect) shadowAreaForRect:(CGRect)R
+{
+	// Expand by blur radius
+	CGFloat r = ceil(self.radius);
+	R = CGRectInset(R, -r, -r);
+
+	// Move by offset
+	CGVector V = [self offsetVector];
+	R = CGRectOffset(R, V.dx, V.dy);
+
+	return R;
+}
+
+- (CGRect) expandRenderArea:(CGRect)R
+{
+	return CGRectUnion(R, [self shadowAreaForRect:R]);
+}
+
+
+- (CGRect) __expandStyleBounds:(CGRect)srcR
 {
 	// Move by offset
 	CGVector V = [self offsetVector];
