@@ -650,11 +650,14 @@ static void WDGLRenderCGPathElement
 
 void WDGLRenderCGPathRef(CGPathRef pathRef)
 {
-	// Process path elements
-	CGPathApply(pathRef, nil, &WDGLRenderCGPathElement);
+	if (pathRef != nil)
+	{
+		// Process path elements
+		CGPathApply(pathRef, nil, &WDGLRenderCGPathElement);
 
-	// Draw any data as open path
-	WDGLQueueFlush(GL_LINE_STRIP);
+		// Draw any data as open path
+		WDGLQueueFlush(GL_LINE_STRIP);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

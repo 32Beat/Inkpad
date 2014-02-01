@@ -208,7 +208,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (CGRect) renderBounds
 {
-	// Can not cache this, since we don't know changes in group
+	// Can not cache this, since we don't know changes in owners
 	return [self computeRenderBounds];
 
 	if (CGRectIsEmpty(mRenderBounds))

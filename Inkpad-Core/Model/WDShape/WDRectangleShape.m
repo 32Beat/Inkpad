@@ -87,7 +87,7 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 - (void) setRadius:(CGFloat)radius
 {
 	mRadius = radius;
-	[self resetPath];
+	[self invalidateCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,14 +45,18 @@ WDShapeType;
 	CGAffineTransform mTransform;
 	
 	// Cache
-	CGPathRef mPathRef;
+	CGPathRef mBoundsPath;
+	CGPathRef mContentsPath;
 	NSMutableArray *mNodes;
 }
 
 + (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
+
+- (void) invalidateCache;
+- (CGPathRef) boundsPath;
+- (CGPathRef) contentsPath;
 - (id) nodes;
-- (void) resetPath;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

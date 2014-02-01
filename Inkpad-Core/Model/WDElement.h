@@ -53,8 +53,10 @@ typedef enum {
 	CGRect dirtyBounds_;
 }
 
-@property (nonatomic, weak) WDLayer *layer;
+// Owner references for convenience
+@property (nonatomic, weak) WDLayer *layer; // layer
 @property (nonatomic, weak) WDGroup *group;  // pointer to parent group, if any
+
 @property (nonatomic, assign) float opacity;
 @property (nonatomic, assign) CGBlendMode blendMode;
 @property (nonatomic, strong) WDShadow *shadow;

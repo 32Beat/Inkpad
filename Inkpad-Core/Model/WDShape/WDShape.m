@@ -31,9 +31,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (void) dealloc
 {
-	if (mPathRef != nil)
-	{ CGPathRelease(mPathRef); }
-	mPathRef = nil;
+	[self invalidateCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +50,8 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 		CGRectGetMidX(bounds),
 		CGRectGetMidY(bounds) };
 
-		bounds.origin.x = -CGRectGetMidX(bounds);
-		bounds.origin.y = -CGRectGetMidY(bounds);
+		bounds.origin.x = -0.5*bounds.size.width;
+		bounds.origin.y = -0.5*bounds.size.height;
 
 		mBounds = bounds;
 //		mTransform = CGAffineTransformIdentity;
@@ -140,7 +138,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 - (void) setBounds:(CGRect)bounds
 {
 	mBounds = bounds;
-	[self resetPath];
+	[self invalidateCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +149,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 - (void) setTransform:(CGAffineTransform)T
 {
 	mTransform = T;
-	[self resetPath];
+	[self invalidateCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +184,64 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 	// Notify drawingcontroller
 	[self postDirtyBoundsChange];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) boundsPath
+{
+	return mBoundsPath ? mBoundsPath :
+	(mBoundsPath = [self createBoundsPath]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) createBoundsPath
+{ return CGPathCreateWithRect(mBounds, &mTransform); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) releaseBoundsPath
+{
+	if (mBoundsPath != nil)
+	{
+		CGPathRelease(mBoundsPath);
+		mBoundsPath = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) pathRef
+{ return [self contentsPath]; }
+
+- (CGPathRef) contentsPath
+{
+	return mContentsPath ? mContentsPath :
+	(mContentsPath = [self createContentsPath]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) releaseContentsPath
+{
+	if (mContentsPath != nil)
+	{
+		CGPathRelease(mContentsPath);
+		mContentsPath = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) invalidateCache
+{
+	// [super invalidateCache];
+	[self releaseBoundsPath];
+
+	[self releaseContentsPath];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +303,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
 
 	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
-	CGPathRef pathRef = CGPathCreateCopyByTransformingPath([self pathRef], &T);
+	CGPathRef pathRef = CGPathCreateCopyByTransformingPath([self boundsPath], &T);
 	if (pathRef != nil)
 	{
 		WDGLRenderCGPathRef(pathRef);
@@ -258,15 +314,6 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Cached Parameters
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) resetPath
-{
-	CGPathRelease(mPathRef);
-	mPathRef = nil;
-//	mNodes = nil;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) nodes
@@ -282,11 +329,6 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 - (void) prepareNodes
 {
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPathRef) pathRef
-{ return mPathRef ? mPathRef : (mPathRef = [self createPathRef]); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -317,7 +359,7 @@ static void CGPathAddSegmentWithNodes
 - (NSArray *) segmentNodes
 { return [[self nodes] arrayByAddingObject:[[self nodes] firstObject]]; }
 
-- (CGPathRef) createPathRef
+- (CGPathRef) createContentsPath
 { return [self createPathRefWithNodes:[self segmentNodes]]; }
 
 - (CGPathRef) createPathRefWithNodes:(NSArray *)nodes

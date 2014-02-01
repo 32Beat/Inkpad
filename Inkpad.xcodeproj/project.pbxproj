@@ -313,6 +313,7 @@
 		BE2ACC97189AFF6600EC91EC /* WDOvalShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */; };
 		BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */; };
 		BE2ACC99189AFF6600EC91EC /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC96189AFF6600EC91EC /* WDShape.m */; };
+		BE4CA4AC189D372600D3436C /* WDItem.m in Sources */ = {isa = PBXBuildFile; fileRef = BE4CA4AB189D372600D3436C /* WDItem.m */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -795,6 +796,8 @@
 		BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDRectangleShape.m; sourceTree = "<group>"; };
 		BE2ACC95189AFF6600EC91EC /* WDShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShape.h; sourceTree = "<group>"; };
 		BE2ACC96189AFF6600EC91EC /* WDShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShape.m; sourceTree = "<group>"; };
+		BE4CA4AA189D372600D3436C /* WDItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDItem.h; sourceTree = "<group>"; };
+		BE4CA4AB189D372600D3436C /* WDItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDItem.m; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1591,6 +1594,8 @@
 		BE2ACC90189AFF6600EC91EC /* WDShape */ = {
 			isa = PBXGroup;
 			children = (
+				BE4CA4AA189D372600D3436C /* WDItem.h */,
+				BE4CA4AB189D372600D3436C /* WDItem.m */,
 				BE2ACC95189AFF6600EC91EC /* WDShape.h */,
 				BE2ACC96189AFF6600EC91EC /* WDShape.m */,
 				BE2ACC91189AFF6600EC91EC /* WDOvalShape.h */,
@@ -1985,6 +1990,7 @@
 				6BABD9E1141ED30100F7E0A9 /* WDUtilities.m in Sources */,
 				6BABD9E4141ED51F00F7E0A9 /* WDDocument.m in Sources */,
 				6BABD9FC141F163C00F7E0A9 /* WDParseUtil.m in Sources */,
+				BE4CA4AC189D372600D3436C /* WDItem.m in Sources */,
 				6BABD9FD141F163C00F7E0A9 /* WDSVGElement.m in Sources */,
 				6BABD9FE141F163C00F7E0A9 /* WDSVGHelper.m in Sources */,
 				6BABD9FF141F163C00F7E0A9 /* WDSVGParser.m in Sources */,
