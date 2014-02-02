@@ -48,6 +48,8 @@ void WDGLQueueAddSegment(WDBezierSegment S);
 void WDGLQueueFlush(GLenum type);
 
 void WDGLRenderCGPathRef(CGPathRef pathRef);
+void WDGLRenderCGPathRefWithTransform
+	(CGPathRef pathRef, CGAffineTransform T);
 
 ////////////////////////////////////////////////////////////////////////////////
 

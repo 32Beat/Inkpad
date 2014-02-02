@@ -23,5 +23,8 @@
 + (id) shapeWithBounds:(CGRect)bounds radius:(CGFloat)radius;
 - (void) setRadius:(CGFloat)radius;
 
+- (id) _bezierNodesWithRect:(CGRect)R;
+- (id) _bezierNodesWithRect:(CGRect)R cornerRadius:(CGFloat)radius;
+
 @end
 ////////////////////////////////////////////////////////////////////////////////

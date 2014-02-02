@@ -661,5 +661,69 @@ void WDGLRenderCGPathRef(CGPathRef pathRef)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+static void WDGLRenderCGPathElementWithTransform
+	(void *info, const CGPathElement *element)
+{
+	const CGAffineTransform *T = (CGAffineTransform *)info;
+
+	switch (element->type)
+	{
+		case kCGPathElementMoveToPoint:
+			// If there is something to draw, draw as open path
+			WDGLQueueFlush(GL_LINE_STRIP);
+			WDGLQueueAddPoint(
+			CGPointApplyAffineTransform(element->points[0],*T));
+			break;
+
+		case kCGPathElementAddLineToPoint:
+			WDGLQueueAddLine(
+				gLastPoint,
+				CGPointApplyAffineTransform(element->points[0],*T));
+			break;
+
+
+		case kCGPathElementAddQuadCurveToPoint:
+			WDGLQueueAddSegment(
+				WDBezierSegmentMakeWithQuadPoints(
+					gLastPoint,
+					CGPointApplyAffineTransform(element->points[0],*T),
+					CGPointApplyAffineTransform(element->points[1],*T)));
+			break;
+
+		case kCGPathElementAddCurveToPoint:
+			WDGLQueueAddSegment(
+				(WDBezierSegment){
+					gLastPoint,
+					CGPointApplyAffineTransform(element->points[0],*T),
+					CGPointApplyAffineTransform(element->points[1],*T),
+					CGPointApplyAffineTransform(element->points[2],*T)});
+			break;
+
+
+		case kCGPathElementCloseSubpath:
+			WDGLQueueFlush(GL_LINE_LOOP);
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLRenderCGPathRefWithTransform
+	(CGPathRef pathRef, CGAffineTransform T)
+{
+	if (pathRef != nil)
+	{
+		// Process path elements
+		CGPathApply(pathRef, &T, &WDGLRenderCGPathElementWithTransform);
+
+		// Draw any data as open path
+		WDGLQueueFlush(GL_LINE_STRIP);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 

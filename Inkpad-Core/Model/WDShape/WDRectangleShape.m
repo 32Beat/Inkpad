@@ -87,7 +87,7 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 - (void) setRadius:(CGFloat)radius
 {
 	mRadius = radius;
-	[self invalidateCache];
+	[self flushCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,30 +116,41 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 #pragma mark Protocol
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareNodes
+- (id) bezierNodesWithRect:(CGRect)R
 {
-	if (mRadius <= 0.0)
-		[self prepareRect:mBounds];
-	else
-		[self prepareRect:mBounds cornerRadius:mRadius];
+	CGFloat W = CGRectGetWidth(R);
+	CGFloat H = CGRectGetHeight(R);
+	CGFloat maxRadius = 0.5 * MIN(W, H);
+
+	CGFloat radius = mRadius;
+
+	if (radius > maxRadius)
+	{ radius = maxRadius; }
+
+	return (radius > 0.0) ?
+	[self _bezierNodesWithRect:R cornerRadius:radius]:
+	[self _bezierNodesWithRect:R];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareRect:(CGRect)R
+- (id) _bezierNodesWithRect:(CGRect)R
 {
-	CGPoint P = R.origin;
-	[[self nodes] addObject:
-	[WDBezierNode bezierNodeWithAnchorPoint:P]];
-	P.x += R.size.width;
-	[[self nodes] addObject:
-	[WDBezierNode bezierNodeWithAnchorPoint:P]];
-	P.y += R.size.height;
-	[[self nodes] addObject:
-	[WDBezierNode bezierNodeWithAnchorPoint:P]];
-	P.x -= R.size.width;
-	[[self nodes] addObject:
-	[WDBezierNode bezierNodeWithAnchorPoint:P]];
+	CGPoint P0 = R.origin;
+	CGPoint P1 = R.origin;
+	CGPoint P2 = R.origin;
+	CGPoint P3 = R.origin;
+
+	P1.x += R.size.width;
+	P2.x += R.size.width;
+	P2.y += R.size.height;
+	P3.y += R.size.height;
+
+	return @[
+	[WDBezierNode bezierNodeWithAnchorPoint:P0],
+	[WDBezierNode bezierNodeWithAnchorPoint:P1],
+	[WDBezierNode bezierNodeWithAnchorPoint:P2],
+	[WDBezierNode bezierNodeWithAnchorPoint:P3]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,55 +158,51 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 static inline CGPoint _PreparePoint(CGPoint a, CGVector b, CGFloat r)
 { return (CGPoint){ a.x+r*b.dx, a.y+r*b.dy }; }
 
-- (void) prepareRect:(CGRect)R cornerRadius:(CGFloat)radius
+- (id) _bezierNodesWithRect:(CGRect)R cornerRadius:(CGFloat)radius
 {
-	CGFloat W = CGRectGetWidth(R);
-	CGFloat H = CGRectGetHeight(R);
-	CGFloat maxRadius = 0.5 * MIN(W, H);
+	static const CGFloat c = kWDShapeCircleFactor;
+	static const CGVector D[] = {
+	{ 0,+1}, { 0,-c}, { 0, 0},
+	{+1, 0}, { 0, 0}, {-c, 0},
+	{-1, 0}, {+c, 0}, { 0, 0},
+	{ 0,+1}, { 0, 0}, { 0,-c},
+	{ 0,-1}, { 0,+c}, { 0, 0},
+	{-1, 0}, { 0, 0}, {+c, 0},
+	{+1, 0}, {-c, 0}, { 0, 0},
+	{ 0,-1}, { 0, 0}, { 0,+c}};
 
-	if (radius > maxRadius)
-	{ radius = maxRadius; }
+	static const CGVector cornerPoints[] =
+	{{-1,-1},{+1,-1},{+1,+1},{-1,+1}};
 
-	if (radius <= 0.0)
-	{ [self prepareRect:R]; }
-	else
+	CGFloat mx = 0.5 * R.size.width;
+	CGFloat my = 0.5 * R.size.height;
+	CGPoint M = { R.origin.x + mx, R.origin.y + my };
+
+	NSMutableArray *nodes = [NSMutableArray arrayWithCapacity:8];
+
+	for (int i=0; i!=4; i++)
 	{
-		static const CGFloat c = kWDShapeCircleFactor;
-		static const CGVector D[] = {
-		{ 0,+1}, { 0,-c}, { 0, 0},
-		{+1, 0}, { 0, 0}, {-c, 0},
-		{-1, 0}, {+c, 0}, { 0, 0},
-		{ 0,+1}, { 0, 0}, { 0,-c},
-		{ 0,-1}, { 0,+c}, { 0, 0},
-		{-1, 0}, { 0, 0}, {+c, 0},
-		{+1, 0}, {-c, 0}, { 0, 0},
-		{ 0,-1}, { 0, 0}, { 0,+c}};
+		CGPoint P = (CGPoint){
+		M.x + mx * cornerPoints[i].dx,
+		M.y + my * cornerPoints[i].dy };
 
-		static const CGVector cornerPoints[] =
-		{{0,0},{1,0},{1,1},{0,1}};
+		CGPoint A, B, C;
+		A = _PreparePoint(P, D[6*i+0], radius);
+		B = _PreparePoint(A, D[6*i+1], radius);
+		C = _PreparePoint(A, D[6*i+2], radius);
 
-		for (int i=0; i!=4; i++)
-		{
-			CGPoint P = (CGPoint){
-			R.origin.x + W * cornerPoints[i].dx,
-			R.origin.y + H * cornerPoints[i].dy };
+		[nodes addObject:[WDBezierNode
+		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
 
-			CGPoint A, B, C;
-			A = _PreparePoint(P, D[6*i+0], radius);
-			B = _PreparePoint(A, D[6*i+1], radius);
-			C = _PreparePoint(A, D[6*i+2], radius);
+		A = _PreparePoint(P, D[6*i+3], radius);
+		B = _PreparePoint(A, D[6*i+4], radius);
+		C = _PreparePoint(A, D[6*i+5], radius);
 
-			[[self nodes] addObject:[WDBezierNode
-			bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
-
-			A = _PreparePoint(P, D[6*i+3], radius);
-			B = _PreparePoint(A, D[6*i+4], radius);
-			C = _PreparePoint(A, D[6*i+5], radius);
-
-			[[self nodes] addObject:[WDBezierNode
-			bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
-		}
+		[nodes addObject:[WDBezierNode
+		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
 	}
+
+	return nodes;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

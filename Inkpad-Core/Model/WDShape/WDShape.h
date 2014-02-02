@@ -41,22 +41,28 @@ WDShapeType;
 {
 	// Model
 	long mType;
-	CGRect mBounds;
+	CGSize mSize;
 	CGAffineTransform mTransform;
 	
 	// Cache
 	CGPathRef mBoundsPath;
-	CGPathRef mContentsPath;
-	NSMutableArray *mNodes;
+	CGPathRef mResultPath;
+	CGPathRef mSourcePath;
+	NSArray *mSourceNodes;
 }
 
 + (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
 
-- (void) invalidateCache;
+- (WDShapeType) shapeType;
+- (void) flushCache;
 - (CGPathRef) boundsPath;
-- (CGPathRef) contentsPath;
-- (id) nodes;
+- (CGPathRef) resultPath;
+- (CGPathRef) sourcePath;
+
+- (id) bezierNodes;
+- (id) createNodes;
+- (id) bezierNodesWithRect:(CGRect)R;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

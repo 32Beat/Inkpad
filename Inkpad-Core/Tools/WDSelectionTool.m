@@ -21,6 +21,7 @@
 #import "WDSelectionTool.h"
 #import "WDTextPath.h"
 #import "WDUtilities.h"
+#import "WDShape.h"
 
 @implementation WDSelectionTool
 
@@ -82,7 +83,7 @@
     
     WDPickResult *result = [controller objectUnderPoint:event.location viewScale:canvas.viewScale];
     
-    if (result.type == kWDEther) {
+    if (!result || result.type == kWDEther) {
         // didn't hit anything: marquee mode!
         [controller selectNone:nil];
         controller.propertyManager.ignoreSelectionChanges = YES;
@@ -288,7 +289,19 @@
         canvas.drawingController.propertyManager.ignoreSelectionChanges = NO;
         return;
     }
-    
+
+	WDDrawingController *drawingMgr = canvas.drawingController;
+	if (drawingMgr != nil)
+	{
+		id selectedObject = drawingMgr.singleSelection;
+		if (selectedObject != nil)
+		{
+			if ([selectedObject isKindOfClass:[WDShape class]])
+			{
+				
+			}
+		}
+	}
     canvas.transforming = canvas.transformingNode = NO;
     
     if (transformingGradient_) {
@@ -389,5 +402,9 @@
     
     return WDAddPoints(delta, originalDelta);
 }
+
+
+
+
 
 @end

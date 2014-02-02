@@ -28,14 +28,10 @@ static NSString *WDShapeTypeNameOval = @"WDShapeTypeOval";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline CGPoint _PreparePoint(CGPoint a, CGVector b, CGFloat r)
-{ return (CGPoint){ a.x+r*b.dx, a.y+r*b.dy }; }
-
-- (void) prepareNodes
+- (id) bezierNodesWithRect:(CGRect)R
 {
-	CGRect R = mBounds;
-	CGFloat rx = 0.5*mBounds.size.width;
-	CGFloat ry = 0.5*mBounds.size.height;
+	CGFloat rx = 0.5*R.size.width;
+	CGFloat ry = 0.5*R.size.height;
 
 	static const CGFloat c = kWDShapeCircleFactor;
 	static const CGPoint D[] = {
@@ -43,6 +39,8 @@ static inline CGPoint _PreparePoint(CGPoint a, CGVector b, CGFloat r)
 	{-1, 0}, { 0,-c}, { 0,+c},
 	{ 0,-1}, {+c, 0}, {-c, 0},
 	{+1, 0}, { 0,+c}, { 0,-c}};
+
+	NSMutableArray *nodes = [NSMutableArray array];
 
 	CGPoint P = (CGPoint){ CGRectGetMidX(R), CGRectGetMidY(R) };
 	CGPoint V = { rx, ry };
@@ -54,9 +52,11 @@ static inline CGPoint _PreparePoint(CGPoint a, CGVector b, CGFloat r)
 		B = WDAddPoints(A, WDMultiplyPoints(D[3*i+1], V));
 		C = WDAddPoints(A, WDMultiplyPoints(D[3*i+2], V));
 
-		[[self nodes] addObject:[WDBezierNode
+		[nodes addObject:[WDBezierNode
 		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
 	}
+
+	return nodes;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

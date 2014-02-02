@@ -68,8 +68,10 @@
 + (id) itemWithFrame:(CGRect)frame;
 - (id) initWithFrame:(CGRect)frame;
 
-- (void) invalidateCache;
 - (CGPathRef) framePath;
+
+- (void) invalidateCache;
+// Used by subclasses to invalidate framePath
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

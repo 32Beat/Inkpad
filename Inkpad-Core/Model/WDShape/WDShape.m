@@ -22,6 +22,7 @@ static NSString *WDShapeVersionKey = @"WDShapeVersion";
 
 static NSInteger WDShapeVersion = 1;
 static NSString *WDShapeTypeKey = @"WDShapeType";
+static NSString *WDShapeSizeKey = @"WDShapeSize";
 static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
@@ -31,7 +32,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (void) dealloc
 {
-	[self invalidateCache];
+	[self flushCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,10 +51,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 		CGRectGetMidX(bounds),
 		CGRectGetMidY(bounds) };
 
-		bounds.origin.x = -0.5*bounds.size.width;
-		bounds.origin.y = -0.5*bounds.size.height;
-
-		mBounds = bounds;
+		mSize = bounds.size;
 //		mTransform = CGAffineTransformIdentity;
 	}
 
@@ -67,7 +65,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	WDShape *shape = [super copyWithZone:zone];
 	if (shape != nil)
 	{
-		shape->mBounds = self->mBounds;
+		shape->mSize = self->mSize;
 		shape->mTransform = self->mTransform;
 	}
 
@@ -76,10 +74,11 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (WDShapeType) shapeType
+{ return mType; }
+
 - (NSString *) shapeTypeName
-{
-	return @"WDShapeTypeRectangle";
-}
+{ return @"WDShapeTypeRectangle"; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +88,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	
 	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
 	[coder encodeInteger:mType forKey:WDShapeTypeKey];
-	[coder encodeCGRect:mBounds forKey:WDShapeBoundsKey];
+	[coder encodeCGSize:mSize forKey:WDShapeSizeKey];
 	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
 }
 
@@ -119,8 +118,12 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	//NSString *T = [coder decodeObjectForKey:WDShapeTypeKey];
 	//if (T != nil) { mType = [T integerValue]; }
 
+	if ([coder containsValueForKey:WDShapeSizeKey])
+	{ mSize = [coder decodeCGSizeForKey:WDShapeSizeKey]; }
+	else
 	if ([coder containsValueForKey:WDShapeBoundsKey])
-	{ mBounds = [coder decodeCGRectForKey:WDShapeBoundsKey]; }
+	{ mSize = [coder decodeCGRectForKey:WDShapeBoundsKey].size; }
+
 	if ([coder containsValueForKey:WDShapeTransformKey])
 	{ mTransform = [coder decodeCGAffineTransformForKey:WDShapeTransformKey]; }
 
@@ -132,16 +135,37 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 #pragma mark Parameters
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGRect) bounds
-{ return CGRectApplyAffineTransform(mBounds, mTransform); }
-
-- (void) setBounds:(CGRect)bounds
+- (void) setSize:(CGSize)size
 {
-	mBounds = bounds;
-	[self invalidateCache];
+	if ((mSize.width!=size.width)||
+		(mSize.height!=size.height))
+	{
+		mSize = size;
+		[self flushSource];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) setPosition:(CGPoint)P
+{
+	if ((mTransform.tx != P.x)||
+		(mTransform.ty != P.y))
+	{
+		mTransform.tx = P.x;
+		mTransform.ty = P.y;
+		[self flushResult];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setFrame:(CGRect)frame
+{
+	mSize = frame.size;
+	[self flushCache];
+}
+
 
 - (CGAffineTransform) transform
 { return mTransform; }
@@ -149,24 +173,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 - (void) setTransform:(CGAffineTransform)T
 {
 	mTransform = T;
-	[self invalidateCache];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustBounds:(CGRect)bounds
-{
-	// Record current bounds for undo
-	[[self.undoManager prepareWithInvocationTarget:self] adjustBounds:mBounds];
-
-	// Store update areas
-	[self cacheDirtyBounds];
-
-	// Set new bounds
-	[self setBounds:bounds];
-
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	[self flushResult];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +196,68 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushCache
+{
+	// [super flushSource];
+	[self flushSource];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushSource
+{
+//	[self flushSourceRect];
+	[self flushSourcePath];
+	[self flushResult];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushResult
+{
+	[self flushBoundsPath];
+	[self flushResultPath];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) sourceRect
+{ return (CGRect){{-0.5*mSize.width, -0.5*mSize.height}, mSize }; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) sourcePath
+{
+	return mSourcePath ? mSourcePath :
+	(mSourcePath = [self createSourcePath]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushSourcePath
+{
+	if (mSourcePath != nil)
+	{
+		CGPathRelease(mSourcePath);
+		mSourcePath = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) bounds
+{ return [self computeBounds]; }
+
+- (CGRect) computeBounds
+{ return CGRectApplyAffineTransform([self sourceRect], mTransform); }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) boundsPath
 {
@@ -199,11 +268,11 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) createBoundsPath
-{ return CGPathCreateWithRect(mBounds, &mTransform); }
+{ return CGPathCreateWithRect([self sourceRect], &mTransform); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) releaseBoundsPath
+- (void) flushBoundsPath
 {
 	if (mBoundsPath != nil)
 	{
@@ -215,33 +284,28 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) pathRef
-{ return [self contentsPath]; }
+{ return [self resultPath]; }
 
-- (CGPathRef) contentsPath
+- (CGPathRef) resultPath
 {
-	return mContentsPath ? mContentsPath :
-	(mContentsPath = [self createContentsPath]);
+	return mResultPath ? mResultPath :
+	(mResultPath = [self createResultPath]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) releaseContentsPath
+- (CGPathRef) createResultPath
+{ return CGPathCreateCopyByTransformingPath([self sourcePath], &mTransform); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushResultPath
 {
-	if (mContentsPath != nil)
+	if (mResultPath != nil)
 	{
-		CGPathRelease(mContentsPath);
-		mContentsPath = nil;
+		CGPathRelease(mResultPath);
+		mResultPath = nil;
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) invalidateCache
-{
-	// [super invalidateCache];
-	[self releaseBoundsPath];
-
-	[self releaseContentsPath];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -303,11 +367,38 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
 
 	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
-	CGPathRef pathRef = CGPathCreateCopyByTransformingPath([self boundsPath], &T);
-	if (pathRef != nil)
+	WDGLRenderCGPathRefWithTransform([self boundsPath], T);
+	WDGLRenderCGPathRefWithTransform([self resultPath], T);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+- (void) ___renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
+{
+	if (metaData.flags & WDRenderOutlineOnly)
 	{
-		WDGLRenderCGPathRef(pathRef);
-		CGPathRelease(pathRef);
+		//[self renderOutlineInContext:ctx metaData:metaData];
+	}
+	else
+	if ([self.strokeStyle willRender] || self.fill || self.maskedElements)
+	{
+CGContextSaveGState(ctx);
+CGContextConcatCTM(ctx, mTransform);
+		[self beginTransparencyLayer:ctx metaData:metaData];
+
+
+		if (self.fill) {
+			//[self.fill paintPath:self inContext:ctx];
+		}
+		
+
+
+		if (self.strokeStyle && [self.strokeStyle willRender]) {
+			[self renderStrokeInContext:ctx];
+		}
+
+
+		[self endTransparencyLayer:ctx metaData:metaData];
+CGContextRestoreGState(ctx);
 	}
 }
 
@@ -316,18 +407,31 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 #pragma mark Cached Parameters
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) nodes
-{ return mNodes ? mNodes : (mNodes=[self createNodes]); }
+- (id) bezierNodes
+{ return mSourceNodes ? mSourceNodes : (mSourceNodes=[self createNodes]); }
 
 - (id) createNodes
-{
-	mNodes=[NSMutableArray new];
-	[self prepareNodes];
-	return mNodes.count ? mNodes : nil;
-}
+{ return [self bezierNodesWithRect:[self sourceRect]]; }
 
-- (void) prepareNodes
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) bezierNodesWithRect:(CGRect)R
 {
+	CGPoint P0 = R.origin;
+	CGPoint P1 = R.origin;
+	CGPoint P2 = R.origin;
+	CGPoint P3 = R.origin;
+
+	P1.x += R.size.width;
+	P2.x += R.size.width;
+	P2.y += R.size.height;
+	P3.y += R.size.height;
+
+	return @[
+	[WDBezierNode bezierNodeWithAnchorPoint:P0],
+	[WDBezierNode bezierNodeWithAnchorPoint:P1],
+	[WDBezierNode bezierNodeWithAnchorPoint:P2],
+	[WDBezierNode bezierNodeWithAnchorPoint:P3]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -357,9 +461,9 @@ static void CGPathAddSegmentWithNodes
 ////////////////////////////////////////////////////////////////////////////////
 
 - (NSArray *) segmentNodes
-{ return [[self nodes] arrayByAddingObject:[[self nodes] firstObject]]; }
+{ return [[self bezierNodes] arrayByAddingObject:[[self bezierNodes] firstObject]]; }
 
-- (CGPathRef) createContentsPath
+- (CGPathRef) createSourcePath
 { return [self createPathRefWithNodes:[self segmentNodes]]; }
 
 - (CGPathRef) createPathRefWithNodes:(NSArray *)nodes
@@ -378,6 +482,8 @@ static void CGPathAddSegmentWithNodes
 		if (nodes.firstObject==nodes.lastObject)
 		{ CGPathCloseSubpath(pathRef); }
 	}
+
+	return pathRef;
 
 	CGPathRef t =  CGPathCreateCopyByTransformingPath(pathRef, &mTransform);
 	CGPathRelease(pathRef);
