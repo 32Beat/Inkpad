@@ -55,6 +55,8 @@
 	CGSize mSize;
 	CGAffineTransform mTransform;
 
+	id mContent; // ? NSArray / WDItem
+
 	// Cache
 	CGRect mFrameBounds;
 	CGPathRef mFramePath;

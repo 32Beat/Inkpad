@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDShapeOptionsController.h"
+#import "WDShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDShapeOptionsController
@@ -27,10 +28,7 @@
 	self = [super init];
 	if (self != nil)
 	{
-		if (shape != nil)
-		{
-			mShape = shape;
-		}
+		mShape = shape;
 	}
 
 	return self;
@@ -40,9 +38,9 @@
 
 - (void) dealloc
 {
-	mShape = nil;
-	mView = nil;
 	mSlider = nil;
+	mView = nil;
+	mShape = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,32 +53,59 @@
 	return mView;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) loadView
 {
-	[[NSBundle mainBundle] loadNibNamed:[self nibName] owner:self options:nil];
+	if ([mShape shapeTypeOptions] == WDShapeOptionsCustom)
+		[self loadCustomView];
+	else
+	if ([mShape shapeTypeOptions] == WDShapeOptionsDefault)
+		[self loadDefaultView];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) loadCustomView
+{
+	NSString *typeName = [mShape shapeTypeName];
+	NSString *nibName = [typeName stringByAppendingString:@"Options"];
+
+	[[NSBundle mainBundle] loadNibNamed:nibName owner:self options:nil];
 	if (mView != nil)
 	{
+		// TODO: prepare view
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) loadDefaultView
+{
+	[[NSBundle mainBundle] loadNibNamed:@"WDShapeOptions" owner:self options:nil];
+	if (mView != nil)
+	{
+		[mSlider setValue:[mShape paramValue]];
+
 		[mSlider addTarget:self
 		action:@selector(adjustValue:)
 		forControlEvents:UIControlEventValueChanged];
 	}
 }
 
-- (NSString *) nibName
-{
-	NSString *bundleName = [mShape shapeTypeName];
-	return [bundleName stringByAppendingString:@"Options"];
-}
-
-////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction) adjustValue:(id)sender
 {
+	// TODO: Use sender isTracking for local undo
 	if (sender == mSlider)
 	{
-		UISlider *slider = mSlider;
-		[mShape adjustParamValue:[slider value] isFinal:![slider isTracking]];
+		if (!mTracking)
+		{ [mShape prepareSetParamValue]; }
+
+		[mShape setParamValue:[mSlider value]];
+
+		mTracking = [mSlider isTracking];
 	}
 }
 

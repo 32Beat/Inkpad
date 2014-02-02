@@ -959,12 +959,18 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 - (void) setToolOptionsView:(UIView *)toolOptionsView
 {
-    [toolOptionsView_ removeFromSuperview];
-    
-    toolOptionsView_ = toolOptionsView;
-    [self positionToolOptionsView];
-    
-    [self insertSubview:toolOptionsView_ belowSubview:toolPalette_];
+	if (toolOptionsView_ != toolOptionsView)
+	{
+		[toolOptionsView_ removeFromSuperview];
+		
+		toolOptionsView_ = toolOptionsView;
+		if (toolOptionsView_ != nil)
+		{
+			[self positionToolOptionsView];
+			
+			[self insertSubview:toolOptionsView_ belowSubview:toolPalette_];
+		}
+	}
 }
 
 - (void) setMarquee:(NSValue *)marquee

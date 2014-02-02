@@ -113,19 +113,17 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) adjustParamValue:(float)value isFinal:(BOOL)final
-{
-	if (!mTracking)
-	{
-		[self adjustRadius:value];
-	}
-	else
-	{
-		[self _adjustRadius:value];
-	}
+- (long) shapeTypeOptions
+{ return WDShapeOptionsDefault; }
 
-	mTracking = !final;
-}
+- (float) paramValue
+{ return mRadius; }
+
+- (void) setParamValue:(float)value
+{ [self _adjustRadius:value]; }
+
+- (void) prepareSetParamValue
+{ [[self.undoManager prepareWithInvocationTarget:self] adjustRadius:mRadius]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

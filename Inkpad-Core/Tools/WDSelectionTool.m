@@ -86,6 +86,7 @@
     
     if (!result || result.type == kWDEther) {
         // didn't hit anything: marquee mode!
+		[canvas setToolOptionsView:nil];
         [controller selectNone:nil];
         controller.propertyManager.ignoreSelectionChanges = YES;
         marqueeMode_ = YES;
@@ -295,15 +296,22 @@
 	if (drawingMgr != nil)
 	{
 		id selectedObject = drawingMgr.singleSelection;
-		if (selectedObject != nil)
+		if ((selectedObject != nil)&&
+			[selectedObject isKindOfClass:[WDShape class]]&&
+			[selectedObject shapeTypeOptions] == WDShapeOptionsDefault)
 		{
-			if ([selectedObject isKindOfClass:[WDShape class]])
-			{
-				if (mOptionsController == nil)
-				mOptionsController = [WDShapeOptionsController shapeControllerWithShape:selectedObject];
-				[canvas addSubview:[mOptionsController view]];
-			}
+			mOptionsController =
+			[WDShapeOptionsController shapeControllerWithShape:selectedObject];
+
+			// TEST TEST TEST
+			// TODO: present and remove properly
+//			[selectedObject.undoManager prepareWithInvocationTarget:selectedObject] \
+			setParamValue:[selectedObject paramValue]];
+			[canvas setToolOptionsView:[mOptionsController view]];
 		}
+		else
+			[canvas setToolOptionsView:nil];
+
 	}
     canvas.transforming = canvas.transformingNode = NO;
     

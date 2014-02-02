@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDAbstractPath.h"
+#import "WDShapeOptionsController.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,9 +50,6 @@ WDShapeType;
 	CGPathRef mResultPath;
 	CGPathRef mSourcePath;
 	NSArray *mSourceNodes;
-
-	// Tracking
-	BOOL mTracking;
 }
 
 + (id) shapeWithBounds:(CGRect)bounds;
@@ -69,7 +67,10 @@ WDShapeType;
 - (id) createNodes;
 - (id) bezierNodesWithRect:(CGRect)R;
 
-- (void) adjustParamValue:(float)value isFinal:(BOOL)final;
+- (long) shapeTypeOptions;
+- (float) paramValue;
+- (void) setParamValue:(float)value;
+- (void) prepareSetParamValue;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

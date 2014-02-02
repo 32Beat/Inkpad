@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <UIKit/UIKit.h>
-#import "WDShape.h"
+@class WDShape;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,12 +29,14 @@ WDShapeOption;
 {
 	__strong WDShape *mShape;
 
-	IBOutlet id mView;
-	IBOutlet id mSlider;
+	IBOutlet UIView *mView;
+	IBOutlet UILabel *mLabel;
+	IBOutlet UISlider *mSlider;
+
+	BOOL mTracking;
 }
 
 + (id) shapeControllerWithShape:(WDShape *)shape;
-- (id) initWithShape:(WDShape *)shape;
 
 - (id) view;
 

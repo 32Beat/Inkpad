@@ -311,11 +311,11 @@
 		6BFBC4EB1335F4A000D5877F /* zoom_to_fit.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BFBC4EA1335F4A000D5877F /* zoom_to_fit.png */; };
 		BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */; };
 		BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE28681D189E688F00F0594C /* WDShapeOptionsController.m */; };
-		BE286820189E712300F0594C /* WDShapeTypeRectangleOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE28681F189E712300F0594C /* WDShapeTypeRectangleOptions.xib */; };
 		BE2ACC97189AFF6600EC91EC /* WDOvalShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */; };
 		BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */; };
 		BE2ACC99189AFF6600EC91EC /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC96189AFF6600EC91EC /* WDShape.m */; };
 		BE4CA4AC189D372600D3436C /* WDItem.m in Sources */ = {isa = PBXBuildFile; fileRef = BE4CA4AB189D372600D3436C /* WDItem.m */; };
+		BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -794,7 +794,6 @@
 		BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDGLVertexBuffer.h; sourceTree = "<group>"; };
 		BE28681C189E688F00F0594C /* WDShapeOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShapeOptionsController.h; sourceTree = "<group>"; };
 		BE28681D189E688F00F0594C /* WDShapeOptionsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShapeOptionsController.m; sourceTree = "<group>"; };
-		BE28681F189E712300F0594C /* WDShapeTypeRectangleOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeTypeRectangleOptions.xib; sourceTree = "<group>"; };
 		BE2ACC91189AFF6600EC91EC /* WDOvalShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDOvalShape.h; sourceTree = "<group>"; };
 		BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDOvalShape.m; sourceTree = "<group>"; };
 		BE2ACC93189AFF6600EC91EC /* WDRectangleShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDRectangleShape.h; sourceTree = "<group>"; };
@@ -803,6 +802,7 @@
 		BE2ACC96189AFF6600EC91EC /* WDShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShape.m; sourceTree = "<group>"; };
 		BE4CA4AA189D372600D3436C /* WDItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDItem.h; sourceTree = "<group>"; };
 		BE4CA4AB189D372600D3436C /* WDItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDItem.m; sourceTree = "<group>"; };
+		BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeOptions.xib; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1605,7 +1605,7 @@
 				BE2ACC96189AFF6600EC91EC /* WDShape.m */,
 				BE28681C189E688F00F0594C /* WDShapeOptionsController.h */,
 				BE28681D189E688F00F0594C /* WDShapeOptionsController.m */,
-				BE28681F189E712300F0594C /* WDShapeTypeRectangleOptions.xib */,
+				BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */,
 				BE2ACC91189AFF6600EC91EC /* WDOvalShape.h */,
 				BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */,
 				BE2ACC93189AFF6600EC91EC /* WDRectangleShape.h */,
@@ -1755,6 +1755,7 @@
 				6BABD984141ED30100F7E0A9 /* groupSelect.png in Resources */,
 				6BABD986141ED30100F7E0A9 /* hand.png in Resources */,
 				6BABD988141ED30100F7E0A9 /* line.png in Resources */,
+				BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */,
 				6BABD98A141ED30100F7E0A9 /* oval.png in Resources */,
 				6BABD98C141ED30100F7E0A9 /* pen.png in Resources */,
 				6BABD98E141ED30100F7E0A9 /* polygon.png in Resources */,
@@ -1835,7 +1836,6 @@
 				6B219CA1150EFAE700761F18 /* groupSelect@2x.png in Resources */,
 				6B219CA3150EFAE700761F18 /* select@2x.png in Resources */,
 				6B219CCB1511893500761F18 /* duplicate.png in Resources */,
-				BE286820189E712300F0594C /* WDShapeTypeRectangleOptions.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
