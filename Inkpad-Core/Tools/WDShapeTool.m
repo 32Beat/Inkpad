@@ -24,6 +24,8 @@
 #import "WDShape.h"
 #import "WDRectangleShape.h"
 #import "WDOvalShape.h"
+#import "WDLeafShape.h"
+#import "WDStarShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
 NSString *WDShapeToolStarPointCount = @"WDShapeToolStarPointCount";
@@ -142,14 +144,13 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	if (shapeMode_ == WDShapeModeRectangle)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDRectangleShape shapeWithBounds:rect radius:rectCornerRadius_];
+		return [WDRectangleShape shapeWithBounds:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeOval)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
 		return [WDOvalShape shapeWithBounds:rect];
-//		return [WDPath pathWithOvalInRect:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeLine)
@@ -180,7 +181,13 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 		path.nodes = nodes;
 		path.closed = YES;
 		return path;
-	} else if (shapeMode_ == WDShapeModeStar) {
+	} else
+	if (shapeMode_ == WDShapeModeStar)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDStarShape shapeWithBounds:rect];
+
+/*
 		float   outerRadius = WDDistance(pt, initialPoint);
 		
 		if (outerRadius == 0) {
@@ -229,7 +236,10 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 		path.nodes = nodes;
 		path.closed = YES;
 		return path;
-	} else if (shapeMode_ == WDShapeModeSpiral) {
+*/
+	}
+	else
+	if (shapeMode_ == WDShapeModeSpiral) {
 		float       radius = WDDistance(pt, initialPoint);
 		CGPoint     delta = WDSubtractPoints(pt, initialPoint);
 		float       offsetAngle = atan2(delta.y, delta.x) + M_PI;

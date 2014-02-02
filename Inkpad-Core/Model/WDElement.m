@@ -283,15 +283,26 @@ NSString *WDShadowKey = @"WDShadowKey";
 	// the layer should dirty its thumbnail
 	[self.layer invalidateThumbnail];
 
+	CGRect sourceArea = dirtyBounds_;
 	CGRect resultArea = [self renderBounds];
 
-	NSArray *rects = @[
-	[NSValue valueWithCGRect:dirtyBounds_],
-	[NSValue valueWithCGRect:resultArea]];
+	if (CGRectEqualToRect(sourceArea, resultArea))
+	{
+		NSDictionary *userInfo = @{@"rect":
+		[NSValue valueWithCGRect:resultArea]};
+		[[NSNotificationCenter defaultCenter]
+		postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
+	}
+	else
+	{
+		NSArray *rects = @[
+		[NSValue valueWithCGRect:dirtyBounds_],
+		[NSValue valueWithCGRect:resultArea]];
 
-	NSDictionary *userInfo = @{@"rects": rects};
-	[[NSNotificationCenter defaultCenter]
-	postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
+		NSDictionary *userInfo = @{@"rects": rects};
+		[[NSNotificationCenter defaultCenter]
+		postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
+	}
 
 	dirtyBounds_ = CGRectNull;
 }

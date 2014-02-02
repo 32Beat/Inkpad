@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDRectangleShape.h
+	WDStarShape.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,16 +14,22 @@
 #import "WDShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDRectangleShape : WDShape
+@interface WDStarShape : WDShape
 {
+	long mCount;
 	CGFloat mRadius;
 }
 
 
-- (void) setRadius:(CGFloat)radius;
+- (long) pointCount;
+- (void) setPointCount:(long)count;
+- (float) innerRadius;
+- (void) setInnerRadius:(float)radius;
 
-- (id) _bezierNodesWithRect:(CGRect)R;
-- (id) _bezierNodesWithRect:(CGRect)R cornerRadius:(CGFloat)radius;
+- (void) adjustPointCount:(long)count withUndo:(BOOL)shouldUndo;
+- (void) adjustInnerRadius:(float)radius withUndo:(BOOL)shouldUndo;
+
+- (id) bezierNodesWithRect:(CGRect)R;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

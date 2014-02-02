@@ -500,6 +500,9 @@ static void CGPathAddSegmentWithNodes
 - (long) shapeTypeOptions
 { return WDShapeOptionsNone; }
 
+- (id) paramName
+{ return @"Value"; } // TODO: localize
+
 - (float) paramValue
 { return 0.0; }
 

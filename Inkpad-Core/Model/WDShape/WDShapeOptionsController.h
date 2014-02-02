@@ -13,6 +13,9 @@
 
 #import <UIKit/UIKit.h>
 @class WDShape;
+@protocol WDShapeOptionsViewProtocol
+- (void) setShape:(id)shape;
+@end
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +41,7 @@ WDShapeOption;
 
 + (id) shapeControllerWithShape:(WDShape *)shape;
 
-- (id) view;
+- (id<WDShapeOptionsViewProtocol>) view;
 
 - (IBAction) adjustValue:(id)sender;
 

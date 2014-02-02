@@ -21,16 +21,13 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 @implementation WDRectangleShape
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (id) shapeWithBounds:(CGRect)bounds radius:(CGFloat)radius
-{ return [[self alloc] initWithBounds:bounds radius:radius]; }
-
-- (id) initWithBounds:(CGRect)bounds radius:(CGFloat)radius
+- (id) initWithBounds:(CGRect)bounds
 {
 	self = [super initWithBounds:bounds];
 	if (self != nil)
 	{
 		mType = WDShapeTypeRectangle;
-		mRadius = radius;
+		mRadius = 0.25;
 	}
 
 	return self;
@@ -115,6 +112,10 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 
 - (long) shapeTypeOptions
 { return WDShapeOptionsDefault; }
+
+
+- (id) paramName
+{ return @"Corner Radius"; } // TODO: localize
 
 - (float) paramValue
 { return mRadius; }

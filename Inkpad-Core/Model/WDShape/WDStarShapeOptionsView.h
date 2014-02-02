@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDRectangleShape.h
+	WDStarShapeOptionsView.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -12,18 +12,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDShape.h"
+#import "WDStarShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDRectangleShape : WDShape
+@interface WDStarShapeOptionsView : UIView
 {
-	CGFloat mRadius;
+	IBOutlet UISlider *mCountSlider;
+	IBOutlet UILabel *mCountSliderLabel;
+	IBOutlet UILabel *mCountResultLabel;
+
+	IBOutlet UISlider *mRadiusSlider;
+	IBOutlet UILabel *mRadiusSliderLabel;
+	IBOutlet UILabel *mRadiusResultLabel;
+
+	BOOL mTracking;
+
+	__weak WDStarShape *mShape;
 }
 
-
-- (void) setRadius:(CGFloat)radius;
-
-- (id) _bezierNodesWithRect:(CGRect)R;
-- (id) _bezierNodesWithRect:(CGRect)R cornerRadius:(CGFloat)radius;
+- (void) setShape:(id)shape;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

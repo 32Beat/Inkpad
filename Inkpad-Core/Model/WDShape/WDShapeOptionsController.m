@@ -68,13 +68,13 @@
 
 - (void) loadCustomView
 {
-	NSString *typeName = [mShape shapeTypeName];
+	NSString *typeName = NSStringFromClass([mShape class]);
 	NSString *nibName = [typeName stringByAppendingString:@"Options"];
 
 	[[NSBundle mainBundle] loadNibNamed:nibName owner:self options:nil];
 	if (mView != nil)
 	{
-		// TODO: prepare view
+		[[self view] setShape:mShape];
 	}
 }
 
@@ -85,6 +85,7 @@
 	[[NSBundle mainBundle] loadNibNamed:@"WDShapeOptions" owner:self options:nil];
 	if (mView != nil)
 	{
+		[mLabel setText:[mShape paramName]];
 		[mSlider setValue:[mShape paramValue]];
 
 		[mSlider addTarget:self

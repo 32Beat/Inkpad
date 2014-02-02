@@ -68,6 +68,7 @@ WDShapeType;
 - (id) bezierNodesWithRect:(CGRect)R;
 
 - (long) shapeTypeOptions;
+- (id) paramName;
 - (float) paramValue;
 - (void) setParamValue:(float)value;
 - (void) prepareSetParamValue;

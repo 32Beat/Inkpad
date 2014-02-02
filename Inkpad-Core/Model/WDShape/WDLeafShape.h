@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDRectangleShape.h
+	WDLeafShape.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,16 +14,9 @@
 #import "WDShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDRectangleShape : WDShape
-{
-	CGFloat mRadius;
-}
-
-
-- (void) setRadius:(CGFloat)radius;
-
-- (id) _bezierNodesWithRect:(CGRect)R;
-- (id) _bezierNodesWithRect:(CGRect)R cornerRadius:(CGFloat)radius;
+@interface WDLeafShape : WDShape
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
+
+
