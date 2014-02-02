@@ -209,6 +209,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 - (void) flushSource
 {
 //	[self flushSourceRect];
+	mSourceNodes = nil;
 	[self flushSourcePath];
 	[self flushResult];
 }
@@ -319,8 +320,6 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 	T = CGAffineTransformConcat(mTransform, T);
 	[self adjustTransform:T];
-	// Set new bounds
-	//[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
 
 	return nil;
 }
@@ -360,6 +359,12 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	transform is an additional transform because the user is currently 
+	in the act of moving, scaling, or rotating
+	
+	viewTransform is an additional transform for current zoom&focus
+*/
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
 							viewTransform:(CGAffineTransform)viewTransform
@@ -381,10 +386,10 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	else
 	if ([self.strokeStyle willRender] || self.fill || self.maskedElements)
 	{
-CGContextSaveGState(ctx);
-CGContextConcatCTM(ctx, mTransform);
 		[self beginTransparencyLayer:ctx metaData:metaData];
 
+CGContextSaveGState(ctx);
+CGContextConcatCTM(ctx, mTransform);
 
 		if (self.fill) {
 			//[self.fill paintPath:self inContext:ctx];
@@ -393,12 +398,14 @@ CGContextConcatCTM(ctx, mTransform);
 
 
 		if (self.strokeStyle && [self.strokeStyle willRender]) {
-			[self renderStrokeInContext:ctx];
+			[self.strokeStyle applyInContext:ctx];
+			CGContextAddPath(ctx, self.sourcePath);
+			CGContextStrokePath(ctx);
 		}
 
 
-		[self endTransparencyLayer:ctx metaData:metaData];
 CGContextRestoreGState(ctx);
+		[self endTransparencyLayer:ctx metaData:metaData];
 	}
 }
 
@@ -484,11 +491,12 @@ static void CGPathAddSegmentWithNodes
 	}
 
 	return pathRef;
-
-	CGPathRef t =  CGPathCreateCopyByTransformingPath(pathRef, &mTransform);
-	CGPathRelease(pathRef);
-	return t;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) adjustParamValue:(float)value isFinal:(BOOL)final
+{ }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

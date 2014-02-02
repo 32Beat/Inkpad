@@ -33,7 +33,7 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 
 - (void) dealloc
 {
-	[self invalidateCache];
+	[self flushCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 	{
 		mTransform = CGAffineTransformIdentity;
 
-		if ([self readFromCoder:coder])
+		if (![self readFromCoder:coder])
 		{ self = nil; }
 	}
 
@@ -113,13 +113,35 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 #pragma mark Parameters
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGSize) size
-{ return mSize; }
-
 - (void) setSize:(CGSize)size
 {
-	mSize = size;
-	[self invalidateCache];
+	if ((mSize.width!=size.width)||
+		(mSize.height!=size.height))
+	{
+		mSize = size;
+		[self flushSource];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setPosition:(CGPoint)P
+{
+	if ((mTransform.tx != P.x)||
+		(mTransform.ty != P.y))
+	{
+		mTransform.tx = P.x;
+		mTransform.ty = P.y;
+		[self flushResult];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setFrame:(CGRect)frame
+{
+	[self setPosition:(CGPoint){ CGRectGetMidX(frame), CGRectGetMidY(frame) }];
+	[self setSize:frame.size];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,30 +152,33 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 - (void) setTransform:(CGAffineTransform)T
 {
 	mTransform = T;
-	[self invalidateCache];
+	[self flushResult];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
 
-- (void) setPosition:(CGPoint)P
+- (void) flushCache
 {
-	mTransform.tx = P.x;
-	mTransform.ty = P.y;
-	[self invalidateCache];
+	[self flushSource];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setFrame:(CGRect)frame
+- (void) flushSource
 {
-	mSize = frame.size;
-	mTransform = (CGAffineTransform)
-	{ 1.0, 0.0, 0.0, 1.0, CGRectGetMidX(frame), CGRectGetMidY(frame) };
-
-	[self invalidateCache];
+	[self flushResult];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushResult
+{
+	[self flushFramePath];
+	[self flushFrameBounds];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Frame
@@ -162,8 +187,21 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 - (CGRect) sourceRect
 { return (CGRect){{-0.5*mSize.width, -0.5*mSize.height}, mSize }; }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) frameBounds
-{ return CGRectApplyAffineTransform([self sourceRect], mTransform); }
+{
+	return
+	mFrameBounds.size.width != 0 ||
+	mFrameBounds.size.height != 0 ?
+	mFrameBounds : (mFrameBounds =
+	CGRectApplyAffineTransform([self sourceRect], mTransform));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushFrameBounds
+{ mFrameBounds.size.width = mFrameBounds.size.height = 0.0; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -180,14 +218,7 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) invalidateCache
-{
-	[self releaseFramePath];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) releaseFramePath
+- (void) flushFramePath
 {
 	if (mFramePath != nil)
 	{
@@ -229,14 +260,10 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 ////////////////////////////////////////////////////////////////////////////////
 // TODO: rename to applyTransform:
 
-- (NSSet *) transform:(CGAffineTransform)T
+- (void) applyTransform:(CGAffineTransform)T
 {
 	T = CGAffineTransformConcat(mTransform, T);
 	[self adjustTransform:T];
-	// Set new bounds
-	//[self adjustBounds:CGRectApplyAffineTransform(mBounds, T)];
-
-	return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

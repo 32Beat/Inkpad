@@ -310,6 +310,8 @@
 		6BFA802C1249CEDB00D1749C /* WDLayerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA802B1249CEDB00D1749C /* WDLayerCell.m */; };
 		6BFBC4EB1335F4A000D5877F /* zoom_to_fit.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BFBC4EA1335F4A000D5877F /* zoom_to_fit.png */; };
 		BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */; };
+		BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE28681D189E688F00F0594C /* WDShapeOptionsController.m */; };
+		BE286820189E712300F0594C /* WDShapeTypeRectangleOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE28681F189E712300F0594C /* WDShapeTypeRectangleOptions.xib */; };
 		BE2ACC97189AFF6600EC91EC /* WDOvalShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */; };
 		BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */; };
 		BE2ACC99189AFF6600EC91EC /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC96189AFF6600EC91EC /* WDShape.m */; };
@@ -790,6 +792,9 @@
 		8D1107310486CEB800E47090 /* Inkpad-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Inkpad-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = WDGLVertexBuffer.c; sourceTree = "<group>"; };
 		BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDGLVertexBuffer.h; sourceTree = "<group>"; };
+		BE28681C189E688F00F0594C /* WDShapeOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShapeOptionsController.h; sourceTree = "<group>"; };
+		BE28681D189E688F00F0594C /* WDShapeOptionsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShapeOptionsController.m; sourceTree = "<group>"; };
+		BE28681F189E712300F0594C /* WDShapeTypeRectangleOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeTypeRectangleOptions.xib; sourceTree = "<group>"; };
 		BE2ACC91189AFF6600EC91EC /* WDOvalShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDOvalShape.h; sourceTree = "<group>"; };
 		BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDOvalShape.m; sourceTree = "<group>"; };
 		BE2ACC93189AFF6600EC91EC /* WDRectangleShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDRectangleShape.h; sourceTree = "<group>"; };
@@ -1598,6 +1603,9 @@
 				BE4CA4AB189D372600D3436C /* WDItem.m */,
 				BE2ACC95189AFF6600EC91EC /* WDShape.h */,
 				BE2ACC96189AFF6600EC91EC /* WDShape.m */,
+				BE28681C189E688F00F0594C /* WDShapeOptionsController.h */,
+				BE28681D189E688F00F0594C /* WDShapeOptionsController.m */,
+				BE28681F189E712300F0594C /* WDShapeTypeRectangleOptions.xib */,
 				BE2ACC91189AFF6600EC91EC /* WDOvalShape.h */,
 				BE2ACC92189AFF6600EC91EC /* WDOvalShape.m */,
 				BE2ACC93189AFF6600EC91EC /* WDRectangleShape.h */,
@@ -1827,6 +1835,7 @@
 				6B219CA1150EFAE700761F18 /* groupSelect@2x.png in Resources */,
 				6B219CA3150EFAE700761F18 /* select@2x.png in Resources */,
 				6B219CCB1511893500761F18 /* duplicate.png in Resources */,
+				BE286820189E712300F0594C /* WDShapeTypeRectangleOptions.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1921,6 +1930,7 @@
 				6B00DA5A1406022B00E45409 /* WDActivityManager.m in Sources */,
 				6B00DA5D140604CE00E45409 /* WDActivityController.m in Sources */,
 				6B74182B140617F100A00C76 /* WDProgressView.m in Sources */,
+				BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */,
 				6BABD96D141ED30100F7E0A9 /* NSArray+Additions.m in Sources */,
 				6BABD96F141ED30100F7E0A9 /* NSData+Additions.m in Sources */,
 				6BABD970141ED30100F7E0A9 /* NSString+Additions.m in Sources */,

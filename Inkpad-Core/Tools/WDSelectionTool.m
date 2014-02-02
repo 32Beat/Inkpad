@@ -22,6 +22,7 @@
 #import "WDTextPath.h"
 #import "WDUtilities.h"
 #import "WDShape.h"
+#import "WDShapeOptionsController.h"
 
 @implementation WDSelectionTool
 
@@ -298,7 +299,9 @@
 		{
 			if ([selectedObject isKindOfClass:[WDShape class]])
 			{
-				
+				if (mOptionsController == nil)
+				mOptionsController = [WDShapeOptionsController shapeControllerWithShape:selectedObject];
+				[canvas addSubview:[mOptionsController view]];
 			}
 		}
 	}

@@ -739,7 +739,9 @@ NSString *WDShadowKey = @"WDShadowKey";
     if ([self needsTransparencyLayer:metaData.scale])
 	{
 //		CGContextBeginTransparencyLayer(ctx, NULL);
-		CGRect R = [self renderBounds]; \
+		CGRect B = CGContextGetClipBoundingBox(ctx);
+		CGRect R = [self renderBounds];
+		R = CGRectIntersection(R, B);
 		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
     }
 }

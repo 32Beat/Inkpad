@@ -41,6 +41,8 @@
     BOOL                    nodeWasSelected_;
     BOOL                    objectWasSelected_;
     WDElement               *lastTappedObject_;
+
+	id mOptionsController;
 }
 
 @property (nonatomic, assign) BOOL groupSelect;

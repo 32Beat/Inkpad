@@ -49,12 +49,17 @@ WDShapeType;
 	CGPathRef mResultPath;
 	CGPathRef mSourcePath;
 	NSArray *mSourceNodes;
+
+	// Tracking
+	BOOL mTracking;
 }
 
 + (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
 
 - (WDShapeType) shapeType;
+- (NSString *) shapeTypeName;
+
 - (void) flushCache;
 - (CGPathRef) boundsPath;
 - (CGPathRef) resultPath;
@@ -63,6 +68,8 @@ WDShapeType;
 - (id) bezierNodes;
 - (id) createNodes;
 - (id) bezierNodesWithRect:(CGRect)R;
+
+- (void) adjustParamValue:(float)value isFinal:(BOOL)final;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

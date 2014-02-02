@@ -96,7 +96,11 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 {
 	// Record current radius for undo
 	[[self.undoManager prepareWithInvocationTarget:self] adjustRadius:mRadius];
+	[self _adjustRadius:radius];
+}
 
+- (void) _adjustRadius:(CGFloat)radius
+{
 	// Store update areas
 	[self cacheDirtyBounds];
 
@@ -109,7 +113,19 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) adjustParamValue:(float)value isFinal:(BOOL)final
+{
+	if (!mTracking)
+	{
+		[self adjustRadius:value];
+	}
+	else
+	{
+		[self _adjustRadius:value];
+	}
 
+	mTracking = !final;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -122,10 +138,9 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 	CGFloat H = CGRectGetHeight(R);
 	CGFloat maxRadius = 0.5 * MIN(W, H);
 
-	CGFloat radius = mRadius;
-
-	if (radius > maxRadius)
-	{ radius = maxRadius; }
+	CGFloat radius = maxRadius;
+	if (0.0 <= mRadius && mRadius <= 1.0)
+	{ radius *= mRadius; }
 
 	return (radius > 0.0) ?
 	[self _bezierNodesWithRect:R cornerRadius:radius]:

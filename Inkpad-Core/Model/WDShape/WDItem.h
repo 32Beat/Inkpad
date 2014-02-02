@@ -56,6 +56,7 @@
 	CGAffineTransform mTransform;
 
 	// Cache
+	CGRect mFrameBounds;
 	CGPathRef mFramePath;
 
 	// Owner
@@ -68,10 +69,24 @@
 + (id) itemWithFrame:(CGRect)frame;
 - (id) initWithFrame:(CGRect)frame;
 
-- (CGPathRef) framePath;
+- (void) setFrame:(CGRect)frame;
+- (void) setPosition:(CGPoint)P;
+- (void) setSize:(CGSize)size;
 
-- (void) invalidateCache;
-// Used by subclasses to invalidate framePath
+- (CGRect) sourceRect;
+// sourceRect = combination of size & anchorpoint,
+// always includes {0,0}, usually at center
+
+- (CGPathRef) framePath;
+// framePath = sourceRect + transform
+
+- (CGRect) frameBounds;
+// frameBounds = bounding box of sourceRect + transform
+
+
+
+- (void) flushCache;
+// subclasses should call this to invalidate frame parameters
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
