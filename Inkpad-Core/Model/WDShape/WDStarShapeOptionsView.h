@@ -17,6 +17,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDStarShapeOptionsView : UIView
 {
+	__weak WDStarShape *mShape;
+
 	IBOutlet UISlider *mCountSlider;
 	IBOutlet UILabel *mCountSliderLabel;
 	IBOutlet UILabel *mCountResultLabel;
@@ -26,8 +28,6 @@
 	IBOutlet UILabel *mRadiusResultLabel;
 
 	BOOL mTracking;
-
-	__weak WDStarShape *mShape;
 }
 
 - (void) setShape:(id)shape;

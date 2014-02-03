@@ -82,6 +82,12 @@ CGRect WDStrokeBoundsForPath(CGPathRef pathRef, WDStrokeStyle *strokeStyle);
 
 CGPathRef WDCreateTransformedCGPathRef(CGPathRef pathRef, CGAffineTransform transform);
 
+
+/*
+*/
+CGPathRef WDCreateCGPathRefWithNodes(NSArray *nodes, BOOL closed);
+// Create path from array of WDBezierNodes
+
 //
 // Misc
 //

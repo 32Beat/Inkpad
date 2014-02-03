@@ -12,8 +12,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDAbstractPath.h"
-#import "WDShapeOptionsController.h"
+#import "WDBezierNode.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDShape
+	-------
+	Superclass for editable shape items
+	
+	Usage: 
+	
+	For a simple shape with no options,
+	only implement bezierNodesWithRect 
+	(see WDOvalShape for example)
+	
+	For an editable shape with a single relative parameter
+	implement WDShapeOptionsProtocol
+	(see WDRectangleShape for example)
+
+	For an editable shape with multiple parameters 
+	implement WDShapeOptionsProtocol
+	and add WD<name>ShapeOptions.xib
+	(see WDStarShape for example)
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef enum WDShapeType
@@ -29,6 +50,27 @@ WDShapeType;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef enum WDShapeOptions
+{
+	WDShapeOptionsNone = 0,
+	WDShapeOptionsDefault,
+	WDShapeOptionsCustom
+}
+WDShapeOption;
+
+////////////////////////////////////////////////////////////////////////////////
+@protocol WDShapeOptionsProtocol
+
+- (long) shapeTypeOptions;
+
+@optional
+- (id) paramName;
+- (float) paramValue;
+- (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;
+
+@end
+////////////////////////////////////////////////////////////////////////////////
+
 // Minimize deviation http://spencermortensen.com/articles/bezier-circle/
 
 #define kWDShapeCircleFactor 	0.551915024494
@@ -37,44 +79,38 @@ WDShapeType;
 
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDShape : WDAbstractPath
+@interface WDShape : WDAbstractPath <WDShapeOptionsProtocol>
 {
 	// Model
-	long mType;
 	CGSize mSize;
 	CGAffineTransform mTransform;
 	
 	// Cache
-	CGPathRef mBoundsPath;
-	CGPathRef mResultPath;
-	CGPathRef mSourcePath;
-	NSArray *mSourceNodes;
+	CGRect mFrameRect; 		// boundingbox of transformed sourcerect
+	CGPathRef mFramePath; 	// transformed sourcerect cornerpoints
+	CGPathRef mResultPath; 	// transformed sourcepath
+	CGPathRef mSourcePath; 	// path from sourcenodes
+	NSArray *mSourceNodes; 	// beziernodes centered around 0,0
 }
 
 + (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
 
-- (WDShapeType) shapeType;
 - (NSString *) shapeTypeName;
 
 - (void) flushCache;
-- (CGPathRef) boundsPath;
+- (CGPathRef) framePath;
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
-
 - (id) bezierNodes;
 - (id) createNodes;
 - (id) bezierNodesWithRect:(CGRect)R;
 
-- (long) shapeTypeOptions;
-- (id) paramName;
-- (float) paramValue;
-- (void) setParamValue:(float)value;
-- (void) prepareSetParamValue;
-
 @end
 ////////////////////////////////////////////////////////////////////////////////
+
 
 
 

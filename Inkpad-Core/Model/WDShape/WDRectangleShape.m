@@ -12,13 +12,38 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDRectangleShape.h"
-#import "WDBezierNode.h"
 
-static NSString *WDShapeTypeNameRectangle = @"WDShapeTypeRectangle";
-static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
+////////////////////////////////////////////////////////////////////////////////
+
+// If *interpretation* of values ever changes:
+static NSInteger WDParamVersion = 1;
+static NSString *WDParamVersionKey = @"WDRectangleShapeVersion";
+static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDRectangleShape
+////////////////////////////////////////////////////////////////////////////////
+
+- (long) shapeTypeOptions
+{ return WDShapeOptionsDefault; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) paramName
+{ return @"Corner Radius"; } // TODO: localize
+
+- (float) paramValue
+{ return mRadius; }
+
+- (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo
+{ [self adjustRadius:value withUndo:shouldUndo]; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithBounds:(CGRect)bounds
@@ -26,8 +51,8 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 	self = [super initWithBounds:bounds];
 	if (self != nil)
 	{
-		mType = WDShapeTypeRectangle;
 		mRadius = 0.25;
+		// may init from user defaults
 	}
 
 	return self;
@@ -48,11 +73,6 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSString *) shapeTypeName
-{ return WDShapeTypeNameRectangle; }
-
-////////////////////////////////////////////////////////////////////////////////
-
 #define NSStringFromCGFloat(v) (sizeof(v)>32)? \
 [[NSNumber numberWithDouble:v] stringValue]:\
 [[NSNumber numberWithFloat:v] stringValue]
@@ -61,8 +81,10 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 {
 	[super encodeWithCoder:coder];
 
+	[coder encodeInteger:WDParamVersion forKey:WDParamVersionKey];
+
 	NSString *R = NSStringFromCGFloat(mRadius);
-	[coder encodeObject:R forKey:WDShapeCornerRadiusKey];
+	[coder encodeObject:R forKey:WDParamCornerRadiusKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,13 +94,15 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		NSString *R = [coder decodeObjectForKey:WDShapeCornerRadiusKey];
+		NSString *R = [coder decodeObjectForKey:WDParamCornerRadiusKey];
 		if (R != nil) { mRadius = [R doubleValue]; }
 	}
 
 	return self;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setRadius:(CGFloat)radius
@@ -89,15 +113,13 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) adjustRadius:(CGFloat)radius
+- (void) adjustRadius:(CGFloat)radius withUndo:(BOOL)shouldUndo
 {
 	// Record current radius for undo
-	[[self.undoManager prepareWithInvocationTarget:self] adjustRadius:mRadius];
-	[self _adjustRadius:radius];
-}
+	if (shouldUndo)
+	[[self.undoManager prepareWithInvocationTarget:self]
+	adjustRadius:mRadius withUndo:YES];
 
-- (void) _adjustRadius:(CGFloat)radius
-{
 	// Store update areas
 	[self cacheDirtyBounds];
 
@@ -107,24 +129,6 @@ static NSString *WDShapeCornerRadiusKey = @"WDShapeCornerRadius";
 	// Notify drawingcontroller
 	[self postDirtyBoundsChange];
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (long) shapeTypeOptions
-{ return WDShapeOptionsDefault; }
-
-
-- (id) paramName
-{ return @"Corner Radius"; } // TODO: localize
-
-- (float) paramValue
-{ return mRadius; }
-
-- (void) setParamValue:(float)value
-{ [self _adjustRadius:value]; }
-
-- (void) prepareSetParamValue
-{ [[self.undoManager prepareWithInvocationTarget:self] adjustRadius:mRadius]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

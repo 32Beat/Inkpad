@@ -12,15 +12,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDStarShape.h"
-#import "WDBezierNode.h"
 
-//static NSInteger WDShapeTypeStarVersion = 1;
-static NSString *WDShapeTypeNameStar = @"WDShapeTypeStar";
-static NSString *WDShapePointCountKey = @"WDShapePointCount";
-static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
+////////////////////////////////////////////////////////////////////////////////
+
+static NSInteger WDParamVersion = 1;
+static NSString *WDParamVersionKey = @"WDStarShapeVersion";
+static NSString *WDParamPointCountKey = @"WDStarShapePointCount";
+static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDStarShape
+////////////////////////////////////////////////////////////////////////////////
+
+- (long) shapeTypeOptions
+{ return WDShapeOptionsCustom; }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithBounds:(CGRect)bounds
@@ -28,7 +38,6 @@ static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
 	self = [super initWithBounds:bounds];
 	if (self != nil)
 	{
-		mType = WDShapeTypeStar;
 		mCount = 5;
 		mRadius = 0.25;
 	}
@@ -52,16 +61,6 @@ static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSString *) shapeTypeName
-{ return WDShapeTypeNameStar; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (long) shapeTypeOptions
-{ return WDShapeOptionsCustom; }
-
-////////////////////////////////////////////////////////////////////////////////
-
 #define NSStringFromCGFloat(v) (sizeof(v)>32)? \
 [[NSNumber numberWithDouble:v] stringValue]:\
 [[NSNumber numberWithFloat:v] stringValue]
@@ -70,10 +69,12 @@ static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
 {
 	[super encodeWithCoder:coder];
 
+	[coder encodeInteger:WDParamVersion forKey:WDParamVersionKey];
+
 	NSString *N = [[NSNumber numberWithInteger:mCount] stringValue];
-	[coder encodeObject:N forKey:WDShapePointCountKey];
+	[coder encodeObject:N forKey:WDParamPointCountKey];
 	NSString *R = NSStringFromCGFloat(mRadius);
-	[coder encodeObject:R forKey:WDShapeInnerRadiusKey];
+	[coder encodeObject:R forKey:WDParamInnerRadiusKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,9 +84,9 @@ static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		NSString *N = [coder decodeObjectForKey:WDShapePointCountKey];
+		NSString *N = [coder decodeObjectForKey:WDParamPointCountKey];
 		if (N != nil) { mCount = [N integerValue]; }
-		NSString *R = [coder decodeObjectForKey:WDShapeInnerRadiusKey];
+		NSString *R = [coder decodeObjectForKey:WDParamInnerRadiusKey];
 		if (R != nil) { mRadius = [R doubleValue]; }
 	}
 
@@ -123,7 +124,8 @@ static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
 {
 	// Record undo
 	if (shouldUndo)
-	[[self.undoManager prepareWithInvocationTarget:self] adjustPointCount:mCount];
+	[[self.undoManager prepareWithInvocationTarget:self]
+	adjustPointCount:mCount withUndo:YES];
 
 	// Store update areas
 	[self cacheDirtyBounds];
@@ -144,7 +146,8 @@ static NSString *WDShapeInnerRadiusKey = @"WDShapeInnerRadius";
 {
 	// Record undo
 	if (shouldUndo)
-	[[self.undoManager prepareWithInvocationTarget:self] adjustInnerRadius:mRadius];
+	[[self.undoManager prepareWithInvocationTarget:self]
+	adjustInnerRadius:mRadius withUndo:YES];
 
 	// Store update areas
 	[self cacheDirtyBounds];

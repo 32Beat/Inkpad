@@ -74,11 +74,11 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDShapeType) shapeType
-{ return mType; }
-
 - (NSString *) shapeTypeName
-{ return @"WDShapeTypeRectangle"; }
+{ return NSStringFromClass([self class]); }
+
+- (long) shapeTypeOptions
+{ return WDShapeOptionsNone; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -87,7 +87,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	[super encodeWithCoder:coder];
 	
 	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
-	[coder encodeInteger:mType forKey:WDShapeTypeKey];
+	[coder encodeObject:[self shapeTypeName] forKey:WDShapeTypeKey];
 	[coder encodeCGSize:mSize forKey:WDShapeSizeKey];
 	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
 }
@@ -132,7 +132,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Parameters
+#pragma mark Model Data
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setSize:(CGSize)size
@@ -162,10 +162,11 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (void) setFrame:(CGRect)frame
 {
-	mSize = frame.size;
-	[self flushCache];
+	[self setSize:frame.size];
+	[self setPosition:(CGPoint){ CGRectGetMidX(frame), CGRectGetMidY(frame) }];
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGAffineTransform) transform
 { return mTransform; }
@@ -196,6 +197,15 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) bounds
+{ return [self frameRect]; }
+
+- (CGPathRef) pathRef
+{ return [self resultPath]; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) flushCache
@@ -218,8 +228,9 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (void) flushResult
 {
-	[self flushBoundsPath];
 	[self flushResultPath];
+	[self flushFramePath];
+	[self flushFrameRect];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,61 +242,54 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) sourcePath
+- (CGRect) frameRect
 {
-	return mSourcePath ? mSourcePath :
-	(mSourcePath = [self createSourcePath]);
+	return !CGRectIsEmpty(mFrameRect) ?
+	mFrameRect : (mFrameRect = [self computeFrameRect]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) flushSourcePath
-{
-	if (mSourcePath != nil)
-	{
-		CGPathRelease(mSourcePath);
-		mSourcePath = nil;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) bounds
-{ return [self computeBounds]; }
-
-- (CGRect) computeBounds
+- (CGRect) computeFrameRect
 { return CGRectApplyAffineTransform([self sourceRect], mTransform); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) boundsPath
+- (void) flushFrameRect
 {
-	return mBoundsPath ? mBoundsPath :
-	(mBoundsPath = [self createBoundsPath]);
+	mFrameRect.size.width = 0;
+	mFrameRect.size.height = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark Frame Path
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) framePath
+{
+	return mFramePath ? mFramePath :
+	(mFramePath = [self createFramePath]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) createBoundsPath
+- (CGPathRef) createFramePath
 { return CGPathCreateWithRect([self sourceRect], &mTransform); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) flushBoundsPath
+- (void) flushFramePath
 {
-	if (mBoundsPath != nil)
+	if (mFramePath != nil)
 	{
-		CGPathRelease(mBoundsPath);
-		mBoundsPath = nil;
+		CGPathRelease(mFramePath);
+		mFramePath = nil;
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (CGPathRef) pathRef
-{ return [self resultPath]; }
+#pragma mark Result Path
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) resultPath
 {
@@ -307,6 +311,64 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 		CGPathRelease(mResultPath);
 		mResultPath = nil;
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark Source Path
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) sourcePath
+{
+	return mSourcePath ? mSourcePath :
+	(mSourcePath = [self createSourcePath]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) createSourcePath
+{ return WDCreateCGPathRefWithNodes([self bezierNodes], YES); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushSourcePath
+{
+	if (mSourcePath != nil)
+	{
+		CGPathRelease(mSourcePath);
+		mSourcePath = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Bezier Nodes
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) bezierNodes
+{ return mSourceNodes ? mSourceNodes : (mSourceNodes=[self createNodes]); }
+
+- (id) createNodes
+{ return [self bezierNodesWithRect:[self sourceRect]]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) bezierNodesWithRect:(CGRect)R
+{
+	CGPoint P0 = R.origin;
+	CGPoint P1 = R.origin;
+	CGPoint P2 = R.origin;
+	CGPoint P3 = R.origin;
+
+	P1.x += R.size.width;
+	P2.x += R.size.width;
+	P2.y += R.size.height;
+	P3.y += R.size.height;
+
+	return @[
+	[WDBezierNode bezierNodeWithAnchorPoint:P0],
+	[WDBezierNode bezierNodeWithAnchorPoint:P1],
+	[WDBezierNode bezierNodeWithAnchorPoint:P2],
+	[WDBezierNode bezierNodeWithAnchorPoint:P3]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,11 +434,14 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
 
 	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
-	WDGLRenderCGPathRefWithTransform([self boundsPath], T);
+	WDGLRenderCGPathRefWithTransform([self framePath], T);
 	WDGLRenderCGPathRefWithTransform([self resultPath], T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	This would scale styling as well
+*/
 - (void) ___renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 	if (metaData.flags & WDRenderOutlineOnly)
@@ -408,109 +473,6 @@ CGContextRestoreGState(ctx);
 		[self endTransparencyLayer:ctx metaData:metaData];
 	}
 }
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark Cached Parameters
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) bezierNodes
-{ return mSourceNodes ? mSourceNodes : (mSourceNodes=[self createNodes]); }
-
-- (id) createNodes
-{ return [self bezierNodesWithRect:[self sourceRect]]; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) bezierNodesWithRect:(CGRect)R
-{
-	CGPoint P0 = R.origin;
-	CGPoint P1 = R.origin;
-	CGPoint P2 = R.origin;
-	CGPoint P3 = R.origin;
-
-	P1.x += R.size.width;
-	P2.x += R.size.width;
-	P2.y += R.size.height;
-	P3.y += R.size.height;
-
-	return @[
-	[WDBezierNode bezierNodeWithAnchorPoint:P0],
-	[WDBezierNode bezierNodeWithAnchorPoint:P1],
-	[WDBezierNode bezierNodeWithAnchorPoint:P2],
-	[WDBezierNode bezierNodeWithAnchorPoint:P3]];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-static void CGPathAddSegmentWithNodes
-(CGMutablePathRef pathRef, WDBezierNode *N1, WDBezierNode *N2)
-{
-	if (N1 == nil)
-		CGPathMoveToPoint(pathRef, NULL,
-			N2.anchorPoint.x,
-			N2.anchorPoint.y);
-	else
-	if (N1.hasOutPoint || N2.hasInPoint)
-		CGPathAddCurveToPoint(pathRef, NULL,
-			N1.outPoint.x,
-			N1.outPoint.y,
-			N2.inPoint.x,
-			N2.inPoint.y,
-			N2.anchorPoint.x,
-			N2.anchorPoint.y);
-	else
-		CGPathAddLineToPoint(pathRef, NULL,
-			N2.anchorPoint.x,
-			N2.anchorPoint.y);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSArray *) segmentNodes
-{ return [[self bezierNodes] arrayByAddingObject:[[self bezierNodes] firstObject]]; }
-
-- (CGPathRef) createSourcePath
-{ return [self createPathRefWithNodes:[self segmentNodes]]; }
-
-- (CGPathRef) createPathRefWithNodes:(NSArray *)nodes
-{
-	CGMutablePathRef pathRef = CGPathCreateMutable();
-	if (pathRef != nil)
-	{
-		WDBezierNode *lastNode = nil;
-		for (WDBezierNode *nextNode in nodes)
-		{
-			CGPathAddSegmentWithNodes(pathRef, lastNode, nextNode);
-			lastNode = nextNode;
-		}
-
-		// For closed path, objectptr is copied
-		if (nodes.firstObject==nodes.lastObject)
-		{ CGPathCloseSubpath(pathRef); }
-	}
-
-	return pathRef;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark
-////////////////////////////////////////////////////////////////////////////////
-
-- (long) shapeTypeOptions
-{ return WDShapeOptionsNone; }
-
-- (id) paramName
-{ return @"Value"; } // TODO: localize
-
-- (float) paramValue
-{ return 0.0; }
-
-- (void) setParamValue:(float)value
-{ }
-
-- (void) prepareSetParamValue
-{ }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

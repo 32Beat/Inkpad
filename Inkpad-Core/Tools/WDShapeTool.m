@@ -24,7 +24,6 @@
 #import "WDShape.h"
 #import "WDRectangleShape.h"
 #import "WDOvalShape.h"
-#import "WDLeafShape.h"
 #import "WDStarShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
@@ -153,6 +152,12 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 		return [WDOvalShape shapeWithBounds:rect];
 	}
 	else
+	if (shapeMode_ == WDShapeModeStar)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDStarShape shapeWithBounds:rect];
+	}
+	else
 	if (shapeMode_ == WDShapeModeLine)
 	{
 		if (constrain) {
@@ -181,62 +186,6 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 		path.nodes = nodes;
 		path.closed = YES;
 		return path;
-	} else
-	if (shapeMode_ == WDShapeModeStar)
-	{
-		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDStarShape shapeWithBounds:rect];
-
-/*
-		float   outerRadius = WDDistance(pt, initialPoint);
-		
-		if (outerRadius == 0) {
-			return nil;
-		}
-		
-		if (constrain) {
-			float tempInner = starInnerRadiusRatio_ * lastStarRadius_;
-			starInnerRadiusRatio_ = WDClamp(0.05, 2.0, tempInner / outerRadius);
-		}
-		lastStarRadius_ = outerRadius;
-		
-		float   ratioToUse = starInnerRadiusRatio_;
-		float   kappa = (M_PI * 2) / numStarPoints_;
-		float   optimalRatio = cos(kappa) / cos(kappa / 2);
-		
-		if ((numStarPoints_ > 4) && (starInnerRadiusRatio_ / optimalRatio > 0.95) && (starInnerRadiusRatio_ / optimalRatio < 1.05)) {
-			ratioToUse = optimalRatio;
-		}
-		
-		NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-		[defaults setFloat:ratioToUse forKey:WDShapeToolStarInnerRadiusRatio];
-		
-		NSMutableArray  *nodes = [NSMutableArray array];
-		CGPoint         delta = WDSubtractPoints(pt, initialPoint);
-		float           innerRadius = outerRadius * ratioToUse;
-		float           angle, x, y;
-		float           theta = M_PI / numStarPoints_; // == (360 degrees / numPoints) / 2.0
-		float           offsetAngle = atan2(delta.y, delta.x);
-		
-		for(int i = 0; i < numStarPoints_ * 2; i += 2) {
-			angle = theta * i + offsetAngle;
-			x = cos(angle) * outerRadius;
-			y = sin(angle) * outerRadius;
-			
-			[nodes addObject:[WDBezierNode bezierNodeWithAnchorPoint:CGPointMake(x + initialPoint.x, y + initialPoint.y)]];
-			
-			angle = theta * (i+1) + offsetAngle;
-			x = cos(angle) * innerRadius;
-			y = sin(angle) * innerRadius;
-			
-			[nodes addObject:[WDBezierNode bezierNodeWithAnchorPoint:CGPointMake(x + initialPoint.x, y + initialPoint.y)]];
-		}
-		
-		WDPath *path = [[WDPath alloc] init];
-		path.nodes = nodes;
-		path.closed = YES;
-		return path;
-*/
 	}
 	else
 	if (shapeMode_ == WDShapeModeSpiral) {
@@ -311,20 +260,24 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	{
 		if (!CGPointEqualToPoint(self.initialEvent.snappedLocation, theEvent.snappedLocation))
 		{
-			WDPath  *path = [self pathWithPoint:theEvent.snappedLocation constrain:[self constrain]];
+			WDStylable *item =
+			[self pathWithPoint:theEvent.snappedLocation constrain:[self constrain]];
 			
 			WDStrokeStyle *stroke = [canvas.drawingController.propertyManager activeStrokeStyle];
-			path.strokeStyle = (shapeMode_ == WDShapeModeLine) ? stroke : [stroke strokeStyleSansArrows];
+			item.strokeStyle = (shapeMode_ == WDShapeModeLine) ? stroke : [stroke strokeStyleSansArrows];
 			
 			if (shapeMode_ != WDShapeModeLine) {
-				path.fill = [canvas.drawingController.propertyManager activeFillStyle];
+				item.fill = [canvas.drawingController.propertyManager activeFillStyle];
 			}
 			
-			path.opacity = [[canvas.drawingController.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
-			path.shadow = [canvas.drawingController.propertyManager activeShadow];
+			item.opacity =
+			[[canvas.drawingController.propertyManager
+			defaultValueForProperty:WDOpacityProperty] floatValue];
+
+			item.shadow = [canvas.drawingController.propertyManager activeShadow];
 			
-			[canvas.drawing addObject:path];
-			[canvas.drawingController selectObject:path];
+			[canvas.drawing addObject:item];
+			[canvas.drawingController selectObject:item];
 		}
 		
 		canvas.shapeUnderConstruction = nil;
@@ -406,6 +359,9 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 
 - (UIView *) optionsView
 {
+	// Editing only available after placement
+	return nil;
+
     if (shapeMode_ == WDShapeModeOval || shapeMode_ == WDShapeModeLine) {
         // no options for these guys
         return nil;

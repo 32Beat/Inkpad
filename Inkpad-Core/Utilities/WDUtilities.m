@@ -526,7 +526,7 @@ CGRect WDStrokeBoundsForPath(CGPathRef pathRef, WDStrokeStyle *strokeStyle)
     
     return styleBounds;
 }
-
+/*
 typedef struct {
     CGMutablePathRef mutablePath;
     CGAffineTransform transform;
@@ -568,6 +568,68 @@ CGPathRef WDCreateTransformedCGPathRef(CGPathRef pathRef, CGAffineTransform tran
     return transformedPath;
 }
 
+*/
+
+CGPathRef WDCreateTransformedCGPathRef(CGPathRef pathRef, CGAffineTransform transform)
+{
+    return CGPathCreateCopyByTransformingPath(pathRef, &transform);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void CGPathAddSegmentWithNodes
+(CGMutablePathRef pathRef, WDBezierNode *N1, WDBezierNode *N2)
+{
+	if (N1 == nil)
+		CGPathMoveToPoint(pathRef, NULL,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+	else
+	if (N1.hasOutPoint || N2.hasInPoint)
+		CGPathAddCurveToPoint(pathRef, NULL,
+			N1.outPoint.x,
+			N1.outPoint.y,
+			N2.inPoint.x,
+			N2.inPoint.y,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+	else
+		CGPathAddLineToPoint(pathRef, NULL,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGPathRef WDCreateCGPathRefWithNodes(NSArray *nodes, BOOL closed)
+{
+	CGMutablePathRef pathRef = CGPathCreateMutable();
+	if (pathRef != nil)
+	{
+		WDBezierNode *lastNode = nil;
+		for (WDBezierNode *nextNode in nodes)
+		{
+			CGPathAddSegmentWithNodes(pathRef, lastNode, nextNode);
+			lastNode = nextNode;
+		}
+
+		if (closed)
+		{
+			if (lastNode != [nodes firstObject])
+			{ CGPathAddSegmentWithNodes(pathRef, lastNode, [nodes firstObject]); }
+			CGPathCloseSubpath(pathRef);
+		}
+	}
+
+	return pathRef;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NSArray *WDCloseNodes(NSArray *nodes)
+{ return [nodes arrayByAddingObject:[nodes firstObject]]; }
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Misc
 

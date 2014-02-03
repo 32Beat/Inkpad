@@ -20,17 +20,23 @@
 - (void) setShape:(id)shape
 {
 	mShape = shape;
-
 	[mCountSlider setValue:[shape pointCount]];
 	[mRadiusSlider setValue:[shape innerRadius]];
 
-	[mCountSlider addTarget:self
-	action:@selector(adjustValue:)
-	forControlEvents:UIControlEventValueChanged];
+	[self updateLabels];
+}
 
-	[mRadiusSlider addTarget:self
-	action:@selector(adjustValue:)
-	forControlEvents:UIControlEventValueChanged];
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateLabels
+{
+	long N = [mShape pointCount];
+	[mCountResultLabel setText:
+	[NSString stringWithFormat:@"%d",(int)N]];
+
+	float R = [mShape innerRadius];
+	[mRadiusResultLabel setText:
+	[NSString stringWithFormat:@"%1.2f",R]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,8 +47,7 @@
 	{
 		long N = [mCountSlider value];
 		[mShape adjustPointCount:N withUndo:!mTracking];
-		[mCountResultLabel setText:
-		[NSString stringWithFormat:@"%d",(int)N]];
+		[self updateLabels];
 
 		mTracking = [mCountSlider isTracking];
 	}
@@ -51,8 +56,7 @@
 	{
 		float R = [mRadiusSlider value];
 		[mShape adjustInnerRadius:R withUndo:!mTracking];
-		[mRadiusResultLabel setText:
-		[NSString stringWithFormat:@"%1.2f",R]];
+		[self updateLabels];
 
 		mTracking = [mRadiusSlider isTracking];
 	}

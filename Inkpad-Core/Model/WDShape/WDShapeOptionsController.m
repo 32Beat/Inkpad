@@ -101,10 +101,7 @@
 	// TODO: Use sender isTracking for local undo
 	if (sender == mSlider)
 	{
-		if (!mTracking)
-		{ [mShape prepareSetParamValue]; }
-
-		[mShape setParamValue:[mSlider value]];
+		[mShape setParamValue:[mSlider value] withUndo:!mTracking];
 
 		mTracking = [mSlider isTracking];
 	}
