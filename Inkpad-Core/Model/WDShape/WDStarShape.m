@@ -69,10 +69,14 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 {
 	[super encodeWithCoder:coder];
 
+	// Save parameters version
 	[coder encodeInteger:WDParamVersion forKey:WDParamVersionKey];
 
+	// Save point count
 	NSString *N = [[NSNumber numberWithInteger:mCount] stringValue];
 	[coder encodeObject:N forKey:WDParamPointCountKey];
+
+	// Save inner radius
 	NSString *R = NSStringFromCGFloat(mRadius);
 	[coder encodeObject:R forKey:WDParamInnerRadiusKey];
 }

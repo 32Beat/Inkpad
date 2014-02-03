@@ -18,22 +18,19 @@
 @implementation WDLeafShape
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) bezierNodesWithRect:(CGRect)R
++ (id) bezierNodesWithRect:(CGRect)R
 {
-	CGFloat rx = 0.5*R.size.width;
-	CGFloat ry = 0.5*R.size.height;
-
 	static const CGFloat c = kWDShapeCircleFactor;
 	static const CGPoint D[] = {
-	{ 0,+1}, {+0, -c}, {-0, 0},
-	{-1, -0.25}, { 0,-0.75*c}, { 0,+0.75*c},
-	{ 0,-1}, {+c, 0}, {-c, 0},
-	{+1, -0.25}, { 0,+0.75*c}, { 0,-0.75*c}};
+	{ 0.00,+1.00}, { 0,  0}, { 0, 0},
+	{-1.00, 0.00}, { 0, -c}, { 0,+c},
+	{ 0.00,-1.00}, { 0,  0}, { 0, 0},
+	{+1.00, 0.00}, { 0, +c}, { 0,-c}};
 
 	NSMutableArray *nodes = [NSMutableArray array];
 
-	CGPoint P = (CGPoint){ CGRectGetMidX(R), CGRectGetMidY(R) };
-	CGPoint V = { rx, ry };
+	CGPoint P = { CGRectGetMidX(R), CGRectGetMidY(R) };
+	CGPoint V = { 0.5*R.size.width, 0.5*R.size.height };
 
 	for (int i=0; i!=4; i++)
 	{

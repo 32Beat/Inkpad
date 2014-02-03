@@ -18,13 +18,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSString *WDShapeVersionKey = @"WDShapeVersion";
-
 static NSInteger WDShapeVersion = 1;
+static NSString *WDShapeVersionKey = @"WDShapeVersion";
 static NSString *WDShapeTypeKey = @"WDShapeType";
 static NSString *WDShapeSizeKey = @"WDShapeSize";
-static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 static NSString *WDShapeTransformKey = @"WDShapeTransform";
+
+// for alpha version
+static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDShape
@@ -351,8 +352,17 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 { return [self bezierNodesWithRect:[self sourceRect]]; }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	bezierNodesWithRect
+	-------------------
+	Create array of WDBezierNode to define shape path within rectangle
+	
+*/
 
 - (id) bezierNodesWithRect:(CGRect)R
+{ return [[self class] bezierNodesWithRect:R]; }
+
++ (id) bezierNodesWithRect:(CGRect)R
 {
 	CGPoint P0 = R.origin;
 	CGPoint P1 = R.origin;
@@ -374,7 +384,14 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: rename to applyTransform:
+// TODO:remove for better mvc separation
+/*
+	Make encompassing path object which holds WDShape 
+	which acts like a kind of controller on WDShape
+	it should handle drawing, and conversion
+*/
+////////////////////////////////////////////////////////////////////////////////
+// TODO: rename to applyTransform: or appendTransform:
 
 - (NSSet *) transform:(CGAffineTransform)T
 {

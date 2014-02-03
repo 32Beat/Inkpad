@@ -25,6 +25,8 @@
 #import "WDRectangleShape.h"
 #import "WDOvalShape.h"
 #import "WDStarShape.h"
+#import "WDLeafShape.h"
+#import "WDHeartShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
 NSString *WDShapeToolStarPointCount = @"WDShapeToolStarPointCount";
@@ -149,7 +151,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	if (shapeMode_ == WDShapeModeOval)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDOvalShape shapeWithBounds:rect];
+		return [WDHeartShape shapeWithBounds:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeStar)

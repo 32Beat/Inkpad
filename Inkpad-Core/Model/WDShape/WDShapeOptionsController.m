@@ -85,8 +85,13 @@
 	[[NSBundle mainBundle] loadNibNamed:@"WDShapeOptions" owner:self options:nil];
 	if (mView != nil)
 	{
-		[mLabel setText:[mShape paramName]];
-		[mSlider setValue:[mShape paramValue]];
+		// No paramName is okay
+		if ([mShape respondsToSelector:@selector(paramName)])
+		{ [mLabel setText:[mShape paramName]]; }
+
+		// No paramValue is okay, but slider won't reflect current state
+		if ([mShape respondsToSelector:@selector(paramValue)])
+		{ [mSlider setValue:[mShape paramValue]]; }
 
 		[mSlider addTarget:self
 		action:@selector(adjustValue:)

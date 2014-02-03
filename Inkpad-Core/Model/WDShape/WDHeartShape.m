@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDOvalShape.m
+	WDHeartShape.m
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,34 +11,40 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import "WDOvalShape.h"
+#import "WDHeartShape.h"
 #import "WDUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@implementation WDOvalShape
+@implementation WDHeartShape
 ////////////////////////////////////////////////////////////////////////////////
 
 + (id) bezierNodesWithRect:(CGRect)R
 {
 	static const CGFloat c = kWDShapeCircleFactor;
 	static const CGPoint D[] = {
-	{ 0,+1}, {-c, 0}, {+c, 0},
-	{-1, 0}, { 0,-c}, { 0,+c},
-	{ 0,-1}, {+c, 0}, {-c, 0},
-	{+1, 0}, { 0,+c}, { 0,-c}};
-
-	// Center point and radius vector
-	CGPoint P = { CGRectGetMidX(R), CGRectGetMidY(R) };
-	CGPoint V = { 0.5*R.size.width, 0.5*R.size.height };
+	{ 0.0,+0.5}, { 0, +0.5*c}, { 0, 0},
+	{-0.5,+1.0}, { -0.5*c, 0}, { +0.5*c, 0},
+	{-1.0,+0.5}, { 0, -1.5*c}, { 0, +0.5*c},
+	{ 0.0,-1.0}, { 0, 0}, { 0, 0},
+	{+1.0,+0.5}, { 0, +0.5*c}, { 0, -1.5*c},
+	{+0.5,+1.0}, { -0.5*c, 0}, { +0.5*c, 0},
+	{ 0.0,+0.5}, { 0, 0}, { 0, +0.5*c}};
 
 	NSMutableArray *nodes = [NSMutableArray array];
 
-	for (int i=0; i!=4; i++)
+	CGPoint P = { CGRectGetMidX(R), CGRectGetMidY(R) };
+	CGPoint V = { 0.5*R.size.width, 0.5*R.size.height };
+
+	// TODO: implement better flip strategy 
+	// Heart shape is not vertically symmetrical, need to flip for SVG
+	V.y = -V.y;
+
+	for (int i=0; i!=7; i++)
 	{
 		CGPoint A, B, C;
-		A = WDAddPoints(P, WDMultiplyPoints(V, D[3*i+0]));
-		B = WDAddPoints(A, WDMultiplyPoints(V, D[3*i+1]));
-		C = WDAddPoints(A, WDMultiplyPoints(V, D[3*i+2]));
+		A = WDAddPoints(P, WDMultiplyPoints(D[3*i+0], V));
+		B = WDAddPoints(A, WDMultiplyPoints(D[3*i+1], V));
+		C = WDAddPoints(A, WDMultiplyPoints(D[3*i+2], V));
 
 		[nodes addObject:[WDBezierNode
 		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];

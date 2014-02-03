@@ -73,7 +73,8 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 - (id) initWithAnchorPoint:(CGPoint)pt
 { return [self initWithAnchorPoint:pt outPoint:pt]; }
 
-- (id) initWithAnchorPoint:(CGPoint)anchorPoint outPoint:(CGPoint)outPoint
+- (id) initWithAnchorPoint:(CGPoint)anchorPoint
+				  outPoint:(CGPoint)outPoint
 {
 	// Mirror outPoint
 	CGPoint inPoint = {

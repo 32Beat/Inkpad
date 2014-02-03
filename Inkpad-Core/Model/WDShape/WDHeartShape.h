@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDRectangleShape.h
+	WDHeartShape.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,19 +14,9 @@
 #import "WDShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDRectangleShape : WDShape
-{
-	CGFloat mRadius;
-}
-
-
-- (void) setRadius:(CGFloat)radius;
-
-// Options protocol
-- (long) shapeTypeOptions;
-- (id) paramName;
-- (float) paramValue;
-- (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;
+@interface WDHeartShape : WDShape
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
+
+

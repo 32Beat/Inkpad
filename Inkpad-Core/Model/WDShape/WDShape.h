@@ -42,9 +42,11 @@ typedef enum WDShapeType
 	WDShapeTypeRectangle = 0,
 	WDShapeTypeOval,
 	WDShapeTypeStar,
-	WDShapeTypePolygon,
-	WDShapeTypeLine,
-	WDShapeTypeSpiral
+	WDShapeTypePolygon, // = star with inner radius 1.0
+	WDShapeTypeLine, 	// = not a shape
+	WDShapeTypeSpiral,
+	WDShapeTypeLeaf,
+	WDShapeTypeHeart
 }
 WDShapeType;
 
@@ -67,6 +69,10 @@ WDShapeOption;
 - (id) paramName;
 - (float) paramValue;
 - (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;
+
+@optional
++ (id) bezierNodesWithRect:(CGRect)R;
+// WDShapeOptionsNone means shape can be defined outside context
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,14 +104,15 @@ WDShapeOption;
 + (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
 
-- (NSString *) shapeTypeName;
+- (NSString *) shapeTypeName; // defaults to classname
+
 
 - (void) flushCache;
+- (CGRect) frameRect;
 - (CGPathRef) framePath;
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
 - (id) bezierNodes;
-- (id) createNodes;
 - (id) bezierNodesWithRect:(CGRect)R;
 
 @end
