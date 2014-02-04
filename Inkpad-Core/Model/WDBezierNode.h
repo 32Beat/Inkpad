@@ -54,6 +54,8 @@ typedef enum {
 // some helper state... not strictly part of the model, but makes many operations simpler
 @property (nonatomic, assign) BOOL selected;
 
++ (id) bezierNodesWithPoints:(const CGPoint *)P count:(int)nodeCount;
+
 // Deprecated
 + (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)A
 							anchorPoint:(CGPoint)B

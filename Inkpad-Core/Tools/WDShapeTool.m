@@ -27,6 +27,7 @@
 #import "WDStarShape.h"
 #import "WDLeafShape.h"
 #import "WDHeartShape.h"
+#import "WDDiamondShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
 NSString *WDShapeToolStarPointCount = @"WDShapeToolStarPointCount";
@@ -41,7 +42,17 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 
 - (NSString *) iconName
 {
-    NSArray *imageNames = @[@"rect.png", @"oval.png", @"star.png", @"polygon.png", @"line.png", @"spiral.png"];
+    NSArray *imageNames = @[
+	@"rect.png",
+	@"oval.png",
+	@"star.png",
+	@"polygon.png",
+	@"line.png",
+	@"spiral.png",
+	@"line.png",
+	@"line.png",
+	@"line.png"
+	];
     
     return imageNames[shapeMode_];
 }
@@ -76,7 +87,11 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	[WDShapeTool starTool],
 	[WDShapeTool polygonTool],
 	[WDShapeTool spiralTool],
-	[WDShapeTool lineTool]];
+	[WDShapeTool lineTool],
+	[WDShapeTool leafTool],
+	[WDShapeTool heartTool],
+	[WDShapeTool diamondTool],
+	];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +113,15 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 
 + (id) spiralTool
 { return [self shapeToolWithMode:WDShapeModeSpiral]; }
+
++ (id) leafTool
+{ return [self shapeToolWithMode:WDShapeModeLeaf]; }
+
++ (id) heartTool
+{ return [self shapeToolWithMode:WDShapeModeHeart]; }
+
++ (id) diamondTool
+{ return [self shapeToolWithMode:WDShapeModeDiamond]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -151,7 +175,25 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	if (shapeMode_ == WDShapeModeOval)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDOvalShape shapeWithBounds:rect];
+	}
+	else
+	if (shapeMode_ == WDShapeModeLeaf)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDLeafShape shapeWithBounds:rect];
+	}
+	else
+	if (shapeMode_ == WDShapeModeHeart)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
 		return [WDHeartShape shapeWithBounds:rect];
+	}
+	else
+	if (shapeMode_ == WDShapeModeDiamond)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDDiamondShape shapeWithBounds:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeStar)

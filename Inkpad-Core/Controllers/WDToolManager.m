@@ -64,7 +64,7 @@ NSString *WDActiveToolDidChange = @"WDActiveToolDidChange";
                    [WDScissorTool tool],
                    @[[WDFreehandTool tool], closedFreehand],
                    [WDEraserTool tool],
-                   [WDShapeTool tools],
+                   [WDShapeTool tools], // array
                    [WDTextTool tool],
                    [WDEyedropperTool tool],
                    [WDScaleTool tool],

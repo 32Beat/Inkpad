@@ -111,7 +111,6 @@
 	self.userInteractionEnabled = NO;
 	self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	self.contentMode = UIViewContentModeCenter;
-//	self.contentMode = UIViewContentModeRedraw;
 
 	// Adjust for screen
 	[self setContentScaleFactor:[UIScreen mainScreen].scale];
@@ -121,8 +120,8 @@
 	// Ensure zooming produces actual pixels
 	[[self layer] setMagnificationFilter:kCAFilterNearest];
 /*
-	To speed up rendering, we may set the layer scalefactor to 
-	a lower value than the screen scalefactor.
+	To speed up rendering, we may set the layer scalefactor to a 
+	lower value than the screen scalefactor.
 
 	If the layer scalefactor is 1.0
 	and the screen scalefactor is 2.0,
@@ -333,7 +332,7 @@
 	// Fetch source rect
 	CGRect srcR = [self pageRect];
 	if (CGRectIsEmpty(srcR))
-	return;
+	{ return; }
 
 	// Get canvas transform
 	CGAffineTransform T = self.canvas.canvasTransform;
@@ -436,8 +435,6 @@
 	// marquee?
 	if (self.canvas.marquee)
 	{ [self renderMarqueWithTransform:T]; }
-
-//	WDGLTestMarkers();
 
 #ifdef WD_DEBUG
     NSLog(@"SelectionView preptime: %f", -[date timeIntervalSinceNow]);

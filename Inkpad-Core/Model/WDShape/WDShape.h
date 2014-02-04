@@ -71,9 +71,10 @@ WDShapeOption;
 - (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;
 
 @optional
-+ (id) bezierNodesWithRect:(CGRect)R;
 // WDShapeOptionsNone means shape can be defined outside context
-
++ (id) bezierNodesWithRect:(CGRect)R;
++ (id) bezierNodesWithShapeInRect:(CGRect)R
+		normalizedPoints:(const CGPoint *)P count:(int)nodeCount;
 @end
 ////////////////////////////////////////////////////////////////////////////////
 

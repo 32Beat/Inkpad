@@ -382,6 +382,32 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
+{ return (CGPoint){ P.x+M.x*V.x, P.y+M.y*V.y }; }
+
++ (id) bezierNodesWithShapeInRect:(CGRect)R
+		normalizedPoints:(const CGPoint *)P count:(int)nodeCount
+{
+	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
+	CGPoint N = { R.origin.x + M.x, R.origin.y + M.y };
+
+	NSMutableArray *nodes = [NSMutableArray array];
+
+	for (int i=0; i!=nodeCount; i++)
+	{
+		CGPoint A = _PreparePoint(N, M, P[3*i+0]);
+		CGPoint B = _PreparePoint(A, M, P[3*i+1]);
+		CGPoint C = _PreparePoint(A, M, P[3*i+2]);
+
+		[nodes addObject:[WDBezierNode
+		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
+	}
+
+	return nodes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 // TODO:remove for better mvc separation
