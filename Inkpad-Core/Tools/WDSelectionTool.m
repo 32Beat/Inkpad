@@ -283,15 +283,9 @@
     }
 }
 
-- (void) endWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+// Perhaps move to canvas...
+- (void) updateToolOptionsForCanvas:(WDCanvas *)canvas
 {
-    if (marqueeMode_) {
-        marqueeMode_ = NO;
-        canvas.marquee = nil;
-        canvas.drawingController.propertyManager.ignoreSelectionChanges = NO;
-        return;
-    }
-
 	WDDrawingController *drawingMgr = canvas.drawingController;
 	if (drawingMgr != nil)
 	{
@@ -311,8 +305,21 @@
 		}
 		else
 			[canvas setToolOptionsView:nil];
-
 	}
+}
+
+- (void) endWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+    if (marqueeMode_) {
+        marqueeMode_ = NO;
+        canvas.marquee = nil;
+        canvas.drawingController.propertyManager.ignoreSelectionChanges = NO;
+		[self updateToolOptionsForCanvas:canvas];
+        return;
+    }
+
+	[self updateToolOptionsForCanvas:canvas];
+	
     canvas.transforming = canvas.transformingNode = NO;
     
     if (transformingGradient_) {
