@@ -41,12 +41,14 @@ typedef enum WDShapeType
 {
 	WDShapeTypeRectangle = 0,
 	WDShapeTypeOval,
+	WDShapeTypePie,
 	WDShapeTypeStar,
 	WDShapeTypePolygon, // = star with inner radius 1.0
 	WDShapeTypeLine, 	// = not a shape
 	WDShapeTypeSpiral,
 	WDShapeTypeLeaf,
-	WDShapeTypeHeart
+	WDShapeTypeHeart,
+	WDShapeTypeDiamond
 }
 WDShapeType;
 
@@ -58,12 +60,12 @@ typedef enum WDShapeOptions
 	WDShapeOptionsDefault,
 	WDShapeOptionsCustom
 }
-WDShapeOption;
+WDShapeOptions;
 
 ////////////////////////////////////////////////////////////////////////////////
 @protocol WDShapeOptionsProtocol
 
-- (long) shapeOptions;
+- (NSInteger) shapeOptions;
 
 @optional
 - (id) paramName;
@@ -106,7 +108,7 @@ WDShapeOption;
 - (id) initWithBounds:(CGRect)bounds;
 
 - (NSString *) shapeName; // defaults to classname
-
+- (NSInteger) shapeVersion; // defaults to 0
 
 - (void) flushCache;
 - (CGRect) frameRect;

@@ -29,7 +29,7 @@ static NSString *WDParamValueKey = @"WDParamValue";
 @implementation WDEditableShape
 ////////////////////////////////////////////////////////////////////////////////
 
-- (long) shapeOptions
+- (NSInteger) shapeOptions
 { return WDShapeOptionsDefault; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,12 +37,15 @@ static NSString *WDParamValueKey = @"WDParamValue";
 - (id) paramName
 { return @"Value"; } // TODO: localize
 
+// If subclass doesn't implement version, it should be 0
 - (int) paramVersion
 { return 0; }
 
+// Called by ShapeOptionsController to initialize slider
 - (float) paramValue
 { return mValue; }
 
+// Called repeatedly by ShapeOptionsController during slider changes
 - (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo
 { [self adjustValue:value withUndo:shouldUndo]; }
 

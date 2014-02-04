@@ -78,7 +78,10 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 - (NSString *) shapeName
 { return NSStringFromClass([self class]); }
 
-- (long) shapeOptions
+- (NSInteger) shapeVersion
+{ return 0; }
+
+- (NSInteger) shapeOptions
 { return WDShapeOptionsNone; }
 
 ////////////////////////////////////////////////////////////////////////////////
