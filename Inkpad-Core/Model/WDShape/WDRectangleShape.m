@@ -28,7 +28,7 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 @implementation WDRectangleShape
 ////////////////////////////////////////////////////////////////////////////////
 
-- (long) shapeTypeOptions
+- (long) shapeOptions
 { return WDShapeOptionsDefault; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 #pragma mark Protocol
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) bezierNodesWithRect:(CGRect)R
+- (id) bezierNodesWithShapeInRect:(CGRect)R
 {
 	CGFloat W = CGRectGetWidth(R);
 	CGFloat H = CGRectGetHeight(R);

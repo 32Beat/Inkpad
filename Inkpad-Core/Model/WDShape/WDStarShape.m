@@ -28,7 +28,7 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 @implementation WDStarShape
 ////////////////////////////////////////////////////////////////////////////////
 
-- (long) shapeTypeOptions
+- (long) shapeOptions
 { return WDShapeOptionsCustom; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 #pragma mark Protocol
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) bezierNodesWithRect:(CGRect)R
+- (id) bezierNodesWithShapeInRect:(CGRect)R
 {
 	CGFloat mx = 0.5 * R.size.width;
 	CGFloat my = 0.5 * R.size.height;

@@ -57,10 +57,10 @@
 
 - (void) loadView
 {
-	if ([mShape shapeTypeOptions] == WDShapeOptionsCustom)
+	if ([mShape shapeOptions] == WDShapeOptionsCustom)
 		[self loadCustomView];
 	else
-	if ([mShape shapeTypeOptions] == WDShapeOptionsDefault)
+	if ([mShape shapeOptions] == WDShapeOptionsDefault)
 		[self loadDefaultView];
 }
 

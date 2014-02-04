@@ -63,7 +63,7 @@ WDShapeOption;
 ////////////////////////////////////////////////////////////////////////////////
 @protocol WDShapeOptionsProtocol
 
-- (long) shapeTypeOptions;
+- (long) shapeOptions;
 
 @optional
 - (id) paramName;
@@ -72,7 +72,7 @@ WDShapeOption;
 
 @optional
 // WDShapeOptionsNone means shape can be defined outside context
-+ (id) bezierNodesWithRect:(CGRect)R;
++ (id) bezierNodesWithShapeInRect:(CGRect)R;
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 		normalizedPoints:(const CGPoint *)P count:(int)nodeCount;
 @end
@@ -105,7 +105,7 @@ WDShapeOption;
 + (id) shapeWithBounds:(CGRect)bounds;
 - (id) initWithBounds:(CGRect)bounds;
 
-- (NSString *) shapeTypeName; // defaults to classname
+- (NSString *) shapeName; // defaults to classname
 
 
 - (void) flushCache;
@@ -114,7 +114,7 @@ WDShapeOption;
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
 - (id) bezierNodes;
-- (id) bezierNodesWithRect:(CGRect)R;
+- (id) bezierNodesWithShapeInRect:(CGRect)R;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

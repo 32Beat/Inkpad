@@ -298,7 +298,7 @@
 		id selectedObject = drawingMgr.singleSelection;
 		if ((selectedObject != nil)&&
 			[selectedObject isKindOfClass:[WDShape class]]&&
-			[selectedObject shapeTypeOptions] != WDShapeOptionsNone)
+			[selectedObject shapeOptions] != WDShapeOptionsNone)
 		{
 			mOptionsController =
 			[WDShapeOptionsController shapeControllerWithShape:selectedObject];

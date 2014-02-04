@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDOvalShape.m
+	WDEditableShape.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,27 +11,16 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import "WDOvalShape.h"
-#import "WDUtilities.h"
+#import "WDShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@implementation WDOvalShape
-////////////////////////////////////////////////////////////////////////////////
-
-+ (id) bezierNodesWithShapeInRect:(CGRect)R
+@interface WDEditableShape : WDShape
 {
-	static const CGFloat c = kWDShapeCircleFactor;
-	static const CGPoint P[] = {
-	{ 0,+1}, {-c, 0}, {+c, 0},
-	{-1, 0}, { 0,-c}, { 0,+c},
-	{ 0,-1}, {+c, 0}, {-c, 0},
-	{+1, 0}, { 0,+c}, { 0,-c}};
-
-	return [self bezierNodesWithShapeInRect:R
-	normalizedPoints:P count:4];
+	CGFloat mValue;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+- (void) adjustValue:(CGFloat)value withUndo:(BOOL)shouldUndo;
+
 @end
 ////////////////////////////////////////////////////////////////////////////////
 

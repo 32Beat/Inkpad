@@ -23,7 +23,6 @@
 - (void) setRadius:(CGFloat)radius;
 
 // Options protocol
-- (long) shapeTypeOptions;
 - (id) paramName;
 - (float) paramValue;
 - (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;

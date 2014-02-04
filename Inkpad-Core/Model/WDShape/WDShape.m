@@ -75,10 +75,10 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSString *) shapeTypeName
+- (NSString *) shapeName
 { return NSStringFromClass([self class]); }
 
-- (long) shapeTypeOptions
+- (long) shapeOptions
 { return WDShapeOptionsNone; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	[super encodeWithCoder:coder];
 	
 	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
-	[coder encodeObject:[self shapeTypeName] forKey:WDShapeTypeKey];
+	[coder encodeObject:[self shapeName] forKey:WDShapeTypeKey];
 	[coder encodeCGSize:mSize forKey:WDShapeSizeKey];
 	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
 }
@@ -349,7 +349,7 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 { return mSourceNodes ? mSourceNodes : (mSourceNodes=[self createNodes]); }
 
 - (id) createNodes
-{ return [self bezierNodesWithRect:[self sourceRect]]; }
+{ return [self bezierNodesWithShapeInRect:[self sourceRect]]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -359,10 +359,10 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	
 */
 
-- (id) bezierNodesWithRect:(CGRect)R
-{ return [[self class] bezierNodesWithRect:R]; }
+- (id) bezierNodesWithShapeInRect:(CGRect)R
+{ return [[self class] bezierNodesWithShapeInRect:R]; }
 
-+ (id) bezierNodesWithRect:(CGRect)R
++ (id) bezierNodesWithShapeInRect:(CGRect)R
 {
 	CGPoint P0 = R.origin;
 	CGPoint P1 = R.origin;
@@ -391,6 +391,8 @@ static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
 {
 	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
 	CGPoint N = { R.origin.x + M.x, R.origin.y + M.y };
+
+	M.y = -M.y; // Flip for SVG
 
 	NSMutableArray *nodes = [NSMutableArray array];
 

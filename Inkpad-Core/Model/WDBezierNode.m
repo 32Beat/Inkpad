@@ -38,27 +38,6 @@ static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
 @synthesize selected = selected_;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-+ (id) bezierNodesWithPoints:(const CGPoint *)P count:(int)nodeCount
-{
-	NSMutableArray *nodes = [NSMutableArray array];
-
-	for (int i=0; i!=nodeCount; i++)
-	{
-		CGPoint A = P[3*i+0];
-		CGPoint B = WDAddPoints(A, P[3*i+1]);
-		CGPoint C = WDAddPoints(A, P[3*i+2]);
-
-		[nodes addObject:[WDBezierNode
-		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
-	}
-
-	return nodes;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-
 // Deprecated
 + (WDBezierNode *) bezierNodeWithInPoint:(CGPoint)C
 							anchorPoint:(CGPoint)A

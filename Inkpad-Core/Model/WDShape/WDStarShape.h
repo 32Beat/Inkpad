@@ -29,7 +29,7 @@
 - (void) adjustPointCount:(long)count withUndo:(BOOL)shouldUndo;
 - (void) adjustInnerRadius:(float)radius withUndo:(BOOL)shouldUndo;
 
-- (id) bezierNodesWithRect:(CGRect)R;
+- (id) bezierNodesWithShapeInRect:(CGRect)R;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

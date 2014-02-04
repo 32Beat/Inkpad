@@ -134,6 +134,7 @@ static inline CGPoint WDMultiplyPoints(CGPoint a, CGPoint b)
 static inline CGPoint WDInterpolatePoints(CGPoint a, CGPoint b, CGFloat r)
 { return (CGPoint){ a.x+r*(b.x-a.x),a.y+r*(b.y-a.y) }; }
 
+
 static inline float WDDistance(CGPoint a, CGPoint b) {
     float xd = (a.x - b.x);
     float yd = (a.y - b.y);

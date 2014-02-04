@@ -18,7 +18,7 @@
 @implementation WDDiamondShape
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (id) bezierNodesWithRect:(CGRect)R
++ (id) bezierNodesWithShapeInRect:(CGRect)R
 {
 	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
 	CGPoint P = { R.origin.x + M.x, R.origin.y + M.y };
