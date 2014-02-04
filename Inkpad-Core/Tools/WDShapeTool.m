@@ -168,7 +168,10 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 		}
 		
 		return [WDPath pathWithStart:initialPoint end:pt];
-	} else if (shapeMode_== WDShapeModePolygon) {
+	}
+	else
+	if (shapeMode_== WDShapeModePolygon)
+	{
 		NSMutableArray  *nodes = [NSMutableArray array];
 		CGPoint         delta = WDSubtractPoints(pt, initialPoint);
 		float           angle, x, y, theta = M_PI * 2 / numPolygonPoints_;

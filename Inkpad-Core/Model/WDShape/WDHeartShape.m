@@ -22,13 +22,13 @@
 {
 	static const CGFloat c = kWDShapeCircleFactor;
 	static const CGPoint D[] = {
-	{ 0.0,+0.5}, { 0, +0.5*c}, { 0, 0},
+	{ 0.0,+0.5}, { 0, +0.5*c}, { 0, +0.5*c},
 	{-0.5,+1.0}, { -0.5*c, 0}, { +0.5*c, 0},
 	{-1.0,+0.5}, { 0, -1.5*c}, { 0, +0.5*c},
 	{ 0.0,-1.0}, { 0, 0}, { 0, 0},
 	{+1.0,+0.5}, { 0, +0.5*c}, { 0, -1.5*c},
-	{+0.5,+1.0}, { -0.5*c, 0}, { +0.5*c, 0},
-	{ 0.0,+0.5}, { 0, 0}, { 0, +0.5*c}};
+	{+0.5,+1.0}, { -0.5*c, 0}, { +0.5*c, 0}};
+//	{ 0.0,+0.5}, { 0, 0}, { 0, +0.5*c}};
 
 	NSMutableArray *nodes = [NSMutableArray array];
 
@@ -39,7 +39,7 @@
 	// Heart shape is not vertically symmetrical, need to flip for SVG
 	V.y = -V.y;
 
-	for (int i=0; i!=7; i++)
+	for (int i=0; i!=6; i++)
 	{
 		CGPoint A, B, C;
 		A = WDAddPoints(P, WDMultiplyPoints(D[3*i+0], V));

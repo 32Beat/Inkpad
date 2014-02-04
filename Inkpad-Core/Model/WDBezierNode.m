@@ -19,9 +19,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSString *WDBezierNodeVersionKey = @"WDBezierNodeVersion";
-
 static NSInteger WDBezierNodeVersion = 1;
+static NSString *WDBezierNodeVersionKey = @"WDBezierNodeVersion";
 static NSString *WDBezierNodeAnchorPointKey = @"WDBezierNodeAnchorPoint";
 static NSString *WDBezierNodeOutPointKey = @"WDBezierNodeOutPoint";
 static NSString *WDBezierNodeInPointKey = @"WDBezierNodeInPoint";

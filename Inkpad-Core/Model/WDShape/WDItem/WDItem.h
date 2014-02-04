@@ -58,7 +58,7 @@
 	id mContent; // ? NSArray / WDItem
 
 	// Cache
-	CGRect mFrameBounds;
+	CGRect mFrameRect;
 	CGPathRef mFramePath;
 
 	// Owner
@@ -75,19 +75,18 @@
 - (void) setPosition:(CGPoint)P;
 - (void) setSize:(CGSize)size;
 
-- (CGRect) sourceRect;
-// sourceRect = combination of size & anchorpoint,
-// always includes {0,0}, usually at center
+- (CGRect) frameRect;
+// frameRect = bounding box of sourceRect + transform
 
 - (CGPathRef) framePath;
 // framePath = sourceRect + transform
 
-- (CGRect) frameBounds;
-// frameBounds = bounding box of sourceRect + transform
+- (CGRect) sourceRect;
+// sourceRect = combination of size & anchorpoint,
+// always includes {0,0}, usually at center
 
 
-
-- (void) flushCache;
+- (void) flushFrame;
 // subclasses should call this to invalidate frame parameters
 
 @end
