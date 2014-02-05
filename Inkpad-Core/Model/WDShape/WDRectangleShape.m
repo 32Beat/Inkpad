@@ -16,7 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // If *interpretation* of values ever changes:
-static NSInteger WDParamVersion = 1;
+static int WDParamVersion = 1;
 static NSString *WDParamVersionKey = @"WDRectangleShapeVersion";
 static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 
@@ -46,9 +46,9 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) initWithBounds:(CGRect)bounds
+- (id) initWithFrame:(CGRect)frame
 {
-	self = [super initWithBounds:bounds];
+	self = [super initWithFrame:frame];
 	if (self != nil)
 	{
 		mRadius = 0.25;
@@ -73,18 +73,12 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define NSStringFromCGFloat(v) (sizeof(v)>32)? \
-[[NSNumber numberWithDouble:v] stringValue]:\
-[[NSNumber numberWithFloat:v] stringValue]
-
 - (void) encodeWithCoder:(NSCoder *)coder
 {
 	[super encodeWithCoder:coder];
 
-	[coder encodeInteger:WDParamVersion forKey:WDParamVersionKey];
-
-	NSString *R = NSStringFromCGFloat(mRadius);
-	[coder encodeObject:R forKey:WDParamCornerRadiusKey];
+	[coder encodeInt:WDParamVersion forKey:WDParamVersionKey];
+	[coder encodeFloat:mRadius forKey:WDParamCornerRadiusKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,8 +88,8 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		NSString *R = [coder decodeObjectForKey:WDParamCornerRadiusKey];
-		if (R != nil) { mRadius = [R doubleValue]; }
+		if ([coder containsValueForKey:WDParamCornerRadiusKey])
+		{ mRadius = [coder decodeFloatForKey:WDParamCornerRadiusKey]; }
 	}
 
 	return self;
@@ -105,7 +99,7 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setRadius:(CGFloat)radius
+- (void) setRadius:(float)radius
 {
 	mRadius = radius;
 	[self flushCache];

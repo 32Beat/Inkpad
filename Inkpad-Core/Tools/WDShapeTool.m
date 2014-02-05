@@ -171,37 +171,37 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
 //		return [WDRectangleShape shapeWithBounds:rect];
-		return [WDPieShape shapeWithBounds:rect];
+		return [WDPieShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeOval)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDOvalShape shapeWithBounds:rect];
+		return [WDOvalShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeLeaf)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDLeafShape shapeWithBounds:rect];
+		return [WDLeafShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeHeart)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDHeartShape shapeWithBounds:rect];
+		return [WDHeartShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeDiamond)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDDiamondShape shapeWithBounds:rect];
+		return [WDDiamondShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeStar)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-		return [WDStarShape shapeWithBounds:rect];
+		return [WDStarShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeLine)

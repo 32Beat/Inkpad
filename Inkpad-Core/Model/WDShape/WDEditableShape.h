@@ -14,12 +14,16 @@
 #import "WDShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	mValue is typed equal to UISlider and doesn't 
+	need to exceed feedback precision of 2 decimals.
+*/
 @interface WDEditableShape : WDShape
 {
-	CGFloat mValue;
+	float mValue;
 }
 
-- (void) adjustValue:(CGFloat)value withUndo:(BOOL)shouldUndo;
+- (void) adjustValue:(float)value withUndo:(BOOL)shouldUndo;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

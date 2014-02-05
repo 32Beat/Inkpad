@@ -32,20 +32,26 @@
 {
 	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
 	CGPoint N = { R.origin.x + M.x, R.origin.y + M.y };
-	CGPoint A, B, C;
 
 	double t = mValue;
 	double r = (1-t) * kWDShapeCircleFactor; // circlefactor length
 
 	NSMutableArray *nodes = [NSMutableArray array];
 
+	// Add center point
 	[nodes addObject:
 	[WDBezierNode bezierNodeWithAnchorPoint:N]];
 
+	// Compute angle for half circle
 	double a = t * M_PI;
+	// Compute step angle for 4 segments
 	double da = 0.5 * (M_PI - a);
+
+	// Add 4 segments = 5 points
 	for (long n=0; n!=5; n++)
 	{
+		CGPoint A, B, C;
+
 		double dx = cos(a);
 		double dy = sin(a);
 		a += da;

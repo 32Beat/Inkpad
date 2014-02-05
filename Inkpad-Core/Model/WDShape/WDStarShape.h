@@ -17,7 +17,7 @@
 @interface WDStarShape : WDShape
 {
 	long mCount;
-	CGFloat mRadius;
+	float mRadius;
 }
 
 

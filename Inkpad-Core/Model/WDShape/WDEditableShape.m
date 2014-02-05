@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSInteger WDEditableShapeVersion = 1;
+static int WDEditableShapeVersion = 1;
 static NSString *WDEditableShapeVersionKey = @"WDEditableShapeVersion";
 static NSString *WDParamVersionKey = @"WDParamVersion";
 static NSString *WDParamValueKey = @"WDParamValue";
@@ -37,7 +37,7 @@ static NSString *WDParamValueKey = @"WDParamValue";
 - (id) paramName
 { return @"Value"; } // TODO: localize
 
-// If subclass doesn't implement version, it should be 0
+// If subclass doesn't implement version, it should default to 0
 - (int) paramVersion
 { return 0; }
 
@@ -53,9 +53,9 @@ static NSString *WDParamValueKey = @"WDParamValue";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) initWithBounds:(CGRect)bounds
+- (id) initWithFrame:(CGRect)frame
 {
-	self = [super initWithBounds:bounds];
+	self = [super initWithFrame:frame];
 	if (self != nil)
 	{
 		mValue = 0.25;
@@ -80,19 +80,17 @@ static NSString *WDParamValueKey = @"WDParamValue";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define NSStringFromCGFloat(v) (sizeof(v)>32)? \
-[[NSNumber numberWithDouble:v] stringValue]:\
-[[NSNumber numberWithFloat:v] stringValue]
-
 - (void) encodeWithCoder:(NSCoder *)coder
 {
+	// Encode superclass
 	[super encodeWithCoder:coder];
 
-	[coder encodeInteger:WDEditableShapeVersion forKey:WDEditableShapeVersionKey];
-	[coder encodeInteger:[self paramVersion] forKey:WDParamVersionKey];
+	// Encode this class version
+	[coder encodeInt:WDEditableShapeVersion forKey:WDEditableShapeVersionKey];
 
-	NSString *V = NSStringFromCGFloat(mValue);
-	[coder encodeObject:V forKey:WDParamValueKey];
+	// Encode parameter
+	[coder encodeInt:[self paramVersion] forKey:WDParamVersionKey];
+	[coder encodeFloat:[self paramValue] forKey:WDParamValueKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,8 +100,8 @@ static NSString *WDParamValueKey = @"WDParamValue";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		NSString *V = [coder decodeObjectForKey:WDParamValueKey];
-		if (V != nil) { mValue = [V doubleValue]; }
+		if ([coder containsValueForKey:WDParamValueKey])
+		{ mValue = [coder decodeFloatForKey:WDParamValueKey]; }
 	}
 
 	return self;
@@ -113,7 +111,7 @@ static NSString *WDParamValueKey = @"WDParamValue";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setValue:(CGFloat)value
+- (void) setValue:(float)value
 {
 	mValue = value;
 	[self flushCache];
@@ -121,9 +119,9 @@ static NSString *WDParamValueKey = @"WDParamValue";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) adjustValue:(CGFloat)value withUndo:(BOOL)shouldUndo
+- (void) adjustValue:(float)value withUndo:(BOOL)shouldUndo
 {
-	// Record current radius for undo
+	// Record current value for undo
 	if (shouldUndo)
 	[[self.undoManager prepareWithInvocationTarget:self]
 	adjustValue:mValue withUndo:YES];

@@ -23,7 +23,7 @@
 	Usage: 
 	
 	For a simple shape with no options,
-	only implement bezierNodesWithRect 
+	only implement bezierNodesWithShapeInRect 
 	(see WDOvalShape for example)
 	
 	For an editable shape with a single relative parameter
@@ -34,6 +34,11 @@
 	implement WDShapeOptionsProtocol
 	and add WD<name>ShapeOptions.xib
 	(see WDStarShape for example)
+	
+	
+	Shapes are closed by default, if open path is desired overwrite:
+	- (CGPathRef) createSourcePath
+	{ return WDCreateCGPathRefWithNodes([self bezierNodes], YES); }
 */
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,12 +74,15 @@ WDShapeOptions;
 
 @optional
 - (id) paramName;
+- (int) paramVersion;
 - (float) paramValue;
+- (void) setParamValue:(float)value withVersion:(int)version;
 - (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;
 
 @optional
 // WDShapeOptionsNone means shape can be defined outside context
 + (id) bezierNodesWithShapeInRect:(CGRect)R;
++ (id) bezierNodesWithShapeInRect:(CGRect)R paramValue:(float)value;
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 		normalizedPoints:(const CGPoint *)P count:(int)nodeCount;
 @end
@@ -94,6 +102,9 @@ WDShapeOptions;
 {
 	// Model
 	CGSize mSize;
+	CGFloat mAngle;
+	CGPoint mPosition;
+
 	CGAffineTransform mTransform;
 	
 	// Cache
@@ -104,8 +115,8 @@ WDShapeOptions;
 	NSArray *mSourceNodes; 	// beziernodes centered around 0,0
 }
 
-+ (id) shapeWithBounds:(CGRect)bounds;
-- (id) initWithBounds:(CGRect)bounds;
++ (id) shapeWithFrame:(CGRect)frame;
+- (id) initWithFrame:(CGRect)frame;
 
 - (NSString *) shapeName; // defaults to classname
 - (NSInteger) shapeVersion; // defaults to 0

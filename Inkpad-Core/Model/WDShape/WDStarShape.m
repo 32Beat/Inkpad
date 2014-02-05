@@ -33,9 +33,9 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) initWithBounds:(CGRect)bounds
+- (id) initWithFrame:(CGRect)frame
 {
-	self = [super initWithBounds:bounds];
+	self = [super initWithFrame:frame];
 	if (self != nil)
 	{
 		mCount = 5;
@@ -73,12 +73,8 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 	[coder encodeInteger:WDParamVersion forKey:WDParamVersionKey];
 
 	// Save point count
-	NSString *N = [[NSNumber numberWithInteger:mCount] stringValue];
-	[coder encodeObject:N forKey:WDParamPointCountKey];
-
-	// Save inner radius
-	NSString *R = NSStringFromCGFloat(mRadius);
-	[coder encodeObject:R forKey:WDParamInnerRadiusKey];
+	[coder encodeInteger:mCount forKey:WDParamPointCountKey];
+	[coder encodeFloat:mRadius forKey:WDParamInnerRadiusKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,10 +84,10 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		NSString *N = [coder decodeObjectForKey:WDParamPointCountKey];
-		if (N != nil) { mCount = [N integerValue]; }
-		NSString *R = [coder decodeObjectForKey:WDParamInnerRadiusKey];
-		if (R != nil) { mRadius = [R doubleValue]; }
+		if ([coder containsValueForKey:WDParamPointCountKey])
+		{ mCount = [coder decodeIntForKey:WDParamPointCountKey]; }
+		if ([coder containsValueForKey:WDParamInnerRadiusKey])
+		{ mRadius = [coder decodeFloatForKey:WDParamInnerRadiusKey]; }
 	}
 
 	return self;

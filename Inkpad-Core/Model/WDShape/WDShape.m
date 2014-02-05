@@ -18,14 +18,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSInteger WDShapeVersion = 1;
-static NSString *WDShapeVersionKey = @"WDShapeVersion";
-static NSString *WDShapeTypeKey = @"WDShapeType";
-static NSString *WDShapeSizeKey = @"WDShapeSize";
-static NSString *WDShapeTransformKey = @"WDShapeTransform";
+static int WDShapeMasterVersion = 1;
+static NSString *WDShapeMasterVersionKey = @"WDShapeMasterVersion";
 
-// for alpha version
-static NSString *WDShapeBoundsKey = @"WDShapeBounds";
+static NSString *WDShapeNameKey = @"WDShapeName";
+static NSString *WDShapeVersionKey = @"WDShapeVersion";
+static NSString *WDShapeSizeKey = @"WDShapeSize";
+static NSString *WDShapeAngleKey = @"WDShapeAngle";
+static NSString *WDShapePositionKey = @"WDShapePosition";
+static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDShape
@@ -38,10 +39,10 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (id) shapeWithBounds:(CGRect)bounds
-{ return [[self alloc] initWithBounds:bounds]; }
++ (id) shapeWithFrame:(CGRect)frame
+{ return [[self alloc] initWithFrame:frame]; }
 
-- (id) initWithBounds:(CGRect)bounds
+- (id) initWithFrame:(CGRect)frame
 {
 	self = [super init];
 	if (self != nil)
@@ -49,10 +50,10 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 		mTransform =
 		(CGAffineTransform)
 		{ 1.0, 0.0, 0.0, 1.0,
-		CGRectGetMidX(bounds),
-		CGRectGetMidY(bounds) };
+		CGRectGetMidX(frame),
+		CGRectGetMidY(frame) };
 
-		mSize = bounds.size;
+		mSize = frame.size;
 //		mTransform = CGAffineTransformIdentity;
 	}
 
@@ -89,9 +90,11 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 - (void) encodeWithCoder:(NSCoder *)coder
 {
 	[super encodeWithCoder:coder];
-	
-	[coder encodeInteger:WDShapeVersion forKey:WDShapeVersionKey];
-	[coder encodeObject:[self shapeName] forKey:WDShapeTypeKey];
+
+	[coder encodeInteger:WDShapeMasterVersion forKey:WDShapeMasterVersionKey];
+
+	[coder encodeObject:[self shapeName] forKey:WDShapeNameKey];
+	[coder encodeInteger:[self shapeVersion] forKey:WDShapeVersionKey];
 	[coder encodeCGSize:mSize forKey:WDShapeSizeKey];
 	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
 }
@@ -106,10 +109,11 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 		mTransform = CGAffineTransformIdentity;
 
 		NSInteger version =
-		[coder decodeIntegerForKey:WDShapeVersionKey];
+		[coder decodeIntegerForKey:WDShapeMasterVersionKey];
 
-		if (version == WDShapeVersion)
-			[self readFromCoder:coder];
+		if (version == WDShapeMasterVersion)
+		{ }//[self readFromCoder:coder]; }
+		[self readFromCoder:coder];
 	}
 
 	return self;
@@ -119,14 +123,8 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 - (BOOL) readFromCoder:(NSCoder *)coder
 {
-	//NSString *T = [coder decodeObjectForKey:WDShapeTypeKey];
-	//if (T != nil) { mType = [T integerValue]; }
-
 	if ([coder containsValueForKey:WDShapeSizeKey])
 	{ mSize = [coder decodeCGSizeForKey:WDShapeSizeKey]; }
-	else
-	if ([coder containsValueForKey:WDShapeBoundsKey])
-	{ mSize = [coder decodeCGRectForKey:WDShapeBoundsKey].size; }
 
 	if ([coder containsValueForKey:WDShapeTransformKey])
 	{ mTransform = [coder decodeCGAffineTransformForKey:WDShapeTransformKey]; }
@@ -158,6 +156,21 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 	{
 		mTransform.tx = P.x;
 		mTransform.ty = P.y;
+		[self flushResult];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setAngle:(CGFloat)angle
+{
+	if (mAngle != angle)
+	{
+		mAngle = angle;
+		mTransform.a = cos(angle);
+		mTransform.b = sin(angle);
+		mTransform.c = -mTransform.b;
+		mTransform.d = +mTransform.a;
 		[self flushResult];
 	}
 }
@@ -196,6 +209,13 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 
 	// Notify drawingcontroller
 	[self postDirtyBoundsChange];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) adjustOptions:(NSDictionary *)options
+{
+	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,10 +265,24 @@ static NSString *WDShapeBoundsKey = @"WDShapeBounds";
 { return (CGRect){{-0.5*mSize.width, -0.5*mSize.height}, mSize }; }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	frameRect
+	---------
+	Returns bounding box of transformed sourcerect
+	
+	This involves 2 steps: 
+	- transforming cornerpoints
+	- find the boundingbox of those cornerpoints 
+	While this is not in itself computationally expensive, 
+	frameRect is used as a basis to compute update regions 
+	and may potentially be called several times from more 
+	time critical procedures. Hence caching.
+*/
 - (CGRect) frameRect
 {
-	return !CGRectIsEmpty(mFrameRect) ?
+	return
+	mFrameRect.size.width != 0.0 ||
+	mFrameRect.size.height != 0.0 ?
 	mFrameRect : (mFrameRect = [self computeFrameRect]);
 }
 

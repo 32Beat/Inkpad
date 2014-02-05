@@ -16,16 +16,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDRectangleShape : WDShape
 {
-	CGFloat mRadius;
+	float mRadius;
 }
 
-
-- (void) setRadius:(CGFloat)radius;
-
-// Options protocol
-- (id) paramName;
-- (float) paramValue;
-- (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;
+- (void) setRadius:(float)radius;
+//+ (id) bezierNodesWithShapeInRect:(CGRect)R cornerRadius:(CGFloat)r;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
