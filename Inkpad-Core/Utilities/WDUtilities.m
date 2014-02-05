@@ -600,36 +600,6 @@ static void CGPathAddSegmentWithNodes
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-CGPathRef WDCreateCGPathRefWithNodes(NSArray *nodes, BOOL closed)
-{
-	CGMutablePathRef pathRef = CGPathCreateMutable();
-	if (pathRef != nil)
-	{
-		WDBezierNode *lastNode = nil;
-		for (WDBezierNode *nextNode in nodes)
-		{
-			CGPathAddSegmentWithNodes(pathRef, lastNode, nextNode);
-			lastNode = nextNode;
-		}
-
-		if (closed)
-		{
-			if (lastNode != [nodes firstObject])
-			{ CGPathAddSegmentWithNodes(pathRef, lastNode, [nodes firstObject]); }
-			CGPathCloseSubpath(pathRef);
-		}
-	}
-
-	return pathRef;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-NSArray *WDCloseNodes(NSArray *nodes)
-{ return [nodes arrayByAddingObject:[nodes firstObject]]; }
-
-////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Misc
 

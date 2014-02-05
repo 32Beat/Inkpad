@@ -24,7 +24,7 @@ static NSString *WDShapeMasterVersionKey = @"WDShapeMasterVersion";
 static NSString *WDShapeNameKey = @"WDShapeName";
 static NSString *WDShapeVersionKey = @"WDShapeVersion";
 static NSString *WDShapeSizeKey = @"WDShapeSize";
-static NSString *WDShapeAngleKey = @"WDShapeAngle";
+static NSString *WDShapeRotationKey = @"WDShapeRotation";
 static NSString *WDShapePositionKey = @"WDShapePosition";
 static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
@@ -47,14 +47,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	self = [super init];
 	if (self != nil)
 	{
-		mTransform =
-		(CGAffineTransform)
-		{ 1.0, 0.0, 0.0, 1.0,
-		CGRectGetMidX(frame),
-		CGRectGetMidY(frame) };
-
-		mSize = frame.size;
-//		mTransform = CGAffineTransformIdentity;
+		[self setFrame:frame];
 	}
 
 	return self;
@@ -68,6 +61,8 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	if (shape != nil)
 	{
 		shape->mSize = self->mSize;
+		shape->mPosition = self->mPosition;
+		shape->mRotation = self->mRotation;
 		shape->mTransform = self->mTransform;
 	}
 
@@ -86,6 +81,9 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 { return WDShapeOptionsNone; }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Encoding
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
@@ -95,10 +93,41 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 	[coder encodeObject:[self shapeName] forKey:WDShapeNameKey];
 	[coder encodeInteger:[self shapeVersion] forKey:WDShapeVersionKey];
-	[coder encodeCGSize:mSize forKey:WDShapeSizeKey];
+	[self encodeSizeWithCoder:coder];
+	[self encodePositionWithCoder:coder];
+	[self encodeRotationWithCoder:coder];
 	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeSizeWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGSize(mSize);
+	[coder encodeObject:str forKey:WDShapeSizeKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodePositionWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGPoint(mPosition);
+	[coder encodeObject:str forKey:WDShapePositionKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeRotationWithCoder:(NSCoder *)coder
+{
+	NSString *str = sizeof(mRotation) > 32 ?
+	[[NSNumber numberWithDouble:mRotation] stringValue]:
+	[[NSNumber numberWithFloat:mRotation] stringValue];
+	[coder encodeObject:str forKey:WDShapeRotationKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Decoding
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithCoder:(NSCoder *)coder
@@ -106,14 +135,18 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
+		mSize = (CGSize){ 2.0, 2.0 };
+		mPosition = (CGPoint){ 0.0, 0.0 };
+		mRotation = 0.0;
+
 		mTransform = CGAffineTransformIdentity;
 
 		NSInteger version =
 		[coder decodeIntegerForKey:WDShapeMasterVersionKey];
 
 		if (version == WDShapeMasterVersion)
-		{ }//[self readFromCoder:coder]; }
-		[self readFromCoder:coder];
+		{ }
+		[self decodeWithCoder:coder];
 	}
 
 	return self;
@@ -121,21 +154,65 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) readFromCoder:(NSCoder *)coder
+- (BOOL) decodeWithCoder:(NSCoder *)coder
 {
-	if ([coder containsValueForKey:WDShapeSizeKey])
-	{ mSize = [coder decodeCGSizeForKey:WDShapeSizeKey]; }
-
-	if ([coder containsValueForKey:WDShapeTransformKey])
-	{ mTransform = [coder decodeCGAffineTransformForKey:WDShapeTransformKey]; }
+	[self decodeSizeWithCoder:coder];
+	[self decodePositionWithCoder:coder];
+	[self decodeRotationWithCoder:coder];
 
 	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeSizeWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDShapeSizeKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDShapeSizeKey];
+		if (str != nil) { mSize = CGSizeFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodePositionWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDShapePositionKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDShapePositionKey];
+		if (str != nil) { mPosition = CGPointFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeRotationWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDShapeRotationKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDShapeRotationKey];
+		if (str != nil)
+		{
+			mRotation = sizeof(mRotation)>32 ?
+			[str doubleValue] : [str floatValue];
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Model Data
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setSize
+	-------
+	Set size of original source shape
+	
+	Some shapes do not scale proportionally so instead of 
+	applying a scale, this will flush the source so beziernodes
+	can be rebuild accordingly .
+*/
 
 - (void) setSize:(CGSize)size
 {
@@ -148,39 +225,93 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setPosition
+	-----------
+	Set position of result shape
+	
+	Regardless of transform, position always overwrites translation.
+*/
 
 - (void) setPosition:(CGPoint)P
 {
-	if ((mTransform.tx != P.x)||
-		(mTransform.ty != P.y))
+	if ((mPosition.x != P.x)||
+		(mPosition.y != P.y))
 	{
-		mTransform.tx = P.x;
-		mTransform.ty = P.y;
+		mPosition.x = P.x;
+		mPosition.y = P.y;
 		[self flushResult];
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setRotation
+	-----------
+	Set rotation of original source shape
+	
+	Additional transform may append additional rotation.
+*/
 
-- (void) setAngle:(CGFloat)angle
+- (void) setRotation:(CGFloat)degrees
 {
-	if (mAngle != angle)
+	if (mRotation != degrees)
 	{
-		mAngle = angle;
-		mTransform.a = cos(angle);
-		mTransform.b = sin(angle);
-		mTransform.c = -mTransform.b;
-		mTransform.d = +mTransform.a;
+		mRotation = degrees;
 		[self flushResult];
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setFrame
+	--------
+	Set size and position, reset rotation
+*/
 
 - (void) setFrame:(CGRect)frame
 {
 	[self setSize:frame.size];
 	[self setPosition:(CGPoint){ CGRectGetMidX(frame), CGRectGetMidY(frame) }];
+	[self setRotation:0.0];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGAffineTransform) computeSourceTransform
+{
+	CGAffineTransform T =
+	{ 1.0, 0.0, 0.0, 1.0, mPosition.x, mPosition.y};
+
+	if (mRotation != 0.0)
+	{
+		CGFloat angle = mRotation * M_PI / 180.0;
+		T.a = cos(angle);
+		T.b = sin(angle);
+		T.c = -T.b;
+		T.d = +T.a;
+	}
+
+	return T;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setPosition:(CGPoint)P withUndo:(BOOL)shouldUndo
+{
+	// Record current bounds for undo
+	if (shouldUndo != NO)
+	[[self.undoManager prepareWithInvocationTarget:self]
+	setPosition:mPosition withUndo:YES];
+
+	// Store update areas
+	[self cacheDirtyBounds];
+
+	// Set new position
+	[self setPosition:P];
+
+	// Notify drawingcontroller
+	[self postDirtyBoundsChange];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +336,14 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	[self cacheDirtyBounds];
 
 	// Set new bounds
-	[self setTransform:T];
+	if ((T.a != 1.0)||
+		(T.b != 0.0)||
+		(T.c != 0.0)||
+		(T.d != 1.0))
+
+	{ [self setTransform:T]; }
+	else
+	{ [self setPosition:(CGPoint){ T.tx, T.ty }]; }
 
 	// Notify drawingcontroller
 	[self postDirtyBoundsChange];
@@ -265,6 +403,14 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 { return (CGRect){{-0.5*mSize.width, -0.5*mSize.height}, mSize }; }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (const CGAffineTransform *) sourceTransform
+{
+	mTransform = [self computeSourceTransform];
+	return &mTransform;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /*
 	frameRect
 	---------
@@ -289,7 +435,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) computeFrameRect
-{ return CGRectApplyAffineTransform([self sourceRect], mTransform); }
+{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform][0]); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -312,7 +458,9 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) createFramePath
-{ return CGPathCreateWithRect([self sourceRect], &mTransform); }
+{
+	return CGPathCreateWithRect([self sourceRect], [self sourceTransform]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -338,7 +486,9 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) createResultPath
-{ return CGPathCreateCopyByTransformingPath([self sourcePath], &mTransform); }
+{
+	return CGPathCreateCopyByTransformingPath([self sourcePath], [self sourceTransform]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -462,8 +612,13 @@ static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
 {
 	[super transform:T];
 
-	T = CGAffineTransformConcat(mTransform, T);
-	[self adjustTransform:T];
+//	T = CGAffineTransformConcat([self sourceTransform], T);
+//	T = CGAffineTransformConcat(mTransform, T);
+//	[self adjustTransform:T];
+	CGPoint P = mPosition;
+	P.x += T.tx;
+	P.y += T.ty;
+	[self setPosition:P withUndo:YES];
 
 	return nil;
 }

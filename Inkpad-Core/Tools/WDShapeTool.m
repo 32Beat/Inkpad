@@ -52,6 +52,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	@"spiral.png",
 	@"line.png",
 	@"line.png",
+	@"line.png",
 	@"line.png"
 	];
     
@@ -92,6 +93,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	[WDShapeTool leafTool],
 	[WDShapeTool heartTool],
 	[WDShapeTool diamondTool],
+	[WDShapeTool pacmanTool]
 	];
 }
 
@@ -123,6 +125,9 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 
 + (id) diamondTool
 { return [self shapeToolWithMode:WDShapeModeDiamond]; }
+
++ (id) pacmanTool
+{ return [self shapeToolWithMode:WDShapeModePie]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -170,8 +175,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	if (shapeMode_ == WDShapeModeRectangle)
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
-//		return [WDRectangleShape shapeWithBounds:rect];
-		return [WDPieShape shapeWithFrame:rect];
+		return [WDRectangleShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeOval)
@@ -202,6 +206,12 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
 		return [WDStarShape shapeWithFrame:rect];
+	}
+	else
+	if (shapeMode_ == WDShapeModePie)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDPieShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeLine)

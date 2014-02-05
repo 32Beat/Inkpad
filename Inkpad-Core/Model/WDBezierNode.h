@@ -95,7 +95,20 @@ typedef enum {
 
 @end
 
+////////////////////////////////////////////////////////////////////////////////
+
 @interface WDBezierNode (GLRendering)
-- (void) drawGLWithViewTransform:(CGAffineTransform)transform color:(UIColor *)color mode:(WDBezierNodeRenderMode)mode;
+- (void) drawGLWithViewTransform:(CGAffineTransform)transform
+			color:(UIColor *)color mode:(WDBezierNodeRenderMode)mode;
 @end
+
+////////////////////////////////////////////////////////////////////////////////
+CGPathRef WDCreateCGPathRefWithNodes(NSArray *nodes, BOOL closed);
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 

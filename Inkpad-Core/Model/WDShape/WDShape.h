@@ -102,7 +102,7 @@ WDShapeOptions;
 {
 	// Model
 	CGSize mSize;
-	CGFloat mAngle;
+	CGFloat mRotation;
 	CGPoint mPosition;
 
 	CGAffineTransform mTransform;

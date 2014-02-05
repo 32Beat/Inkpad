@@ -18,6 +18,75 @@
 #import "WDUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+// Utility functions
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDCGPathAddElement
+	------------------
+	Add element to CGPathRef based on 2 beziernodes
+*/
+
+static void WDCGPathAddElement
+(CGMutablePathRef pathRef, WDBezierNode *N1, WDBezierNode *N2)
+{
+	if (N1 == nil)
+		CGPathMoveToPoint(pathRef, NULL,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+	else
+	if (N1.hasOutPoint || N2.hasInPoint)
+		CGPathAddCurveToPoint(pathRef, NULL,
+			N1.outPoint.x,
+			N1.outPoint.y,
+			N2.inPoint.x,
+			N2.inPoint.y,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+	else
+		CGPathAddLineToPoint(pathRef, NULL,
+			N2.anchorPoint.x,
+			N2.anchorPoint.y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDCreateCGPathRefWithNodes
+	--------------------------
+	Create CGPathRef from an array of WDBezierNodes
+*/
+
+CGPathRef WDCreateCGPathRefWithNodes(NSArray *nodes, BOOL closed)
+{
+	CGMutablePathRef pathRef = CGPathCreateMutable();
+	if (pathRef != nil)
+	{
+		WDBezierNode *lastNode = nil;
+		for (WDBezierNode *nextNode in nodes)
+		{
+			WDCGPathAddElement(pathRef, lastNode, nextNode);
+			lastNode = nextNode;
+		}
+
+		if (closed)
+		{
+			if (lastNode != [nodes firstObject])
+			{ WDCGPathAddElement(pathRef, lastNode, [nodes firstObject]); }
+			CGPathCloseSubpath(pathRef);
+		}
+	}
+
+	return pathRef;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NSArray *WDCloseNodes(NSArray *nodes)
+{ return [nodes arrayByAddingObject:[nodes firstObject]]; }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 static NSInteger WDBezierNodeVersion = 1;
 static NSString *WDBezierNodeVersionKey = @"WDBezierNodeVersion";
@@ -27,6 +96,8 @@ static NSString *WDBezierNodeInPointKey = @"WDBezierNodeInPoint";
 
 static NSInteger WDBezierNodeVersion0 = 0;
 static NSString *WDBezierNodePointArrayKey = @"WDPointArrayKey";
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDBezierNode

@@ -863,6 +863,13 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
     [self ensureToolPaletteIsOnScreen];
 }
 
+
+- (void) moveSelection:(CGVector)vector
+{
+	[self transformSelection:
+	CGAffineTransformMakeTranslation(vector.dx, vector.dy)];
+}
+
 - (void) transformSelection:(CGAffineTransform)transform
 {
     selectionTransform_ = transform;
