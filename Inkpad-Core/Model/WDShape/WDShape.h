@@ -126,6 +126,8 @@ WDShapeOptions;
 - (CGPathRef) framePath;
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
+- (CGRect) sourceRect;
+
 - (id) bezierNodes;
 - (id) bezierNodesWithShapeInRect:(CGRect)R;
 

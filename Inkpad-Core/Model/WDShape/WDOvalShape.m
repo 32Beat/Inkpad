@@ -18,6 +18,38 @@
 @implementation WDOvalShape
 ////////////////////////////////////////////////////////////////////////////////
 
+CGPathRef CGPathCreateWithOvalShapeInRect(CGRect R)
+{
+	CGFloat px = 0.5*R.size.width;
+	CGFloat py = 0.5*R.size.height;
+	CGFloat cx = px * (1.0-kWDShapeCircleFactor);
+	CGFloat cy = py * (1.0-kWDShapeCircleFactor);
+
+	CGMutablePathRef pathRef = CGPathCreateMutable();
+
+	CGPoint P = R.origin;
+	CGPathMoveToPoint(pathRef, nil, P.x, P.y+py);
+	CGPathAddCurveToPoint(pathRef, nil, P.x, P.y+cy, P.x+cx, P.y, P.x+px, P.y);
+
+	P.x += R.size.width;
+	CGPathAddCurveToPoint(pathRef, nil, P.x-cx, P.y, P.x, P.y+cy, P.x, P.y+py);
+
+	P.y += R.size.height;
+	CGPathAddCurveToPoint(pathRef, nil, P.x, P.y-cy, P.x-cx, P.y, P.x-px, P.y);
+
+	P.x -= R.size.width;
+	CGPathAddCurveToPoint(pathRef, nil, P.x+cx, P.y, P.x, P.y-cy, P.x, P.y-py);
+
+	CGPathCloseSubpath(pathRef);
+
+	return pathRef;
+}
+
+- (CGPathRef) createSourcePath
+{ return CGPathCreateWithOvalShapeInRect([self sourceRect]); }
+
+
+
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 {
 	static const CGFloat c = kWDShapeCircleFactor;
