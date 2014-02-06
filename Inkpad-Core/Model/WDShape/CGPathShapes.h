@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDOvalShape.m
+	CGPathShapes.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -10,29 +10,33 @@
 	Project Copyright (c) 2009-2014 Steve Sprang
 */
 ////////////////////////////////////////////////////////////////////////////////
+#pragma once
+#ifndef __CGPATH_SHAPES_H__
+#define __CGPATH_SHAPES_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+////////////////////////////////////////////////////////////////////////////////
 
-#import "WDOvalShape.h"
-#import "WDUtilities.h"
+// Minimize deviation http://spencermortensen.com/articles/bezier-circle/
+
+#define kCGPathShapesCircleFactor 	0.551915024494
 
 ////////////////////////////////////////////////////////////////////////////////
-@implementation WDOvalShape
+
+#include <CoreGraphics/CoreGraphics.h>
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
-
-+ (id) bezierNodesWithShapeInRect:(CGRect)R
-{
-	static const CGFloat c = kWDShapeCircleFactor;
-	static const CGPoint P[] = {
-	{ 0, +1}, {-c,  0}, {+c,  0},
-	{-1,  0}, { 0, -c}, { 0, +c},
-	{ 0, -1}, {+c,  0}, {-c,  0},
-	{+1,  0}, { 0, +c}, { 0, -c}};
-
-	return [self bezierNodesWithShapeInRect:R
-	normalizedPoints:P count:4];
+#ifdef __cplusplus
 }
+#endif
+#endif
+////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-@end
-////////////////////////////////////////////////////////////////////////////////
+
 
 

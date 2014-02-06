@@ -104,8 +104,6 @@ WDShapeOptions;
 	CGSize mSize;
 	CGFloat mRotation;
 	CGPoint mPosition;
-
-	CGAffineTransform mTransform;
 	
 	// Cache
 	CGRect mFrameRect; 		// boundingbox of transformed sourcerect

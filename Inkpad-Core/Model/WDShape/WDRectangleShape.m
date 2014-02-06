@@ -185,52 +185,8 @@ CGPoint CGRectGetCornerPoint(CGRect R, long index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CGPoint CGRectGetPointInRect(CGRect R, CGPoint P)
-{
-	return (CGPoint){
-	R.origin.x + 0.5 * (P.x+1.0) * R.size.width,
-	R.origin.y + 0.5 * (P.y+1.0) * R.size.height };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-CGPathRef CGPathCreateWithRectangleShapeInRect(CGRect R, CGFloat cornerRadius)
-{
-	// Compute absolute cornerRadius
-	cornerRadius *= 0.5 * MIN(R.size.width, R.size.height);
-	// Define offsets relative to cornerpoints
-	CGFloat p = cornerRadius;
-	CGFloat c = cornerRadius * (1.0 - kWDShapeCircleFactor);
-
-	// Start path
-	CGMutablePathRef pathRef = CGPathCreateMutable();
-
-	CGPoint P = R.origin;
-	CGPathMoveToPoint(pathRef, nil, P.x, P.y+p);
-	CGPathAddCurveToPoint(pathRef, nil, P.x, P.y+c, P.x+c, P.y, P.x+p, P.y);
-
-	P.x += R.size.width;
-	CGPathAddLineToPoint(pathRef, nil, P.x-p, P.y);
-	CGPathAddCurveToPoint(pathRef, nil, P.x-c, P.y, P.x, P.y+c, P.x, P.y+p);
-
-	P.y += R.size.height;
-	CGPathAddLineToPoint(pathRef, nil, P.x, P.y-p);
-	CGPathAddCurveToPoint(pathRef, nil, P.x, P.y-c, P.x-c, P.y, P.x-p, P.y);
-
-	P.x -= R.size.width;
-	CGPathAddLineToPoint(pathRef, nil, P.x+p, P.y);
-	CGPathAddCurveToPoint(pathRef, nil, P.x+c, P.y, P.x, P.y-c, P.x, P.y-p);
-
-	CGPathCloseSubpath(pathRef);
-
-	return pathRef;
-}
-
-
-- (CGPathRef) createSourcePath
-{ return CGPathCreateWithRectangleShapeInRect([self sourceRect], mRadius); }
-
-
+static inline CGVector CGVectorScale(CGVector vector, CGFloat m)
+{ return (CGVector){ m*vector.dx, m*vector.dy }; }
 
 static inline CGPoint _PreparePoint(CGPoint a, CGVector b, CGFloat r)
 { return (CGPoint){ a.x+r*b.dx, a.y+r*b.dy }; }

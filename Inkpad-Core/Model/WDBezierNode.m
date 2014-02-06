@@ -30,12 +30,12 @@ static void WDCGPathAddElement
 (CGMutablePathRef pathRef, WDBezierNode *N1, WDBezierNode *N2)
 {
 	if (N1 == nil)
-		CGPathMoveToPoint(pathRef, NULL,
+		CGPathMoveToPoint(pathRef, nil,
 			N2.anchorPoint.x,
 			N2.anchorPoint.y);
 	else
 	if (N1.hasOutPoint || N2.hasInPoint)
-		CGPathAddCurveToPoint(pathRef, NULL,
+		CGPathAddCurveToPoint(pathRef, nil,
 			N1.outPoint.x,
 			N1.outPoint.y,
 			N2.inPoint.x,
@@ -43,7 +43,7 @@ static void WDCGPathAddElement
 			N2.anchorPoint.x,
 			N2.anchorPoint.y);
 	else
-		CGPathAddLineToPoint(pathRef, NULL,
+		CGPathAddLineToPoint(pathRef, nil,
 			N2.anchorPoint.x,
 			N2.anchorPoint.y);
 }

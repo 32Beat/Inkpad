@@ -15,8 +15,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSInteger WDParamVersion = 1;
-static NSString *WDParamVersionKey = @"WDStarShapeVersion";
+static NSInteger WDStarShapeVersion = 1;
 static NSString *WDParamPointCountKey = @"WDStarShapePointCount";
 static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 
@@ -28,9 +27,14 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 @implementation WDStarShape
 ////////////////////////////////////////////////////////////////////////////////
 
+- (NSInteger) shapeVersion
+{ return WDStarShapeVersion; }
+
 - (NSInteger) shapeOptions
 { return WDShapeOptionsCustom; }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithFrame:(CGRect)frame
@@ -61,20 +65,28 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define NSStringFromCGFloat(v) (sizeof(v)>32)? \
-[[NSNumber numberWithDouble:v] stringValue]:\
-[[NSNumber numberWithFloat:v] stringValue]
-
 - (void) encodeWithCoder:(NSCoder *)coder
 {
 	[super encodeWithCoder:coder];
 
-	// Save parameters version
-	[coder encodeInteger:WDParamVersion forKey:WDParamVersionKey];
+	[self encodePointCountWithCoder:coder];
+	[self encodeInnerRadiusWithCoder:coder];
+}
 
-	// Save point count
-	[coder encodeInteger:mCount forKey:WDParamPointCountKey];
-	[coder encodeFloat:mRadius forKey:WDParamInnerRadiusKey];
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodePointCountWithCoder:(NSCoder *)coder
+{
+	NSString *str = [[NSNumber numberWithInteger:mCount] stringValue];
+	[coder encodeObject:str forKey:WDParamPointCountKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeInnerRadiusWithCoder:(NSCoder *)coder
+{
+	NSString *str = [[NSNumber numberWithFloat:mRadius] stringValue];
+	[coder encodeObject:str forKey:WDParamInnerRadiusKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,15 +96,37 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		if ([coder containsValueForKey:WDParamPointCountKey])
-		{ mCount = [coder decodeIntForKey:WDParamPointCountKey]; }
-		if ([coder containsValueForKey:WDParamInnerRadiusKey])
-		{ mRadius = [coder decodeFloatForKey:WDParamInnerRadiusKey]; }
+		[self decodePointCountWithCoder:coder];
+		[self decodeInnerRadiusWithCoder:coder];
 	}
 
 	return self;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodePointCountWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDParamPointCountKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDParamPointCountKey];
+		if (str != nil) { mCount = [str integerValue]; }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeInnerRadiusWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDParamInnerRadiusKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDParamInnerRadiusKey];
+		if (str != nil) { mRadius = [str floatValue]; }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 
 - (long) pointCount
@@ -175,14 +209,14 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 	long N = mCount <= 3 ? 3 : mCount;
 	for (long n=0; n!=N; n++)
 	{
-		double a = 2.0*M_PI*n/N;
+		double a = M_PI*(2*n+0)/N;
 		double x = mx * sin(a);
 		double y = my * cos(a);
 
 		[nodes addObject:[WDBezierNode
 		bezierNodeWithAnchorPoint:(CGPoint){ x, y }]];
 
-		a = 2.0*M_PI*(2*n+1)/(2*N);
+		a = M_PI*(2*n+1)/N;
 		x = r * mx * sin(a);
 		y = r * my * cos(a);
 

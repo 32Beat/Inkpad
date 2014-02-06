@@ -323,6 +323,7 @@
 		BE698F14189EE4AB00C6A774 /* WDStarShapeOptionsView.m in Sources */ = {isa = PBXBuildFile; fileRef = BE698F13189EE4AB00C6A774 /* WDStarShapeOptionsView.m */; };
 		BE7533FC18A0DFEC00060839 /* WDDiamondShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE7533FB18A0DFEC00060839 /* WDDiamondShape.m */; };
 		BE7533FF18A136B700060839 /* WDPieShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE7533FE18A136B700060839 /* WDPieShape.m */; };
+		BE84FC6418A3C7510025D495 /* CGPathShapes.c in Sources */ = {isa = PBXBuildFile; fileRef = BE84FC6218A3C7510025D495 /* CGPathShapes.c */; };
 		BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
@@ -825,6 +826,8 @@
 		BE7533FB18A0DFEC00060839 /* WDDiamondShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDDiamondShape.m; sourceTree = "<group>"; };
 		BE7533FD18A136B700060839 /* WDPieShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDPieShape.h; sourceTree = "<group>"; };
 		BE7533FE18A136B700060839 /* WDPieShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDPieShape.m; sourceTree = "<group>"; };
+		BE84FC6218A3C7510025D495 /* CGPathShapes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CGPathShapes.c; sourceTree = "<group>"; };
+		BE84FC6318A3C7510025D495 /* CGPathShapes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGPathShapes.h; sourceTree = "<group>"; };
 		BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeOptions.xib; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1623,6 +1626,8 @@
 			isa = PBXGroup;
 			children = (
 				BE40990418A00CC500FA17B6 /* WDItem */,
+				BE84FC6318A3C7510025D495 /* CGPathShapes.h */,
+				BE84FC6218A3C7510025D495 /* CGPathShapes.c */,
 				BE2ACC95189AFF6600EC91EC /* WDShape.h */,
 				BE2ACC96189AFF6600EC91EC /* WDShape.m */,
 				BE056B6518A151A20081C8D6 /* WDEditableShape.h */,
@@ -2043,6 +2048,7 @@
 				6BABD9D6141ED30100F7E0A9 /* WDPenTool.m in Sources */,
 				6BABD9D7141ED30100F7E0A9 /* WDRotateTool.m in Sources */,
 				6BABD9D8141ED30100F7E0A9 /* WDScaleTool.m in Sources */,
+				BE84FC6418A3C7510025D495 /* CGPathShapes.c in Sources */,
 				6BABD9D9141ED30100F7E0A9 /* WDScissorTool.m in Sources */,
 				6BABD9DA141ED30100F7E0A9 /* WDSelectionTool.m in Sources */,
 				6BABD9DB141ED30100F7E0A9 /* WDShapeTool.m in Sources */,

@@ -26,7 +26,6 @@ static NSString *WDShapeVersionKey = @"WDShapeVersion";
 static NSString *WDShapeSizeKey = @"WDShapeSize";
 static NSString *WDShapeRotationKey = @"WDShapeRotation";
 static NSString *WDShapePositionKey = @"WDShapePosition";
-static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDShape
@@ -63,7 +62,6 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 		shape->mSize = self->mSize;
 		shape->mPosition = self->mPosition;
 		shape->mRotation = self->mRotation;
-		shape->mTransform = self->mTransform;
 	}
 
 	return shape;
@@ -91,12 +89,18 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 	[coder encodeInteger:WDShapeMasterVersion forKey:WDShapeMasterVersionKey];
 
-	[coder encodeObject:[self shapeName] forKey:WDShapeNameKey];
-	[coder encodeInteger:[self shapeVersion] forKey:WDShapeVersionKey];
+	[self encodeTypeWithCoder:coder];
 	[self encodeSizeWithCoder:coder];
 	[self encodePositionWithCoder:coder];
 	[self encodeRotationWithCoder:coder];
-	[coder encodeCGAffineTransform:mTransform forKey:WDShapeTransformKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeTypeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:[self shapeName] forKey:WDShapeNameKey];
+	[coder encodeInteger:[self shapeVersion] forKey:WDShapeVersionKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,8 +142,6 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 		mSize = (CGSize){ 2.0, 2.0 };
 		mPosition = (CGPoint){ 0.0, 0.0 };
 		mRotation = 0.0;
-
-		mTransform = CGAffineTransformIdentity;
 
 		NSInteger version =
 		[coder decodeIntegerForKey:WDShapeMasterVersionKey];
@@ -202,7 +204,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Model Data
+#pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	setSize
@@ -210,8 +212,8 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	Set size of original source shape
 	
 	Some shapes do not scale proportionally so instead of 
-	applying a scale, this will flush the source so beziernodes
-	can be rebuild accordingly .
+	applying a scale, flush the source so beziernodes can 
+	be rebuild properly .
 */
 
 - (void) setSize:(CGSize)size
@@ -229,8 +231,6 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	setPosition
 	-----------
 	Set position of result shape
-	
-	Regardless of transform, position always overwrites translation.
 */
 
 - (void) setPosition:(CGPoint)P
@@ -248,9 +248,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 /*
 	setRotation
 	-----------
-	Set rotation of original source shape
-	
-	Additional transform may append additional rotation.
+	Set rotation of result shape
 */
 
 - (void) setRotation:(CGFloat)degrees
@@ -262,6 +260,8 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	setFrame
@@ -278,36 +278,44 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGAffineTransform) computeSourceTransform
+- (void) adjustTransform:(CGAffineTransform)T
 {
-	CGAffineTransform T =
-	{ 1.0, 0.0, 0.0, 1.0, mPosition.x, mPosition.y};
-
-	if (mRotation != 0.0)
-	{
-		CGFloat angle = mRotation * M_PI / 180.0;
-		T.a = cos(angle);
-		T.b = sin(angle);
-		T.c = -T.b;
-		T.d = +T.a;
-	}
-
-	return T;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setPosition:(CGPoint)P withUndo:(BOOL)shouldUndo
-{
-	// Record current bounds for undo
-	if (shouldUndo != NO)
-	[[self.undoManager prepareWithInvocationTarget:self]
-	setPosition:mPosition withUndo:YES];
+	// Record current state for undo
+	[self saveState];
 
 	// Store update areas
 	[self cacheDirtyBounds];
 
-	// Set new position
+/*
+	If we ever want to support numeric transformations,
+	we need to limit our transforms to normal rotation, scale, and move.
+	
+	They currently are, attempt breaking it down.
+*/
+	// Test for rotation
+	if ((T.b != 0.0)||(T.c != 0.0))
+	{
+		double a1 = atan2(+T.b, +T.a);
+		double a2 = atan2(-T.c, +T.d);
+		double a = 0.5*(a1+a2);
+		double degrees = 180.0*a/M_PI;
+
+		degrees += mRotation;
+		[self setRotation:degrees];
+	}
+	else
+	// Test for scale
+	if ((T.a != 1.0)||(T.d != 1.0))
+	{
+		CGSize size = mSize;
+		size.width *= T.a;
+		size.height *= T.d;
+		[self setSize:size];
+	}
+
+	// Always move
+	CGPoint P = mPosition;
+	P = CGPointApplyAffineTransform(P, T);
 	[self setPosition:P];
 
 	// Notify drawingcontroller
@@ -315,45 +323,36 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (CGAffineTransform) transform
-{ return mTransform; }
-
-- (void) setTransform:(CGAffineTransform)T
+/*
+	TODO: move up in object chain or implement proper hierarchy
+*/
+- (void) saveState
 {
-	mTransform = T;
-	[self flushResult];
+	// Record current properties for undo
+	[[self.undoManager prepareWithInvocationTarget:self]
+	resetState:[self copy]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) adjustTransform:(CGAffineTransform)T
+- (void) resetState:(WDShape *)shape
 {
-	// Record current bounds for undo
-	[[self.undoManager prepareWithInvocationTarget:self] adjustTransform:mTransform];
+	if (shape != nil)
+	{
+		// Save state for redo
+		[self saveState];
 
-	// Store update areas
-	[self cacheDirtyBounds];
+		// Store update areas
+		[self cacheDirtyBounds];
 
-	// Set new bounds
-	if ((T.a != 1.0)||
-		(T.b != 0.0)||
-		(T.c != 0.0)||
-		(T.d != 1.0))
+		// [self copyProperties:shape];
+		[self setSize:shape->mSize];
+		[self setPosition:shape->mPosition];
+		[self setRotation:shape->mRotation];
 
-	{ [self setTransform:T]; }
-	else
-	{ [self setPosition:(CGPoint){ T.tx, T.ty }]; }
-
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustOptions:(NSDictionary *)options
-{
-	
+		// Notify drawingcontroller
+		[self postDirtyBoundsChange];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,7 +379,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (void) flushSource
 {
-//	[self flushSourceRect];
+	// [self flushBezierNodes];
 	mSourceNodes = nil;
 	[self flushSourcePath];
 	[self flushResult];
@@ -404,10 +403,21 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (const CGAffineTransform *) sourceTransform
+- (CGAffineTransform) sourceTransform
 {
-	mTransform = [self computeSourceTransform];
-	return &mTransform;
+	CGAffineTransform T =
+	{ 1.0, 0.0, 0.0, 1.0, mPosition.x, mPosition.y};
+
+	if (mRotation != 0.0)
+	{
+		CGFloat angle = mRotation * M_PI / 180.0;
+		T.a = cos(angle);
+		T.b = sin(angle);
+		T.c = -T.b;
+		T.d = +T.a;
+	}
+
+	return T;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -435,7 +445,7 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) computeFrameRect
-{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform][0]); }
+{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform]); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -459,7 +469,8 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (CGPathRef) createFramePath
 {
-	return CGPathCreateWithRect([self sourceRect], [self sourceTransform]);
+	CGAffineTransform T = [self sourceTransform];
+	return CGPathCreateWithRect([self sourceRect], &T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -487,7 +498,9 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 - (CGPathRef) createResultPath
 {
-	return CGPathCreateCopyByTransformingPath([self sourcePath], [self sourceTransform]);
+	CGPathRef srcPath = [self sourcePath];
+	CGAffineTransform T = [self sourceTransform];
+	return CGPathCreateCopyByTransformingPath(srcPath, &T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -570,24 +583,30 @@ static NSString *WDShapeTransformKey = @"WDShapeTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
-{ return (CGPoint){ P.x+M.x*V.x, P.y+M.y*V.y }; }
+
+CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
+{
+	return (CGPoint){
+	R.origin.x + 0.5 * (P.x+1.0) * R.size.width,
+	R.origin.y + 0.5 * (1.0-P.y) * R.size.height };
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 		normalizedPoints:(const CGPoint *)P count:(int)nodeCount
 {
-	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
-	CGPoint N = { R.origin.x + M.x, R.origin.y + M.y };
-
-	M.y = -M.y; // Flip for SVG
-
 	NSMutableArray *nodes = [NSMutableArray array];
 
 	for (int i=0; i!=nodeCount; i++)
 	{
-		CGPoint A = _PreparePoint(N, M, P[3*i+0]);
-		CGPoint B = _PreparePoint(A, M, P[3*i+1]);
-		CGPoint C = _PreparePoint(A, M, P[3*i+2]);
+		CGPoint A = P[3*i+0];
+		CGPoint B = WDAddPoints(A, P[3*i+1]);
+		CGPoint C = WDAddPoints(A, P[3*i+2]);
+
+		A = CGRectPointFromNormalizedPoint(R, A);
+		B = CGRectPointFromNormalizedPoint(R, B);
+		C = CGRectPointFromNormalizedPoint(R, C);
 
 		[nodes addObject:[WDBezierNode
 		bezierNodeWithAnchorPoint:A outPoint:B inPoint:C]];
@@ -612,13 +631,7 @@ static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
 {
 	[super transform:T];
 
-//	T = CGAffineTransformConcat([self sourceTransform], T);
-//	T = CGAffineTransformConcat(mTransform, T);
-//	[self adjustTransform:T];
-	CGPoint P = mPosition;
-	P.x += T.tx;
-	P.y += T.ty;
-	[self setPosition:P withUndo:YES];
+	[self adjustTransform:T];
 
 	return nil;
 }
@@ -692,7 +705,7 @@ static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
 		[self beginTransparencyLayer:ctx metaData:metaData];
 
 CGContextSaveGState(ctx);
-CGContextConcatCTM(ctx, mTransform);
+CGContextConcatCTM(ctx, [self sourceTransform]);
 
 		if (self.fill) {
 			//[self.fill paintPath:self inContext:ctx];
