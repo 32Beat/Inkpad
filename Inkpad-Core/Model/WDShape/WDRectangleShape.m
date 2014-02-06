@@ -11,122 +11,22 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #import "WDRectangleShape.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-// If *interpretation* of values ever changes:
-static int WDParamVersion = 1;
-static NSString *WDParamVersionKey = @"WDRectangleShapeVersion";
-static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDRectangleShape
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSInteger) shapeOptions
-{ return WDShapeOptionsDefault; }
-
-////////////////////////////////////////////////////////////////////////////////
+- (NSInteger) shapeVersion
+{ return 1; }
 
 - (id) paramName
 { return @"Corner Radius"; } // TODO: localize
 
-- (float) paramValue
-{ return mRadius; }
-
-- (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo
-{ [self adjustRadius:value withUndo:shouldUndo]; }
-
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) initWithFrame:(CGRect)frame
-{
-	self = [super initWithFrame:frame];
-	if (self != nil)
-	{
-		mRadius = 0.25;
-		// may init from user defaults
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) copyWithZone:(NSZone *)zone
-{
-	WDRectangleShape *shape = [super copyWithZone:zone];
-	if (shape != nil)
-	{
-		shape->mRadius = self->mRadius;
-	}
-
-	return shape;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) encodeWithCoder:(NSCoder *)coder
-{
-	[super encodeWithCoder:coder];
-
-	[coder encodeInt:WDParamVersion forKey:WDParamVersionKey];
-	[coder encodeFloat:mRadius forKey:WDParamCornerRadiusKey];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) initWithCoder:(NSCoder *)coder
-{
-	self = [super initWithCoder:coder];
-	if (self != nil)
-	{
-		if ([coder containsValueForKey:WDParamCornerRadiusKey])
-		{ mRadius = [coder decodeFloatForKey:WDParamCornerRadiusKey]; }
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setRadius:(float)radius
-{
-	mRadius = radius;
-	[self flushCache];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustRadius:(CGFloat)radius withUndo:(BOOL)shouldUndo
-{
-	// Record current radius for undo
-	if (shouldUndo)
-	[[self.undoManager prepareWithInvocationTarget:self]
-	adjustRadius:mRadius withUndo:YES];
-
-	// Store update areas
-	[self cacheDirtyBounds];
-
-	// Set new radius
-	[self setRadius:radius];
-
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark Protocol
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) bezierNodesWithShapeInRect:(CGRect)R
@@ -136,8 +36,8 @@ static NSString *WDParamCornerRadiusKey = @"WDRectangleShapeCornerRadius";
 	CGFloat maxRadius = 0.5 * MIN(W, H);
 
 	CGFloat radius = maxRadius;
-	if (0.0 <= mRadius && mRadius <= 1.0)
-	{ radius *= mRadius; }
+	if (0.0 <= mValue && mValue <= 1.0)
+	{ radius *= mValue; }
 
 	return (radius > 0.0) ?
 	[self _bezierNodesWithRect:R cornerRadius:radius]:

@@ -74,7 +74,7 @@ WDShapeOptions;
 
 @optional
 - (id) paramName;
-- (int) paramVersion;
+- (id) paramKey;
 - (float) paramValue;
 - (void) setParamValue:(float)value withVersion:(int)version;
 - (void) setParamValue:(float)value withUndo:(BOOL)shouldUndo;

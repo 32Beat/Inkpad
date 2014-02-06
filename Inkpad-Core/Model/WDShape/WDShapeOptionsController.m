@@ -72,7 +72,7 @@
 	NSString *nibName = [typeName stringByAppendingString:@"Options"];
 
 	[[NSBundle mainBundle] loadNibNamed:nibName owner:self options:nil];
-	if (mView != nil)
+	if ([self view] != nil)
 	{
 		[[self view] setShape:mShape];
 	}
@@ -83,7 +83,7 @@
 - (void) loadDefaultView
 {
 	[[NSBundle mainBundle] loadNibNamed:@"WDShapeOptions" owner:self options:nil];
-	if (mView != nil)
+	if ([self view] != nil)
 	{
 		// No paramName is okay
 		if ([mShape respondsToSelector:@selector(paramName)])

@@ -18,8 +18,6 @@
 
 static int WDEditableShapeVersion = 1;
 static NSString *WDEditableShapeVersionKey = @"WDEditableShapeVersion";
-static NSString *WDParamVersionKey = @"WDParamVersion";
-static NSString *WDParamValueKey = @"WDParamValue";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,12 +32,13 @@ static NSString *WDParamValueKey = @"WDParamValue";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Used for encoding/decoding mValue
+- (id) paramKey
+{ return [NSString stringWithFormat:@"%@%@",[self shapeName],@"PrmValue"]; }
+
+// Called by ShapeOptionsController for slider label
 - (id) paramName
 { return @"Value"; } // TODO: localize
-
-// If subclass doesn't implement version, it should default to 0
-- (int) paramVersion
-{ return 0; }
 
 // Called by ShapeOptionsController to initialize slider
 - (float) paramValue
@@ -89,8 +88,15 @@ static NSString *WDParamValueKey = @"WDParamValue";
 	[coder encodeInt:WDEditableShapeVersion forKey:WDEditableShapeVersionKey];
 
 	// Encode parameter
-	[coder encodeInt:[self paramVersion] forKey:WDParamVersionKey];
-	[coder encodeFloat:[self paramValue] forKey:WDParamValueKey];
+	[self encodeValueWithCoder:coder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeValueWithCoder:(NSCoder *)coder
+{
+	NSString *str = [[NSNumber numberWithFloat:mValue] stringValue];
+	[coder encodeObject:str forKey:[self paramKey]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,11 +106,21 @@ static NSString *WDParamValueKey = @"WDParamValue";
 	self = [super initWithCoder:coder];
 	if (self != nil)
 	{
-		if ([coder containsValueForKey:WDParamValueKey])
-		{ mValue = [coder decodeFloatForKey:WDParamValueKey]; }
+		[self decodeValueWithCoder:coder];
 	}
 
 	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeValueWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:[self paramKey]])
+	{
+		NSString *str = [coder decodeObjectForKey:[self paramKey]];
+		if (str != nil) { mValue = [str floatValue]; }
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,8 +129,11 @@ static NSString *WDParamValueKey = @"WDParamValue";
 
 - (void) setValue:(float)value
 {
-	mValue = value;
-	[self flushCache];
+	if (mValue != value)
+	{
+		mValue = value;
+		[self flushCache];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

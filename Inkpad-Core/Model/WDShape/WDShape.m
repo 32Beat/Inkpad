@@ -31,6 +31,19 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 @implementation WDShape
 ////////////////////////////////////////////////////////////////////////////////
 
+- (NSString *) shapeName
+{ return NSStringFromClass([self class]); }
+
+- (NSInteger) shapeVersion
+{ return 0; }
+
+- (NSInteger) shapeOptions
+{ return WDShapeOptionsNone; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) dealloc
 {
 	[self flushCache];
@@ -66,17 +79,6 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 	return shape;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSString *) shapeName
-{ return NSStringFromClass([self class]); }
-
-- (NSInteger) shapeVersion
-{ return 0; }
-
-- (NSInteger) shapeOptions
-{ return WDShapeOptionsNone; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -345,14 +347,22 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 		// Store update areas
 		[self cacheDirtyBounds];
 
-		// [self copyProperties:shape];
-		[self setSize:shape->mSize];
-		[self setPosition:shape->mPosition];
-		[self setRotation:shape->mRotation];
+		// Copy properties from shape
+		[self resetProperties:shape];
 
 		// Notify drawingcontroller
 		[self postDirtyBoundsChange];
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) resetProperties:(WDShape *)shape
+{
+	// super...
+	[self setSize:shape->mSize];
+	[self setPosition:shape->mPosition];
+	[self setRotation:shape->mRotation];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
