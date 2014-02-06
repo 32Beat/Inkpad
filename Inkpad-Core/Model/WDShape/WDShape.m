@@ -671,6 +671,7 @@ static const CGPoint _PreparePoint(CGPoint P, CGPoint M, CGPoint V)
 	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
 
 	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
+
 	WDGLRenderCGPathRefWithTransform([self framePath], T);
 	WDGLRenderCGPathRefWithTransform([self resultPath], T);
 }

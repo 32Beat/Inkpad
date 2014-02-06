@@ -17,7 +17,33 @@
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDDiamondShape
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	CGPathCreateWithDiamondShapeInRect
+	----------------------------------
+*/
 
+CGPathRef CGPathCreateWithDiamondShapeInRect(CGRect R)
+{
+	CGFloat px = 0.5*R.size.width;
+	CGFloat py = 0.5*R.size.height;
+	CGFloat mx = R.origin.x + px;
+	CGFloat my = R.origin.y + py;
+
+	CGMutablePathRef pathRef = CGPathCreateMutable();
+
+	CGPathMoveToPoint(pathRef, nil, mx, my+py);
+	CGPathAddLineToPoint(pathRef, nil, mx-px, my);
+	CGPathAddLineToPoint(pathRef, nil, mx, my-py);
+	CGPathAddLineToPoint(pathRef, nil, mx+px, my);
+	CGPathCloseSubpath(pathRef);
+
+	return pathRef;
+}
+
+- (CGPathRef) createSourcePath
+{ return CGPathCreateWithDiamondShapeInRect([self sourceRect]); }
+
+/*
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 {
 	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
@@ -34,7 +60,7 @@
 	[WDBezierNode bezierNodeWithAnchorPoint:P2],
 	[WDBezierNode bezierNodeWithAnchorPoint:P3]];
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 @end
 ////////////////////////////////////////////////////////////////////////////////
