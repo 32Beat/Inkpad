@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDOvalShape.m
+	WDSpadesShape.m
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,39 +11,30 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import "WDOvalShape.h"
+#import "WDSpadesShape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@implementation WDOvalShape
+@implementation WDSpadesShape
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	bezierNodesWithShapeInRect
-	--------------------------
-	Return an array of beziernodes that define the shape within rectangle R
-	
-	The routine here uses "normalized" points in the order
-	
-		anchorPoint, outPoint, inPoint,
-	
-	where anchorPoint should be defined within a rectangle that has its 
-	lowerleft corner at (-1,-1) and upperright at (+1,+1), and the 
-	controlpoints are defined as vectors relative to anchorpoint.
-	
-	bezierNodesWithShapeInRect:normalizedPoints:count: will create nodes 
-	that are scaled and translated to R, as well as flipped for SVG.
-*/
 
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 {
-	static const CGFloat c = kWDShapeCircleFactor;
+	static const CGFloat cx = 0.5*kWDShapeCircleFactor;
+	static const CGFloat cy = 0.4*kWDShapeCircleFactor;
 	static const CGPoint P[] = {
-	{ 0, +1}, {-c,  0}, {+c,  0},
-	{-1,  0}, { 0, -c}, { 0, +c},
-	{ 0, -1}, {+c,  0}, {-c,  0},
-	{+1,  0}, { 0, +c}, { 0, -c}};
+	{ 0.5, -1.0}, { -cx, 0}, { 0, 0}, // right foot
+	{ 0.01, -0.2}, { 0, -cy}, { 0, -2*cy},
+	{ 0.5, -0.6}, { cx, 0}, { -cx, 0},
+	{ 1.0, -0.2}, { 0, 2*cy}, { 0, -cy},
+	{ 0.0, +1.0}, { 0, -cy}, { 0, -cy}, // top
+	{-1.0, -0.2}, { 0, -cy}, { 0, 2*cy},
+	{-0.5, -0.6}, { cx, 0}, { -cx, 0},
+	{-0.01, -0.2}, { 0, -2*cy}, { 0, -cy},
+	{-0.5, -1.0}, { 0, 0}, { cx, 0}
+	};
 
 	return [self bezierNodesWithShapeInRect:R
-	normalizedPoints:P count:4];
+	normalizedPoints:P count:9];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

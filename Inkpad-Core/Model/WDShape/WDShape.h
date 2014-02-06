@@ -28,7 +28,7 @@
 	
 	For an editable shape with a single relative parameter
 	implement WDShapeOptionsProtocol
-	(see WDRectangleShape for example)
+	(see WDPieShape for example)
 
 	For an editable shape with multiple parameters 
 	implement WDShapeOptionsProtocol
