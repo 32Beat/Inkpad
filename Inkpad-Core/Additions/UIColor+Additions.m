@@ -38,6 +38,19 @@
     return [UIColor colorWithHue:WDRandomFloat() saturation:0.7f brightness:0.75f alpha:1.0];
 }
 
+- (void) glSet
+{
+	CGFloat w, r, g, b, a;
+
+	if ([self getRed:&r green:&g blue:&b alpha:&a])
+	{ glColor4f(r, g, b, a); }
+	else
+	if ([self getWhite:&w alpha:&a])
+	{ glColor4f(w, w, w, a); }
+	else
+	{ glColor4f(0.0, 0.0, 0.0, 1.0); }
+}
+
 - (void) openGLSet
 {
     CGFloat w, r, g, b, a;

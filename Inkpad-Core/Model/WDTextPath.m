@@ -763,6 +763,13 @@ done:
 	WDGLDrawOverflowMarker(overflowPoint);
 }
 
+
+
+
+- (void) glDrawFramePathWithTransform:(CGAffineTransform)T
+{
+}
+
 - (void) drawTextPathControlsWithViewTransform:(CGAffineTransform)viewTransform viewScale:(float)viewScale
 {
     // draw start bar
@@ -783,6 +790,12 @@ done:
     [color openGLSet];
     WDGLStrokeCircleMarker(top);
 }
+
+
+
+
+
+
 
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
@@ -828,13 +841,22 @@ done:
     return NO;
 }
 
-- (void) getStartKnobBase:(CGPoint *)base andTop:(CGPoint *)top viewScale:(float)viewScale
+- (void) getStartKnobBase:(CGPoint *)base
+				   andTop:(CGPoint *)top
+				viewScale:(float)viewScale
 {
-    float       startDistance = MIN(startOffset_ + 0.01, [self length:YES] - 0.01); // add some fudge
-    CGPoint     tangent = CGPointZero;
-    CGPoint     startPt = [self getPointOnPathAtDistance:startDistance tangentVector:&tangent transformed:YES];
-    float       barLength = MIN(MAX(fontSize_ * viewScale, 10), 200); // scale with the font size, but keep the length manageable
-    CGPoint     endPt = CGPointMake(tangent.y, -tangent.x);
+    float startDistance =
+	MIN(startOffset_ + 0.01, [self length:YES] - 0.01); // add some fudge
+
+	CGPoint tangent = CGPointZero;
+    CGPoint startPt =
+	[self getPointOnPathAtDistance:startDistance
+			tangentVector:&tangent transformed:YES];
+
+	// scale with the font size, but keep the length manageable
+    float barLength = MIN(MAX(fontSize_ * viewScale, 10), 200);
+
+    CGPoint endPt = CGPointMake(tangent.y, -tangent.x);
     
     endPt = WDScaleVector(endPt, barLength / viewScale);
     endPt = WDAddPoints(startPt, endPt);

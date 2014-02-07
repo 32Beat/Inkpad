@@ -682,6 +682,12 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) glDrawFramePathWithTransform:(CGAffineTransform)T
+{
+	WDGLRenderCGPathRefWithTransform([self framePath], T);
+	WDGLRenderCGPathRefWithTransform([self resultPath], T);
+}
+
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)T
 {
 	[super drawOpenGLHighlightWithTransform:T];

@@ -16,6 +16,7 @@
 + (UIColor *) randomColor:(BOOL)includeAlpha;
 + (UIColor *) saturatedRandomColor;
 
+- (void) glSet;
 - (void) openGLSet;
 
 @end

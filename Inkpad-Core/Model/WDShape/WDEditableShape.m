@@ -161,12 +161,15 @@ static NSString *WDEditableShapeVersionKey = @"WDEditableShapeVersion";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) bezierNodesWithShapeInRect:(CGRect)R
+{ return [[self class] bezierNodesWithShapeInRect:R parameterValue:mValue]; }
+
++ (id) bezierNodesWithShapeInRect:(CGRect)R parameterValue:(float)value
 {
 	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
 	CGPoint N = { R.origin.x + M.x, R.origin.y + M.y };
 	CGPoint A, B, C;
 
-	double t = mValue;
+	double t = value;
 	double r = (1-t) * kWDShapeCircleFactor; // circlefactor length
 
 	NSMutableArray *nodes = [NSMutableArray array];

@@ -38,7 +38,7 @@
 	
 	Shapes are closed by default, if open path is desired overwrite:
 	- (CGPathRef) createSourcePath
-	{ return WDCreateCGPathRefWithNodes([self bezierNodes], YES); }
+	{ return WDCreateCGPathRefWithNodes([self bezierNodes], NO); }
 */
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,7 +53,8 @@ typedef enum WDShapeType
 	WDShapeTypeSpiral,
 	WDShapeTypeLeaf,
 	WDShapeTypeHeart,
-	WDShapeTypeDiamond
+	WDShapeTypeDiamond,
+	WDShapeTypeSpades
 }
 WDShapeType;
 
@@ -128,6 +129,8 @@ WDShapeOptions;
 
 - (id) bezierNodes;
 - (id) bezierNodesWithShapeInRect:(CGRect)R;
+
+- (void) glDrawFramePathWithTransform:(CGAffineTransform)T;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

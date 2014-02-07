@@ -17,6 +17,8 @@
 #import "WDGLUtilities.h"
 #import "WDLayer.h"
 #import "WDPath.h"
+#import "WDShape.h"
+
 #import "WDSelectionTool.h"
 #import "WDSelectionView.h"
 #import "WDToolManager.h"
@@ -393,9 +395,20 @@
 	}
 
 
-	WDDrawingController *controller = self.canvas.drawingController;
-	WDElement           *singleSelection = [controller singleSelection];
+	WDDrawingController *drawController = self.canvas.drawingController;
+	WDElement *singleSelection = [drawController singleSelection];
 
+	if (singleSelection)
+	{
+		if (!self.canvas.transformingNode)
+		{
+			[singleSelection.layer.highlightColor glSet];
+			if ([singleSelection respondsToSelector:
+			@selector(glDrawFramePathWithTransform:)])
+			[(id)singleSelection glDrawFramePathWithTransform:T];
+		}
+	}
+/*
 	if (singleSelection && !self.canvas.transforming && !self.canvas.transformingNode) {
 		if ([[WDToolManager sharedInstance].activeTool isKindOfClass:[WDSelectionTool class]]) {
 			[singleSelection drawTextPathControlsWithViewTransform:T viewScale:self.canvas.viewScale];
@@ -431,7 +444,7 @@
 	}
 
 //	[self renderPageWithTransform:T];
-
+*/
 	// marquee?
 	if (self.canvas.marquee)
 	{ [self renderMarqueWithTransform:T]; }
