@@ -101,7 +101,11 @@ typedef enum {
 // OpenGL-based selection rendering
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect;
 - (void) drawOpenGLAnchorAtPoint:(CGPoint)pt transform:(CGAffineTransform)transform selected:(BOOL)selected;
-- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform;
+
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
+							viewTransform:(CGAffineTransform)viewTransform;
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform;
+
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform;
 - (void) drawOpenGLAnchorsWithViewTransform:(CGAffineTransform)transform;
 - (void) drawGradientControlsWithViewTransform:(CGAffineTransform)transform;

@@ -87,7 +87,10 @@
 @property (nonatomic, readonly) WDEyedropper *eyedropper;
 @property (nonatomic, readonly) WDRulerView *horizontalRuler;
 @property (nonatomic, readonly) WDRulerView *verticalRuler;
-@property (nonatomic, weak) UIView *toolOptionsView;
+
+//@property (nonatomic, weak) UIView *toolOptionsView;
+@property (nonatomic, strong) UIView *toolOptionsView;
+
 @property (nonatomic, readonly) float thinWidth;
 @property (nonatomic, strong) IBOutlet UIView *activityView;
 
@@ -133,7 +136,11 @@
 - (void) dismissEyedropper;
 
 // tool options view
-- (void) positionToolOptionsView;
+- (void) setToolOptionsView:(UIView *)view;
+- (void) showToolOptionsView;
+- (void) hideToolOptionsView;
+
+//- (void) positionToolOptionsView;
 
 - (float) effectiveBackgroundGray;
 

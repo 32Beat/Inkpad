@@ -681,20 +681,10 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	transform is an additional transform because the user is currently 
-	in the act of moving, scaling, or rotating
-	
-	viewTransform is an additional transform for current zoom&focus
-*/
 
-- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
-							viewTransform:(CGAffineTransform)viewTransform
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)T
 {
-	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
-
-	CGAffineTransform T = CGAffineTransformConcat(transform, viewTransform);
-
+	[super drawOpenGLHighlightWithTransform:T];
 	WDGLRenderCGPathRefWithTransform([self framePath], T);
 	WDGLRenderCGPathRefWithTransform([self resultPath], T);
 }

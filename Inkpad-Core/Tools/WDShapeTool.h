@@ -22,6 +22,7 @@ typedef enum WDShapeMode
 	WDShapeModeLeaf,
 	WDShapeModeHeart,
 	WDShapeModeDiamond,
+	WDShapeModeSpades,
 	WDShapeModePie
 }
 WDShapeMode;

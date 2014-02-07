@@ -28,6 +28,7 @@
 #import "WDLeafShape.h"
 #import "WDHeartShape.h"
 #import "WDDiamondShape.h"
+#import "WDSpadesShape.h"
 #import "WDPieShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
@@ -48,12 +49,13 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	@"oval.png",
 	@"star.png",
 	@"polygon.png",
-	@"line.png",
 	@"spiral.png",
 	@"line.png",
+	@"oval.png",
 	@"line.png",
+	@"oval.png",
 	@"line.png",
-	@"line.png"
+	@"oval.png"
 	];
     
     return imageNames[shapeMode_];
@@ -93,6 +95,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	[WDShapeTool leafTool],
 	[WDShapeTool heartTool],
 	[WDShapeTool diamondTool],
+	[WDShapeTool spadesTool],
 	[WDShapeTool pacmanTool]
 	];
 }
@@ -125,6 +128,9 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 
 + (id) diamondTool
 { return [self shapeToolWithMode:WDShapeModeDiamond]; }
+
++ (id) spadesTool
+{ return [self shapeToolWithMode:WDShapeModeSpades]; }
 
 + (id) pacmanTool
 { return [self shapeToolWithMode:WDShapeModePie]; }
@@ -200,6 +206,12 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
 		return [WDDiamondShape shapeWithFrame:rect];
+	}
+	else
+	if (shapeMode_ == WDShapeModeSpades)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDSpadesShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeStar)

@@ -63,7 +63,9 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 @synthesize eyedropper = eyedropper_;
 @synthesize horizontalRuler = horizontalRuler_;
 @synthesize verticalRuler = verticalRuler_;
-@synthesize toolOptionsView = toolOptionsView_;
+
+//@synthesize toolOptionsView = toolOptionsView_;
+
 @synthesize activityView = activityView_;
 
 - (id)initWithFrame:(CGRect)frame
@@ -589,9 +591,7 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
         [self insertSubview:eraserPreview_ aboveSubview:selectionView_];
         eraserPreview_.canvas = self;
     }
-    
-    [self positionToolOptionsView];
-    
+
     [self rebuildViewTransform_];
 }
 
@@ -827,14 +827,15 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 - (void) hideAccessoryViews
 {
     [self hideTools];
-    toolOptionsView_.hidden = YES;
+
+    _toolOptionsView.hidden = YES;
     pivotView_.hidden = YES;
 }
 
 - (void) showAccessoryViews
 {
     [self showTools];
-    toolOptionsView_.hidden = NO;
+    _toolOptionsView.hidden = NO;
     pivotView_.hidden = NO;
 }
 
@@ -959,26 +960,114 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
     }
 }
 
-- (void) positionToolOptionsView
-{
-    toolOptionsView_.sharpCenter = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMaxY(self.bounds) - (CGRectGetHeight(toolOptionsView_.frame) / 2) - 15);
-}
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+#pragma mark ToolOptionsView
+////////////////////////////////////////////////////////////////////////////////
 
-- (void) setToolOptionsView:(UIView *)toolOptionsView
+- (void) setToolOptionsView:(id)view
 {
-	if (toolOptionsView_ != toolOptionsView)
+	if (_toolOptionsView != view)
 	{
-		[toolOptionsView_ removeFromSuperview];
-		
-		toolOptionsView_ = toolOptionsView;
-		if (toolOptionsView_ != nil)
+		if (_toolOptionsView != nil)
+		{ [self dismissToolOptionsView]; }
+
+		_toolOptionsView = view;
+
+		if (_toolOptionsView != nil)
 		{
-			[self positionToolOptionsView];
-			
-			[self insertSubview:toolOptionsView_ belowSubview:toolPalette_];
+			[self prepareToolOptionsView:_toolOptionsView];
+			[self showToolOptionsView:_toolOptionsView];
 		}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareToolOptionsView:(UIView *)view
+{
+	CGRect srcR = [view frame];
+	CGRect dstR = [self bounds];
+	srcR.origin.y = CGRectGetMaxY(dstR);
+	srcR.origin.x = CGRectGetMidX(dstR);
+	srcR.origin.x -= 0.5*srcR.size.width;
+	srcR.origin.x = round(srcR.origin.x);
+
+	// Move offscreen
+	[view setFrame:srcR];
+
+	// Set display options
+	view.layer.cornerRadius = 9;
+	view.layer.shadowOpacity = 0.4f;
+	view.layer.shadowRadius = 2;
+	view.layer.shadowOffset = CGSizeZero;
+	[view addParallaxEffect];
+
+	[self insertSubview:view belowSubview:self.toolPalette];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) showToolOptionsView
+{
+	if (self.toolOptionsView)
+	{ [self showToolOptionsView:self.toolOptionsView]; }
+}
+
+- (void) showToolOptionsView:(UIView *)view
+{
+	CGRect srcR = [view frame];
+	CGRect dstR = [self bounds];
+
+	if (CGRectGetMinY(srcR) >= CGRectGetMaxY(dstR))
+	{
+		srcR.origin.y = CGRectGetMaxY(dstR) - srcR.size.height;
+		[UIView animateWithDuration:0.2
+		animations:^{[view setFrame:srcR];}];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) hideToolOptionsView
+{
+	if (self.toolOptionsView)
+	{ [self hideToolOptionsView:self.toolOptionsView]; }
+}
+
+- (void) hideToolOptionsView:(UIView *)view
+{
+	CGRect srcR = [view frame];
+	CGRect dstR = [self bounds];
+
+	if (CGRectGetMinY(srcR) < CGRectGetMaxY(dstR))
+	{
+		srcR.origin.y = CGRectGetMaxY(dstR);
+		[UIView animateWithDuration:0.2
+		animations:^{[view setFrame:srcR];}];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) dismissToolOptionsView
+{
+	UIView *view = [self toolOptionsView];
+	CGRect srcR = [view frame];
+	CGRect dstR = [self bounds];
+
+	if (CGRectGetMinY(srcR) < CGRectGetMaxY(dstR))
+	{
+		srcR.origin.y = CGRectGetMaxY(dstR); // + kToolOptionsShadowSize
+		[UIView animateWithDuration:0.2
+		animations:^{[view setFrame:srcR];}
+		completion:^(BOOL f){[view removeFromSuperview];}];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) setMarquee:(NSValue *)marquee
 {

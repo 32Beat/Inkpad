@@ -395,22 +395,36 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
     if (CGRectIntersectsRect(self.bounds, visibleRect)) {
-        [self drawOpenGLHighlightWithTransform:CGAffineTransformIdentity viewTransform:viewTransform];
+        [self drawOpenGLHighlightWithTransform:viewTransform];
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
 							viewTransform:(CGAffineTransform)viewTransform
 {
-	CGRect B = [self bounds];
-	B = CGRectApplyAffineTransform(B, transform);
-	B = CGRectApplyAffineTransform(B, viewTransform);
-
-	[self.layer.highlightColor openGLSet];
-	WDGLStrokeRect(B);
+	[self drawOpenGLHighlightWithTransform:
+	CGAffineTransformConcat(transform, viewTransform)];
 
 	[self glDrawBoundsWithViewTransform:viewTransform];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)transform
+{
+	CGRect B = [self bounds];
+	B = CGRectApplyAffineTransform(B, transform);
+
+	[self.layer.highlightColor openGLSet];
+	WDGLStrokeRect(B);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
