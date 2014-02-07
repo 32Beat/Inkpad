@@ -974,10 +974,10 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 		_toolOptionsView = view;
 
-		if (_toolOptionsView != nil)
+		if (view != nil)
 		{
-			[self prepareToolOptionsView:_toolOptionsView];
-			[self showToolOptionsView:_toolOptionsView];
+			[self prepareToolOptionsView:view];
+			[self showToolOptionsView:view];
 		}
 	}
 }
@@ -995,6 +995,10 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 	// Move offscreen
 	[view setFrame:srcR];
+	[view setAutoresizingMask:
+	UIViewAutoresizingFlexibleTopMargin|
+	UIViewAutoresizingFlexibleLeftMargin|
+	UIViewAutoresizingFlexibleRightMargin];
 
 	// Set display options
 	view.layer.cornerRadius = 9;
@@ -1022,7 +1026,7 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 	if (CGRectGetMinY(srcR) >= CGRectGetMaxY(dstR))
 	{
 		srcR.origin.y = CGRectGetMaxY(dstR) - srcR.size.height;
-		[UIView animateWithDuration:0.2
+		[UIView animateWithDuration:0.25
 		animations:^{[view setFrame:srcR];}];
 	}
 }

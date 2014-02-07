@@ -97,8 +97,6 @@
     [canvas_ showRulers:NO animated:NO];
     
     [canvas_ nixMessageLabel];
-
-	[canvas_ hideToolOptionsView];
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
@@ -107,8 +105,6 @@
     [canvas_ rotateToInterfaceOrientation];
     
     [canvas_ showRulers:self.drawing.rulersVisible animated:NO];
-
-	[canvas_ showToolOptionsView];
 }
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
