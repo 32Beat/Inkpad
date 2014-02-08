@@ -297,10 +297,7 @@
 			mOptionsController =
 			[WDShapeOptionsController shapeControllerWithShape:selectedObject];
 
-			// TEST TEST TEST
 			// TODO: present and remove properly
-//			[selectedObject.undoManager prepareWithInvocationTarget:selectedObject] \
-			setParamValue:[selectedObject paramValue]];
 			[canvas setToolOptionsView:[mOptionsController view]];
 		}
 		else

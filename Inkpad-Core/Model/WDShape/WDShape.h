@@ -121,7 +121,7 @@ WDShapeOptions;
 - (NSInteger) shapeVersion; // defaults to 0
 
 - (void) flushCache;
-- (CGRect) frameRect;
+- (CGRect) frameRect; // framerect - framepath - framebounds ?
 - (CGPathRef) framePath;
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
@@ -130,7 +130,10 @@ WDShapeOptions;
 - (id) bezierNodes;
 - (id) bezierNodesWithShapeInRect:(CGRect)R;
 
-- (void) glDrawFramePathWithTransform:(CGAffineTransform)T;
+- (void) glDrawFrameWithTransform:(CGAffineTransform)T;
+- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T;
+- (void) glDrawContentsWithTransform:(CGAffineTransform)T;
+//- (void) glDrawContentsControlsWithTransform:(CGAffineTransform)T;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

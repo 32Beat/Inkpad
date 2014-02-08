@@ -398,16 +398,23 @@
 	WDDrawingController *drawController = self.canvas.drawingController;
 	WDElement *singleSelection = [drawController singleSelection];
 
-	if (singleSelection)
+	// Always draw frame and content path for selected objects
+	CGAffineTransform combined =
+	CGAffineTransformConcat(self.canvas.selectionTransform, T);
+
+	for (WDElement *object in drawController.selectedObjects)
 	{
-		if (!self.canvas.transformingNode)
-		{
-			[singleSelection.layer.highlightColor glSet];
-			if ([singleSelection respondsToSelector:
-			@selector(glDrawFramePathWithTransform:)])
-			[(id)singleSelection glDrawFramePathWithTransform:T];
-		}
+		[object.layer.highlightColor glSet];
+		[(id)object glDrawWithTransform:combined];
 	}
+
+	// Indicate editable frame if possible
+	if (singleSelection && !self.canvas.transforming)
+	{
+		[singleSelection.layer.highlightColor glSet];
+		[singleSelection glDrawFrameControlsWithTransform:T];
+	}
+
 /*
 	if (singleSelection && !self.canvas.transforming && !self.canvas.transformingNode) {
 		if ([[WDToolManager sharedInstance].activeTool isKindOfClass:[WDSelectionTool class]]) {

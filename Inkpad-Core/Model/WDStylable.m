@@ -156,6 +156,7 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     [self.maskedElements makeObjectsPerformSelector:@selector(setLayer:) withObject:layer];
 }    
 
+#pragma mark
 /*
 	Apply minimum default stroke expansion: 0.5*strokeSize
 */

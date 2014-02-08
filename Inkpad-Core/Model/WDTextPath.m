@@ -824,10 +824,7 @@ done:
     
     for (id pathRef in glyphs_) {
         CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
-        
-        CGPathRef transformed = WDCreateTransformedCGPathRef(glyphPath, glTransform);
-        WDGLRenderCGPathRef(transformed);
-        CGPathRelease(transformed);
+        WDGLRenderCGPathRef(glyphPath, &glTransform);
     }
 }
 

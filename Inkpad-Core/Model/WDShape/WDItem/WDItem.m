@@ -276,7 +276,7 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 
 - (void) glRenderHighLightWithTransform:(CGAffineTransform)transform
 {
-	WDGLRenderCGPathRefWithTransform([self framePath], transform);
+	WDGLRenderCGPathRef([self framePath], &transform);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

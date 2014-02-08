@@ -377,6 +377,45 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 // OpenGL-based selection rendering
 
+
+- (CGPathRef) framePath
+{ return nil; }
+
+- (void) glDrawWithTransform:(CGAffineTransform)T
+{ [self glDrawWithTransform:T options:WDGLDrawOptionsNone]; }
+
+- (void) glDrawWithTransform:(CGAffineTransform)T options:(long)options
+{
+	[self glDrawContentsWithTransform:T];
+	if (options & WDGLDrawOptionsEditableContents)
+	{ [self glDrawContentsControlsWithTransform:T]; }
+	
+	[self glDrawFrameWithTransform:T];
+	if (options & WDGLDrawOptionsEditableFrame)
+	{ [self glDrawFrameControlsWithTransform:T]; }
+}
+
+- (void) glDrawFrameWithTransform:(CGAffineTransform)T
+{
+	CGRect R = [self styleBounds];
+	R = CGRectApplyAffineTransform(R, T);
+	WDGLStrokeRect(R);
+}
+
+- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
+{
+}
+
+- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+{
+}
+
+- (void) glDrawContentsControlsWithTransform:(CGAffineTransform)T
+{
+}
+
+
+
 - (void) drawOpenGLAnchorAtPoint:(CGPoint)pt transform:(CGAffineTransform)transform selected:(BOOL)selected
 {
     CGPoint P = CGPointApplyAffineTransform(pt, transform);

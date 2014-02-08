@@ -455,7 +455,8 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) computeFrameRect
-{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform]); }
+//{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform]); }
+{ return [self styleBounds]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -479,8 +480,10 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 - (CGPathRef) createFramePath
 {
+	CGRect B = [self.strokeStyle styleBoundsForPath:[self sourcePath]];
 	CGAffineTransform T = [self sourceTransform];
-	return CGPathCreateWithRect([self sourceRect], &T);
+
+	return CGPathCreateWithRect(B, &T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -682,17 +685,27 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) glDrawFramePathWithTransform:(CGAffineTransform)T
+- (void) glDrawFrameWithTransform:(CGAffineTransform)T
 {
-	WDGLRenderCGPathRefWithTransform([self framePath], T);
-	WDGLRenderCGPathRefWithTransform([self resultPath], T);
+	WDGLRenderCGPathRef([self framePath], &T);
 }
+
+- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
+{
+	WDGLDrawMarkersForCGPathRef([self framePath], &T);
+}
+
+- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+{
+	WDGLRenderCGPathRef([self resultPath], &T);
+}
+
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)T
 {
 	[super drawOpenGLHighlightWithTransform:T];
-	WDGLRenderCGPathRefWithTransform([self framePath], T);
-	WDGLRenderCGPathRefWithTransform([self resultPath], T);
+	WDGLRenderCGPathRef([self framePath], &T);
+	WDGLRenderCGPathRef([self resultPath], &T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

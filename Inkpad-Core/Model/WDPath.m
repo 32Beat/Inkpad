@@ -1029,6 +1029,23 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
+{
+	CGPathRef framePath = CGPathCreateWithRect([self styleBounds], nil);
+	WDGLDrawMarkersForCGPathRef(framePath, &T);
+	CGPathRelease(framePath);
+}
+
+- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+{
+	WDGLRenderCGPathRef([self pathRef], &T);
+}
+
+- (void) glDrawContentsControlsWithTransform:(CGAffineTransform)T
+{
+}
+
+
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
 	if (CGRectIntersectsRect(self.bounds, visibleRect))

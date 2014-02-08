@@ -41,15 +41,17 @@ void WDGLStrokeDiamondMarker(CGPoint P);
 
 void WDGLDrawOverflowMarker(CGPoint);
 
+void WDGLDrawMarkersForCGPathRef(CGPathRef pathRef, const CGAffineTransform *T);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "WDBezierSegment.h"
 void WDGLQueueAddSegment(WDBezierSegment S);
 void WDGLQueueFlush(GLenum type);
 
-void WDGLRenderCGPathRef(CGPathRef pathRef);
-void WDGLRenderCGPathRefWithTransform
-	(CGPathRef pathRef, CGAffineTransform T);
+void WDGLRenderCGPathRef
+(CGPathRef pathRef, const CGAffineTransform *T);
+// Draw path as sequence of lines (T may be nil)
 
 ////////////////////////////////////////////////////////////////////////////////
 

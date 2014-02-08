@@ -576,6 +576,36 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     return nil;
 }
 
+
+
+- (CGPathRef) createFramePath
+{
+	return CGPathCreateWithRect(self.naturalBounds, &transform_);
+}
+
+- (void) glDrawFrameWithTransform:(CGAffineTransform)T
+{
+	CGPathRef framePath = [self createFramePath];
+	WDGLRenderCGPathRef(framePath, &T);
+	CGPathRelease(framePath);
+}
+
+- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
+{
+	CGPathRef framePath = [self createFramePath];
+	WDGLDrawMarkersForCGPathRef(framePath, &T);
+	CGPathRelease(framePath);
+}
+
+- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+{
+	//WDGLRenderCGPathRef([self resultPath], &T);
+}
+
+
+
+
+
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
     if (CGRectIntersectsRect(self.bounds, visibleRect)) {
@@ -1000,11 +1030,8 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     [self layout];
     
     for (id pathRef in glyphs_) {
-        CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
-        
-        CGPathRef transformed = WDCreateTransformedCGPathRef(glyphPath, glTransform);
-        WDGLRenderCGPathRef(transformed);
-        CGPathRelease(transformed);
+		CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
+		WDGLRenderCGPathRef(glyphPath, &glTransform);
     }
 }
 

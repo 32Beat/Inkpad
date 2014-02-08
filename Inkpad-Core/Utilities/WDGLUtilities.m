@@ -508,6 +508,53 @@ void WDGLDrawOverflowMarker(CGPoint P)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static void WDGLDrawMarkersForCGPathElement
+	(void *info, const CGPathElement *element)
+{
+	const CGAffineTransform *T = (CGAffineTransform *)info;
+
+	switch (element->type)
+	{
+		case kCGPathElementMoveToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[0]:
+			CGPointApplyAffineTransform(element->points[0],*T));
+			break;
+
+		case kCGPathElementAddLineToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[0]:
+			CGPointApplyAffineTransform(element->points[0],*T));
+			break;
+
+
+		case kCGPathElementAddQuadCurveToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[1]:
+			CGPointApplyAffineTransform(element->points[1],*T));
+			break;
+
+		case kCGPathElementAddCurveToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[2]:
+			CGPointApplyAffineTransform(element->points[2],*T));
+			break;
+
+
+		case kCGPathElementCloseSubpath:
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLDrawMarkersForCGPathRef(CGPathRef pathRef, const CGAffineTransform *T)
+{
+	if (pathRef != nil)
+	{
+		// Process path elements
+		CGPathApply(pathRef, (void *)T, &WDGLDrawMarkersForCGPathElement);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark OpenGL Path rendering with WDGLVertexBuffer
 ////////////////////////////////////////////////////////////////////////////////
@@ -648,22 +695,6 @@ static void WDGLRenderCGPathElement
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WDGLRenderCGPathRef(CGPathRef pathRef)
-{
-	if (pathRef != nil)
-	{
-		// Process path elements
-		CGPathApply(pathRef, nil, &WDGLRenderCGPathElement);
-
-		// Draw any data as open path
-		WDGLQueueFlush(GL_LINE_STRIP);
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////
-
 static void WDGLRenderCGPathElementWithTransform
 	(void *info, const CGPathElement *element)
 {
@@ -711,13 +742,15 @@ static void WDGLRenderCGPathElementWithTransform
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void WDGLRenderCGPathRefWithTransform
-	(CGPathRef pathRef, CGAffineTransform T)
+void WDGLRenderCGPathRef
+	(CGPathRef pathRef, const CGAffineTransform *T)
 {
 	if (pathRef != nil)
 	{
 		// Process path elements
-		CGPathApply(pathRef, &T, &WDGLRenderCGPathElementWithTransform);
+		CGPathApply(pathRef, (void *)T, T != nil ?
+		&WDGLRenderCGPathElementWithTransform:
+		&WDGLRenderCGPathElement);
 
 		// Draw any data as open path
 		WDGLQueueFlush(GL_LINE_STRIP);

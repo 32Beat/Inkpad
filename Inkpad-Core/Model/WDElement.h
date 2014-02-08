@@ -21,6 +21,16 @@
 #import <OpenGL/gl.h>
 #endif
 
+
+typedef enum
+{
+	WDGLDrawOptionsNone 			= 0,
+	WDGLDrawOptionsEditableFrame 	= (1<<0),
+	WDGLDrawOptionsEditableContents = (1<<1)
+}
+WDGLDrawOptions;
+
+
 typedef enum {
     WDAlignLeft,
     WDAlignCenter,
@@ -98,7 +108,18 @@ typedef enum {
 - (void) restoreCachedColorAdjustmentData;
 - (void) registerUndoWithCachedColorAdjustmentData;
 
+
+
 // OpenGL-based selection rendering
+- (void) glDrawWithTransform:(CGAffineTransform)T;
+- (void) glDrawWithTransform:(CGAffineTransform)T options:(long)options;
+- (void) glDrawFrameWithTransform:(CGAffineTransform)T;
+- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T;
+
+
+
+
+
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect;
 - (void) drawOpenGLAnchorAtPoint:(CGPoint)pt transform:(CGAffineTransform)transform selected:(BOOL)selected;
 
