@@ -1036,13 +1036,23 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	CGPathRelease(framePath);
 }
 
-- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+- (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
 	WDGLRenderCGPathRef([self pathRef], &T);
 }
 
-- (void) glDrawContentsControlsWithTransform:(CGAffineTransform)T
+- (void) glDrawContentControlsWithTransform:(CGAffineTransform)T
 {
+	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
+
+	for (WDBezierNode *node in nodes)
+	{
+		if (node.selected)
+			[node drawGLWithViewTransform:T color:color mode:kWDBezierNodeRenderSelected];
+		else
+			[node drawGLWithViewTransform:T color:color mode:kWDBezierNodeRenderOpen];
+	}
 }
 
 
@@ -1661,7 +1671,10 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     if (!CGRectIntersectsRect(pointRect, [self controlBounds])) {
         return result;
     }
-    
+
+	// TODO: test for editingMode first
+
+
     if (flags & kWDSnapNodes) {
         // look for fill control points
         if (self.fillTransform) {

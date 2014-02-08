@@ -445,6 +445,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     }
     
     [selectedObjects_ addObject:element];
+
     [self deselectAllNodes];
     
     [self notifySelectionChanged];
@@ -522,8 +523,24 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 #pragma mark -
 #pragma mark Action Items
 
+- (void) deselectAllObjects
+{
+    // be sure to end any active path editing
+    self.activePath = nil;
+
+    for (WDElement *object in selectedObjects_)
+	{ [object setEditingMode:eWDEditingNone]; }
+
+    [selectedObjects_ removeAllObjects];
+
+    [self deselectAllNodes];
+}
+
 - (void) selectNone:(id)sender
 {
+	[self deselectAllObjects];
+	return;
+	
     // be sure to end any active path editing
     self.activePath = nil;
     
@@ -532,6 +549,8 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     
     [self notifySelectionChanged];
 }
+
+
 
 - (void) selectAll:(id)sender
 {

@@ -52,7 +52,7 @@ NSString *WDDefaultFreehandTool = @"WDDefaultFreehandTool";
 
 - (void) beginWithEvent:(WDEvent *)theEvent inCanvas:(WDCanvas *)canvas
 {
-    [canvas.drawingController selectNone:nil];
+    [canvas.drawingController deselectAllObjects];
     
     pathStarted_ = YES;
     

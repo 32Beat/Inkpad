@@ -24,6 +24,15 @@
 @class WDRulerView;
 @class WDSelectionView;
 
+typedef enum WDSelectionMode
+{
+	WDSelectionModeNone = 0,
+	WDSelectionModeFrame = 1,
+	WDSelectionModeContents = 2
+}
+WDSelectionMode;
+
+
 @interface WDCanvas : UIView {
     WDSelectionView         *selectionView_;
     WDEraserPreviewView     *eraserPreview_;

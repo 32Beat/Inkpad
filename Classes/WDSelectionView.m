@@ -398,21 +398,26 @@
 	WDDrawingController *drawController = self.canvas.drawingController;
 	WDElement *singleSelection = [drawController singleSelection];
 
-	// Always draw frame and content path for selected objects
+	// Assume selectionTransform applies to entire object(s) (not just a single node)
 	CGAffineTransform combined =
 	CGAffineTransformConcat(self.canvas.selectionTransform, T);
 
-	for (WDElement *object in drawController.selectedObjects)
+	// Assuming singleSelection always indicates object, not nodes
+	if (singleSelection)
 	{
-		[object.layer.highlightColor glSet];
-		[(id)object glDrawWithTransform:combined];
-	}
+		WDEditingMode editingMode = singleSelection.editingMode;
 
-	// Indicate editable frame if possible
-	if (singleSelection && !self.canvas.transforming)
-	{
 		[singleSelection.layer.highlightColor glSet];
-		[singleSelection glDrawFrameControlsWithTransform:T];
+		[singleSelection glDrawWithTransform:T options:editingMode];
+	}
+	else
+	{
+		// Draw outline for multiple objects
+		for (WDElement *object in drawController.selectedObjects)
+		{
+			[object.layer.highlightColor glSet];
+			[(id)object glDrawWithTransform:combined];
+		}
 	}
 
 /*

@@ -695,7 +695,7 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 	WDGLDrawMarkersForCGPathRef([self framePath], &T);
 }
 
-- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+- (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
 	WDGLRenderCGPathRef([self resultPath], &T);
 }

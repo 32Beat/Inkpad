@@ -53,30 +53,33 @@
 {
 	// Model
 	CGSize mSize;
-	CGAffineTransform mTransform;
+	CGPoint mPosition;
+	CGFloat mRotation;
 
-	id mContent; // ? NSArray / WDItem
+	id mContent; // Either {WDItem} or {NSArray of WDItems}
 
 	// Cache
 	CGRect mFrameRect;
 	CGPathRef mFramePath;
-
+	CGAffineTransform mTransform;
+	
 	// Owner
-	__weak id<WDItemManager> mItemManager;
+	__weak id<WDItemManager> mOwner;
 }
 
-@property (nonatomic, weak) id<WDItemManager> itemManager;
+@property (nonatomic, weak) id<WDItemManager> itemOwner;
 
 
 + (id) itemWithFrame:(CGRect)frame;
 - (id) initWithFrame:(CGRect)frame;
 
 - (void) setFrame:(CGRect)frame;
-- (void) setPosition:(CGPoint)P;
 - (void) setSize:(CGSize)size;
+- (void) setPosition:(CGPoint)P;
+- (void) setRotation:(CGFloat)degrees;
 
 - (CGRect) frameRect;
-// frameRect = bounding box of sourceRect + transform
+// frameRect = bounding box of framePath
 
 - (CGPathRef) framePath;
 // framePath = sourceRect + transform
@@ -85,9 +88,6 @@
 // sourceRect = combination of size & anchorpoint,
 // always includes {0,0}, usually at center
 
-
-- (void) flushFrame;
-// subclasses should call this to invalidate frame parameters
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

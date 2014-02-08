@@ -17,22 +17,30 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSInteger WDItemVersion = 1;
+static NSInteger WDItemMasterVersion = 1;
+static NSString *WDItemMasterVersionKey = @"WDItemVersion";
+
+static NSString *WDItemNameKey = @"WDItemName";
 static NSString *WDItemVersionKey = @"WDItemVersion";
 static NSString *WDItemSizeKey = @"WDItemSize";
-static NSString *WDItemTransformKey = @"WDItemTransform";
+static NSString *WDItemPositionKey = @"WDShapePosition";
+static NSString *WDItemRotationKey = @"WDShapeRotation";
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDItem
 ////////////////////////////////////////////////////////////////////////////////
 
-@synthesize itemManager = mItemManager;
+@synthesize itemOwner = mOwner;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) dealloc
 {
-	[self flushFrame];
+	[self flushFramePath];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,21 +67,73 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 	if (item != nil)
 	{
 		item->mSize = self->mSize;
-		item->mTransform = self->mTransform;
+		item->mPosition = self->mPosition;
+		item->mRotation = self->mRotation;
 	}
 
 	return item;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Encoding
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) itemName
+{ return NSStringFromClass([self class]); }
+
+- (NSInteger) itemVersion
+{ return 0; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeInteger:WDItemVersion forKey:WDItemVersionKey];
-	[coder encodeCGSize:mSize forKey:WDItemSizeKey];
-	[coder encodeCGAffineTransform:mTransform forKey:WDItemTransformKey];
+	[coder encodeInteger:WDItemMasterVersion forKey:WDItemMasterVersionKey];
+
+	[self encodeTypeWithCoder:coder];
+	[self encodeSizeWithCoder:coder];
+	[self encodePositionWithCoder:coder];
+	[self encodeRotationWithCoder:coder];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeTypeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:[self itemName] forKey:WDItemNameKey];
+	[coder encodeInteger:[self itemVersion] forKey:WDItemVersionKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeSizeWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGSize(mSize);
+	[coder encodeObject:str forKey:WDItemSizeKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodePositionWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGPoint(mPosition);
+	[coder encodeObject:str forKey:WDItemPositionKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeRotationWithCoder:(NSCoder *)coder
+{
+	NSString *str = sizeof(mRotation) > 32 ?
+	[[NSNumber numberWithDouble:mRotation] stringValue]:
+	[[NSNumber numberWithFloat:mRotation] stringValue];
+	[coder encodeObject:str forKey:WDItemRotationKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Decoding
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithCoder:(NSCoder *)coder
@@ -81,10 +141,16 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 	self = [super init];
 	if (self != nil)
 	{
-		mTransform = CGAffineTransformIdentity;
+		mSize = (CGSize){ 2.0, 2.0 };
+		mPosition = (CGPoint){ 0.0, 0.0 };
+		mRotation = 0.0;
 
-		if (![self readFromCoder:coder])
-		{ self = nil; }
+		NSInteger version =
+		[coder decodeIntegerForKey:WDItemMasterVersionKey];
+
+		if (version == WDItemMasterVersion)
+		{ }
+		[self decodeWithCoder:coder];
 	}
 
 	return self;
@@ -92,25 +158,61 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) readFromCoder:(NSCoder *)coder
+- (BOOL) decodeWithCoder:(NSCoder *)coder
 {
-	// Always attempt to read regardless of version
-//	NSInteger version = \
-	[coder decodeIntegerForKey:WDItemVersionKey];
+	[self decodeSizeWithCoder:coder];
+	[self decodePositionWithCoder:coder];
+	[self decodeRotationWithCoder:coder];
 
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeSizeWithCoder:(NSCoder *)coder
+{
 	if ([coder containsValueForKey:WDItemSizeKey])
-	{ mSize = [coder decodeCGSizeForKey:WDItemSizeKey]; }
+	{
+		NSString *str = [coder decodeObjectForKey:WDItemSizeKey];
+		if (str != nil) { mSize = CGSizeFromString(str); }
+	}
+}
 
-	if ([coder containsValueForKey:WDItemTransformKey])
-	{ mTransform = [coder decodeCGAffineTransformForKey:WDItemTransformKey]; }
+////////////////////////////////////////////////////////////////////////////////
 
-	return mSize.width > 0.0 && mSize.height > 0.0;
+- (void) decodePositionWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDItemPositionKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDItemPositionKey];
+		if (str != nil) { mPosition = CGPointFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeRotationWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDItemRotationKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDItemRotationKey];
+		if (str != nil)
+		{
+			mRotation = sizeof(mRotation)>32 ?
+			[str doubleValue] : [str floatValue];
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Model Data
+#pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setSize
+	-------
+	Set size of content
+*/
 
 - (void) setSize:(CGSize)size
 {
@@ -118,125 +220,88 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 		(mSize.height!=size.height))
 	{
 		mSize = size;
-		[self flushSource];
+		[self updateCache];
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setPosition
+	-----------
+	Set position of result shape
+*/
 
 - (void) setPosition:(CGPoint)P
 {
-	if ((mTransform.tx != P.x)||
-		(mTransform.ty != P.y))
+	if ((mPosition.x != P.x)||
+		(mPosition.y != P.y))
 	{
-		mTransform.tx = P.x;
-		mTransform.ty = P.y;
-		[self flushResult];
+		mPosition.x = P.x;
+		mPosition.y = P.y;
+		[self updateCache];
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	setRotation
+	-----------
+	Set rotation of result shape
+*/
 
-- (void) setFrame:(CGRect)frame
+- (void) setRotation:(CGFloat)degrees
 {
-	[self setSize:frame.size];
-	[self setPosition:(CGPoint){
-	CGRectGetMidX(frame),
-	CGRectGetMidY(frame) }];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGAffineTransform) transform
-{ return mTransform; }
-
-- (void) setTransform:(CGAffineTransform)T
-{
-	mTransform = T;
-	[self flushResult];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustFrame:(CGRect)frame
-{
-	// Allow item manager to prepare
-	[[self itemManager] itemWillAdjust:self];
-
-	// Set new frame
-	[self setFrame:frame];
-
-	// Allow item manager to respond
-	[[self itemManager] itemDidAdjust:self];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustTransform:(CGAffineTransform)T
-{
-	// Allow item manager to prepare
-	[[self itemManager] itemWillAdjust:self];
-
-	// Set new bounds
-	[self setTransform:T];
-
-	// Allow item manager to respond
-	[[self itemManager] itemDidAdjust:self];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark
-////////////////////////////////////////////////////////////////////////////////
-
-// Flush all pre-transform cached vars and dependants
-- (void) flushSource
-{
-	[self flushResult];
-}
-
-// Flush all post-transform cached vars
-- (void) flushResult
-{
-	[self flushFrame];
-}
-
-- (void) flushFrame
-{
-	[self flushFramePath];
-	[self flushFrameRect];
+	if (mRotation != degrees)
+	{
+		mRotation = degrees;
+		[self updateCache];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Frame
+////////////////////////////////////////////////////////////////////////////////
+/*
+	setFrame
+	--------
+	Set size and position, reset rotation
+*/
+
+- (void) setFrame:(CGRect)frame
+{
+	[self setSize:frame.size];
+	[self setPosition:(CGPoint){ CGRectGetMidX(frame), CGRectGetMidY(frame) }];
+	[self setRotation:0.0];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) sourceRect
-{ return (CGRect){{-0.5*mSize.width, -0.5*mSize.height}, mSize }; }
+{
+	if ([mContent isKindOfClass:[NSArray class]])
+	{
+		CGRect R = CGRectNull;
+		for (id item in mContent)
+		{ R = CGRectUnion(R, [item sourceRect]); }
+		return R;
+	}
+	else
+	if ([mContent isKindOfClass:[WDItem class]])
+	{
+		return [mContent sourceRect];
+	}
+
+	return (CGRect){ -0.5*mSize.width, -0.5*mSize.height, mSize.width, mSize.height };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) frameRect
-{
-	return
-	mFrameRect.size.width != 0.0 ||
-	mFrameRect.size.height != 0.0 ?
-	mFrameRect : (mFrameRect = [self computeFrameRect]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) computeFrameRect
 { return CGRectApplyAffineTransform([self sourceRect], mTransform); }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (void) flushFrameRect
-{
-	mFrameRect.size.width = 0;
-	mFrameRect.size.height = 0;
-}
-
+#pragma mark -
+#pragma mark Frame Path
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) framePath
@@ -248,7 +313,9 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) createFramePath
-{ return CGPathCreateWithRect([self sourceRect], &mTransform); }
+{
+	return CGPathCreateWithRect([self sourceRect], &mTransform);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -262,21 +329,46 @@ static NSString *WDItemTransformKey = @"WDItemTransform";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#pragma mark
+#pragma mark -
+#pragma mark Cache
 ////////////////////////////////////////////////////////////////////////////////
-// TODO: rename to applyTransform:
 
-- (void) applyTransform:(CGAffineTransform)T
+- (void) updateCache
 {
-	T = CGAffineTransformConcat(mTransform, T);
-	[self adjustTransform:T];
+	[self updateTransform];
+	/*
+		if (mCachedSize != mSize)
+		{
+			update contents for size
+			mCachedSize = mSize;
+		}
+	*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) glRenderHighLightWithTransform:(CGAffineTransform)transform
+- (void) updateTransform
 {
-	WDGLRenderCGPathRef([self framePath], &transform);
+	mTransform = [self computeTransform];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGAffineTransform) computeTransform
+{
+	CGAffineTransform T =
+	{ 1.0, 0.0, 0.0, 1.0, mPosition.x, mPosition.y};
+
+	if (mRotation != 0.0)
+	{
+		CGFloat angle = mRotation * M_PI / 180.0;
+		T.a = cos(angle);
+		T.b = sin(angle);
+		T.c = -T.b;
+		T.d = +T.a;
+	}
+
+	return T;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

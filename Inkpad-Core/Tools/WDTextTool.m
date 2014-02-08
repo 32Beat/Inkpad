@@ -35,7 +35,7 @@
 - (void) moveWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
     if (!self.moved) {
-        [canvas.drawingController selectNone:nil];
+        [canvas.drawingController deselectAllObjects];
     }
     
     WDPath  *temp = [WDPath pathWithRect:WDRectWithPoints(self.initialEvent.snappedLocation, event.snappedLocation)];
@@ -60,7 +60,7 @@
         textObj = (WDText *) result.element;
         
         if (textObj && [textObj hasEditableText]) {
-            [canvas.drawingController selectNone:nil];
+            [canvas.drawingController deselectAllObjects];
             [canvas.drawingController selectObject:textObj];
             [canvas.controller editTextObject:textObj selectAll:NO];
         }

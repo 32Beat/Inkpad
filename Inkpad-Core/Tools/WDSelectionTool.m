@@ -28,6 +28,11 @@
 
 @synthesize groupSelect = groupSelect_;
 
+- (BOOL) shouldAppendSelection
+{ return groupSelect_; }
+
+
+
 - (id) init
 {
     self = [super init];
@@ -87,38 +92,49 @@
     if (!result || result.type == kWDEther) {
         // didn't hit anything: marquee mode!
 		[canvas setToolOptionsView:nil];
-        [controller selectNone:nil];
+        [controller deselectAllObjects];
         controller.propertyManager.ignoreSelectionChanges = YES;
         marqueeMode_ = YES;
         return;
     }
     
-    WDElement *element = result.element;
-    
-    if (![controller isSelected:element]) {
+	WDElement *element = result.element;
+
+    if (![controller isSelected:element])
+	{
         WDPath *path = nil;
         
-        if ([element isKindOfClass:[WDPath class]]) {
-            path = (WDPath *) element;
-        }
+        if ([element isKindOfClass:[WDPath class]])
+		{ path = (WDPath *) element; }
         
-        if (!path || !path.superpath || (path.superpath && ![controller isSelected:path.superpath])) {
-            if (!self.groupSelect) {
-                [controller selectNone:nil];
-            }
+        if (!path || !path.superpath || (path.superpath && ![controller isSelected:path.superpath]))
+		{
+			//
+			if (![self shouldAppendSelection])
+			{ [controller deselectAllObjects]; }
+
             [controller selectObject:element];
-        } else if (path && path.superpath && [controller isSelected:path.superpath] && ![controller singleSelection]) {
+			[element setEditingMode:eWDEditingFrame];
+        }
+		else
+		if (path && path.superpath && [controller isSelected:path.superpath] && ![controller singleSelection])
+		{
             lastTappedObject_ = path.superpath;
             objectWasSelected_ = YES;
         }
-    } else if ([controller singleSelection]) {
+    }
+	else if ([controller singleSelection])
+	{
+		[element setEditingMode:eWDEditingContent];
         // we have a single selection, and the hit element is already selected... it must be the single selection
        
-        if ([element isKindOfClass:[WDPath class]] && result.node) {
+        if ([element isKindOfClass:[WDPath class]] && result.node)
+		{
             nodeWasSelected_ = result.node.selected;
             activeNode_ = result.node;
             
-            if (!nodeWasSelected_) {
+            if (!nodeWasSelected_)
+			{
                 if (!self.groupSelect) {
                     // only allow one node to be selected at a time
                     [controller deselectAllNodes];

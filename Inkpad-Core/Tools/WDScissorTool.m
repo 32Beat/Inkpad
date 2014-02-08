@@ -46,7 +46,7 @@
             whatToSelect = [path splitAtNode:result.node];
         }
         
-        [canvas.drawingController selectNone:nil];
+        [canvas.drawingController deselectAllObjects];
         [canvas.drawingController selectObject:whatToSelect[@"path"]];
         [canvas.drawingController selectNode:whatToSelect[@"node"]];
     }

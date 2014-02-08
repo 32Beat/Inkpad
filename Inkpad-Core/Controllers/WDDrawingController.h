@@ -66,7 +66,8 @@
 - (void) deselectObjectAndSubelements:(WDElement *)element;
 - (void) selectObjectsInRect:(CGRect)rect;
 
-- (void) selectNone:(id)sender;
+- (void) deselectAllObjects;
+//- (void) selectNone:(id)sender;
 - (void) selectAll:(id)sender;
 - (void) selectAllOnActiveLayer:(id)sender;
 - (void) delete:(id)sender;

@@ -721,6 +721,46 @@ done:
     return paths;
 }
 
+
+
+
+- (void) glDrawContentControlsWithTransform:(CGAffineTransform)viewTransform
+{
+    [super glDrawContentControlsWithTransform:viewTransform];
+
+    if (!overflow_ || self.displayNodes) {
+        return;
+    }
+    
+    CGPoint     overflowPoint;
+    BOOL        selected = NO;
+    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+    
+    if (!closed_) {
+        NSArray *nodes = reversed_ ? [self reversedNodes] : nodes_;
+        WDBezierNode *lastNode = [nodes lastObject];
+        overflowPoint = CGPointApplyAffineTransform(lastNode.anchorPoint, viewTransform);
+        selected = lastNode.selected;
+    } else {
+        CGPoint tangent;
+        CGPoint startBarAttachment =
+		[self getPointOnPathAtDistance:startOffset_ tangentVector:&tangent transformed:YES];
+        
+        overflowPoint =
+		CGPointApplyAffineTransform(startBarAttachment, CGAffineTransformConcat(transform_, viewTransform));
+    }
+
+    if (selected) {
+        glColor4f(1, 1, 1, 1);
+    } else {
+        [color openGLSet];
+    }
+
+    // draw +
+	WDGLDrawOverflowMarker(overflowPoint);
+}
+
+
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
     [super drawOpenGLHandlesWithTransform:transform viewTransform:viewTransform];
@@ -766,9 +806,6 @@ done:
 
 
 
-- (void) glDrawFramePathWithTransform:(CGAffineTransform)T
-{
-}
 
 - (void) drawTextPathControlsWithViewTransform:(CGAffineTransform)viewTransform viewScale:(float)viewScale
 {

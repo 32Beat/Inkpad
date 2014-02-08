@@ -132,8 +132,8 @@ WDShapeOptions;
 
 - (void) glDrawFrameWithTransform:(CGAffineTransform)T;
 - (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T;
-- (void) glDrawContentsWithTransform:(CGAffineTransform)T;
-//- (void) glDrawContentsControlsWithTransform:(CGAffineTransform)T;
+- (void) glDrawContentWithTransform:(CGAffineTransform)T;
+//- (void) glDrawContentControlsWithTransform:(CGAffineTransform)T;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

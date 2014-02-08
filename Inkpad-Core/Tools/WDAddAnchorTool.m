@@ -39,7 +39,7 @@
 	{
 		if (result.type == kWDEdge)
 		{
-			[dc selectNone:nil];
+			[dc deselectAllObjects];
 			[dc selectObject:result.element];
 			
 			WDBezierNode *newestNode =
@@ -53,7 +53,7 @@
 			// to ensure anchors are actually visible
 			if (![dc isSelected:path])
 			{
-				[dc selectNone:nil];
+				[dc deselectAllObjects];
 				[dc selectObject:path];
 				[dc selectNode:result.node];
 			}

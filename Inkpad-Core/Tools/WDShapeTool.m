@@ -317,7 +317,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 - (void)moveWithEvent:(WDEvent *)theEvent inCanvas:(WDCanvas *)canvas
 {
     if (!self.moved) {
-        [canvas.drawingController selectNone:nil];
+        [canvas.drawingController deselectAllObjects];
     }
     
     WDPath  *temp = [self pathWithPoint:theEvent.snappedLocation constrain:[self constrain]];

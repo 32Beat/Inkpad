@@ -83,7 +83,7 @@
                     [path reversePathDirection];
                 }
                 
-                [canvas.drawingController selectNone:nil];
+                [canvas.drawingController deselectAllObjects];
                 canvas.drawingController.activePath = path;
                 activePath = path;
                 
@@ -91,7 +91,7 @@
                 oldNodeMode_ = [path lastNode].reflectionMode;
                 self.replacementNode = [[path lastNode] chopOutHandle];
             } else {
-                [canvas.drawingController selectNone:nil];
+                [canvas.drawingController deselectAllObjects];
                 canvas.drawingController.tempDisplayNode = self.replacementNode;
             }
         }

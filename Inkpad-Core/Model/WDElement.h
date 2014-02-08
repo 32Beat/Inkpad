@@ -21,14 +21,35 @@
 #import <OpenGL/gl.h>
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDEditingMode
+	-------------
+	Indicates the current editing mode of an object
+	
+	The behavior and representation of objects may change depending 
+	on the editing mode. To indicate frame editing, the object will 
+	be drawn with a frame that includes circular controlpoints. 
+	Frame editing allows the object to be resized, repositioned, and rotated. 
+
+	Content editing will generally draw controlpoints for content, e.g.
+	beziercurve controls, and style editing will draw controlpoints for style. 
+	
+	If required, editingmode options can be combined into a bitmask.
+*/
 
 typedef enum
 {
-	WDGLDrawOptionsNone 			= 0,
-	WDGLDrawOptionsEditableFrame 	= (1<<0),
-	WDGLDrawOptionsEditableContents = (1<<1)
+	eWDEditingLocked 	= (-1),
+	eWDEditingNone 		= 0,
+	eWDEditingFrame 	= (1<<0),
+	eWDEditingContent 	= (1<<1),
+	eWDEditingStyle 	= (1<<2),
+	eWDEditingText 		= (1<<3)
 }
-WDGLDrawOptions;
+WDEditingMode;
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 typedef enum {
@@ -55,6 +76,8 @@ typedef enum {
 
 @interface WDElement : NSObject <NSCoding, NSCopying>
 {
+	WDEditingMode mEditingMode;
+
 	// Cached info
 	CGRect mStyleBounds;
 	CGRect mShadowBounds;
@@ -109,13 +132,19 @@ typedef enum {
 - (void) registerUndoWithCachedColorAdjustmentData;
 
 
+- (WDEditingMode) editingMode;
+- (void) setEditingMode:(WDEditingMode)mode;
 
 // OpenGL-based selection rendering
 - (void) glDrawWithTransform:(CGAffineTransform)T;
 - (void) glDrawWithTransform:(CGAffineTransform)T options:(long)options;
+
 - (void) glDrawFrameWithTransform:(CGAffineTransform)T;
 - (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T;
-
+- (void) glDrawContentWithTransform:(CGAffineTransform)T;
+- (void) glDrawContentControlsWithTransform:(CGAffineTransform)T;
+- (void) glDrawStyleWithTransform:(CGAffineTransform)T;
+- (void) glDrawStyleControlsWithTransform:(CGAffineTransform)T;
 
 
 

@@ -375,24 +375,39 @@ NSString *WDShadowKey = @"WDShadowKey";
     return nil;
 }
 
-// OpenGL-based selection rendering
+- (WDEditingMode) editingMode
+{ return mEditingMode; }
 
+- (void) setEditingMode:(WDEditingMode)mode
+{
+	if (mEditingMode != mode)
+	{
+		mEditingMode = mode;
+		[self postDirtyBoundsChange];
+	}
+}
+
+// OpenGL-based selection rendering
 
 - (CGPathRef) framePath
 { return nil; }
 
 - (void) glDrawWithTransform:(CGAffineTransform)T
-{ [self glDrawWithTransform:T options:WDGLDrawOptionsNone]; }
+{ [self glDrawWithTransform:T options:eWDEditingNone]; }
 
 - (void) glDrawWithTransform:(CGAffineTransform)T options:(long)options
 {
-	[self glDrawContentsWithTransform:T];
-	if (options & WDGLDrawOptionsEditableContents)
-	{ [self glDrawContentsControlsWithTransform:T]; }
-	
+	[self glDrawContentWithTransform:T];
 	[self glDrawFrameWithTransform:T];
-	if (options & WDGLDrawOptionsEditableFrame)
+
+	if (options & eWDEditingContent)
+	{ [self glDrawContentControlsWithTransform:T]; }
+	
+	if (options & eWDEditingFrame)
 	{ [self glDrawFrameControlsWithTransform:T]; }
+
+	if (options & eWDEditingStyle)
+	{ [self glDrawStyleControlsWithTransform:T]; }
 }
 
 - (void) glDrawFrameWithTransform:(CGAffineTransform)T
@@ -406,11 +421,19 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 }
 
-- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+- (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
 }
 
-- (void) glDrawContentsControlsWithTransform:(CGAffineTransform)T
+- (void) glDrawContentControlsWithTransform:(CGAffineTransform)T
+{
+}
+
+- (void) glDrawStyleWithTransform:(CGAffineTransform)T
+{
+}
+
+- (void) glDrawStyleControlsWithTransform:(CGAffineTransform)T
 {
 }
 
