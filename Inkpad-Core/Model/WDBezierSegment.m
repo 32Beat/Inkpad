@@ -1028,44 +1028,80 @@ CGFloat WDBezierSegmentFindLengthRatio(WDBezierSegment *S, CGFloat r)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Curvature
+////////////////////////////////////////////////////////////////////////////////
 
-//static CGPoint      *vertices = NULL;
-//static NSUInteger   size = 128;
-
-float firstDerivative(float A, float B, float C, float D, float t);
-float secondDerivative(float A, float B, float C, float D, float t);
-float base3(double t, double p1, double p2, double p3, double p4);
-float cubicF(double t, WDBezierSegment seg);
-
-
-
-inline float firstDerivative(float A, float B, float C, float D, float t)
+static inline double _Derivative1
+(double P0, double P1, double P2, double P3, double t)
 {
-return -3*A*(1-t)*(1-t) + 3*B*(1-t)*(1-t) - 6*B*(1-t)*t + 6*C*(1-t)*t - 3*C*t*t + 3*D*t*t;
+	// Compute cubic polynomial co-efficients
+	//double d = P0;
+	double c = 3*(P1-P0);
+	double b = 3*(P2-P1) - c;
+	double a = (P3-P0) - b - c;
+
+	// Compute polynomial co-efficients for derivative
+	double A = a+a+a;
+	double B = b+b;
+	double C = c;
+
+	return (A*t+B)*t+C;
 }
 
-inline  float secondDerivative(float A, float B, float C, float D, float t)
+static inline double _Derivative2
+(double P0, double P1, double P2, double P3, double t)
 {
-return 6*A*(1-t) - 12*B*(1-t) + 6*C*(1-t) + 6*B*t - 12*C*t + 6*D*t;
+	// Compute cubic polynomial co-efficients
+	//double d = P0;
+	double c = 3*(P1-P0);
+	double b = 3*(P2-P1) - c;
+	double a = (P3-P0) - b - c;
+
+	// Compute polynomial co-efficients for derivative
+	double A = a+a+a;
+	double B = b+b;
+
+	return 2*A*t+B;
 }
 
-inline float WDBezierSegmentCurvatureAtT(WDBezierSegment seg, float t)
+CGPoint WDBezierSegmentDerivativeAtT(WDBezierSegment S, CGFloat t)
 {
-if (WDBezierSegmentIsLineSegmentShape(seg)) {
-	return 0.0f;
+	const CGPoint *P = &S.a_;
+	return (CGPoint){
+		_Derivative1(P[0].x, P[1].x, P[2].x, P[3].x, t),
+		_Derivative1(P[0].y, P[1].y, P[2].y, P[3].y, t) };
 }
 
-float xPrime = firstDerivative(seg.a_.x, seg.out_.x, seg.in_.x, seg.b_.x, t);
-float yPrime = firstDerivative(seg.a_.y, seg.out_.y, seg.in_.y, seg.b_.y, t);
-
-float xPrime2 = secondDerivative(seg.a_.x, seg.out_.x, seg.in_.x, seg.b_.x, t);
-float yPrime2 = secondDerivative(seg.a_.y, seg.out_.y, seg.in_.y, seg.b_.y, t);
-
-float num = xPrime * yPrime2 - yPrime * xPrime2;
-float denom =  pow(xPrime * xPrime + yPrime * yPrime, 3.0f / 2);
-
-return -num/denom;
+CGPoint WDBezierSegmentSecondDerivativeAtT(WDBezierSegment S, CGFloat t)
+{
+	const CGPoint *P = &S.a_;
+	return (CGPoint){
+		_Derivative2(P[0].x, P[1].x, P[2].x, P[3].x, t),
+		_Derivative2(P[0].y, P[1].y, P[2].y, P[3].y, t) };
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+double WDBezierSegmentCurvatureAtT(WDBezierSegment S, CGFloat t)
+{
+	CGPoint D1 = WDBezierSegmentDerivativeAtT(S, t);
+	double D = D1.x*D1.x + D1.y*D1.y;
+	if (D > 0.0)
+	{
+		CGPoint D2 = WDBezierSegmentSecondDerivativeAtT(S, t);
+		double N = D1.x * D2.y - D1.y * D2.x;
+
+		return -N / pow(D, 1.5);
+	}
+
+	return 0.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
 
 /*
 * WDBezierSegmentFindPointOnSegment_R()

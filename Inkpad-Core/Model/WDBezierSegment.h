@@ -152,6 +152,8 @@ WDFindInfo WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P);
 ////////////////////////////////////////////////////////////////////////////////
 
 
+double WDBezierSegmentCurvatureAtT(WDBezierSegment S, CGFloat t);
+
 BOOL WDBezierSegmentFindPointOnSegment(
 	WDBezierSegment seg,
 	CGPoint testPoint,
@@ -167,7 +169,6 @@ CGPoint WDBezierSegmentPointAndTangentAtDistance
 (WDBezierSegment seg, float distance, CGPoint *tangent, float *curvature);
 
 float WDBezierSegmentLength(WDBezierSegment seg);
-float WDBezierSegmentCurvatureAtT(WDBezierSegment seg, float t);
 
 
 BOOL WDBezierSegmentsFormCorner
