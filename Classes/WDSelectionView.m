@@ -408,7 +408,7 @@
 		WDEditingMode editingMode = singleSelection.editingMode;
 
 		[singleSelection.layer.highlightColor glSet];
-		[singleSelection glDrawWithTransform:T options:editingMode];
+		[singleSelection glDrawWithTransform:combined options:editingMode];
 	}
 	else
 	{

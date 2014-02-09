@@ -28,7 +28,7 @@
     BOOL                closed_;
     BOOL                reversed_;
     
-    CGMutablePathRef    pathRef_;
+    CGPathRef    		pathRef_;
     CGMutablePathRef    strokePathRef_;
     CGRect              bounds_;
 //    BOOL                boundsDirty_;
@@ -95,6 +95,9 @@
 - (WDBezierNode *) lastNode;
 - (NSMutableArray *) reversedNodes;
 - (NSSet *) nodesInRect:(CGRect)rect;
+
+- (NSMutableArray *) nodesWithTransform:(CGAffineTransform)T;
+- (NSMutableArray *) nodesWithSelectionTransform:(CGAffineTransform)T;
 
 - (WDBezierNode *) convertNode:(WDBezierNode *)node whichPoint:(WDPickResultType)whichPoint;
 

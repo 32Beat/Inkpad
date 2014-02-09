@@ -204,6 +204,8 @@
     transform_ = CGAffineTransformIdentity;
 }
 
+
+
 - (void) moveWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
     CGPoint initialPt = self.initialEvent.location;
@@ -224,7 +226,31 @@
         
         canvas.marquee = [NSValue valueWithCGRect:selectionRect];
         [canvas.drawingController selectObjectsInRect:selectionRect];
-    }  else if (transformingNodes_) {
+    }
+	else
+	if ([canvas.drawingController singleSelection].editingMode & eWDEditingFrame)
+	{
+        // transform selected
+        canvas.transforming = YES;
+        canvas.transformingNode = [canvas.drawingController selectedNodes].count;
+        
+        delta = WDSubtractPoints(currentPt, initialSnapped);
+        
+        if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
+            delta = WDConstrainPoint(delta);
+        }
+        
+        if ([canvas.drawing snapFlags] & kWDSnapGrid) {
+            delta = [self offsetSelection:delta inCanvas:canvas];
+        }
+        
+        transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
+        [canvas transformSelection:transform_];
+
+	}
+	else
+	if (transformingNodes_)
+	{
         canvas.transforming = canvas.transformingNode = YES;
         delta = WDSubtractPoints(snapped, initialSnapped);
     
@@ -233,30 +259,40 @@
         }
         
         transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
-        [canvas transformSelection:transform_];
-    } else if (transformingHandles_) {
+
+		WDPath *path = (WDPath *) [canvas.drawingController singleSelection];
+
+		path.displayNodes = [path anyNodesSelected] ?
+		[path nodesWithSelectionTransform:transform_]:
+		[path nodesWithTransform:transform_];
+
+        path.displayClosed = path.closed;
+        [canvas invalidateSelectionView];
+    }
+	else
+	if (transformingHandles_)
+	{
         canvas.transforming = canvas.transformingNode = YES;
         
-        WDPath *path = (WDPath *) [canvas.drawingController singleSelection];
         WDBezierNodeReflectionMode reflect = (self.flags & WDToolOptionKey || self.flags & WDToolSecondaryTouch ? WDIndependent : originalReflectionMode_);
         
         replacementNode_ = [activeNode_ moveControlHandle:(int)pointToMove_ toPoint:snapped reflectionMode:reflect];
         replacementNode_.selected = YES; 
-        
+
+        WDPath *path = (WDPath *) [canvas.drawingController singleSelection];
+
         NSMutableArray *newNodes = [NSMutableArray array];
         
-        for (WDBezierNode *node in path.nodes) {
-            if (node == activeNode_) {
-                [newNodes addObject:replacementNode_];
-            } else {
-                [newNodes addObject:node];
-            }
-        }
-        
+        for (WDBezierNode *node in path.nodes)
+		{ [newNodes addObject:node == activeNode_ ? replacementNode_ : node]; }
+
         path.displayNodes = newNodes;
         path.displayClosed = path.closed;
         [canvas invalidateSelectionView];
-    } else if (transformingGradient_) {
+    }
+	else
+	if (transformingGradient_)
+	{
         canvas.transforming = YES;
         canvas.transformingNode = YES;
         

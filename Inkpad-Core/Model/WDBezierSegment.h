@@ -142,8 +142,8 @@ CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
 typedef struct
 {
 	CGFloat t; 	// t of resultpoint
-	CGFloat D; 	// distance to targetpoint
 	CGPoint P; 	// resultpoint
+	CGFloat D; 	// distance to targetpoint
 }
 WDFindInfo;
 

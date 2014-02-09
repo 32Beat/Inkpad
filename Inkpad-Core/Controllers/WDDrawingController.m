@@ -478,6 +478,17 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 
 - (void) selectObjectsInRect:(CGRect)rect
 {
+	if ([[self singleSelection] editingMode] & eWDEditingContent)
+	{
+		if ([[self singleSelection] isKindOfClass:[WDPath class]])
+		{
+			// Select nodes
+			[self setSelectedNodesFromSet:
+			[(WDPath *)[self singleSelection] nodesInRect:rect]];
+			return;
+		}
+	}
+
     [selectedObjects_ removeAllObjects];
     
     NSArray *layersToCheck = drawing_.isolateActiveLayer ? @[drawing_.activeLayer] : drawing_.layers;

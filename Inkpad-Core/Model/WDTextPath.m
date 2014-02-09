@@ -728,7 +728,7 @@ done:
 {
     [super glDrawContentControlsWithTransform:viewTransform];
 
-    if (!overflow_ || self.displayNodes) {
+    if (!overflow_) {
         return;
     }
     

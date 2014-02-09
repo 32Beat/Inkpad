@@ -80,6 +80,47 @@ CGPathRef WDCreateCGPathRefWithNodes(NSArray *nodes, BOOL closed)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void _WDGLRenderPathWithNodes(NSArray *nodes)
+{
+	WDBezierNode *lastNode = nil;
+	for (WDBezierNode *nextNode in nodes)
+	{
+		if (lastNode != nil)
+		{
+			WDGLQueueAddSegment(
+				(WDBezierSegment){
+					lastNode.anchorPoint,
+					lastNode.outPoint,
+					nextNode.inPoint,
+					nextNode.anchorPoint});
+			lastNode = nextNode;
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLRenderPathWithNodes(NSArray *nodes, CGAffineTransform T)
+{
+	WDBezierNode *lastNode = nil;
+	for (WDBezierNode *nextNode in nodes)
+	{
+		if (lastNode != nil)
+			WDGLQueueAddSegment(
+				(WDBezierSegment){
+					CGPointApplyAffineTransform(lastNode.anchorPoint, T),
+					CGPointApplyAffineTransform(lastNode.outPoint, T),
+					CGPointApplyAffineTransform(nextNode.inPoint, T),
+					CGPointApplyAffineTransform(nextNode.anchorPoint, T)});
+
+		lastNode = nextNode;
+	}
+
+	WDGLQueueFlush(GL_LINE_STRIP);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 NSArray *WDCloseNodes(NSArray *nodes)
 { return [nodes arrayByAddingObject:[nodes firstObject]]; }
 
@@ -543,7 +584,9 @@ NSLog(@"%@",[self description]);
 					  inPoint:anchorPoint_];
 }
 
-- (WDBezierNode *) moveControlHandle:(WDPickResultType)pointToTransform toPoint:(CGPoint)pt reflectionMode:(WDBezierNodeReflectionMode)reflectionMode
+- (WDBezierNode *) moveControlHandle:(WDPickResultType)pointToTransform
+	toPoint:(CGPoint)pt
+	reflectionMode:(WDBezierNodeReflectionMode)reflectionMode
 {
     CGPoint     inPoint = inPoint_, outPoint = outPoint_;
     
@@ -624,6 +667,14 @@ NSLog(@"%@",[self description]);
 @end
 
 @implementation WDBezierNode (GLRendering)
+
+- (void) drawGLWithViewTransform:(CGAffineTransform)transform
+	color:(UIColor *)color
+{
+	return
+	[self drawGLWithViewTransform:transform color:color
+	mode:[self selected] ? kWDBezierNodeRenderSelected : kWDBezierNodeRenderOpen];
+}
 
 - (void) drawGLWithViewTransform:(CGAffineTransform)transform
 	color:(UIColor *)color mode:(WDBezierNodeRenderMode)mode

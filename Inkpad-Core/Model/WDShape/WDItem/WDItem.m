@@ -277,27 +277,34 @@ static NSString *WDItemRotationKey = @"WDShapeRotation";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) sourceRect
-{
-	if ([mContent isKindOfClass:[NSArray class]])
-	{
-		CGRect R = CGRectNull;
-		for (id item in mContent)
-		{ R = CGRectUnion(R, [item sourceRect]); }
-		return R;
-	}
-	else
-	if ([mContent isKindOfClass:[WDItem class]])
-	{
-		return [mContent sourceRect];
-	}
-
-	return (CGRect){ -0.5*mSize.width, -0.5*mSize.height, mSize.width, mSize.height };
-}
+{ return (CGRect){ -0.5*mSize.width, -0.5*mSize.height, mSize.width, mSize.height }; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) frameRect
-{ return CGRectApplyAffineTransform([self sourceRect], mTransform); }
+{
+	CGRect frameR;
+
+	if ([mContent isKindOfClass:[NSArray class]])
+	{
+		frameR = CGRectNull;
+		for (id item in mContent)
+		{ frameR = CGRectUnion(frameR, [item frameRect]); }
+
+		return CGRectApplyAffineTransform(frameR, mTransform);
+	}
+	else
+	if ([mContent isKindOfClass:[WDItem class]])
+	{
+		frameR = [mContent frameRect];
+	}
+	else
+	{
+		frameR = [self sourceRect];
+	}
+
+	return CGRectApplyAffineTransform(frameR, mTransform);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

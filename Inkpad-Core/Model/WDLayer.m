@@ -199,7 +199,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:obj.styleBounds]};
+                                  @"rect": [NSValue valueWithCGRect:obj.renderBounds]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerContentsChangedNotification
                                                             object:self.drawing
@@ -224,7 +224,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:obj.styleBounds]};
+                                  @"rect": [NSValue valueWithCGRect:obj.renderBounds]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerContentsChangedNotification
                                                             object:self.drawing
@@ -243,7 +243,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     if (!self.isSuppressingNotifications) {
         NSDictionary *userInfo = @{@"layer": self,
-                                  @"rect": [NSValue valueWithCGRect:element.styleBounds]};
+                                  @"rect": [NSValue valueWithCGRect:element.renderBounds]};
         
         [[NSNotificationCenter defaultCenter] postNotificationName:WDLayerContentsChangedNotification
                                                             object:self.drawing
@@ -265,7 +265,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     WDElement *srcElement = elements_[src];
     WDElement *destElement = elements_[dest];
     
-    CGRect dirtyRect = CGRectIntersection(srcElement.styleBounds, destElement.styleBounds);
+    CGRect dirtyRect = CGRectIntersection(srcElement.renderBounds, destElement.renderBounds);
     
     [self invalidateThumbnail];
     

@@ -865,8 +865,8 @@ CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S)
 WDFindInfo WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 {
 	CGFloat minT = 0.0;
-	CGFloat minD = WDLineLength(P, S.a_);
 	CGPoint minP = S.a_;
+	CGFloat minD = WDLineLength(P, S.a_);
 
 	CGFloat d = 0.5;
 
@@ -881,8 +881,8 @@ WDFindInfo WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 		if (D < minD)
 		{
 			minT = t;
-			minD = D;
 			minP = T;
+			minD = D;
 		}
 		else
 		{ d = -0.5*d; }
@@ -890,7 +890,7 @@ WDFindInfo WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 	while (fabs(d) > 0.0001);
 
 	return (WDFindInfo)
-	{ minT, minD, minP };
+	{ minT, minP, minD };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -914,7 +914,7 @@ WDFindInfo WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P)
 {
 	// Initialize reply
 	__block WDFindInfo minInfo =
-	{ 0.0, WDLineLength(P, S.a_), S.a_ };
+	{ 0.0, S.a_, WDLineLength(P, S.a_) };
 
 	// Start recursive search
 	WDBezierSegmentRangeSplitWithBlock(S, WDRangeDefault,
@@ -1364,7 +1364,7 @@ float WDBezierSegmentLength(WDBezierSegment S)
 
 
 
-
+//*
 CGPoint WDBezierSegmentGetClosestPoint(WDBezierSegment seg, CGPoint test, float *error, float *distance)
 {
 float       delta = 0.001f;
@@ -1389,7 +1389,7 @@ for (float t = 0; t < (1.0f + delta); t += delta) {
 
 return closest;
 }
-
+//*/
 
 BOOL WDBezierSegmentGetIntersection(WDBezierSegment seg, CGPoint a, CGPoint b, float *tIntersect)
 {
