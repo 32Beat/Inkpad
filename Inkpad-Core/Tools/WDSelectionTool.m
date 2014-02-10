@@ -196,58 +196,146 @@
     }
 }
 
+
+/*
+	If touching air, start marque mode,
+	otherwise wait for next event
+	if next event is end,
+		change editmode
+	else
+	if next event is move,
+		if editmode = frame, move element (adjust selectionTransform)
+		if editmode = content, move content (adjust displayNodes)
+*/
 - (void) beginWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
-    [self selectWithEvent:event inCanvas:canvas];
+	// reset mode
+	marqueeMode_ = NO;
 
     // reset the transform
     transform_ = CGAffineTransformIdentity;
+
+
+    CGPoint P = event.location;
+
+	WDDrawingController *controller = canvas.drawingController;
+	id element = [controller hitTest:P viewScale:canvas.viewScale];
+	if ((element == nil)||([element editingMode] <= eWDEditingNone))
+	{
+		[canvas setToolOptionsView:nil];
+        [controller deselectAllObjects];
+        controller.propertyManager.ignoreSelectionChanges = YES;
+        marqueeMode_ = YES;
+	}
+
+	// Probably need only editingmode
+	mTargetElement = element;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
+- (void) moveMarqueWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	CGPoint P0 = self.initialEvent.location;
+	CGPoint P1 = event.location;
+
+	if (self.flags & WDToolSecondaryTouch || self.flags & WDToolOptionKey)
+	{
+		P0 = WDSubtractPoints(P0, WDSubtractPoints(P1, P0));
+	}
+
+	CGRect selectionRect = WDRectWithPoints(P0, P1);
+
+	canvas.marquee = [NSValue valueWithCGRect:selectionRect];
+	[canvas.drawingController selectObjectsInRect:selectionRect];
+
+	WDElement *target = [canvas.drawingController singleSelection];
+	if (target != nil)
+	{
+		[target setEditingMode:eWDEditingContent];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) moveSelectionWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	CGPoint srcP = self.initialEvent.snappedLocation;
+	CGPoint dstP = event.location;
+
+	CGPoint delta = WDSubtractPoints(dstP, srcP);
+
+	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch)
+	{ delta = WDConstrainPoint(delta); }
+
+	if ([canvas.drawing snapFlags] & kWDSnapGrid)
+	{ delta = [self offsetSelection:delta inCanvas:canvas]; }
+
+	transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
+	[canvas transformSelection:transform_];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) moveContentWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	CGPoint srcP = self.initialEvent.snappedLocation;
+	CGPoint dstP = event.snappedLocation;
+
+	CGPoint delta = WDSubtractPoints(dstP, srcP);
+
+	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
+		delta = WDConstrainPoint(delta);
+	}
+
+	transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
+
+	if ([mTargetElement isKindOfClass:[WDPath class]])
+	{
+		WDPath *path = (WDPath *)mTargetElement;
+
+		path.displayNodes = [path anyNodesSelected] ?
+		[path nodesWithSelectionTransform:transform_]:
+		[path nodesWithTransform:transform_];
+
+		path.displayClosed = path.closed;
+		[canvas invalidateSelectionView];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) moveWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
-    CGPoint initialPt = self.initialEvent.location;
+	if (marqueeMode_)
+	{
+		[self moveMarqueWithEvent:event inCanvas:canvas];
+	}
+	else
+	if (mTargetElement.editingMode & eWDEditingFrame)
+	{
+		canvas.transforming = YES;
+		canvas.transformingNode = NO;
+
+		[self moveSelectionWithEvent:event inCanvas:canvas];
+	}
+	else
+	if (mTargetElement.editingMode & eWDEditingContent)
+	{
+		canvas.transforming = YES;
+		canvas.transformingNode = YES;
+
+		[self moveContentWithEvent:event inCanvas:canvas];
+	}
+
+
+
+/*
     CGPoint initialSnapped = self.initialEvent.snappedLocation;
     CGPoint currentPt = event.location;
     CGPoint snapped = event.snappedLocation;
     CGPoint delta;
-    
-    if (marqueeMode_) {
-        CGRect selectionRect;
-        
-        if (self.flags & WDToolSecondaryTouch || self.flags & WDToolOptionKey) {
-            delta = WDSubtractPoints(initialPt, currentPt);
-            selectionRect = WDRectWithPoints(WDAddPoints(initialPt, delta), WDSubtractPoints(initialPt, delta));
-        } else {
-            selectionRect = WDRectWithPoints(initialPt, currentPt);
-       }
-        
-        canvas.marquee = [NSValue valueWithCGRect:selectionRect];
-        [canvas.drawingController selectObjectsInRect:selectionRect];
-    }
-	else
-	if ([canvas.drawingController singleSelection].editingMode & eWDEditingFrame)
-	{
-        // transform selected
-        canvas.transforming = YES;
-        canvas.transformingNode = [canvas.drawingController selectedNodes].count;
-        
-        delta = WDSubtractPoints(currentPt, initialSnapped);
-        
-        if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
-            delta = WDConstrainPoint(delta);
-        }
-        
-        if ([canvas.drawing snapFlags] & kWDSnapGrid) {
-            delta = [self offsetSelection:delta inCanvas:canvas];
-        }
-        
-        transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
-        [canvas transformSelection:transform_];
 
-	}
 	else
 	if (transformingNodes_)
 	{
@@ -333,9 +421,17 @@
         transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
         [canvas transformSelection:transform_];
     }
+*/
 }
 
-// Perhaps move to canvas...
+/*
+	Perhaps move to canvas...
+
+	TestPath could also have additional options: 
+	- start of text, alignment etc...
+	
+	updateOptionsDialog...?
+*/
 - (void) updateToolOptionsForCanvas:(WDCanvas *)canvas
 {
 	WDDrawingController *drawingMgr = canvas.drawingController;
@@ -348,17 +444,26 @@
 		{
 			mOptionsController =
 			[WDShapeOptionsController shapeControllerWithShape:selectedObject];
-
-			// TODO: present and remove properly
 			[canvas setToolOptionsView:[mOptionsController view]];
 		}
 		else
+		{
 			[canvas setToolOptionsView:nil];
+			mOptionsController = nil;
+		}
 	}
 }
 
 - (void) endWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
+	
+
+	if (!self.moved)
+	{
+		[self selectWithEvent:event inCanvas:canvas];
+		return;
+	}
+
     if (marqueeMode_) {
         marqueeMode_ = NO;
         canvas.marquee = nil;
@@ -441,7 +546,8 @@
 
 - (CGPoint) offsetSelection:(CGPoint)originalDelta inCanvas:(WDCanvas *)canvas
 {
-    CGRect          selectionBounds = CGRectOffset([canvas.drawingController selectionBounds], originalDelta.x, originalDelta.y);
+    CGRect selectionBounds =
+	CGRectOffset([canvas.drawingController selectionBounds], originalDelta.x, originalDelta.y);
     NSMutableArray  *deltas = [NSMutableArray array];
     CGPoint         delta;
     

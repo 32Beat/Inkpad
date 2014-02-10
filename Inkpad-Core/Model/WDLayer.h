@@ -53,6 +53,8 @@
 - (void) bringForward:(NSSet *)sortedElements;
 - (void) bringToFront:(NSArray *)sortedElements;
 
+- (WDElement *) hitTest:(CGPoint)pt viewScale:(float)viewScale;
+
 - (void) invalidateThumbnail;
 
 // draw the layer contents scaled to fit within bounds

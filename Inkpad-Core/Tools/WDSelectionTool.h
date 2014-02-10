@@ -16,6 +16,7 @@
 @class WDTextPath;
 
 @interface WDSelectionTool : WDTool {
+
     CGAffineTransform       transform_;
     BOOL                    marqueeMode_;
     BOOL                    groupSelect_;
@@ -41,9 +42,11 @@
     BOOL                    nodeWasSelected_;
     BOOL                    objectWasSelected_;
     WDElement               *lastTappedObject_;
+    WDElement *mTargetElement;
 
 	id mOptionsController;
 }
+
 
 @property (nonatomic, assign) BOOL groupSelect;
 

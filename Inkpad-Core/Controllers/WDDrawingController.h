@@ -157,6 +157,7 @@
 - (WDPickResult *) snappedPoint:(CGPoint)pt viewScale:(float)viewScale snapFlags:(int)flags;
 - (WDPickResult *) inspectableUnderPoint:(CGPoint)pt viewScale:(float)viewScale;
 - (WDPickResult *) objectUnderPoint:(CGPoint)pt viewScale:(float)viewScale;
+- (WDElement *) hitTest:(CGPoint)pt viewScale:(float)viewScale;
 
 // can do methods
 - (BOOL) canPaste;

@@ -240,6 +240,25 @@ WDBezierSegmentMakeWithNodes(WDBezierNode *a, WDBezierNode *b)
 #pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////
 /*
+	WDBezierSegmentIsPoint
+	----------------------
+	Test whether segment represents a singular point
+*/
+
+BOOL WDBezierSegmentIsPoint(WDBezierSegment S)
+{
+	const CGPoint *P = &S.a_;
+	return
+	(P[0].x == P[1].x)&&
+	(P[0].y == P[1].y)&&
+	(P[1].x == P[2].x)&&
+	(P[1].y == P[2].y)&&
+	(P[2].x == P[3].x)&&
+	(P[2].y == P[3].y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
 	WDBezierSegmentIsLineSegment
 	----------------------------
 	Test whether segment represents a line between endpoints
@@ -587,8 +606,8 @@ BOOL WDBezierSegmentControlBoundsIntersectsRect(WDBezierSegment S, CGRect R)
 BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect R)
 {
 	// If either of the end points is inside R, then the curve intersects
-	if (CGRectHoldsPoint(R, S.b_)||
-		CGRectHoldsPoint(R, S.a_))
+	if (CGRectIncludesPoint(R, S.b_)||
+		CGRectIncludesPoint(R, S.a_))
 		return YES;
 
 	// If curvebounds still intersects with rect, then continue recursively
@@ -597,9 +616,14 @@ BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect R)
 		WDBezierSegment Sn;
 		WDBezierSegmentSplit(S, &S, &Sn);
 
-		return
-		WDBezierSegmentCurveIntersectsRect(Sn, R)||
-		WDBezierSegmentCurveIntersectsRect(S, R);
+		// Make sure splitting was possible within machine precision
+		if (!WDBezierSegmentIsPoint(S)&&
+			!WDBezierSegmentIsPoint(Sn))
+		{
+			return
+			WDBezierSegmentCurveIntersectsRect(Sn, R)||
+			WDBezierSegmentCurveIntersectsRect(S, R);
+		}
 	}
 
 	return NO;
@@ -1065,7 +1089,7 @@ static inline double _Derivative2
 	return 2*A*t+B;
 }
 
-CGPoint WDBezierSegmentDerivativeAtT(WDBezierSegment S, CGFloat t)
+CGPoint WDBezierSegment1stDerivativeAtT(WDBezierSegment S, CGFloat t)
 {
 	const CGPoint *P = &S.a_;
 	return (CGPoint){
@@ -1073,7 +1097,7 @@ CGPoint WDBezierSegmentDerivativeAtT(WDBezierSegment S, CGFloat t)
 		_Derivative1(P[0].y, P[1].y, P[2].y, P[3].y, t) };
 }
 
-CGPoint WDBezierSegmentSecondDerivativeAtT(WDBezierSegment S, CGFloat t)
+CGPoint WDBezierSegment2ndDerivativeAtT(WDBezierSegment S, CGFloat t)
 {
 	const CGPoint *P = &S.a_;
 	return (CGPoint){
@@ -1085,11 +1109,11 @@ CGPoint WDBezierSegmentSecondDerivativeAtT(WDBezierSegment S, CGFloat t)
 
 double WDBezierSegmentCurvatureAtT(WDBezierSegment S, CGFloat t)
 {
-	CGPoint D1 = WDBezierSegmentDerivativeAtT(S, t);
+	CGPoint D1 = WDBezierSegment1stDerivativeAtT(S, t);
 	double D = D1.x*D1.x + D1.y*D1.y;
 	if (D > 0.0)
 	{
-		CGPoint D2 = WDBezierSegmentSecondDerivativeAtT(S, t);
+		CGPoint D2 = WDBezierSegment2ndDerivativeAtT(S, t);
 		double N = D1.x * D2.y - D1.y * D2.x;
 
 		return -N / pow(D, 1.5);

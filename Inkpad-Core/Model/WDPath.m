@@ -157,8 +157,14 @@ NSString *WDClosedKey = @"WDClosedKey";
 - (NSArray *) segmentNodes
 { return closed_ ? [self closedNodes] : [self orderedNodes]; }
 
+
 - (NSArray *) displayNodes
-{ return displayNodes_ ? displayNodes_ : [self nodes]; }
+{
+	if ([self editingMode] & eWDEditingContent)
+	{ return displayNodes_ ? displayNodes_ : [self nodes]; }
+
+	return [self nodes];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -685,6 +691,7 @@ NSString *WDClosedKey = @"WDClosedKey";
         [self.superpath invalidatePath];
     }
 
+	self.displayNodes = nil;
 	
     bounds_ = CGRectNull;
 	[self invalidateBounds];
@@ -1166,10 +1173,9 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     if ([nodes_ isEqualToArray:nodes]) {
         return;
     }
-    
-    [self cacheDirtyBounds];
-    
     [[self.undoManager prepareWithInvocationTarget:self] setNodes:nodes_];
+
+    [self cacheDirtyBounds];
     
     nodes_ = nodes;
     

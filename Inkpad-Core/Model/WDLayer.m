@@ -326,6 +326,24 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (WDElement *) hitTest:(CGPoint)P viewScale:(float)viewScale
+{
+	if (self.editable)
+	{
+		for (WDElement *element in [self.elements reverseObjectEnumerator])
+		{
+			CGRect B = [element styleBounds];
+			
+			if (CGRectContainsPoint(B, P))
+			{ return element; }
+		}
+	}
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 #pragma mark Render Area
 ////////////////////////////////////////////////////////////////////////////////

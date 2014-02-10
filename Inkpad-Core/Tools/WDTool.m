@@ -125,11 +125,11 @@
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event inCanvas:(WDCanvas *)canvas
 {
-    if ([event allTouches].count == 1) {
+	if ([event allTouches].count == 1) {
         primaryTouch_ = [touches anyObject];
         
+		moved_ = NO;
         primaryTouchEnded_ = NO;
-        moved_ = NO;
         flags_ = WDToolDefault;
         
         // the primary touch has begun

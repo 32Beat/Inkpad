@@ -1890,6 +1890,25 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     return [WDPickResult pickResult];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDElement *) hitTest:(CGPoint)pt viewScale:(float)viewScale
+{
+	if (drawing_.isolateActiveLayer)
+	{ return [drawing_.activeLayer hitTest:pt viewScale:viewScale]; }
+
+	for (WDLayer *layer in [drawing_.layers reverseObjectEnumerator])
+	{
+		WDElement *element = [layer hitTest:pt viewScale:viewScale];
+		if (element != nil)
+		{ return element; }
+	}
+
+	return nil;
+}
+
 - (WDPickResult *) objectUnderPoint:(CGPoint)pt viewScale:(float)viewScale
 {
     WDPickResult    *pickResult;
