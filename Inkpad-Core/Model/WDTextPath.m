@@ -358,6 +358,12 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
     return CGPointZero;
 }
 
+- (void) setDisplayNodes:(id)nodes
+{
+	[super setDisplayNodes:nodes];
+	needsLayout_ = YES;
+}
+
 - (void) invalidatePath
 {
     [super invalidatePath];
@@ -366,7 +372,7 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
 
 - (float) getSegments:(WDBezierSegment *)segments andLengths:(float *)lengths naturalSpace:(BOOL)transform
 {
-    NSArray             *nodes = reversed_ ? [self reversedNodes] : nodes_;
+    NSArray             *nodes = [self orderedDisplayNodes];
     NSInteger           numNodes = closed_ ? (nodes.count + 1) : nodes.count;
     WDBezierNode        *prev, *curr;
     CGAffineTransform   inverse = transform ? CGAffineTransformInvert(transform_) : CGAffineTransformIdentity;
@@ -721,8 +727,22 @@ done:
     return paths;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
+- (void) glDrawContentWithTransform:(CGAffineTransform)viewTransform
+{
+    [self layout];
+    
+	for (id pathRef in glyphs_)
+	{
+		CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
+		WDGLRenderCGPathRef(glyphPath, &viewTransform);
+	}
 
+	[super glDrawContentWithTransform:viewTransform];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) glDrawContentControlsWithTransform:(CGAffineTransform)viewTransform
 {
@@ -736,12 +756,15 @@ done:
     BOOL        selected = NO;
     UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
     
-    if (!closed_) {
-        NSArray *nodes = reversed_ ? [self reversedNodes] : nodes_;
-        WDBezierNode *lastNode = [nodes lastObject];
+    if (!closed_)
+	{
+        NSArray *nodes = [self displayNodes];
+        WDBezierNode *lastNode = reversed_ ? [nodes firstObject] : [nodes lastObject];
         overflowPoint = CGPointApplyAffineTransform(lastNode.anchorPoint, viewTransform);
         selected = lastNode.selected;
-    } else {
+    }
+	else
+	{
         CGPoint tangent;
         CGPoint startBarAttachment =
 		[self getPointOnPathAtDistance:startOffset_ tangentVector:&tangent transformed:YES];
@@ -759,6 +782,8 @@ done:
     // draw +
 	WDGLDrawOverflowMarker(overflowPoint);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
@@ -859,10 +884,10 @@ done:
     
     [self layout];
     
-    for (id pathRef in glyphs_) {
-        CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
-        WDGLRenderCGPathRef(glyphPath, &glTransform);
-    }
+	for (id pathRef in glyphs_) {
+		CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
+		WDGLRenderCGPathRef(glyphPath, &glTransform);
+	}
 }
 
 - (BOOL) isErasable

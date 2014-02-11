@@ -96,6 +96,8 @@
 - (NSMutableArray *) reversedNodes;
 - (NSSet *) nodesInRect:(CGRect)rect;
 
+- (NSArray *) orderedDisplayNodes;
+
 - (NSMutableArray *) nodesWithTransform:(CGAffineTransform)T;
 - (NSMutableArray *) nodesWithSelectionTransform:(CGAffineTransform)T;
 

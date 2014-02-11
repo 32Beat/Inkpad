@@ -327,16 +327,20 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDElement *) hitTest:(CGPoint)P viewScale:(float)viewScale
+- (WDElement *) findContent:(CGRect)touchR
 {
 	if (self.editable)
 	{
 		for (WDElement *element in [self.elements reverseObjectEnumerator])
 		{
-			CGRect B = [element styleBounds];
-			
-			if (CGRectContainsPoint(B, P))
-			{ return element; }
+			if ([element editingMode] >= 0)
+			{
+				CGRect B = [element styleBounds];
+				if (CGRectIntersectsRect(touchR, B))
+				{
+					return element;
+				}
+			}
 		}
 	}
 

@@ -15,6 +15,8 @@
 @class WDBezierNode;
 @class WDTextPath;
 
+#define kWDTouchRadius 	11.0
+
 @interface WDSelectionTool : WDTool {
 
     CGAffineTransform       transform_;

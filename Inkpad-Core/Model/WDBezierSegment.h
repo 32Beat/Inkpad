@@ -47,16 +47,19 @@ WDBezierSegmentMakeWithNodes(WDBezierNode *a, WDBezierNode *b);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline BOOL WDBezierSegmentIsLineSegment(WDBezierSegment S);
+inline BOOL WDBezierSegmentIsPoint(const WDBezierSegment *S);
+// Test whether segment represents a singular point
+
+inline BOOL WDBezierSegmentIsLineSegment(const WDBezierSegment *S);
 // Test whether segment represents a line between endpoints
 
-inline BOOL WDBezierSegmentIsCollinear(WDBezierSegment S);
+inline BOOL WDBezierSegmentIsCollinear(const WDBezierSegment *S);
 // Test whether segment points form a line
 
-inline BOOL WDBezierSegmentIsContained(WDBezierSegment S);
+inline BOOL WDBezierSegmentIsContained(const WDBezierSegment *S);
 // Test whether controlpoints fall within endpoints
 
-inline BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S);
+inline BOOL WDBezierSegmentIsLineSegmentShape(const WDBezierSegment *S);
 // Test whether segment is collinear and contained
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +67,7 @@ inline BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S);
 extern const CGFloat kDefaultFlatness;
 
 inline BOOL WDBezierSegmentIsFlat
-(WDBezierSegment S, CGFloat deviceTolerance);
+(const WDBezierSegment *S, CGFloat deviceTolerance);
 // Test whether segment can be approximated by line between endpoints
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,8 +144,8 @@ CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S);
 
 typedef struct
 {
-	CGFloat t; 	// t of resultpoint
 	CGPoint P; 	// resultpoint
+	CGFloat t; 	// t of resultpoint
 	CGFloat D; 	// distance to targetpoint
 }
 WDFindInfo;

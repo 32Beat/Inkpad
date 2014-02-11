@@ -1894,14 +1894,14 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDElement *) hitTest:(CGPoint)pt viewScale:(float)viewScale
+- (WDElement *) findElementInRect:(CGRect)R
 {
 	if (drawing_.isolateActiveLayer)
-	{ return [drawing_.activeLayer hitTest:pt viewScale:viewScale]; }
+	{ return [drawing_.activeLayer findContent:R]; }
 
 	for (WDLayer *layer in [drawing_.layers reverseObjectEnumerator])
 	{
-		WDElement *element = [layer hitTest:pt viewScale:viewScale];
+		WDElement *element = [layer findContent:R];
 		if (element != nil)
 		{ return element; }
 	}

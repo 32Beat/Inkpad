@@ -245,16 +245,16 @@ WDBezierSegmentMakeWithNodes(WDBezierNode *a, WDBezierNode *b)
 	Test whether segment represents a singular point
 */
 
-BOOL WDBezierSegmentIsPoint(WDBezierSegment S)
+BOOL WDBezierSegmentIsPoint(const WDBezierSegment *S)
 {
-	const CGPoint *P = &S.a_;
+	const CGPoint *P = &S->a_;
 	return
+	(P[0].x == P[3].x)&&
+	(P[0].y == P[3].y)&&
+	(P[0].x == P[2].x)&&
+	(P[0].y == P[2].y)&&
 	(P[0].x == P[1].x)&&
-	(P[0].y == P[1].y)&&
-	(P[1].x == P[2].x)&&
-	(P[1].y == P[2].y)&&
-	(P[2].x == P[3].x)&&
-	(P[2].y == P[3].y);
+	(P[0].y == P[1].y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,9 +268,9 @@ BOOL WDBezierSegmentIsPoint(WDBezierSegment S)
 	and where t can traverse nonlinearly along the line.
 */
 
-BOOL WDBezierSegmentIsLineSegment(WDBezierSegment S)
+BOOL WDBezierSegmentIsLineSegment(const WDBezierSegment *S)
 {
-	const CGPoint *P = &S.a_;
+	const CGPoint *P = &S->a_;
 	return
 	(P[0].x == P[1].x)&&
 	(P[0].y == P[1].y)&&
@@ -290,9 +290,9 @@ BOOL WDBezierSegmentIsLineSegment(WDBezierSegment S)
 	p0, p2, p3 would fail if p0 == p3
 */
 
-BOOL WDBezierSegmentIsCollinear(WDBezierSegment S)
+BOOL WDBezierSegmentIsCollinear(const WDBezierSegment *S)
 {
-	const CGPoint *P = &S.a_;
+	const CGPoint *P = &S->a_;
 	return
 	WDCollinear(P[0], P[1], P[2])&&
 	WDCollinear(P[1], P[2], P[3]);
@@ -309,12 +309,12 @@ BOOL WDBezierSegmentIsCollinear(WDBezierSegment S)
 	it doesn't have local min or max values.
 */
 
-BOOL WDBezierSegmentIsContained(WDBezierSegment S)
+BOOL WDBezierSegmentIsContained(const WDBezierSegment *S)
 {
-	CGRect R = WDLineBounds(S.a_, S.b_);
+	CGRect R = WDLineBounds(S->a_, S->b_);
 	return
-	CGRectIncludesPoint(R, S.out_)&&
-	CGRectIncludesPoint(R, S.in_);
+	CGRectIncludesPoint(R, S->out_)&&
+	CGRectIncludesPoint(R, S->in_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,7 +324,7 @@ BOOL WDBezierSegmentIsContained(WDBezierSegment S)
 	Test whether segment renders like a straight line between endpoints
 */
 
-BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S)
+BOOL WDBezierSegmentIsLineSegmentShape(const WDBezierSegment *S)
 {
 	return
 	WDBezierSegmentIsCollinear(S)&&
@@ -354,9 +354,9 @@ BOOL WDBezierSegmentIsLineSegmentShape(WDBezierSegment S)
 
 const CGFloat kDefaultFlatness = 1.5; // 1.5 pixels both ways = 3
 
-BOOL WDBezierSegmentIsFlat(WDBezierSegment S, CGFloat deviceTolerance)
+BOOL WDBezierSegmentIsFlat(const WDBezierSegment *S, CGFloat deviceTolerance)
 {
-	const CGPoint *P = &S.a_;
+	const CGPoint *P = &S->a_;
 	if (fabs(P[1].x - P[0].x) > deviceTolerance) return NO;
 	if (fabs(P[1].y - P[0].y) > deviceTolerance) return NO;
 	if (fabs(P[2].x - P[3].x) > deviceTolerance) return NO;
@@ -617,8 +617,8 @@ BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect R)
 		WDBezierSegmentSplit(S, &S, &Sn);
 
 		// Make sure splitting was possible within machine precision
-		if (!WDBezierSegmentIsPoint(S)&&
-			!WDBezierSegmentIsPoint(Sn))
+		if (!WDBezierSegmentIsPoint(&S)&&
+			!WDBezierSegmentIsPoint(&Sn))
 		{
 			return
 			WDBezierSegmentCurveIntersectsRect(Sn, R)||
@@ -713,6 +713,16 @@ CGPoint WDBezierSegmentSplitAtT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentSplit
+	--------------------
+	Split segment halfway into a left and right segment
+	
+	Note that there is a limit to how many times a segment 
+	can be split, dictated by machine precision for CGFloat. 
+	If WDBezierSegmentIsPoint returns true for either of L or R, 
+	then splitting will no longer have an effect.
+*/
 
 CGPoint WDBezierSegmentSplit
 (WDBezierSegment S, WDBezierSegment *L, WDBezierSegment *R)
@@ -730,6 +740,7 @@ CGPoint WDBezierSegmentSplit
 
 	*L = WDBezierSegmentMake(S.a_, A, D, F);
 	*R = WDBezierSegmentMake(F, E, C, S.b_);
+
 	return F;
 }
 
@@ -858,7 +869,7 @@ CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S)
 		{
 			// Splitting guarantees containment eventually
 			// If not contained yet, split further
-			if (!WDBezierSegmentIsContained(subSegment))
+			if (!WDBezierSegmentIsContained(&subSegment))
 			{ return YES; }
 
 			// Otherwise expand bounds
@@ -888,8 +899,8 @@ CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S)
 
 WDFindInfo WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 {
-	CGFloat minT = 0.0;
 	CGPoint minP = S.a_;
+	CGFloat minT = 0.0;
 	CGFloat minD = WDLineLength(P, S.a_);
 
 	CGFloat d = 0.5;
@@ -914,7 +925,7 @@ WDFindInfo WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 	while (fabs(d) > 0.0001);
 
 	return (WDFindInfo)
-	{ minT, minP, minD };
+	{ minP, minT, minD };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -927,9 +938,9 @@ WDFindInfo WDBezierSegmentFindClosestPointOnSlope(WDBezierSegment S, CGPoint P)
 
 	typedef struct
 	{
+		CGPoint P; 	// resultpoint
 		CGFloat t; 	// t of resultpoint
 		CGFloat D; 	// distance to targetpoint
-		CGPoint P; 	// resultpoint
 	}
 	WDFindInfo;
 */
@@ -938,14 +949,14 @@ WDFindInfo WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P)
 {
 	// Initialize reply
 	__block WDFindInfo minInfo =
-	{ 0.0, S.a_, WDLineLength(P, S.a_) };
+	{ S.a_, 0.0, WDLineLength(P, S.a_) };
 
 	// Start recursive search
 	WDBezierSegmentRangeSplitWithBlock(S, WDRangeDefault,
 		^CGFloat(WDBezierSegment subSegment, WDRange subRange)
 		{
 			// Subdivide until segment is contained
-			if (!WDBezierSegmentIsContained(subSegment))
+			if (!WDBezierSegmentIsContained(&subSegment))
 			{ return 0.5; }
 
 			// Find closest point on slope
@@ -1146,7 +1157,7 @@ double depth)
 	if (!CGRectContainsPoint(bbox, testPoint))
 		return NO;
 	else
-	if (WDBezierSegmentIsLineSegmentShape(seg))
+	if (WDBezierSegmentIsLineSegmentShape(&seg))
 	{
 		CGPoint s = WDSubtractPoints(seg.b_, seg.a_);
 		CGPoint v = WDSubtractPoints(testPoint, seg.a_);
@@ -1259,7 +1270,7 @@ return WDBezierSegmentFindPointOnSegment_R(seg, testPoint, tolerance, nearestPoi
 
 CGPoint WDBezierSegmentPointAndTangentAtDistance(WDBezierSegment seg, float distance, CGPoint *tangent, float *curvature)
 {
-if (WDBezierSegmentIsLineSegment(seg)) {
+if (WDBezierSegmentIsLineSegment(&seg)) {
 	float t = distance / WDDistance(seg.a_, seg.b_);
 	CGPoint point = WDMultiplyPointScalar(WDSubtractPoints(seg.b_, seg.a_), t);
 	point = WDAddPoints(seg.a_, point);

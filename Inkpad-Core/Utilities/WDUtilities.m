@@ -285,6 +285,9 @@ CGPoint WDConstrainPoint(CGPoint delta)
     return delta;
 }
 
+CGRect WDRectWithRadius(CGPoint c, CGFloat radius)
+{ return (CGRect){ c.x-radius, c.y-radius, 2*radius, 2*radius }; }
+
 CGRect WDRectFromPoint(CGPoint a, float width, float height)
 {
     return CGRectMake(a.x - (width / 2), a.y - (height / 2), width, height);

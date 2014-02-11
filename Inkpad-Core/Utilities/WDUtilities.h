@@ -61,6 +61,7 @@ CGPoint WDSharpPointInContext(CGPoint pt, CGContextRef ctx);
 // keep point at 90 degree angles
 CGPoint WDConstrainPoint(CGPoint pt);
 
+CGRect WDRectWithRadius(CGPoint c, CGFloat radius);
 CGRect WDRectFromPoint(CGPoint a, float width, float height);
 
 CGFloat WDCollinearity(CGPoint a, CGPoint b, CGPoint c);

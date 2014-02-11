@@ -75,7 +75,17 @@
 - (void) selectWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
     WDDrawingController *controller = canvas.drawingController;
-    
+
+	if (mTargetElement != nil)
+	{
+		if (mTargetElement == [controller singleSelection])
+		{
+
+		}
+	}
+
+
+
     activeNode_ = nil;
     activeTextHandle_ = kWDEther;
     activeGradientHandle_ = kWDEther;
@@ -212,15 +222,20 @@
 	// reset mode
 	marqueeMode_ = NO;
 
-    // reset the transform
+    // reset transform
     transform_ = CGAffineTransformIdentity;
 
-
+	// Get event location
     CGPoint P = event.location;
+	// Define touch rect in document scale
+	CGRect touchR = WDRectWithRadius(P, kWDTouchRadius/canvas.viewScale);
 
+	// Ask controller to find first element with intersecting stylebounds
 	WDDrawingController *controller = canvas.drawingController;
-	id element = [controller hitTest:P viewScale:canvas.viewScale];
-	if ((element == nil)||([element editingMode] <= eWDEditingNone))
+	id element = [controller findElementInRect:touchR];
+	// TODO: redirect to include editingmode mask
+
+	if (element == nil)
 	{
 		[canvas setToolOptionsView:nil];
         [controller deselectAllObjects];
@@ -230,77 +245,6 @@
 
 	// Probably need only editingmode
 	mTargetElement = element;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) moveMarqueWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
-{
-	CGPoint P0 = self.initialEvent.location;
-	CGPoint P1 = event.location;
-
-	if (self.flags & WDToolSecondaryTouch || self.flags & WDToolOptionKey)
-	{
-		P0 = WDSubtractPoints(P0, WDSubtractPoints(P1, P0));
-	}
-
-	CGRect selectionRect = WDRectWithPoints(P0, P1);
-
-	canvas.marquee = [NSValue valueWithCGRect:selectionRect];
-	[canvas.drawingController selectObjectsInRect:selectionRect];
-
-	WDElement *target = [canvas.drawingController singleSelection];
-	if (target != nil)
-	{
-		[target setEditingMode:eWDEditingContent];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) moveSelectionWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
-{
-	CGPoint srcP = self.initialEvent.snappedLocation;
-	CGPoint dstP = event.location;
-
-	CGPoint delta = WDSubtractPoints(dstP, srcP);
-
-	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch)
-	{ delta = WDConstrainPoint(delta); }
-
-	if ([canvas.drawing snapFlags] & kWDSnapGrid)
-	{ delta = [self offsetSelection:delta inCanvas:canvas]; }
-
-	transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
-	[canvas transformSelection:transform_];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) moveContentWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
-{
-	CGPoint srcP = self.initialEvent.snappedLocation;
-	CGPoint dstP = event.snappedLocation;
-
-	CGPoint delta = WDSubtractPoints(dstP, srcP);
-
-	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
-		delta = WDConstrainPoint(delta);
-	}
-
-	transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
-
-	if ([mTargetElement isKindOfClass:[WDPath class]])
-	{
-		WDPath *path = (WDPath *)mTargetElement;
-
-		path.displayNodes = [path anyNodesSelected] ?
-		[path nodesWithSelectionTransform:transform_]:
-		[path nodesWithTransform:transform_];
-
-		path.displayClosed = path.closed;
-		[canvas invalidateSelectionView];
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -424,6 +368,80 @@
 */
 }
 
+
+
+
+- (void) moveMarqueWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	CGPoint P0 = self.initialEvent.location;
+	CGPoint P1 = event.location;
+
+	if (self.flags & WDToolSecondaryTouch || self.flags & WDToolOptionKey)
+	{
+		P0 = WDSubtractPoints(P0, WDSubtractPoints(P1, P0));
+	}
+
+	CGRect selectionRect = WDRectWithPoints(P0, P1);
+
+	canvas.marquee = [NSValue valueWithCGRect:selectionRect];
+	[canvas.drawingController selectObjectsInRect:selectionRect];
+
+	WDElement *target = [canvas.drawingController singleSelection];
+	if (target != nil)
+	{
+		[target setEditingMode:eWDEditingContent];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) moveSelectionWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	CGPoint srcP = self.initialEvent.snappedLocation;
+	CGPoint dstP = event.location;
+
+	CGPoint delta = WDSubtractPoints(dstP, srcP);
+
+	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch)
+	{ delta = WDConstrainPoint(delta); }
+
+	if ([canvas.drawing snapFlags] & kWDSnapGrid)
+	{ delta = [self offsetSelection:delta inCanvas:canvas]; }
+
+	transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
+	[canvas transformSelection:transform_];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) moveContentWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	CGPoint srcP = self.initialEvent.snappedLocation;
+	CGPoint dstP = event.snappedLocation;
+
+	CGPoint delta = WDSubtractPoints(dstP, srcP);
+
+	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
+		delta = WDConstrainPoint(delta);
+	}
+
+	transform_ = CGAffineTransformMakeTranslation(delta.x, delta.y);
+
+	if ([mTargetElement isKindOfClass:[WDPath class]])
+	{
+		WDPath *path = (WDPath *)mTargetElement;
+
+		path.displayNodes = [path anyNodesSelected] ?
+		[path nodesWithSelectionTransform:transform_]:
+		[path nodesWithTransform:transform_];
+
+		path.displayClosed = path.closed;
+		[canvas invalidateSelectionView];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 	Perhaps move to canvas...
 
@@ -456,11 +474,10 @@
 
 - (void) endWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
-	
-
 	if (!self.moved)
 	{
 		[self selectWithEvent:event inCanvas:canvas];
+		[self updateToolOptionsForCanvas:canvas];
 		return;
 	}
 
@@ -472,8 +489,7 @@
         return;
     }
 
-	[self updateToolOptionsForCanvas:canvas];
-	
+
     canvas.transforming = canvas.transformingNode = NO;
     
     if (transformingGradient_) {
@@ -531,6 +547,10 @@
         }  
     }
 }
+
+
+
+
 
 - (NSValue *) snapCorner:(CGPoint)pt inCanvas:(WDCanvas *)canvas
 {

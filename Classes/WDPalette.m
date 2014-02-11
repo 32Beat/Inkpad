@@ -53,7 +53,13 @@ NSString *WDPaletteMovedNotification = @"WDPaletteMovedNotification";
     self.userInteractionEnabled = YES;
     self.exclusiveTouch = YES;
     self.multipleTouchEnabled = NO;
-    
+
+	[self setAutoresizingMask:
+	UIViewAutoresizingFlexibleTopMargin|
+	UIViewAutoresizingFlexibleLeftMargin|
+	UIViewAutoresizingFlexibleRightMargin|
+	UIViewAutoresizingFlexibleBottomMargin];
+
     return self;
 }
 
@@ -113,11 +119,9 @@ NSString *WDPaletteMovedNotification = @"WDPaletteMovedNotification";
 
 - (void) bringOnScreen
 {
-    if (CGRectContainsRect(self.superview.bounds, self.frame)) {
-        return;
-    }
-    
-    [self constrainOriginToSuperview:self.frame.origin];
+	// If not fully in superview, constrain to superview
+    if (!CGRectContainsRect(self.superview.bounds, self.frame))
+	{ [self constrainOriginToSuperview:self.frame.origin]; }
 }
 
 + (WDPalette *) paletteWithBaseView:(UIView *)view defaultsName:(NSString *)name
@@ -136,7 +140,7 @@ NSString *WDPaletteMovedNotification = @"WDPaletteMovedNotification";
     WDPalette *palette = [[WDPalette alloc] initWithFrame:frame];
     palette.defaultsName = name;
     [palette addSubview:view];
-    
+
     return palette;
 }
 

@@ -157,7 +157,9 @@
 - (WDPickResult *) snappedPoint:(CGPoint)pt viewScale:(float)viewScale snapFlags:(int)flags;
 - (WDPickResult *) inspectableUnderPoint:(CGPoint)pt viewScale:(float)viewScale;
 - (WDPickResult *) objectUnderPoint:(CGPoint)pt viewScale:(float)viewScale;
-- (WDElement *) hitTest:(CGPoint)pt viewScale:(float)viewScale;
+
+// DrawingController should have no sense for viewScale
+- (WDElement *) findElementInRect:(CGRect)R;
 
 // can do methods
 - (BOOL) canPaste;

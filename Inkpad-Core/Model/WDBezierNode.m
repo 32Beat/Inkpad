@@ -668,6 +668,11 @@ NSLog(@"%@",[self description]);
 
 @implementation WDBezierNode (GLRendering)
 
+- (void) glDrawWithTransform:(CGAffineTransform)transform
+{
+
+}
+
 - (void) drawGLWithViewTransform:(CGAffineTransform)transform
 	color:(UIColor *)color
 {

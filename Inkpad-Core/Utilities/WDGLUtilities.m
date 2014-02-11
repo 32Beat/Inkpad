@@ -615,7 +615,7 @@ void WDGLQueueAddSegment(WDBezierSegment S)
 		^BOOL(WDBezierSegment subSegment)
 		{
 			// If not flat enough, split further
-			if (!WDBezierSegmentIsFlat(subSegment, kDefaultFlatness))
+			if (!WDBezierSegmentIsFlat(&subSegment, kDefaultFlatness))
 			{ return YES; }
 
 			// Otherwise add line to point

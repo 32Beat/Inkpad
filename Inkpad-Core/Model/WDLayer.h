@@ -53,7 +53,7 @@
 - (void) bringForward:(NSSet *)sortedElements;
 - (void) bringToFront:(NSArray *)sortedElements;
 
-- (WDElement *) hitTest:(CGPoint)pt viewScale:(float)viewScale;
+- (WDElement *) findContent:(CGRect)touchR;
 
 - (void) invalidateThumbnail;
 

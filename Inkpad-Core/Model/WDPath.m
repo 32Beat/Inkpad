@@ -166,6 +166,21 @@ NSString *WDClosedKey = @"WDClosedKey";
 	return [self nodes];
 }
 
+- (NSArray *) orderedDisplayNodes
+{
+	NSArray *nodes = [self displayNodes];
+	if (reversed_)
+	{
+		NSMutableArray *reversed = [NSMutableArray array];
+		
+		for (WDBezierNode *node in [nodes reverseObjectEnumerator])
+		{ [reversed addObject:[node flippedNode]]; }
+		
+		return reversed;
+	}
+
+	return nodes;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1025,13 +1040,14 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	CGPathRelease(framePath);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
-	NSArray *displayNodes = [self displayNodes];
-
-	if (displayNodes != nil)
-	{ WDGLRenderPathWithNodes(displayNodes, T); }
+	WDGLRenderPathWithNodes([self displayNodes], T);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) glDrawContentControlsWithTransform:(CGAffineTransform)T
 {
@@ -1039,14 +1055,18 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	NSArray *nodes = [self displayNodes];
 
 	int n, total = nodes.count;
-	if ((nodes.count != 0)&&
+
+	// Closed nodes may have repeated entry
+	if ((nodes.count > 1)&&
 		(nodes.firstObject == nodes.lastObject))
 		{ total -= 1; }
 
+	// Draw nodes
 	for (n=0; n!=total; n++)
 	{ [nodes[n] drawGLWithViewTransform:T color:color]; }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
@@ -2136,7 +2156,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 		WDBezierSegmentSplitWithBlock(S,
 		^BOOL(WDBezierSegment subSegment)
 		{
-			if (WDBezierSegmentIsFlat(subSegment, kDefaultFlatness))
+			if (WDBezierSegmentIsFlat(&subSegment, kDefaultFlatness))
 			{
 				[flatNodes addObject:
 				[WDBezierNode bezierNodeWithAnchorPoint:subSegment.b_]];
