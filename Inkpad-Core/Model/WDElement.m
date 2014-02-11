@@ -408,12 +408,39 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) increaseEditingMode
+{
+	WDEditingMode mode = mEditingMode << 1;
+
+	if ((mode==0) || (mode > eWDEditingStyle))
+	{ mode = eWDEditingFrame; }
+
+	[self setEditingMode:mode];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark OpenGL Rendering
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) framePath
-{ return nil; }
+{
+	return _framePath ? _framePath :
+	(_framePath = [self createFramePath]);
+}
+
+- (CGPathRef) createFramePath
+{ return CGPathCreateWithRect([self styleBounds], nil); }
+
+- (void) flushFramePath
+{
+	if (_framePath != nil)
+	{
+		CGPathRelease(_framePath);
+		_framePath = nil;
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -78,6 +78,8 @@ typedef enum {
 {
 	WDEditingMode mEditingMode;
 
+	CGPathRef _framePath;
+
 	// Cached info
 	CGRect mStyleBounds;
 	CGRect mShadowBounds;
@@ -134,6 +136,7 @@ typedef enum {
 
 - (WDEditingMode) editingMode;
 - (void) setEditingMode:(WDEditingMode)mode;
+- (void) increaseEditingMode;
 
 // OpenGL-based selection rendering
 - (void) glDrawWithTransform:(CGAffineTransform)T;

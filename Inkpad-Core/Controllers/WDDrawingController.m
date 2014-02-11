@@ -429,6 +429,8 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 
 - (void) selectObject:(WDElement *)element
 {
+	// TODO: make compound path a descendant of group or something similar
+
     if ([element isKindOfClass:[WDCompoundPath class]]) {
         // if the compound path is selected, its subpaths ain't
         for (WDPath *path in ((WDCompoundPath *)element).subpaths) {
@@ -443,12 +445,22 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
             [selectedObjects_ removeObject:path];
         }
     }
-    
-    [selectedObjects_ addObject:element];
 
-    [self deselectAllNodes];
-    
-    [self notifySelectionChanged];
+	if (![self isSelected:element])
+	{
+		[selectedObjects_ addObject:element];
+		if ([self selectedObjects].count == 1)
+			[element setEditingMode:eWDEditingFrame];
+		else
+		{
+			for (WDElement *object in [self selectedObjects])
+			{ [object setEditingMode:eWDEditingNone]; }
+		}
+
+		[self deselectAllNodes];
+		
+		[self notifySelectionChanged];
+	}
 }
 
 - (void) selectObjects:(NSArray *)elements

@@ -326,6 +326,7 @@
 		BE7533FF18A136B700060839 /* WDPieShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE7533FE18A136B700060839 /* WDPieShape.m */; };
 		BE84FC6418A3C7510025D495 /* CGPathShapes.c in Sources */ = {isa = PBXBuildFile; fileRef = BE84FC6218A3C7510025D495 /* CGPathShapes.c */; };
 		BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */; };
+		BEFFB62518AA674D00DAF110 /* WDClubsShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFFB62418AA674D00DAF110 /* WDClubsShape.m */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -832,6 +833,8 @@
 		BE84FC6218A3C7510025D495 /* CGPathShapes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CGPathShapes.c; sourceTree = "<group>"; };
 		BE84FC6318A3C7510025D495 /* CGPathShapes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGPathShapes.h; sourceTree = "<group>"; };
 		BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeOptions.xib; sourceTree = "<group>"; };
+		BEFFB62318AA674D00DAF110 /* WDClubsShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDClubsShape.h; sourceTree = "<group>"; };
+		BEFFB62418AA674D00DAF110 /* WDClubsShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDClubsShape.m; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1651,6 +1654,8 @@
 				BE7533FB18A0DFEC00060839 /* WDDiamondShape.m */,
 				BE56D4D518A3F10A00B4374C /* WDSpadesShape.h */,
 				BE56D4D618A3F10A00B4374C /* WDSpadesShape.m */,
+				BEFFB62318AA674D00DAF110 /* WDClubsShape.h */,
+				BEFFB62418AA674D00DAF110 /* WDClubsShape.m */,
 				BE28681C189E688F00F0594C /* WDShapeOptionsController.h */,
 				BE28681D189E688F00F0594C /* WDShapeOptionsController.m */,
 				BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */,
@@ -1997,6 +2002,7 @@
 				BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */,
 				6BABD96D141ED30100F7E0A9 /* NSArray+Additions.m in Sources */,
 				6BABD96F141ED30100F7E0A9 /* NSData+Additions.m in Sources */,
+				BEFFB62518AA674D00DAF110 /* WDClubsShape.m in Sources */,
 				6BABD970141ED30100F7E0A9 /* NSString+Additions.m in Sources */,
 				6BABD971141ED30100F7E0A9 /* UIColor+Additions.m in Sources */,
 				6BABD972141ED30100F7E0A9 /* UIImage+Resize.m in Sources */,

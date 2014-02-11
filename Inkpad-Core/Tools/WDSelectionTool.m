@@ -72,6 +72,8 @@
     [canvas.drawingController selectObjectsInRect:selectionRect];
 }
 
+
+
 - (void) selectWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
     WDDrawingController *controller = canvas.drawingController;
@@ -80,10 +82,18 @@
 	{
 		if (mTargetElement == [controller singleSelection])
 		{
-
+			[mTargetElement increaseEditingMode];
+		}
+		else
+		if (![controller isSelected:mTargetElement])
+		{
+			if (![self shouldAppendSelection])
+			{ [controller deselectAllObjects]; }
+			[controller selectObject:mTargetElement];
 		}
 	}
 
+	return;
 
 
     activeNode_ = nil;
