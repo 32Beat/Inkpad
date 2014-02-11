@@ -31,7 +31,8 @@
 
 + (id) shapeControllerWithShape:(WDShape *)shape;
 
-- (id<WDShapeOptionsViewProtocol>) view;
+- (WDShape *) shape;
+- (UIView<WDShapeOptionsViewProtocol> *) view;
 
 - (IBAction) adjustValue:(id)sender;
 

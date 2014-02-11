@@ -460,9 +460,12 @@
 			[selectedObject isKindOfClass:[WDShape class]]&&
 			[selectedObject shapeOptions] != WDShapeOptionsNone)
 		{
-			mOptionsController =
-			[WDShapeOptionsController shapeControllerWithShape:selectedObject];
-			[canvas setToolOptionsView:[mOptionsController view]];
+			if ([mOptionsController shape] != selectedObject)
+			{
+				mOptionsController =
+				[WDShapeOptionsController shapeControllerWithShape:selectedObject];
+				[canvas setToolOptionsView:[mOptionsController view]];
+			}
 		}
 		else
 		{

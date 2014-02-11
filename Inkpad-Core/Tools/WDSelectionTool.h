@@ -14,6 +14,7 @@
 
 @class WDBezierNode;
 @class WDTextPath;
+@class WDShapeOptionsController;
 
 #define kWDTouchRadius 	11.0
 
@@ -46,7 +47,7 @@
     WDElement               *lastTappedObject_;
     WDElement *mTargetElement;
 
-	id mOptionsController;
+	WDShapeOptionsController *mOptionsController;
 }
 
 
