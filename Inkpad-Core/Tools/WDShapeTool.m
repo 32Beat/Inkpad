@@ -25,11 +25,12 @@
 #import "WDRectangleShape.h"
 #import "WDOvalShape.h"
 #import "WDStarShape.h"
+#import "WDPieShape.h"
 #import "WDLeafShape.h"
 #import "WDHeartShape.h"
 #import "WDDiamondShape.h"
 #import "WDSpadesShape.h"
-#import "WDPieShape.h"
+#import "WDClubsShape.h"
 
 NSString *WDShapeToolStarInnerRadiusRatio = @"WDShapeToolStarInnerRadiusRatio";
 NSString *WDShapeToolStarPointCount = @"WDShapeToolStarPointCount";
@@ -55,7 +56,8 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	@"line.png",
 	@"oval.png",
 	@"line.png",
-	@"oval.png"
+	@"oval.png",
+	@"line.png"
 	];
     
     return imageNames[shapeMode_];
@@ -92,11 +94,12 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	[WDShapeTool polygonTool],
 	[WDShapeTool spiralTool],
 	[WDShapeTool lineTool],
+	[WDShapeTool pacmanTool],
 	[WDShapeTool leafTool],
 	[WDShapeTool heartTool],
 	[WDShapeTool diamondTool],
 	[WDShapeTool spadesTool],
-	[WDShapeTool pacmanTool]
+	[WDShapeTool clubsTool]
 	];
 }
 
@@ -131,6 +134,9 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 
 + (id) spadesTool
 { return [self shapeToolWithMode:WDShapeModeSpades]; }
+
++ (id) clubsTool
+{ return [self shapeToolWithMode:WDShapeModeClubs]; }
 
 + (id) pacmanTool
 { return [self shapeToolWithMode:WDShapeModePie]; }
@@ -212,6 +218,12 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 	{
 		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
 		return [WDSpadesShape shapeWithFrame:rect];
+	}
+	else
+	if (shapeMode_ == WDShapeModeClubs)
+	{
+		CGRect rect = WDRectWithPointsConstrained(initialPoint, pt, constrain);
+		return [WDClubsShape shapeWithFrame:rect];
 	}
 	else
 	if (shapeMode_ == WDShapeModeStar)
@@ -322,7 +334,8 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
     
     WDPath  *temp = [self pathWithPoint:theEvent.snappedLocation constrain:[self constrain]];
     
-    canvas.shapeUnderConstruction = temp;
+	canvas.shapeUnderConstruction = temp;
+
 }
 
 - (void)endWithEvent:(WDEvent *)theEvent inCanvas:(WDCanvas *)canvas

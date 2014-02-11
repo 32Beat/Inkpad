@@ -54,7 +54,8 @@ typedef enum WDShapeType
 	WDShapeTypeLeaf,
 	WDShapeTypeHeart,
 	WDShapeTypeDiamond,
-	WDShapeTypeSpades
+	WDShapeTypeSpades,
+	WDShapeTypeClubs
 }
 WDShapeType;
 

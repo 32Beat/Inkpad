@@ -161,9 +161,9 @@ NSString *WDClosedKey = @"WDClosedKey";
 - (NSArray *) displayNodes
 {
 	if ([self editingMode] & eWDEditingContent)
-	{ return displayNodes_ ? displayNodes_ : [self nodes]; }
+	{ return displayNodes_ ? displayNodes_ : [self segmentNodes]; }
 
-	return [self nodes];
+	return [self segmentNodes];
 }
 
 - (NSArray *) orderedDisplayNodes
@@ -907,6 +907,18 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (BOOL) intersectsRect:(CGRect)R
 {
+	if ([self fill] != nil)
+	{
+		if (CGPathContainsPoint([self pathRef], nil, WDCenterOfRect(R), NO))
+		{ return YES; }
+	}
+
+	return [self strokeIntersectsRect:R];
+}
+
+
+- (BOOL) strokeIntersectsRect:(CGRect)R
+{
 	NSArray *nodes = [self segmentNodes];
 
 	if (nodes.count == 0)
@@ -1054,7 +1066,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
 	NSArray *nodes = [self displayNodes];
 
-	int n, total = nodes.count;
+	NSUInteger n, total = nodes.count;
 
 	// Closed nodes may have repeated entry
 	if ((nodes.count > 1)&&

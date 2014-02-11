@@ -81,12 +81,6 @@ WDRange;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WDRange WDBezierSegmentRangeX(WDBezierSegment S);
-// Get range of x coordinates of curve
-
-WDRange WDBezierSegmentRangeY(WDBezierSegment S);
-// Get range of y coordinates of curve
-
 CGRect WDBezierSegmentCurveBounds(WDBezierSegment S);
 // Get bounds rectangle encompassing curve
 

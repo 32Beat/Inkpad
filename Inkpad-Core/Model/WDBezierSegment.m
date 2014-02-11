@@ -479,17 +479,17 @@ static inline WDRange _BezierRange(double P0, double P1, double P2, double P3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WDRange WDBezierSegmentRangeX(WDBezierSegment S)
+static inline WDRange WDBezierSegmentRangeX(const WDBezierSegment *S)
 {
-	const CGPoint *P = &S.a_;
+	const CGPoint *P = &S->a_;
 	return _BezierRange(P[0].x, P[1].x, P[2].x, P[3].x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WDRange WDBezierSegmentRangeY(WDBezierSegment S)
+static inline WDRange WDBezierSegmentRangeY(const WDBezierSegment *S)
 {
-	const CGPoint *P = &S.a_;
+	const CGPoint *P = &S->a_;
 	return _BezierRange(P[0].y, P[1].y, P[2].y, P[3].y);
 }
 
@@ -502,8 +502,8 @@ WDRange WDBezierSegmentRangeY(WDBezierSegment S)
 
 CGRect WDBezierSegmentCurveBounds(WDBezierSegment S)
 {
-	WDRange X = WDBezierSegmentRangeX(S);
-	WDRange Y = WDBezierSegmentRangeY(S);
+	WDRange X = WDBezierSegmentRangeX(&S);
+	WDRange Y = WDBezierSegmentRangeY(&S);
 	return (CGRect){X.min, Y.min, X.max-X.min, Y.max-Y.min};
 }
 
@@ -571,10 +571,10 @@ CGFloat WDBezierSegmentLineSegmentLength(WDBezierSegment S)
 
 BOOL WDBezierSegmentCurveBoundsIntersectsRect(WDBezierSegment S, CGRect R)
 {
-	WDRange X = WDBezierSegmentRangeX(S);
+	WDRange X = WDBezierSegmentRangeX(&S);
 	if (X.max <= CGRectGetMinX(R)) return NO;
 	if (X.min >= CGRectGetMaxX(R)) return NO;
-	WDRange Y = WDBezierSegmentRangeY(S);
+	WDRange Y = WDBezierSegmentRangeY(&S);
 	if (Y.max <= CGRectGetMinY(R)) return NO;
 	if (Y.min >= CGRectGetMaxY(R)) return NO;
 	return YES;

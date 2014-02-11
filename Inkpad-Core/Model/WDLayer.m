@@ -335,8 +335,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 		{
 			if ([element editingMode] >= 0)
 			{
-				CGRect B = [element styleBounds];
-				if (CGRectIntersectsRect(touchR, B))
+				if ([element intersectsRect:touchR])
 				{
 					return element;
 				}

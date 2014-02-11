@@ -229,6 +229,8 @@
 */
 - (void) beginWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
+	WDDrawingController *controller = canvas.drawingController;
+
 	// reset mode
 	marqueeMode_ = NO;
 
@@ -240,12 +242,14 @@
 	// Define touch rect in document scale
 	CGRect touchR = WDRectWithRadius(P, kWDTouchRadius/canvas.viewScale);
 
-	// Ask controller to find first element with intersecting stylebounds
-	WDDrawingController *controller = canvas.drawingController;
-	id element = [controller findElementInRect:touchR];
-	// TODO: redirect to include editingmode mask
+	if (![mTargetElement intersectsRect:touchR])
+	{
+		// Ask controller to find first element with intersecting stylebounds
+		mTargetElement = [controller findElementInRect:touchR];
+		// TODO: redirect to include editingmode mask
+	}
 
-	if (element == nil)
+	if (mTargetElement == nil)
 	{
 		[canvas setToolOptionsView:nil];
         [controller deselectAllObjects];
@@ -253,8 +257,6 @@
         marqueeMode_ = YES;
 	}
 
-	// Probably need only editingmode
-	mTargetElement = element;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

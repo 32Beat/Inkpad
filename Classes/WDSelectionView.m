@@ -396,29 +396,27 @@
 
 
 	WDDrawingController *drawController = self.canvas.drawingController;
-	WDElement *singleSelection = [drawController singleSelection];
 
 	// Assume selectionTransform applies to entire object(s) (not just a single node)
 	CGAffineTransform combined =
 	CGAffineTransformConcat(self.canvas.selectionTransform, T);
 
-	// Assuming singleSelection always indicates object, not nodes
-	if (singleSelection)
+	// Draw outline for multiple objects
+	for (WDElement *object in drawController.selectedObjects)
 	{
-		WDEditingMode editingMode = singleSelection.editingMode;
+		[object.layer.highlightColor glSet];
+		[(id)object glDrawWithTransform:combined];
+	}
 
-		[singleSelection.layer.highlightColor glSet];
-		[singleSelection glDrawWithTransform:combined options:editingMode];
-	}
-	else
+	if (self.canvas.shapeUnderConstruction)
 	{
-		// Draw outline for multiple objects
-		for (WDElement *object in drawController.selectedObjects)
-		{
-			[object.layer.highlightColor glSet];
-			[(id)object glDrawWithTransform:combined];
-		}
+		[[UIColor blackColor] glSet];
+		[self.canvas.shapeUnderConstruction glDrawWithTransform:combined];
 	}
+
+	// marquee?
+	if (self.canvas.marquee)
+	{ [self renderMarqueWithTransform:T]; }
 
 /*
 	if (singleSelection && !self.canvas.transforming && !self.canvas.transformingNode) {
@@ -457,9 +455,6 @@
 
 //	[self renderPageWithTransform:T];
 */
-	// marquee?
-	if (self.canvas.marquee)
-	{ [self renderMarqueWithTransform:T]; }
 
 #ifdef WD_DEBUG
     NSLog(@"SelectionView preptime: %f", -[date timeIntervalSinceNow]);
