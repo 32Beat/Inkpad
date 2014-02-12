@@ -158,10 +158,15 @@ NSString *WDClosedKey = @"WDClosedKey";
 { return closed_ ? [self closedNodes] : [self orderedNodes]; }
 
 
+// TODO: define displayClosed behavior
 - (NSArray *) displayNodes
 {
-	if ([self editingMode] & eWDEditingContent)
-	{ return displayNodes_ ? displayNodes_ : [self segmentNodes]; }
+	if ((displayNodes_ != nil) &&
+		([self editingMode] & eWDEditingContent))
+	{
+		return displayClosed_?
+		WDCloseNodes(displayNodes_) : displayNodes_;
+	}
 
 	return [self segmentNodes];
 }
@@ -909,13 +914,19 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 {
 	if ([self fill] != nil)
 	{
-		if (CGPathContainsPoint([self pathRef], nil, WDCenterOfRect(R), NO))
+		if ([self containsPoint:WDCenterOfRect(R)])
 		{ return YES; }
 	}
 
 	return [self strokeIntersectsRect:R];
 }
 
+
+- (BOOL) containsPoint:(CGPoint)P
+{
+	bool eoFill = [self fill] ? NO : NO;
+	return CGPathContainsPoint([self pathRef], nil, P, eoFill);
+}
 
 - (BOOL) strokeIntersectsRect:(CGRect)R
 {
@@ -948,17 +959,28 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) findContentControlsInRect:(CGRect)touchR
+{
+	return [self nodesInRect:touchR];
+}
+
+
+
 - (NSSet *) nodesInRect:(CGRect)rect
 {
-    NSMutableSet *nodesInRect = [NSMutableSet set];
-    
-    for (WDBezierNode *node in nodes_) {
-        if (CGRectContainsPoint(rect, node.anchorPoint)) {
-            [nodesInRect addObject:node];
-        }
-    }
-    
-    return nodesInRect;
+	NSMutableSet *nodesInRect = nil;
+
+	for (WDBezierNode *node in nodes_)
+	{
+		if (CGRectContainsPoint(rect, node.anchorPoint))
+		{
+			if (nodesInRect == nil)
+			{ nodesInRect = [NSMutableSet set]; }
+			[nodesInRect addObject:node];
+		}
+	}
+
+	return nodesInRect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1296,7 +1318,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	if (transformAll)
 	{ [super transform:transform]; }
 
-	return [self selectedNodeCount]? [self selectedNodesSet] : nil;
+	return [self selectedNodeCount] ? [self selectedNodesSet] : nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

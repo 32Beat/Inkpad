@@ -124,6 +124,8 @@ typedef enum {
 - (BOOL) containsPoint:(CGPoint)pt;
 - (BOOL) intersectsRect:(CGRect)rect;
 
+- (id) findContentControlsInRect:(CGRect)R;
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 - (void) cacheDirtyBounds;
@@ -137,6 +139,13 @@ typedef enum {
 - (WDEditingMode) editingMode;
 - (void) setEditingMode:(WDEditingMode)mode;
 - (void) increaseEditingMode;
+
+- (BOOL) isEditingFrame;
+- (BOOL) isEditingContent;
+- (BOOL) isEditingStyle;
+- (BOOL) isEditingText;
+
+
 
 // OpenGL-based selection rendering
 - (void) glDrawWithTransform:(CGAffineTransform)T;

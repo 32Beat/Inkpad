@@ -340,6 +340,13 @@ NSString *WDShadowKey = @"WDShadowKey";
     return CGRectIntersectsRect([self bounds], rect);
 }
 
+
+- (id) findContentControlsInRect:(CGRect)touchR
+{
+	return nil;
+}
+
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 }
@@ -418,6 +425,20 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[self setEditingMode:mode];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) isEditingFrame
+{ return mEditingMode & eWDEditingFrame; }
+
+- (BOOL) isEditingContent
+{ return mEditingMode & eWDEditingContent; }
+
+- (BOOL) isEditingStyle
+{ return mEditingMode & eWDEditingStyle; }
+
+- (BOOL) isEditingText
+{ return mEditingMode & eWDEditingText; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

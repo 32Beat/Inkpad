@@ -28,6 +28,7 @@ typedef enum {
 @property (nonatomic, assign) CGPoint location; // coordinate in document space
 @property (nonatomic, assign) CGPoint snappedLocation; // snapped coordinate in document space
 @property (nonatomic, assign) NSUInteger count; // tap or click count
+- (CGRect) touchRectForViewScale:(float)viewScale;
 @end
 
 @interface WDTool : NSObject

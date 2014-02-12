@@ -123,7 +123,7 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
     return self; 
 }
 
-- (CGRect) styleBounds
+- (CGRect) computeStyleBounds
 {
     [self layout];
     return CGRectUnion(styleBounds_, self.bounds);

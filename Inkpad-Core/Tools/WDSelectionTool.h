@@ -16,7 +16,6 @@
 @class WDTextPath;
 @class WDShapeOptionsController;
 
-#define kWDTouchRadius 	11.0
 
 @interface WDSelectionTool : WDTool {
 

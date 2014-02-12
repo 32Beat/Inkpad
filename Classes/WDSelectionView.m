@@ -397,17 +397,23 @@
 
 	WDDrawingController *drawController = self.canvas.drawingController;
 
-	// Assume selectionTransform applies to entire object(s) (not just a single node)
+	// Assume selectionTransform applies to entire object(s)
 	CGAffineTransform combined =
 	CGAffineTransformConcat(self.canvas.selectionTransform, T);
 
-	// Draw outline for multiple objects
+	/*
+		Note: adjusted nodes are stored in WDPath->displayNodes
+		WDPath will always draw displaynodes if available
+	*/
+
+	// Draw outline for selected objects
 	for (WDElement *object in drawController.selectedObjects)
 	{
 		[object.layer.highlightColor glSet];
 		[(id)object glDrawWithTransform:combined];
 	}
 
+	// Or draw object being constructed
 	if (self.canvas.shapeUnderConstruction)
 	{
 		[[UIColor blackColor] glSet];

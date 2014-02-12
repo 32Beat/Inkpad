@@ -104,8 +104,11 @@ typedef struct {
 WDQuad WDQuadNull();
 WDQuad WDQuadMake(CGPoint a, CGPoint b, CGPoint c, CGPoint d);
 WDQuad WDQuadWithRect(CGRect rect, CGAffineTransform transform);
+WDQuad WDQuadApplyTransform(WDQuad quad, CGAffineTransform T);
 BOOL WDQuadEqualToQuad(WDQuad a, WDQuad b);
 BOOL WDQuadIntersectsQuad(WDQuad a, WDQuad b);
+BOOL WDQuadIntersectsRect(WDQuad quad, CGRect R);
+BOOL WDQuadContainsPoint(WDQuad quad, CGPoint P);
 CGPathRef WDCreateQuadPathRef(WDQuad q);
 NSString * NSStringFromWDQuad(WDQuad quad);
 

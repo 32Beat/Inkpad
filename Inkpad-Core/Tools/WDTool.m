@@ -15,14 +15,22 @@
 #import "WDPickResult.h"
 #import "WDTool.h"
 #import "UIView+Additions.h"
+#import "WDUtilities.h"
 
 #define kOptionsViewCornerRadius    9
 
+#define kWDTouchRadius 	11.0
+
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDEvent
 @synthesize location;
 @synthesize snappedLocation;
 @synthesize count;
+
+- (CGRect) touchRectForViewScale:(float)viewScale
+{ return WDRectWithRadius(self.location, kWDTouchRadius/viewScale); }
 @end
+////////////////////////////////////////////////////////////////////////////////
 
 @implementation WDTool
 

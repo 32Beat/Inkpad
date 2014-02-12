@@ -677,21 +677,66 @@ WDQuad WDQuadMake(CGPoint a, CGPoint b, CGPoint c, CGPoint d)
     return quad;
 }
 
-WDQuad WDQuadWithRect(CGRect rect, CGAffineTransform transform)
+
+////////////////////////////////////////////////////////////////////////////////
+
+WDQuad WDQuadWithRect(CGRect R, CGAffineTransform T)
 {
-    WDQuad quad;
-    
-    quad.corners[0] = CGPointMake(CGRectGetMinX(rect), CGRectGetMinY(rect));
-    quad.corners[1] = CGPointMake(CGRectGetMaxX(rect), CGRectGetMinY(rect));
-    quad.corners[2] = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
-    quad.corners[3] = CGPointMake(CGRectGetMinX(rect), CGRectGetMaxY(rect));
-    
-    for (int i = 0; i < 4; i++) {
-        quad.corners[i] = CGPointApplyAffineTransform(quad.corners[i], transform);
-    }
-    
-    return quad;
+	WDQuad quad;
+
+	quad.corners[0] = CGPointMake(CGRectGetMinX(R), CGRectGetMinY(R));
+	quad.corners[1] = CGPointMake(CGRectGetMaxX(R), CGRectGetMinY(R));
+	quad.corners[2] = CGPointMake(CGRectGetMaxX(R), CGRectGetMaxY(R));
+	quad.corners[3] = CGPointMake(CGRectGetMinX(R), CGRectGetMaxY(R));
+
+	quad = WDQuadApplyTransform(quad, T);
+
+	return quad;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+WDQuad WDQuadApplyTransform(WDQuad quad, CGAffineTransform T)
+{
+	quad.corners[0] = CGPointApplyAffineTransform(quad.corners[0], T);
+	quad.corners[1] = CGPointApplyAffineTransform(quad.corners[1], T);
+	quad.corners[2] = CGPointApplyAffineTransform(quad.corners[2], T);
+	quad.corners[3] = CGPointApplyAffineTransform(quad.corners[3], T);
+	return quad;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDQuadIntersectsRect
+	--------------------
+	Test if any of the quad linesegments intersect rect
+	
+	Does not test for fully inside
+*/
+
+BOOL WDQuadIntersectsRect(WDQuad quad, CGRect R)
+{
+	return
+	WDLineIntersectsRect(quad.corners[0], quad.corners[1], R)||
+	WDLineIntersectsRect(quad.corners[1], quad.corners[2], R)||
+	WDLineIntersectsRect(quad.corners[2], quad.corners[3], R)||
+	WDLineIntersectsRect(quad.corners[3], quad.corners[0], R);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BOOL WDQuadContainsPoint(WDQuad quad, CGPoint P)
+{
+	BOOL result = NO;
+
+	CGPathRef pathRef = WDCreateQuadPathRef(quad);
+	result = CGPathContainsPoint(pathRef, nil, P, false);
+	CGPathRelease(pathRef);
+
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 BOOL WDQuadEqualToQuad(WDQuad a, WDQuad b)
 {
@@ -724,19 +769,22 @@ BOOL WDQuadIntersectsQuad(WDQuad a, WDQuad b)
 
 NSString * NSStringFromWDQuad(WDQuad quad)
 {
-    return [NSString stringWithFormat:@"{{%@}, {%@}, {%@}, {%@}}", NSStringFromCGPoint(quad.corners[0]), NSStringFromCGPoint(quad.corners[1]),
-            NSStringFromCGPoint(quad.corners[2]), NSStringFromCGPoint(quad.corners[3])];
+	return [NSString stringWithFormat:@"{{%@}, {%@}, {%@}, {%@}}", \
+	NSStringFromCGPoint(quad.corners[0]), \
+	NSStringFromCGPoint(quad.corners[1]), \
+	NSStringFromCGPoint(quad.corners[2]), \
+	NSStringFromCGPoint(quad.corners[3])];
 }
 
 CGPathRef WDCreateQuadPathRef(WDQuad q)
 {
-    CGMutablePathRef pathRef = CGPathCreateMutable();
-    
-    CGPathMoveToPoint(pathRef, NULL, q.corners[0].x, q.corners[0].y);
-    for (int i = 1; i < 4; i++) {
-        CGPathAddLineToPoint(pathRef, NULL, q.corners[i].x, q.corners[i].y);
-    }
-    CGPathCloseSubpath(pathRef);
-    
-    return pathRef;
+	CGMutablePathRef pathRef = CGPathCreateMutable();
+
+	CGPathMoveToPoint(pathRef, NULL, q.corners[0].x, q.corners[0].y);
+	CGPathAddLineToPoint(pathRef, NULL, q.corners[1].x, q.corners[1].y);
+	CGPathAddLineToPoint(pathRef, NULL, q.corners[2].x, q.corners[2].y);
+	CGPathAddLineToPoint(pathRef, NULL, q.corners[3].x, q.corners[3].y);
+	CGPathCloseSubpath(pathRef);
+
+	return pathRef;
 }

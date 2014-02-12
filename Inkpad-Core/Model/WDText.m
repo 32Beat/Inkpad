@@ -103,23 +103,37 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (CGRect) naturalBounds
 {
-    if (fontName_ && naturalBoundsDirty_) {
-        CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((CFAttributedStringRef) self.attributedString);
-        CFRange fitRange;
-        
-        // compute size
-        CGSize naturalSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), NULL, CGSizeMake(width_, CGFLOAT_MAX), &fitRange);
-        
-        // clean up
-        CFRelease(framesetter);
-        
-        float fontHeight = CTFontGetLeading([self fontRef]);
-        naturalBounds_ = CGRectMake(0, 0, width_, MAX(fontHeight, naturalSize.height + 1));
-        naturalBoundsDirty_ =  NO;
-    }
-    
-    return naturalBounds_;
+	if (fontName_ && naturalBoundsDirty_)
+	{
+		CGSize size = [self naturalSize];
+		
+		float fontHeight = CTFontGetLeading([self fontRef]);
+		naturalBounds_ = CGRectMake(0, 0, width_, MAX(fontHeight, size.height + 1));
+		naturalBoundsDirty_ =  NO;
+	}
+
+	return naturalBounds_;
 }
+
+- (CGSize) naturalSize
+{
+	CTFramesetterRef framesetter =
+	CTFramesetterCreateWithAttributedString((CFAttributedStringRef) self.attributedString);
+
+	// compute size
+	CFRange fitRange;
+	CGSize naturalSize =
+	CTFramesetterSuggestFrameSizeWithConstraints
+	(framesetter, CFRangeMake(0, 0), NULL, CGSizeMake(width_, CGFLOAT_MAX), &fitRange);
+
+	// clean up
+	CFRelease(framesetter);
+
+	return naturalSize;
+}
+
+
+
 
 - (CGRect) bounds
 {
@@ -243,25 +257,11 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     return CGPathContainsPoint(self.pathRef, NULL, pt, 0);
 }
 
-- (BOOL) intersectsRect:(CGRect)rect
+- (BOOL) intersectsRect:(CGRect)R
 {
-    CGPoint     ul, ur, lr, ll;
-    CGRect      naturalBounds = self.naturalBounds;
-    
-    ul = CGPointZero;
-    ur = CGPointMake(width_, 0);
-    lr = CGPointMake(width_, CGRectGetHeight(naturalBounds));
-    ll = CGPointMake(0, CGRectGetHeight(naturalBounds));
-    
-    ul = CGPointApplyAffineTransform(ul, transform_);
-    ur = CGPointApplyAffineTransform(ur, transform_);
-    lr = CGPointApplyAffineTransform(lr, transform_);
-    ll = CGPointApplyAffineTransform(ll, transform_);
-    
-    return (WDLineIntersectsRect(ul, ur, rect) ||
-            WDLineIntersectsRect(ur, lr, rect) ||
-            WDLineIntersectsRect(lr, ll, rect) ||
-            WDLineIntersectsRect(ll, ul, rect));
+	WDQuad Q = WDQuadWithRect(self.naturalBounds, transform_);
+	return WDQuadIntersectsRect(Q, R)||
+	WDQuadContainsPoint(Q, WDCenterOfRect(R));
 }
 
 - (void) drawTextInContext:(CGContextRef)ctx drawingMode:(CGTextDrawingMode)mode

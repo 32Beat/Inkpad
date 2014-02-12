@@ -72,7 +72,9 @@
     [canvas.drawingController selectObjectsInRect:selectionRect];
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) selectWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
@@ -82,7 +84,102 @@
 	{
 		if (mTargetElement == [controller singleSelection])
 		{
-			[mTargetElement increaseEditingMode];
+			if (![self selectControlsWithEvent:event inCanvas:canvas])
+			{ [mTargetElement increaseEditingMode]; }
+		}
+		else
+		if (![controller isSelected:mTargetElement])
+		{
+			if (![self shouldAppendSelection])
+			{ [controller deselectAllObjects]; }
+			[controller selectObject:mTargetElement];
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) selectControlsWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	if ([mTargetElement isEditingFrame]&&
+		[self selectFrameControlsWithEvent:event inCanvas:canvas])
+	{ return YES; }
+
+	if ([mTargetElement isEditingContent]&&
+		[self selectContentControlsWithEvent:event inCanvas:canvas])
+	{ return YES; }
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) selectFrameControlsWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	// Define touch rect in document scale
+//	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) selectContentControlsWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	// Define touch rect in document scale
+	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
+
+	id content = [mTargetElement findContentControlsInRect:touchR];
+	if (content != nil)
+	{
+		if ([mTargetElement isKindOfClass:[WDPath class]])
+		{
+			WDDrawingController *controller = canvas.drawingController;
+			if (![self shouldAppendSelection])
+			{ [controller deselectAllNodes]; }
+            [controller selectNode:[content anyObject]];
+		}
+
+		return YES;
+	}
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) selectStyleControlsWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	// Define touch rect in document scale
+//	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) selectTextControlsWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	// Define touch rect in document scale
+//	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) __selectWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+    WDDrawingController *controller = canvas.drawingController;
+
+	if (mTargetElement != nil)
+	{
+		if (mTargetElement == [controller singleSelection])
+		{
+			if (![self selectControlsWithEvent:event inCanvas:canvas])
+			{ [mTargetElement increaseEditingMode]; }
 		}
 		else
 		if (![controller isSelected:mTargetElement])
@@ -237,10 +334,8 @@
     // reset transform
     transform_ = CGAffineTransformIdentity;
 
-	// Get event location
-    CGPoint P = event.location;
 	// Define touch rect in document scale
-	CGRect touchR = WDRectWithRadius(P, kWDTouchRadius/canvas.viewScale);
+	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
 
 	if (![mTargetElement intersectsRect:touchR])
 	{
@@ -248,6 +343,7 @@
 		mTargetElement = [controller findElementInRect:touchR];
 		// TODO: redirect to include editingmode mask
 	}
+	
 
 	if (mTargetElement == nil)
 	{
@@ -489,6 +585,8 @@
 
 - (void) endWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
+	canvas.drawingController.propertyManager.ignoreSelectionChanges = NO;
+
 	if (!self.moved)
 	{
 		[self selectWithEvent:event inCanvas:canvas];
@@ -499,7 +597,6 @@
     if (marqueeMode_) {
         marqueeMode_ = NO;
         canvas.marquee = nil;
-        canvas.drawingController.propertyManager.ignoreSelectionChanges = NO;
 		[self updateToolOptionsForCanvas:canvas];
         return;
     }

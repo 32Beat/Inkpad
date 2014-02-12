@@ -184,9 +184,14 @@ BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R)
 		// Split half way
 		CGPoint m = WDLineCenter(a, b);
 
-		return
-		WDLineIntersectsRect(a, m, R)||
-		WDLineIntersectsRect(m, b, R);
+		// Ensure precision allows further splitting
+		if (!CGPointEqualToPoint(m, a)&&
+			!CGPointEqualToPoint(m, b))
+		{
+			return
+			WDLineIntersectsRect(a, m, R)||
+			WDLineIntersectsRect(m, b, R);
+		}
 	}
 
 	return NO;
@@ -569,7 +574,7 @@ CGFloat WDBezierSegmentLineSegmentLength(WDBezierSegment S)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BOOL WDBezierSegmentCurveBoundsIntersectsRect(WDBezierSegment S, CGRect R)
+BOOL WDBezierSegmentCurveBoundsIntersectRect(WDBezierSegment S, CGRect R)
 {
 	WDRange X = WDBezierSegmentRangeX(&S);
 	if (X.max <= CGRectGetMinX(R)) return NO;
@@ -582,7 +587,7 @@ BOOL WDBezierSegmentCurveBoundsIntersectsRect(WDBezierSegment S, CGRect R)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BOOL WDBezierSegmentControlBoundsIntersectsRect(WDBezierSegment S, CGRect R)
+BOOL WDBezierSegmentControlBoundsIntersectRect(WDBezierSegment S, CGRect R)
 {
 	const CGPoint *P = &S.a_;
 	return
@@ -611,7 +616,7 @@ BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect R)
 		return YES;
 
 	// If curvebounds still intersects with rect, then continue recursively
-	if (WDBezierSegmentCurveBoundsIntersectsRect(S, R))
+	if (WDBezierSegmentCurveBoundsIntersectRect(S, R))
 	{
 		WDBezierSegment Sn;
 		WDBezierSegmentSplit(S, &S, &Sn);
@@ -857,7 +862,7 @@ WDSplitInfo WDBezierSegmentCustomSplitWithBlock(WDBezierSegment S, WDSplitInfo i
 	Find curve bounds by recursion. 
 
 	Primarily meant as an example for SplitWithBlock,
-	WDBezierSegmentGetCurveBounds will compute bounds without recursion.
+	WDBezierSegmentCurveBounds will compute bounds without recursion.
 */
 
 CGRect WDBezierSegmentFindCurveBounds(WDBezierSegment S)
@@ -970,7 +975,7 @@ WDFindInfo WDBezierSegmentFindClosestPoint(WDBezierSegment S, CGPoint P)
 				minInfo.t = subRange.min + info.t*(subRange.max-subRange.min);
 			}
 
-			// Stop splitting
+			// Stop splitting subsegment
 			return 0.0;
 		});
 
