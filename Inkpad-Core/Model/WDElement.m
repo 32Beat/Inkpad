@@ -397,48 +397,155 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Editing Mode
+#pragma mark Edit Mode
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDEditingMode) editingMode
-{ return mEditingMode; }
+- (WDEditMode) editMode
+{ return mEditMode; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setEditingMode:(WDEditingMode)mode
+- (void) setEditMode:(WDEditMode)mode
 {
-	if (mEditingMode != mode)
+	if (mEditMode != mode)
 	{
-		mEditingMode = mode;
+		mEditMode = mode;
 		[self postDirtyBoundsChange];
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) increaseEditingMode
+- (void) setEditModeLocked
+{ [self setEditMode:eWDEditModeLocked]; }
+
+- (void) setEditModeNone
+{ [self setEditMode:eWDEditModeNone]; }
+
+- (void) setEditModeFrame
+{ [self setEditMode:eWDEditModeFrame]; }
+
+- (void) setEditModeContent
+{ [self setEditMode:eWDEditModeContent]; }
+
+- (void) setEditModeStyle
+{ [self setEditMode:eWDEditModeStyle]; }
+
+- (void) setEditModeText
+{ [self setEditMode:eWDEditModeText]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) increaseEditMode
 {
-	WDEditingMode mode = mEditingMode << 1;
-
-	if ((mode==0) || (mode > eWDEditingStyle))
-	{ mode = eWDEditingFrame; }
-
-	[self setEditingMode:mode];
+	[self setEditMode:[self nextEditMode]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (WDEditMode) nextEditMode
+{
+	WDEditMode mode = mEditMode;
+
+	if (mode == eWDEditModeNone)
+	{ return eWDEditModeFrame; }
+
+	if (mode > eWDEditModeNone)
+	{
+		while ((mode <<= 1) <= eWDEditModeText)
+		{
+			if([self canEditMode:mode])
+			{ return mode; }
+		}
+
+		mode = eWDEditModeFrame;
+	}
+
+	return mode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) lockEditing
+{ mEditMode = eWDEditModeLocked; }
+
+- (BOOL) isLocked
+{ return mEditMode < 0; }
+
+- (BOOL) isEditable
+{ return ![self isLocked]; }
+
+- (BOOL) isEditingLocked
+{ return mEditMode < 0; }
+
 - (BOOL) isEditingFrame
-{ return mEditingMode & eWDEditingFrame; }
+{ return mEditMode & eWDEditModeFrame; }
 
 - (BOOL) isEditingContent
-{ return mEditingMode & eWDEditingContent; }
+{ return mEditMode & eWDEditModeContent; }
 
 - (BOOL) isEditingStyle
-{ return mEditingMode & eWDEditingStyle; }
+{ return mEditMode & eWDEditModeStyle; }
 
 - (BOOL) isEditingText
-{ return mEditingMode & eWDEditingText; }
+{ return mEditMode & eWDEditModeText; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) canEditMode:(WDEditMode)mode
+{
+	switch(mode)
+	{
+		case eWDEditModeLocked:
+		case eWDEditModeNone:
+		return YES;
+
+		case eWDEditModeFrame:
+		return [self canEditFrame];
+
+		case eWDEditModeContent:
+		return [self canEditContent];
+
+		case eWDEditModeStyle:
+		return [self canEditStyle];
+
+		case eWDEditModeText:
+		return [self canEditText];
+	}
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) canEdit
+{ return ![self isLocked]; }
+
+- (BOOL) canEditFrame
+{ return YES; }
+
+- (BOOL) canEditContent
+{ return NO; }
+
+- (BOOL) canEditStyle
+{ return NO; }
+
+- (BOOL) canEditText
+{ return NO; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) hasFrameControls
+{ return YES; }
+
+- (BOOL) hasContentControls
+{ return NO; }
+
+- (BOOL) hasStyleControls
+{ return NO; }
+
+- (BOOL) hasTextControls
+{ return NO; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -466,7 +573,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) glDrawWithTransform:(CGAffineTransform)T
-{ [self glDrawWithTransform:T options:[self editingMode]]; }
+{ [self glDrawWithTransform:T options:[self editMode]]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -475,14 +582,16 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self glDrawContentWithTransform:T];
 	[self glDrawFrameWithTransform:T];
 
-	if (options & eWDEditingContent)
+	if (options & eWDEditModeContent)
 	{ [self glDrawContentControlsWithTransform:T]; }
 	
-	if (options & eWDEditingFrame)
+	if (options & eWDEditModeFrame)
 	{ [self glDrawFrameControlsWithTransform:T]; }
 
-	if (options & eWDEditingStyle)
+	if (options & eWDEditModeStyle)
 	{ [self glDrawStyleControlsWithTransform:T]; }
+
+	[self glDrawBoundsWithViewTransform:T];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -917,6 +1026,10 @@ NSString *WDShadowKey = @"WDShadowKey";
     
     if ([self needsTransparencyLayer:metaData.scale])
 	{
+		/*
+			We don't need more than the stylebounds,
+			the shadow is apparently rendered separately.
+		*/
 //		CGContextBeginTransparencyLayer(ctx, NULL);
 		CGRect B = CGContextGetClipBoundingBox(ctx);
 		CGRect R = [self styleBounds];

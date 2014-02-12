@@ -211,7 +211,14 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
 	return nil;
 }
 
+#pragma mark
+#pragma mark
 
+- (BOOL) canEditStyle
+{ return [self fillTransform] != nil; }
+
+- (BOOL) hasStyleControls
+{ return [self fillTransform] != nil; }
 
 - (void) drawGradientControlsWithViewTransform:(CGAffineTransform)transform
 {

@@ -85,7 +85,7 @@
 		if (mTargetElement == [controller singleSelection])
 		{
 			if (![self selectControlsWithEvent:event inCanvas:canvas])
-			{ [mTargetElement increaseEditingMode]; }
+			{ [mTargetElement increaseEditMode]; }
 		}
 		else
 		if (![controller isSelected:mTargetElement])
@@ -179,7 +179,7 @@
 		if (mTargetElement == [controller singleSelection])
 		{
 			if (![self selectControlsWithEvent:event inCanvas:canvas])
-			{ [mTargetElement increaseEditingMode]; }
+			{ [mTargetElement increaseEditMode]; }
 		}
 		else
 		if (![controller isSelected:mTargetElement])
@@ -231,7 +231,7 @@
 			{ [controller deselectAllObjects]; }
 
             [controller selectObject:element];
-			[element setEditingMode:eWDEditingFrame];
+			[element setEditMode:eWDEditModeFrame];
         }
 		else
 		if (path && path.superpath && [controller isSelected:path.superpath] && ![controller singleSelection])
@@ -242,7 +242,7 @@
     }
 	else if ([controller singleSelection])
 	{
-		[element setEditingMode:eWDEditingContent];
+		[element setEditMode:eWDEditModeContent];
         // we have a single selection, and the hit element is already selected... it must be the single selection
        
         if ([element isKindOfClass:[WDPath class]] && result.node)
@@ -364,7 +364,7 @@
 		[self moveMarqueWithEvent:event inCanvas:canvas];
 	}
 	else
-	if (mTargetElement.editingMode & eWDEditingFrame)
+	if (mTargetElement.editMode & eWDEditModeFrame)
 	{
 		canvas.transforming = YES;
 		canvas.transformingNode = NO;
@@ -372,7 +372,7 @@
 		[self moveSelectionWithEvent:event inCanvas:canvas];
 	}
 	else
-	if (mTargetElement.editingMode & eWDEditingContent)
+	if (mTargetElement.editMode & eWDEditModeContent)
 	{
 		canvas.transforming = YES;
 		canvas.transformingNode = YES;
@@ -497,7 +497,7 @@
 	WDElement *target = [canvas.drawingController singleSelection];
 	if (target != nil)
 	{
-		[target setEditingMode:eWDEditingContent];
+		[target setEditMode:eWDEditModeContent];
 	}
 }
 

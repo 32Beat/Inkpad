@@ -450,11 +450,11 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 	{
 		[selectedObjects_ addObject:element];
 		if ([self selectedObjects].count == 1)
-			[element setEditingMode:eWDEditingFrame];
+			[element setEditMode:eWDEditModeFrame];
 		else
 		{
 			for (WDElement *object in [self selectedObjects])
-			{ [object setEditingMode:eWDEditingNone]; }
+			{ [object setEditMode:eWDEditModeNone]; }
 		}
 
 		[self deselectAllNodes];
@@ -490,7 +490,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 
 - (void) selectObjectsInRect:(CGRect)rect
 {
-	if ([[self singleSelection] editingMode] & eWDEditingContent)
+	if ([[self singleSelection] editMode] & eWDEditModeContent)
 	{
 		if ([[self singleSelection] isKindOfClass:[WDPath class]])
 		{
@@ -552,7 +552,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     self.activePath = nil;
 
     for (WDElement *object in selectedObjects_)
-	{ [object setEditingMode:eWDEditingNone]; }
+	{ [object setEditMode:eWDEditModeNone]; }
 
     [selectedObjects_ removeAllObjects];
 

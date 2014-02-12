@@ -162,7 +162,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 - (NSArray *) displayNodes
 {
 	if ((displayNodes_ != nil) &&
-		([self editingMode] & eWDEditingContent))
+		([self editMode] & eWDEditModeContent))
 	{
 		return displayClosed_?
 		WDCloseNodes(displayNodes_) : displayNodes_;
@@ -205,6 +205,15 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 	return count;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) canEditContent
+{ return YES; }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -23,9 +23,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDEditingMode
-	-------------
-	Indicates the current editing mode of an object
+	WDEditMode
+	----------
+	Indicates the current edit mode of an object
 	
 	The behavior and representation of objects may change depending 
 	on the editing mode. To indicate frame editing, the object will 
@@ -40,14 +40,14 @@
 
 typedef enum
 {
-	eWDEditingLocked 	= (-1),
-	eWDEditingNone 		= 0,
-	eWDEditingFrame 	= (1<<0),
-	eWDEditingContent 	= (1<<1),
-	eWDEditingStyle 	= (1<<2),
-	eWDEditingText 		= (1<<3)
+	eWDEditModeLocked 	= (-1),
+	eWDEditModeNone 	= 0,
+	eWDEditModeFrame 	= (1<<0),
+	eWDEditModeContent 	= (1<<1),
+	eWDEditModeStyle 	= (1<<2),
+	eWDEditModeText 	= (1<<3)
 }
-WDEditingMode;
+WDEditMode;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +76,7 @@ typedef enum {
 
 @interface WDElement : NSObject <NSCoding, NSCopying>
 {
-	WDEditingMode mEditingMode;
+	WDEditMode mEditMode;
 
 	CGPathRef _framePath;
 
@@ -126,26 +126,48 @@ typedef enum {
 
 - (id) findContentControlsInRect:(CGRect)R;
 
-- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 - (void) cacheDirtyBounds;
 - (void) postDirtyBoundsChange;
+- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 - (void) tossCachedColorAdjustmentData;
 - (void) restoreCachedColorAdjustmentData;
 - (void) registerUndoWithCachedColorAdjustmentData;
 
+////////////////////////////////////////////////////////////////////////////////
 
-- (WDEditingMode) editingMode;
-- (void) setEditingMode:(WDEditingMode)mode;
-- (void) increaseEditingMode;
+- (WDEditMode) editMode;
+- (void) setEditMode:(WDEditMode)mode;
+- (void) increaseEditMode;
 
+- (void) setEditModeLocked;
+- (void) setEditModeNone;
+- (void) setEditModeFrame;
+- (void) setEditModeContent;
+- (void) setEditModeStyle;
+- (void) setEditModeText;
+
+- (BOOL) isEditingLocked;
 - (BOOL) isEditingFrame;
 - (BOOL) isEditingContent;
 - (BOOL) isEditingStyle;
 - (BOOL) isEditingText;
 
+- (BOOL) isLocked;
+- (BOOL) isEditable;
+- (BOOL) canEditMode:(WDEditMode)mode;
+- (BOOL) canEditFrame;
+- (BOOL) canEditContent;
+- (BOOL) canEditStyle;
+- (BOOL) canEditText;
 
+- (BOOL) hasFrameControls;
+- (BOOL) hasContentControls;
+- (BOOL) hasStyleControls;
+- (BOOL) hasTextControls;
+
+////////////////////////////////////////////////////////////////////////////////
 
 // OpenGL-based selection rendering
 - (void) glDrawWithTransform:(CGAffineTransform)T;
@@ -158,6 +180,7 @@ typedef enum {
 - (void) glDrawStyleWithTransform:(CGAffineTransform)T;
 - (void) glDrawStyleControlsWithTransform:(CGAffineTransform)T;
 
+////////////////////////////////////////////////////////////////////////////////
 
 
 

@@ -333,13 +333,9 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 	{
 		for (WDElement *element in [self.elements reverseObjectEnumerator])
 		{
-			if ([element editingMode] >= 0)
-			{
-				if ([element intersectsRect:touchR])
-				{
-					return element;
-				}
-			}
+			if ([element isEditable]&&
+				[element intersectsRect:touchR])
+			{ return element; }
 		}
 	}
 
