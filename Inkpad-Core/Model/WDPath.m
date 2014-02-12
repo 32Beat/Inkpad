@@ -755,7 +755,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (CGRect) computeBounds
 {
-	return CGPathGetPathBoundingBox(self.pathRef);
+	return CGPathGetPathBoundingBox([self strokePathRef]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

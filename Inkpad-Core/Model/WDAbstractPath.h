@@ -36,6 +36,8 @@ typedef enum {
 
 + (WDAbstractPath *) pathWithCGPathRef:(CGPathRef)pathRef;
 
+- (CGRect) styleBoundsForPath:(CGPathRef)pathRef;
+
 - (NSUInteger) subpathCount;
 - (NSString *) nodeSVGRepresentation;
 - (void) addSVGArrowheadsToGroup:(WDXMLElement *)group;

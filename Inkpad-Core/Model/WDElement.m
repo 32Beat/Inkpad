@@ -898,7 +898,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	{
 //		CGContextBeginTransparencyLayer(ctx, NULL);
 		CGRect B = CGContextGetClipBoundingBox(ctx);
-		CGRect R = [self renderBounds];
+		CGRect R = [self styleBounds];
 		R = CGRectIntersection(R, B);
 		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
     }

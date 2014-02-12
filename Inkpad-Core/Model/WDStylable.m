@@ -605,6 +605,8 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
 
 - (BOOL) needsTransparencyLayer:(float)scale
 {
+	//return NO;
+
     if (self.maskedElements) {
         return YES;
     }

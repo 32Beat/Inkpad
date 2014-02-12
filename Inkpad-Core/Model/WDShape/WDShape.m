@@ -480,7 +480,7 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 - (CGPathRef) createFramePath
 {
-	CGRect B = [self.strokeStyle styleBoundsForPath:[self sourcePath]];
+	CGRect B = [self styleBoundsForPath:[self sourcePath]];
 	CGAffineTransform T = [self sourceTransform];
 
 	return CGPathCreateWithRect(B, &T);

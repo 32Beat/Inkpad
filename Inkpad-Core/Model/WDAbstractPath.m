@@ -58,9 +58,18 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 
 - (CGRect) computeStyleBounds
 {
-	WDStrokeStyle *strokeStyle = [self strokeStyle];
-	return [strokeStyle styleBoundsForPath:[self strokePathRef]];
+	return [self styleBoundsForPath:[self strokePathRef]];
 }
+
+- (CGRect) styleBoundsForPath:(CGPathRef)pathRef
+{
+	WDStrokeStyle *strokeStyle = [self strokeStyle];
+	if (strokeStyle != nil)
+	{ return [strokeStyle styleBoundsForPath:pathRef]; }
+
+	return CGPathGetPathBoundingBox(pathRef);
+}
+
 
 
 - (BOOL) containsPoint:(CGPoint)pt
