@@ -96,6 +96,7 @@ WDPickResult * WDSnapToRectangle(CGRect rect, CGAffineTransform *transform, CGPo
 // WDQuad
 //
 // This stuff is used for placing text on a path
+#pragma mark -
 
 typedef struct {
     CGPoint     corners[4];
@@ -109,8 +110,11 @@ BOOL WDQuadEqualToQuad(WDQuad a, WDQuad b);
 BOOL WDQuadIntersectsQuad(WDQuad a, WDQuad b);
 BOOL WDQuadIntersectsRect(WDQuad quad, CGRect R);
 BOOL WDQuadContainsPoint(WDQuad quad, CGPoint P);
+CGPoint WDQuadGetCenter(WDQuad Q);
 CGPathRef WDCreateQuadPathRef(WDQuad q);
 NSString * NSStringFromWDQuad(WDQuad quad);
+
+#pragma mark -
 
 //
 // Static Inline Functions (Geometry)
@@ -144,6 +148,9 @@ static inline float WDDistance(CGPoint a, CGPoint b) {
 static inline float WDClamp(float min, float max, float value) {
     return (value < min) ? min : (value > max) ? max : value;
 }
+
+static inline CGPoint WDCenterOfLine(CGPoint a, CGPoint b)
+{ return (CGPoint){ 0.5*(a.x+b.x), 0.5*(a.y+b.y) }; }
 
 static inline CGPoint WDCenterOfRect(CGRect rect) {
     return CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));

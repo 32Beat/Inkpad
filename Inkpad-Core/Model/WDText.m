@@ -583,6 +583,55 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	return CGPathCreateWithRect(self.naturalBounds, &transform_);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDQuad) frameQuad
+{
+	return WDQuadWithRect([self naturalBounds], transform_);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) frameControlPointAtIndex:(NSInteger)n
+{
+	WDQuad Q = [self frameQuad];
+
+	if (n == 0)
+	{ return WDCenterOfLine(Q.corners[3],Q.corners[0]); }
+	if (n == 1)
+	{ return WDCenterOfLine(Q.corners[1],Q.corners[2]); }
+
+	return (CGPoint){ INFINITY, INFINITY };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) frameControlWithIndex:(NSInteger)n
+{
+	WDQuad Q = [self frameQuad];
+
+	if (n == 0)
+	{ return [NSValue valueWithCGPoint:WDCenterOfLine(Q.corners[3],Q.corners[0])]; }
+	if (n == 1)
+	{ return [NSValue valueWithCGPoint:WDCenterOfLine(Q.corners[1],Q.corners[2])]; }
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d
+{
+	CGAffineTransform T = CGAffineTransformInvert(transform_);
+	CGSize vector = { d.x, d.y };
+	vector = CGSizeApplyAffineTransform(vector, T);
+
+	[self setWidth:width_+vector.width];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) glDrawFrameWithTransform:(CGAffineTransform)T
 {
 	CGPathRef framePath = [self createFramePath];
@@ -592,9 +641,16 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
 {
-	CGPathRef framePath = [self createFramePath];
-	WDGLDrawMarkersForCGPathRef(framePath, &T);
-	CGPathRelease(framePath);
+	WDQuad Q = [self frameQuad];
+
+	CGPoint P0 = WDCenterOfLine(Q.corners[3],Q.corners[0]);
+	CGPoint P1 = WDCenterOfLine(Q.corners[1],Q.corners[2]);
+
+	P0 = CGPointApplyAffineTransform(P0, T);
+	P1 = CGPointApplyAffineTransform(P1, T);
+
+	WDGLFillCircleMarker(P0);
+	WDGLFillCircleMarker(P1);
 }
 
 - (void) glDrawContentsWithTransform:(CGAffineTransform)T

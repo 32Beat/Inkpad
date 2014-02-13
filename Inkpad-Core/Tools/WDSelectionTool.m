@@ -117,7 +117,13 @@
 - (BOOL) selectFrameControlsWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
 	// Define touch rect in document scale
-//	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
+	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
+
+	NSInteger n = [mTargetElement findFrameControlForRect:touchR];
+	if ((0 <= n)&&(n <= 3))
+	{
+		
+	}
 
 	return NO;
 }
@@ -343,6 +349,12 @@
 		mTargetElement = [controller findElementInRect:touchR];
 		// TODO: redirect to include editingmode mask
 	}
+
+	if (mTargetElement != nil)
+	{
+		mTargetCenter = [mTargetElement frameCenter];
+		mTargetControlIndex = [mTargetElement findFrameControlIndexForRect:touchR];
+	}
 	
 
 	if (mTargetElement == nil)
@@ -364,17 +376,23 @@
 		[self moveMarqueWithEvent:event inCanvas:canvas];
 	}
 	else
-	if (mTargetElement.editMode & eWDEditModeFrame)
+	if ([mTargetElement isEditingNone])
 	{
 		canvas.transforming = YES;
 		canvas.transformingNode = NO;
-
 		[self moveSelectionWithEvent:event inCanvas:canvas];
 	}
 	else
-	if (mTargetElement.editMode & eWDEditModeContent)
+	if ([mTargetElement isEditingFrame])
 	{
-		canvas.transforming = YES;
+		canvas.transforming = NO;
+		canvas.transformingNode = NO;
+		[self moveFrameWithEvent:event inCanvas:canvas];
+	}
+	else
+	if ([mTargetElement isEditingContent])
+	{
+		canvas.transforming = NO;
 		canvas.transformingNode = YES;
 
 		[self moveContentWithEvent:event inCanvas:canvas];
@@ -497,7 +515,7 @@
 	WDElement *target = [canvas.drawingController singleSelection];
 	if (target != nil)
 	{
-		[target setEditMode:eWDEditModeContent];
+		//[target setEditMode:eWDEditModeContent];
 	}
 }
 
@@ -522,8 +540,43 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) moveFrameWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+	if (mTargetControlIndex < 0)
+		[self moveSelectionWithEvent:event inCanvas:canvas];
+	else
+	{
+		CGPoint srcP = mTargetCenter;
+		CGPoint dstP = event.snappedLocation;
+
+		CGPoint delta = WDSubtractPoints(dstP, srcP);
+
+		if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
+			delta = WDConstrainPoint(delta);
+		}
+
+		CGPoint P = [mTargetElement frameControlPointAtIndex:mTargetControlIndex];
+		P = WDSubtractPoints(P, srcP);
+		delta = WDSubtractPoints(delta, P);
+
+		// Move frame control
+		[mTargetElement adjustFrameControlWithIndex:mTargetControlIndex delta:delta];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) moveFrameControlWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
+	CGPoint srcP = self.initialEvent.snappedLocation;
+	CGPoint dstP = event.snappedLocation;
+
+	CGPoint delta = WDSubtractPoints(dstP, srcP);
+
+	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
+		delta = WDConstrainPoint(delta);
+	}
+
 
 }
 

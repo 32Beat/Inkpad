@@ -19,15 +19,17 @@
 
 + (id) bezierNodesWithShapeInRect:(CGRect)R
 {
-	static const CGFloat p = 0.0; // Curvature (1.0 = cardssuit shape, 0.0 = valentine shape)
-	static const CGFloat c = 0.5 * kWDShapeCircleFactor;
+	static const CGFloat p = 1.0; // Curvature (1.0 = cardssuit shape, 0.0 = valentine shape)
+	static const CGFloat cx = 0.5 * kWDShapeCircleFactor;
+	static const CGFloat cy = 0.4 * kWDShapeCircleFactor;
+	static const CGFloat b = 0.4 * 1.732050807568877; //sqrt(3.0);
 	static const CGPoint P[] = {
-	{ 0.0, -1.0}, { 0, +p*c}, { 0, +p*c}, // center bottom
-	{+1.0, +0.5}, { 0, +c}, { 0, -c*2},
-	{+0.5, +1.0}, { -c, 0}, { +c, 0},
-	{ 0.0, +0.5}, { 0, +c}, { 0, +c}, // center top
-	{-0.5, +1.0}, { -c, 0}, { +c, 0},
-	{-1.0, +0.5}, { 0, -c*2}, { 0, +c}};
+	{ 0.0, -0.2-b}, { 0, +p*cy}, { 0, +p*cy}, // center bottom
+	{+1.0, +0.6}, { 0, +cy}, { 0, -cy*2},
+	{+0.5, +1.0}, { -cx, 0}, { +cx, 0},
+	{ 0.0, +0.6}, { 0, +cy}, { 0, +cy}, // center top
+	{-0.5, +1.0}, { -cx, 0}, { +cx, 0},
+	{-1.0, +0.6}, { 0, -cy*2}, { 0, +cy}};
 
 	return [self bezierNodesWithShapeInRect:R
 	normalizedPoints:P count:6];

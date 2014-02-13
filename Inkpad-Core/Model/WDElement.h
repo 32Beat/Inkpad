@@ -12,6 +12,7 @@
 #import <Foundation/Foundation.h>
 #import "WDDrawing.h"
 #import "WDXMLElement.h"
+#import "WDUtilities.h"
 
 #if TARGET_OS_IPHONE
 #import <OpenGLES/EAGL.h>
@@ -124,6 +125,7 @@ typedef enum {
 - (BOOL) containsPoint:(CGPoint)pt;
 - (BOOL) intersectsRect:(CGRect)rect;
 
+
 - (id) findContentControlsInRect:(CGRect)R;
 
 
@@ -149,6 +151,7 @@ typedef enum {
 - (void) setEditModeText;
 
 - (BOOL) isEditingLocked;
+- (BOOL) isEditingNone;
 - (BOOL) isEditingFrame;
 - (BOOL) isEditingContent;
 - (BOOL) isEditingStyle;
@@ -168,6 +171,19 @@ typedef enum {
 - (BOOL) hasTextControls;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (WDQuad) frameQuad;
+- (CGPoint) frameCenter;
+
+- (id) frameControlWithIndex:(NSInteger)n;
+- (id) findFrameControlForRect:(CGRect)touchR;
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d;
+
+- (NSInteger) findFrameControlIndexForRect:(CGRect)touchR;
+- (CGPoint) frameControlPointAtIndex:(NSInteger)n;
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 // OpenGL-based selection rendering
 - (void) glDrawWithTransform:(CGAffineTransform)T;

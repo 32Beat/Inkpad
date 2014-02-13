@@ -193,6 +193,16 @@ NSString *WDGroupElements = @"WDGroupElements";
     return NO;
 }
 
+
+
+- (void) glDrawContentWithTransform:(CGAffineTransform)T
+{
+	for (WDElement *object in elements_)
+	{ [object glDrawContentWithTransform:T]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // OpenGL-based selection rendering
 
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect

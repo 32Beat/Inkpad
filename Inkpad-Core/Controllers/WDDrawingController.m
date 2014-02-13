@@ -434,25 +434,31 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 
 - (void) selectObject:(WDElement *)element
 {
-	// TODO: make compound path a descendant of group or something similar
+	if ([self _selectObject:element])
+	{ [self notifySelectionChanged]; }
+}
 
-    if ([element isKindOfClass:[WDCompoundPath class]]) {
-        // if the compound path is selected, its subpaths ain't
-        for (WDPath *path in ((WDCompoundPath *)element).subpaths) {
-            [selectedObjects_ removeObject:path];
-        }
-    } else if ([element isKindOfClass:[WDPath class]] && [self allSiblingsSelected:(WDPath *)element]) {
-        // We're selecting the final path in a compound path, which means the compound path should be selected
-        // and not its subpaths. This is similar to the above case...
-        element = ((WDPath *) element).superpath;
-        
-        for (WDPath *path in ((WDCompoundPath *)element).subpaths) {
-            [selectedObjects_ removeObject:path];
-        }
-    }
-
+- (BOOL) _selectObject:(WDElement *)element
+{
 	if (![self isSelected:element])
 	{
+		// TODO: make compound path a descendant of group or something similar
+
+		if ([element isKindOfClass:[WDCompoundPath class]]) {
+			// if the compound path is selected, its subpaths ain't
+			for (WDPath *path in ((WDCompoundPath *)element).subpaths) {
+				[selectedObjects_ removeObject:path];
+			}
+		} else if ([element isKindOfClass:[WDPath class]] && [self allSiblingsSelected:(WDPath *)element]) {
+			// We're selecting the final path in a compound path, which means the compound path should be selected
+			// and not its subpaths. This is similar to the above case...
+			element = ((WDPath *) element).superpath;
+			
+			for (WDPath *path in ((WDCompoundPath *)element).subpaths) {
+				[selectedObjects_ removeObject:path];
+			}
+		}
+
 		[selectedObjects_ addObject:element];
 		if ([self selectedObjects].count == 1)
 			[element setEditMode:eWDEditModeFrame];
@@ -464,8 +470,10 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 
 		[self deselectAllNodes];
 		
-		[self notifySelectionChanged];
+		return YES;
 	}
+
+	return NO;
 }
 
 - (void) selectObjects:(NSArray *)elements
@@ -517,7 +525,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
         
         for (WDElement *element in [layer.elements reverseObjectEnumerator]) {
             if ([element intersectsRect:rect]) {
-                [selectedObjects_ addObject:element];
+                [self _selectObject:element];
             }
         }
     }
@@ -1925,6 +1933,16 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 
 	return nil;
 }
+
+- (WDPickResult *) pickResultForRect:(CGRect)R
+{
+	WDPickResult *pickResult = nil;
+
+
+
+	return pickResult;
+}
+
 
 - (WDPickResult *) objectUnderPoint:(CGPoint)pt viewScale:(float)viewScale
 {

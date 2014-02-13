@@ -767,6 +767,16 @@ BOOL WDQuadIntersectsQuad(WDQuad a, WDQuad b)
     return NO;
 }
 
+
+CGPoint WDQuadGetCenter(WDQuad Q)
+{
+	const CGPoint *P = Q.corners;
+	return (CGPoint){
+		0.25 * (P[0].x+P[1].x+P[2].x+P[3].x),
+		0.25 * (P[0].y+P[1].y+P[2].y+P[3].y) };
+}
+
+
 NSString * NSStringFromWDQuad(WDQuad quad)
 {
 	return [NSString stringWithFormat:@"{{%@}, {%@}, {%@}, {%@}}", \

@@ -478,6 +478,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (BOOL) isEditingLocked
 { return mEditMode < 0; }
 
+- (BOOL) isEditingNone
+{ return mEditMode == eWDEditModeNone; }
+
 - (BOOL) isEditingFrame
 { return mEditMode & eWDEditModeFrame; }
 
@@ -552,31 +555,70 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark Frame Editing
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSInteger) findFrameControlForRect:(CGRect)touchR
+- (WDQuad) frameQuad
+{
+	return WDQuadWithRect([self styleBounds], CGAffineTransformIdentity);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) frameCenter
+{ return WDQuadGetCenter([self frameQuad]); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) frameControlWithIndex:(NSInteger)n
+{
+	WDQuad Q = [self frameQuad];
+	return ((0<=n)&&(n<=3)) ?
+	[NSValue valueWithCGPoint:Q.corners[n]] : nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) findFrameControlForRect:(CGRect)touchR
 {
 	for (NSInteger n=0; n!=4; n++)
 	{
-		CGPoint P = [self frameCornerWithIndex:n];
+		id frameControl = [self frameControlWithIndex:n];
+		if (frameControl != nil)
+		{
+			CGPoint P = [frameControl CGPointValue];
+			if (CGRectContainsPoint(touchR, P))
+			{ return frameControl; }
+		}
+	}
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSInteger) findFrameControlIndexForRect:(CGRect)touchR
+{
+	for (NSInteger n=0; n!=4; n++)
+	{
+		CGPoint P = [self frameControlPointAtIndex:n];
 		if (CGRectContainsPoint(touchR, P))
 		{ return n; }
 	}
 
-	return (-1);
+	return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPoint) frameCornerWithIndex:(NSInteger)n
+- (CGPoint) frameControlPointAtIndex:(NSInteger)n
 {
 	WDQuad Q = [self frameQuad];
-	return Q.corners[n];
+	return ((0<=n)&&(n<=3)) ?
+	Q.corners[n] : (CGPoint){ INFINITY, INFINITY };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDQuad) frameQuad
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d
 {
-	return WDQuadWithRect([self styleBounds], CGAffineTransformIdentity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,7 +665,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (options & eWDEditModeStyle)
 	{ [self glDrawStyleControlsWithTransform:T]; }
 
-	[self glDrawBoundsWithViewTransform:T];
+	//[self glDrawBoundsWithViewTransform:T];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

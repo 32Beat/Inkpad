@@ -44,9 +44,12 @@
     BOOL                    nodeWasSelected_;
     BOOL                    objectWasSelected_;
     WDElement               *lastTappedObject_;
-    WDElement *mTargetElement;
+
 
 	WDShapeOptionsController *mOptionsController;
+	WDElement *mTargetElement;
+	CGPoint mTargetCenter;
+	NSInteger mTargetControlIndex;
 }
 
 
