@@ -131,8 +131,28 @@ typedef enum {
 - (CGRect) subselectionBounds;
 - (void) clearSubselection;
 
-- (BOOL) containsPoint:(CGPoint)pt;
-- (BOOL) intersectsRect:(CGRect)rect;
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	intersectsRect
+		frameIntersectsRect
+		contentIntersectsRect
+			strokeIntersectsRect
+			fillIntersectsRect
+				containsPoint:WDCenterOfRect
+
+*/
+
+- (BOOL) containsPoint:(CGPoint)P;
+- (BOOL) intersectsRect:(CGRect)R;
+- (BOOL) frameIntersectsRect:(CGRect)R;
+- (BOOL) contentIntersectsRect:(CGRect)R;
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 
 - (id) findContentControlsInRect:(CGRect)R;
@@ -184,8 +204,8 @@ typedef enum {
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;
 
-- (id) frameControlWithIndex:(NSInteger)n;
-- (id) findFrameControlForRect:(CGRect)touchR;
+//- (id) frameControlWithIndex:(NSInteger)n;
+//- (id) findFrameControlForRect:(CGRect)touchR;
 - (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d;
 
 - (NSInteger) findFrameControlIndexForRect:(CGRect)touchR;

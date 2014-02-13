@@ -375,6 +375,36 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 - (CGPathRef) pathRef
 { return [self resultPath]; }
 
+- (WDQuad) frameQuad
+{
+	CGRect B = [self styleBoundsForPath:[self sourcePath]];
+	CGAffineTransform T = [self sourceTransform];
+	return WDQuadWithRect(B, T);
+}
+
+
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d
+{
+	CGPoint P0 = [self frameControlPointAtIndex:n];
+	CGPoint P1 = WDAddPoints(P0, d);
+	CGPoint C = mPosition;
+
+	CGPoint d0 = WDSubtractPoints(P0,C);
+	CGPoint d1 = WDSubtractPoints(P1,C);
+
+	CGFloat a0 = atan2(d0.y, d0.x);
+	CGFloat a1 = atan2(d1.y, d1.x);
+	CGFloat da = a1-a0;
+
+	// Store update areas
+	[self cacheDirtyBounds];
+
+	[self setRotation:mRotation+180.0*da/M_PI];
+
+	// Notify drawingcontroller
+	[self postDirtyBoundsChange];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////

@@ -71,6 +71,35 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 }
 
 
+- (BOOL) contentIntersectsRect:(CGRect)R
+{
+	return
+	[self strokeIntersectsRect:R]||
+	[self fillIntersectsRect:R];
+}
+
+- (BOOL) strokeIntersectsRect:(CGRect)R
+{
+	WDQuad Q = WDQuadWithRect(R, CGAffineTransformIdentity);
+
+	int N =
+	[self containsPoint:Q.corners[0]]+
+	[self containsPoint:Q.corners[1]]+
+	[self containsPoint:Q.corners[2]]+
+	[self containsPoint:Q.corners[3]];
+
+	return (N&0x03) != 0; // generally correct but not strictly correct
+}
+
+- (BOOL) fillIntersectsRect:(CGRect)R
+{
+	if ([self fill] != nil)
+	{ return [self containsPoint:WDCenterOfRect(R)]; }
+
+	return NO;
+}
+
+
 
 - (BOOL) containsPoint:(CGPoint)pt
 {

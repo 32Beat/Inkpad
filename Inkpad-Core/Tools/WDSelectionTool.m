@@ -129,7 +129,7 @@
 	NSInteger n = [mTargetElement findFrameControlIndexForRect:touchR];
 
 	// Just need to report a hit, so editmode doesn't change
-	return !(n < 0);
+	return (n >= 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

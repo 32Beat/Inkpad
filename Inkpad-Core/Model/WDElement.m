@@ -335,10 +335,33 @@ NSString *WDShadowKey = @"WDShadowKey";
     return CGRectContainsPoint([self bounds], pt);
 }
 
-- (BOOL) intersectsRect:(CGRect)rect
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark 
+#pragma mark 
+#pragma mark 
+
+- (BOOL) intersectsRect:(CGRect)R
 {
-    return CGRectIntersectsRect([self bounds], rect);
+	return
+	[self frameIntersectsRect:R]||
+	[self contentIntersectsRect:R];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) frameIntersectsRect:(CGRect)R
+{
+	return WDQuadIntersectsRect([self frameQuad], R);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) contentIntersectsRect:(CGRect)R
+{
+	return WDQuadContainsPoint([self frameQuad], WDCenterOfRect(R));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 - (id) findContentControlsInRect:(CGRect)touchR
@@ -573,7 +596,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 { return WDQuadGetCenter([self frameQuad]); }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 - (id) frameControlWithIndex:(NSInteger)n
 {
 	WDQuad Q = [self frameQuad];
@@ -598,7 +621,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	return nil;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 - (NSInteger) findFrameControlIndexForRect:(CGRect)touchR

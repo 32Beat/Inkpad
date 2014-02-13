@@ -106,8 +106,6 @@
 - (CGRect) controlBounds;
 - (CGRect) computeBounds;
 
-- (BOOL) containsPoint:(CGPoint)P;
-
 - (NSString *) nodeSVGRepresentation;
 
 - (void) setClosedQuiet:(BOOL)closed;

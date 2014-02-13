@@ -921,25 +921,10 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     return CGRectMake(minX, minY, maxX - minX, maxY - minY);
 }
 
-
-- (BOOL) intersectsRect:(CGRect)R
-{
-	if ([self fill] != nil)
-	{
-		if ([self containsPoint:WDCenterOfRect(R)])
-		{ return YES; }
-	}
-
-	return [self strokeIntersectsRect:R];
-}
-
-
-- (BOOL) containsPoint:(CGPoint)P
-{
-	bool eoFill = [self fill] ? NO : NO;
-	return CGPathContainsPoint([self pathRef], nil, P, eoFill);
-}
-
+/*
+	Overwrite from WDAbstractPath 
+	for more correct strokeintersection test
+*/
 - (BOOL) strokeIntersectsRect:(CGRect)R
 {
 	NSArray *nodes = [self segmentNodes];
