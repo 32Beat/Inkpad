@@ -79,6 +79,11 @@ typedef enum {
 {
 	WDEditMode mEditMode;
 
+	CGSize _size;
+	CGPoint _position;
+	CGFloat _rotation;
+
+
 	CGPathRef _framePath;
 
 	// Cached info
@@ -88,7 +93,11 @@ typedef enum {
 
 	CGRect dirtyBounds_;
 }
-
+/*
+@property (nonatomic, assign) CGSize size;
+@property (nonatomic, assign) CGPoint position;
+@property (nonatomic, assign) CGFloat rotation;
+*/
 // Owner references for convenience
 @property (nonatomic, weak) WDLayer *layer; // layer
 @property (nonatomic, weak) WDGroup *group;  // pointer to parent group, if any

@@ -1502,7 +1502,10 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     text.text = NSLocalizedString(@"Text", @"Text");
     text.fontName = [propertyManager_ defaultValueForProperty:WDFontNameProperty];
     text.fontSize = [[propertyManager_ defaultValueForProperty:WDFontSizeProperty] floatValue];
-    text.transform = CGAffineTransformMakeTranslation(rect.origin.x, rect.origin.y);
+
+	text.transform =
+	CGAffineTransformMakeTranslation(CGRectGetMidX(rect), CGRectGetMidY(rect));
+
     text.alignment = [[propertyManager_ defaultValueForProperty:WDTextAlignmentProperty] intValue];
     // set this after width, so that the gradient will be set up properly
     text.fill = [propertyManager_ activeFillStyle];

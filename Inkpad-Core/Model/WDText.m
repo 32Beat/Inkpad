@@ -106,9 +106,10 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	if (fontName_ && naturalBoundsDirty_)
 	{
 		CGSize size = [self naturalSize];
-		
-		float fontHeight = CTFontGetLeading([self fontRef]);
-		naturalBounds_ = CGRectMake(0, 0, width_, MAX(fontHeight, size.height + 1));
+		CGFloat fontHeight = CTFontGetLeading([self fontRef]);
+		CGFloat H = MAX(fontHeight, size.height + 1);
+
+		naturalBounds_ = CGRectMake(-0.5*width_, -0.5*H, width_, H);
 		naturalBoundsDirty_ =  NO;
 	}
 
@@ -623,11 +624,26 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d
 {
-	CGAffineTransform T = CGAffineTransformInvert(transform_);
-	CGSize vector = { d.x, d.y };
-	vector = CGSizeApplyAffineTransform(vector, T);
+	CGPoint P0 = [self frameControlPointAtIndex:n];
+	CGPoint P1 = WDAddPoints(P0, d);
+	CGPoint C = [self frameCenter];
 
-	[self setWidth:width_+vector.width];
+	CGPoint d0 = WDSubtractPoints(P0,C);
+	CGPoint d1 = WDSubtractPoints(P1,C);
+
+	CGFloat a0 = atan2(d0.y, d0.x);
+	CGFloat a1 = atan2(d1.y, d1.x);
+	CGFloat da = a1-a0;
+
+	CGAffineTransform T = transform_;
+	T = CGAffineTransformConcat(T, CGAffineTransformMakeTranslation(-C.x, -C.y));
+	T = CGAffineTransformConcat(T, CGAffineTransformMakeRotation(da));
+	T = CGAffineTransformConcat(T, CGAffineTransformMakeTranslation(+C.x, +C.y));
+
+	[self setTransform:T];
+
+	CGFloat D = WDDistance(P1, C);
+	[self setWidth:2*D];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
