@@ -354,6 +354,14 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     return YES;
 }
 
+/*
+	We could possibly do without canEditText...
+*/
+- (BOOL) canEditContent
+{ return YES; }
+
+
+
 - (void) cacheOriginalText
 {
     cachedText_ = [self.text copy];

@@ -85,7 +85,14 @@
 		if (mTargetElement == [controller singleSelection])
 		{
 			if (![self selectControlsWithEvent:event inCanvas:canvas])
-			{ [mTargetElement increaseEditMode]; }
+			{
+				[mTargetElement increaseEditMode];
+				if ([mTargetElement isEditingContent]&&
+					[mTargetElement isKindOfClass:[WDText class]])
+				{
+					[canvas.controller editTextObject:(WDText *)mTargetElement selectAll:NO];
+				}
+			}
 		}
 		else
 		if (![controller isSelected:mTargetElement])
@@ -119,13 +126,10 @@
 	// Define touch rect in document scale
 	CGRect touchR = [event touchRectForViewScale:canvas.viewScale];
 
-	NSInteger n = [mTargetElement findFrameControlForRect:touchR];
-	if ((0 <= n)&&(n <= 3))
-	{
-		
-	}
+	NSInteger n = [mTargetElement findFrameControlIndexForRect:touchR];
 
-	return NO;
+	// Just need to report a hit, so editmode doesn't change
+	return !(n < 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
