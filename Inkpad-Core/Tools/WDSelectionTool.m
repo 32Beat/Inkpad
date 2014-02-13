@@ -522,6 +522,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) moveFrameControlWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) moveContentWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
 	CGPoint srcP = self.initialEvent.snappedLocation;

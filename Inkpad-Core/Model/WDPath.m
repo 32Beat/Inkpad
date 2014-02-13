@@ -213,6 +213,9 @@ NSString *WDClosedKey = @"WDClosedKey";
 - (BOOL) canEditContent
 { return YES; }
 
+- (BOOL) hasContentControls
+{ return YES; }
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -956,7 +959,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 			WDBezierSegment S =
 			WDBezierSegmentMakeWithNodes(lastNode, nextNode);
 
-			if (WDBezierSegmentCurveIntersectsRect(S, R))
+			if (WDBezierSegmentIntersectsRect(S, R))
 			{ return YES; }
 		}
 

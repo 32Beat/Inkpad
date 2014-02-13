@@ -263,6 +263,11 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 }
 
 #pragma mark -
+#pragma mark Frame selection
+
+
+
+#pragma mark -
 #pragma mark Node selection
 
 - (void) selectNode:(WDBezierNode *)node

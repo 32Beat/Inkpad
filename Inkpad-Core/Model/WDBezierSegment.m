@@ -484,7 +484,7 @@ static inline WDRange _BezierRange(double P0, double P1, double P2, double P3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline WDRange WDBezierSegmentRangeX(const WDBezierSegment *S)
+static inline WDRange WDBezierSegmentCurveRangeX(const WDBezierSegment *S)
 {
 	const CGPoint *P = &S->a_;
 	return _BezierRange(P[0].x, P[1].x, P[2].x, P[3].x);
@@ -492,7 +492,7 @@ static inline WDRange WDBezierSegmentRangeX(const WDBezierSegment *S)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline WDRange WDBezierSegmentRangeY(const WDBezierSegment *S)
+static inline WDRange WDBezierSegmentCurveRangeY(const WDBezierSegment *S)
 {
 	const CGPoint *P = &S->a_;
 	return _BezierRange(P[0].y, P[1].y, P[2].y, P[3].y);
@@ -507,9 +507,48 @@ static inline WDRange WDBezierSegmentRangeY(const WDBezierSegment *S)
 
 CGRect WDBezierSegmentCurveBounds(WDBezierSegment S)
 {
-	WDRange X = WDBezierSegmentRangeX(&S);
-	WDRange Y = WDBezierSegmentRangeY(&S);
+	WDRange X = WDBezierSegmentCurveRangeX(&S);
+	WDRange Y = WDBezierSegmentCurveRangeY(&S);
 	return (CGRect){X.min, Y.min, X.max-X.min, Y.max-Y.min};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+BOOL WDBezierSegmentCurveBoundsIntersectRect(WDBezierSegment S, CGRect R)
+{
+	WDRange X = WDBezierSegmentCurveRangeX(&S);
+	if (X.max <= CGRectGetMinX(R)) return NO;
+	if (X.min >= CGRectGetMaxX(R)) return NO;
+
+	WDRange Y = WDBezierSegmentCurveRangeY(&S);
+	if (Y.max <= CGRectGetMinY(R)) return NO;
+	if (Y.min >= CGRectGetMaxY(R)) return NO;
+
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+static inline WDRange WDBezierSegmentControlRangeX(const WDBezierSegment *S)
+{
+	const CGPoint *P = &S->a_;
+
+	return WDRangeUnion(
+	WDLineRangeX(P[0], P[1]),
+	WDLineRangeX(P[2], P[3]));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline WDRange WDBezierSegmentControlRangeY(const WDBezierSegment *S)
+{
+	const CGPoint *P = &S->a_;
+
+	return WDRangeUnion(
+	WDLineRangeY(P[0], P[1]),
+	WDLineRangeY(P[2], P[3]));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -524,19 +563,28 @@ CGRect WDBezierSegmentCurveBounds(WDBezierSegment S)
 
 CGRect WDBezierSegmentControlBounds(WDBezierSegment S)
 {
-	const CGPoint *P = &S.a_;
-
-	WDRange X = WDRangeUnion(
-	WDLineRangeX(P[0], P[1]),
-	WDLineRangeX(P[2], P[3]));
-
-	WDRange Y = WDRangeUnion(
-	WDLineRangeY(P[0], P[1]),
-	WDLineRangeY(P[2], P[3]));
-
+	WDRange X = WDBezierSegmentControlRangeX(&S);
+	WDRange Y = WDBezierSegmentControlRangeY(&S);
 	return (CGRect){ X.min, Y.min, X.max-X.min, Y.max-Y.min };
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+BOOL WDBezierSegmentControlBoundsIntersectRect(WDBezierSegment S, CGRect R)
+{
+	WDRange X = WDBezierSegmentControlRangeX(&S);
+	if (X.max <= CGRectGetMinX(R)) return NO;
+	if (X.min >= CGRectGetMaxX(R)) return NO;
+
+	WDRange Y = WDBezierSegmentControlRangeY(&S);
+	if (Y.max <= CGRectGetMinY(R)) return NO;
+	if (Y.min >= CGRectGetMaxY(R)) return NO;
+
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
 CGPoint WDBezierSegmentControlBoundsCenter(WDBezierSegment S)
@@ -571,68 +619,6 @@ CGFloat WDBezierSegmentControlStripLength(WDBezierSegment S)
 
 CGFloat WDBezierSegmentLineSegmentLength(WDBezierSegment S)
 { return WDLineLength(S.a_, S.b_); }
-
-////////////////////////////////////////////////////////////////////////////////
-
-BOOL WDBezierSegmentCurveBoundsIntersectRect(WDBezierSegment S, CGRect R)
-{
-	WDRange X = WDBezierSegmentRangeX(&S);
-	if (X.max <= CGRectGetMinX(R)) return NO;
-	if (X.min >= CGRectGetMaxX(R)) return NO;
-	WDRange Y = WDBezierSegmentRangeY(&S);
-	if (Y.max <= CGRectGetMinY(R)) return NO;
-	if (Y.min >= CGRectGetMaxY(R)) return NO;
-	return YES;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-BOOL WDBezierSegmentControlBoundsIntersectRect(WDBezierSegment S, CGRect R)
-{
-	const CGPoint *P = &S.a_;
-	return
-	CGRectHoldsPoint(R, P[0])&&
-	CGRectHoldsPoint(R, P[1])&&
-	CGRectHoldsPoint(R, P[2])&&
-	CGRectHoldsPoint(R, P[3]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	WDBezierSegmentIntersectsRect
-	-----------------------------
-	Determine whether any part of the curve described by segment
-	is included by rectangle bounds
-	
-	Generally when drawing, we draw with finitely small pen around 
-	an infinitely small point, therefore we'll assume edge to mean inclusive.
-*/
-
-BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect R)
-{
-	// If either of the end points is inside R, then the curve intersects
-	if (CGRectIncludesPoint(R, S.b_)||
-		CGRectIncludesPoint(R, S.a_))
-		return YES;
-
-	// If curvebounds still intersects with rect, then continue recursively
-	if (WDBezierSegmentCurveBoundsIntersectRect(S, R))
-	{
-		WDBezierSegment Sn;
-		WDBezierSegmentSplit(S, &S, &Sn);
-
-		// Make sure splitting was possible within machine precision
-		if (!WDBezierSegmentIsPoint(&S)&&
-			!WDBezierSegmentIsPoint(&Sn))
-		{
-			return
-			WDBezierSegmentCurveIntersectsRect(Sn, R)||
-			WDBezierSegmentCurveIntersectsRect(S, R);
-		}
-	}
-
-	return NO;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -855,6 +841,43 @@ WDSplitInfo WDBezierSegmentCustomSplitWithBlock(WDBezierSegment S, WDSplitInfo i
 */
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBezierSegmentIntersectsRect
+	-----------------------------
+	Determine whether any part of the curve described by segment
+	is included by rectangle bounds
+	
+	Generally when drawing, we draw with finitely small pen around 
+	an infinitely small point, therefore we'll assume edge to mean inclusive.
+*/
+
+BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect R)
+{
+	// If either of the end points is inside R, then the curve intersects
+	if (CGRectIncludesPoint(R, S.b_)||
+		CGRectIncludesPoint(R, S.a_))
+		return YES;
+
+	// If curvebounds still intersects with rect, then continue recursively
+	if (WDBezierSegmentCurveBoundsIntersectRect(S, R))
+	{
+		WDBezierSegment Sn;
+		WDBezierSegmentSplit(S, &S, &Sn);
+
+		// Make sure splitting was possible within machine precision
+		if (!WDBezierSegmentIsPoint(&S)&&
+			!WDBezierSegmentIsPoint(&Sn))
+		{
+			return
+			WDBezierSegmentIntersectsRect(Sn, R)||
+			WDBezierSegmentIntersectsRect(S, R);
+		}
+	}
+
+	return NO;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	WDBezierSegmentFindCurveBounds

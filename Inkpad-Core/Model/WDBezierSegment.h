@@ -98,17 +98,17 @@ CGFloat WDBezierSegmentLineSegmentLength(WDBezierSegment S);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-BOOL WDBezierSegmentControlBoundsIntersectRect(WDBezierSegment S, CGRect R);
-// Test if control bounds intersect rect, edge exclusive
+BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
+// Currently required for WDImage...
+
+BOOL WDBezierSegmentIntersectsRect(WDBezierSegment S, CGRect rect);
+// Test if curve intersects rect, edge inclusive
 
 BOOL WDBezierSegmentCurveBoundsIntersectRect(WDBezierSegment S, CGRect R);
 // Test if curve bounds intersect rect, edge exclusive
 
-BOOL WDBezierSegmentCurveIntersectsRect(WDBezierSegment S, CGRect rect);
-// Test if curve intersects rect, edge inclusive
-
-BOOL WDLineIntersectsRect(CGPoint a, CGPoint b, CGRect R);
-// Currently required for WDImage...
+BOOL WDBezierSegmentControlBoundsIntersectRect(WDBezierSegment S, CGRect R);
+// Test if control bounds intersect rect, edge exclusive
 
 ////////////////////////////////////////////////////////////////////////////////
 // Bezier
