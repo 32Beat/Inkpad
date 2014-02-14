@@ -1159,15 +1159,6 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
-{
-	CGPathRef framePath = CGPathCreateWithRect([self styleBounds], nil);
-	WDGLDrawMarkersForCGPathRef(framePath, &T);
-	CGPathRelease(framePath);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
 	WDGLRenderPathWithNodes([self displayNodes], T);

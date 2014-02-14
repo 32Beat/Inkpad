@@ -585,14 +585,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     return nil;
 }
 
-
-
-- (CGPathRef) createFramePath
-{
-	return CGPathCreateWithRect(self.naturalBounds, &transform_);
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDQuad) frameQuad
@@ -655,13 +647,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (void) glDrawFrameWithTransform:(CGAffineTransform)T
-{
-	CGPathRef framePath = [self createFramePath];
-	WDGLRenderCGPathRef(framePath, &T);
-	CGPathRelease(framePath);
-}
 
 - (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
 {

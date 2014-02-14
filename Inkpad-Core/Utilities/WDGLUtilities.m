@@ -758,5 +758,37 @@ void WDGLRenderCGPathRef
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Quad Rendering
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLDrawQuadStroke(WDQuad Q, const CGAffineTransform *T)
+{
+	if (T != nil)
+	{ Q = WDQuadApplyTransform(Q, *T); }
+	WDGLQueueAddPoint(Q.corners[0]);
+	WDGLQueueAddPoint(Q.corners[1]);
+	WDGLQueueAddPoint(Q.corners[2]);
+	WDGLQueueAddPoint(Q.corners[3]);
+	WDGLQueueFlush(GL_LINE_LOOP);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLDrawQuadMarkers(WDQuad Q, const CGAffineTransform *T)
+{
+	if (T != nil)
+	{ Q = WDQuadApplyTransform(Q, *T); }
+	WDGLFillCircleMarker(Q.corners[0]);
+	WDGLFillCircleMarker(Q.corners[1]);
+	WDGLFillCircleMarker(Q.corners[2]);
+	WDGLFillCircleMarker(Q.corners[3]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 

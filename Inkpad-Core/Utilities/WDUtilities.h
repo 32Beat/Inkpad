@@ -164,6 +164,9 @@ static inline CGSize WDMultiplySizeScalar(CGSize size, float s) {
     return CGSizeMake(size.width * s, size.height * s);
 }
 
+static inline CGSize WDScaleSize(CGSize size, CGFloat sx, CGFloat sy)
+{ return (CGSize){ size.width * sx, size.height * sy }; }
+
 static inline CGPoint WDMultiplyPointScalar(CGPoint p, float s) {
     return CGPointMake(p.x * s, p.y * s);
 }

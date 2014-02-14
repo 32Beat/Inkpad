@@ -131,8 +131,6 @@ WDShapeOptions;
 - (id) bezierNodes;
 - (id) bezierNodesWithShapeInRect:(CGRect)R;
 
-- (void) glDrawFrameWithTransform:(CGAffineTransform)T;
-- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T;
 - (void) glDrawContentWithTransform:(CGAffineTransform)T;
 //- (void) glDrawContentControlsWithTransform:(CGAffineTransform)T;
 

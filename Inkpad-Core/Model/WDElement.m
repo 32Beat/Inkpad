@@ -168,21 +168,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGSize) sourceSize
-{ return _size; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) sourceBounds
-{
-	CGSize size = [self sourceSize];
-	return (CGRect){ {-0.5*size.width, -0.5*size.height}, size };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (CGRect) bounds
-{ return [self sourceBounds]; }
+{ return [self sourceRect]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -582,7 +569,18 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark Frame Editing
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGSize) sourceSize
+{ return CGSizeZero; }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) sourceRect
+{
+	CGSize srcSize = [self sourceSize];
+	return (CGRect){{-0.5*srcSize.width, -0.5*srcSize.height}, srcSize };
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDQuad) frameQuad
 {
@@ -656,26 +654,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark OpenGL Rendering
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) framePath
-{
-	return _framePath ? _framePath :
-	(_framePath = [self createFramePath]);
-}
-
-- (CGPathRef) createFramePath
-{ return CGPathCreateWithRect([self styleBounds], nil); }
-
-- (void) flushFramePath
-{
-	if (_framePath != nil)
-	{
-		CGPathRelease(_framePath);
-		_framePath = nil;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) glDrawWithTransform:(CGAffineTransform)T
 { [self glDrawWithTransform:T options:[self editMode]]; }
 
@@ -702,19 +680,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) glDrawFrameWithTransform:(CGAffineTransform)T
 {
-	CGRect R = [self styleBounds];
-	R = CGRectApplyAffineTransform(R, T);
-	WDGLStrokeRect(R);
+	WDGLDrawQuadStroke([self frameQuad], &T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
 {
-	CGRect R = [self styleBounds];
-	CGPathRef framePath = CGPathCreateWithRect(R, nil);
-	WDGLDrawMarkersForCGPathRef(framePath, &T);
-	CGPathRelease(framePath);
+	WDGLDrawQuadMarkers([self frameQuad], &T);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

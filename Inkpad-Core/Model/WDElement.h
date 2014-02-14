@@ -83,9 +83,6 @@ typedef enum {
 	CGPoint _position;
 	CGFloat _rotation;
 
-
-	CGPathRef _framePath;
-
 	// Cached info
 	CGRect mStyleBounds;
 	CGRect mShadowBounds;
@@ -111,25 +108,6 @@ typedef enum {
 @property (weak, nonatomic, readonly) NSSet *inspectableProperties;
 
 - (void) awakeFromEncoding;
-
-
-- (CGRect) bounds;
-- (CGRect) styleBounds;
-- (CGRect) computeStyleBounds;
-- (CGRect) shadowBounds;
-- (CGRect) computeShadowBounds;
-- (CGRect) renderBounds;
-- (CGRect) computeRenderBounds;
-
-- (CGRect) expandRenderArea:(CGRect)R;
-
-- (void) invalidateBounds;
-- (void) invalidateStyleBounds;
-- (void) invalidateShadowBounds;
-
-
-- (CGRect) subselectionBounds;
-- (void) clearSubselection;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +179,29 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGRect) bounds;
+- (CGRect) styleBounds;
+- (CGRect) computeStyleBounds;
+- (CGRect) shadowBounds;
+- (CGRect) computeShadowBounds;
+- (CGRect) renderBounds;
+- (CGRect) computeRenderBounds;
+
+- (CGRect) expandRenderArea:(CGRect)R;
+
+- (void) invalidateBounds;
+- (void) invalidateStyleBounds;
+- (void) invalidateShadowBounds;
+
+
+- (CGRect) subselectionBounds;
+- (void) clearSubselection;
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) sourceSize;
+- (CGRect) sourceRect;
+
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;
 
@@ -220,8 +221,10 @@ typedef enum {
 
 - (void) glDrawFrameWithTransform:(CGAffineTransform)T;
 - (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T;
+
 - (void) glDrawContentWithTransform:(CGAffineTransform)T;
 - (void) glDrawContentControlsWithTransform:(CGAffineTransform)T;
+
 - (void) glDrawStyleWithTransform:(CGAffineTransform)T;
 - (void) glDrawStyleControlsWithTransform:(CGAffineTransform)T;
 

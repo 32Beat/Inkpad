@@ -72,12 +72,20 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 	WDShape *shape = [super copyWithZone:zone];
 	if (shape != nil)
 	{
-		shape->mSize = self->mSize;
-		shape->mPosition = self->mPosition;
-		shape->mRotation = self->mRotation;
+		[shape takePropertiesFrom:self];
 	}
 
 	return shape;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) takePropertiesFrom:(WDShape *)shape
+{
+	// super...
+	[self setSize:shape->mSize];
+	[self setPosition:shape->mPosition];
+	[self setRotation:shape->mRotation];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,21 +356,11 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 		[self cacheDirtyBounds];
 
 		// Copy properties from shape
-		[self resetProperties:shape];
+		[self takePropertiesFrom:shape];
 
 		// Notify drawingcontroller
 		[self postDirtyBoundsChange];
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) resetProperties:(WDShape *)shape
-{
-	// super...
-	[self setSize:shape->mSize];
-	[self setPosition:shape->mPosition];
-	[self setRotation:shape->mRotation];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -398,15 +396,12 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 	CGFloat d0 = WDDistance(P0, C);
 	CGFloat d1 = WDDistance(P1, C);
-	CGFloat d = d0 > 0 ? d1 / d0 : 1.0;
+	CGFloat d = d0 != 0.0 && d1 != 0.0 ? d1 / d0 : 1.0;
 
 	// Store update areas
 	[self cacheDirtyBounds];
 
-	CGSize size = mSize;
-	size.width *= d;
-	size.height *= d;
-	[self setSize:size];
+	[self setSize:WDScaleSize(mSize, d, d)];
 	[self setRotation:mRotation + 180.0*da/M_PI];
 
 	// Notify drawingcontroller
@@ -723,21 +718,10 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) glDrawFrameWithTransform:(CGAffineTransform)T
-{
-	WDGLRenderCGPathRef([self framePath], &T);
-}
-
-- (void) glDrawFrameControlsWithTransform:(CGAffineTransform)T
-{
-	WDGLDrawMarkersForCGPathRef([self framePath], &T);
-}
-
 - (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
 	WDGLRenderCGPathRef([self resultPath], &T);
 }
-
 
 - (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)T
 {

@@ -72,19 +72,10 @@ inline BOOL WDBezierSegmentIsFlat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct
-{
-	CGFloat min;
-	CGFloat max;
-}
-WDRange;
-
-////////////////////////////////////////////////////////////////////////////////
-
 CGRect WDBezierSegmentCurveBounds(WDBezierSegment S);
 // Get bounds rectangle encompassing curve
 
-CGRect WDBezierSegmentControlBounds(WDBezierSegment seg);
+CGRect WDBezierSegmentControlBounds(WDBezierSegment S);
 // Get bounds rectangle encompassing segment points
 
 CGPoint WDBezierSegmentControlBoundsCenter(WDBezierSegment S);
@@ -120,6 +111,15 @@ inline CGPoint WDBezierSegmentSplitAtT(WDBezierSegment S,
 										WDBezierSegment *R, CGFloat t);
 inline CGPoint WDBezierSegmentSplit
 (WDBezierSegment S, WDBezierSegment *L, WDBezierSegment *R);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct
+{
+	CGFloat min;
+	CGFloat max;
+}
+WDRange;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Recursion
