@@ -383,23 +383,31 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 }
 
 
-- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)delta
 {
 	CGPoint P0 = [self frameControlPointAtIndex:n];
-	CGPoint P1 = WDAddPoints(P0, d);
+	CGPoint P1 = WDAddPoints(P0, delta);
+
 	CGPoint C = mPosition;
+	CGPoint D0 = WDSubtractPoints(P0,C);
+	CGPoint D1 = WDSubtractPoints(P1,C);
 
-	CGPoint d0 = WDSubtractPoints(P0,C);
-	CGPoint d1 = WDSubtractPoints(P1,C);
+	CGFloat a0 = atan2(D0.y, D0.x);
+	CGFloat a1 = atan2(D1.y, D1.x);
+	CGFloat da = a1 - a0;
 
-	CGFloat a0 = atan2(d0.y, d0.x);
-	CGFloat a1 = atan2(d1.y, d1.x);
-	CGFloat da = a1-a0;
+	CGFloat d0 = WDDistance(P0, C);
+	CGFloat d1 = WDDistance(P1, C);
+	CGFloat d = d0 > 0 ? d1 / d0 : 1.0;
 
 	// Store update areas
 	[self cacheDirtyBounds];
 
-	[self setRotation:mRotation+180.0*da/M_PI];
+	CGSize size = mSize;
+	size.width *= d;
+	size.height *= d;
+	[self setSize:size];
+	[self setRotation:mRotation + 180.0*da/M_PI];
 
 	// Notify drawingcontroller
 	[self postDirtyBoundsChange];

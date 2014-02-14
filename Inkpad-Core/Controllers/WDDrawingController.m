@@ -1348,6 +1348,11 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     lastAppliedTransform_ = transform;
     
     for (WDElement *element in selectedObjects_) {
+/*
+implement undo at this level
+rewrite element to report current transform
+and rename to applyTransform
+*/
         NSSet *replacedNodes = [element transform:transform];
         
         if (replacedNodes && replacedNodes.count) {

@@ -241,7 +241,12 @@ typedef enum {
 - (void) drawGradientControlsWithViewTransform:(CGAffineTransform)transform;
 - (void) drawTextPathControlsWithViewTransform:(CGAffineTransform)viewTransform viewScale:(float)viewScale;
 
+
+
 - (NSSet *) transform:(CGAffineTransform)transform;
+
+
+
 - (void) adjustColor:(WDColor * (^)(WDColor *color))adjustment scope:(WDColorAdjustmentScope)scope;
 
 - (NSSet *) alignToRect:(CGRect)rect alignment:(WDAlignment)align;

@@ -549,39 +549,28 @@
 	if (mTargetControlIndex < 0)
 		[self moveSelectionWithEvent:event inCanvas:canvas];
 	else
-	{
-		CGPoint srcP = mTargetCenter;
-		CGPoint dstP = event.snappedLocation;
-
-		CGPoint delta = WDSubtractPoints(dstP, srcP);
-
-		if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
-			delta = WDConstrainPoint(delta);
-		}
-
-		CGPoint P = [mTargetElement frameControlPointAtIndex:mTargetControlIndex];
-		P = WDSubtractPoints(P, srcP);
-		delta = WDSubtractPoints(delta, P);
-
-		// Move frame control
-		[mTargetElement adjustFrameControlWithIndex:mTargetControlIndex delta:delta];
-	}
+		[self moveFrameControlWithEvent:event inCanvas:canvas];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) moveFrameControlWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
-	CGPoint srcP = self.initialEvent.snappedLocation;
-	CGPoint dstP = event.snappedLocation;
+	CGPoint C = mTargetCenter;
+	CGPoint P0 = [mTargetElement frameControlPointAtIndex:mTargetControlIndex];
+	CGPoint P1 = event.snappedLocation;
 
-	CGPoint delta = WDSubtractPoints(dstP, srcP);
+	P0 = WDSubtractPoints(P0, C);
+	P1 = WDSubtractPoints(P1, C);
+
+	CGPoint delta = WDSubtractPoints(P1, P0);
 
 	if (self.flags & WDToolShiftKey || self.flags & WDToolSecondaryTouch) {
 		delta = WDConstrainPoint(delta);
 	}
 
-
+	// Move frame control
+	[mTargetElement adjustFrameControlWithIndex:mTargetControlIndex delta:delta];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

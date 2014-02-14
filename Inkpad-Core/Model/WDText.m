@@ -677,9 +677,14 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	WDGLFillCircleMarker(P1);
 }
 
-- (void) glDrawContentsWithTransform:(CGAffineTransform)T
+- (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
-	//WDGLRenderCGPathRef([self resultPath], &T);
+	[self layout];
+
+	for (id pathRef in glyphs_) {
+		CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
+		WDGLRenderCGPathRef(glyphPath, &T);
+	}
 }
 
 
@@ -1107,12 +1112,12 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     
     CGAffineTransform glTransform = CGAffineTransformConcat(transform, viewTransform);
     
-    [self layout];
-    
-    for (id pathRef in glyphs_) {
+	[self layout];
+
+	for (id pathRef in glyphs_) {
 		CGPathRef glyphPath = (__bridge CGPathRef) pathRef;
 		WDGLRenderCGPathRef(glyphPath, &glTransform);
-    }
+	}
 }
 
 - (id) copyWithZone:(NSZone *)zone

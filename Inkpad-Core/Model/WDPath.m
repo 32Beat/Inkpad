@@ -129,6 +129,26 @@ NSString *WDClosedKey = @"WDClosedKey";
 #pragma mark 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) setNodes:(NSMutableArray *)nodes
+{
+    if ([nodes_ isEqualToArray:nodes]) {
+        return;
+    }
+    [[self.undoManager prepareWithInvocationTarget:self] setNodes:nodes_];
+
+    [self cacheDirtyBounds];
+    
+    nodes_ = nodes;
+    
+    [self invalidatePath];
+    
+    [self postDirtyBoundsChange];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
 //- (id) nodes \
 { return nodes_ ? nodes_ : (nodes_ = [[NSMutableArray alloc] init]); }
 
@@ -204,6 +224,182 @@ NSString *WDClosedKey = @"WDClosedKey";
 	{ count += [node selected]; }
 
 	return count;
+}
+
+- (BOOL) addNode:(WDBezierNode *)node scale:(float)scale
+{
+    [self cacheDirtyBounds];
+    
+    if (nodes_.count && WDDistance(node.anchorPoint, ((WDBezierNode *) nodes_[0]).anchorPoint) < (kNodeSelectionTolerance / scale)) {
+        self.closed = YES;
+    } else {
+        NSMutableArray *newNodes = [nodes_ mutableCopy];
+        [newNodes addObject:node];
+        self.nodes = newNodes;
+    }
+    
+    [self postDirtyBoundsChange];
+    
+    return closed_;
+}
+
+- (void) addNodeWithAnchorPoint:(CGPoint)P
+{ [self addNode:[WDBezierNode bezierNodeWithAnchorPoint:P]]; }
+
+- (void) addNode:(WDBezierNode *)node
+{
+	if (node != nil)
+	[self.nodes addObject:node];
+}
+
+- (void) replaceFirstNodeWithNode:(WDBezierNode *)node
+{
+    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
+    newNodes[0] = node;
+    self.nodes = newNodes;
+}
+
+- (void) replaceLastNodeWithNode:(WDBezierNode *)node
+{
+    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
+    [newNodes removeLastObject];
+    [newNodes addObject:node];
+    self.nodes = newNodes;
+}
+
+- (WDBezierNode *) firstNode
+{
+    return nodes_[0];
+}
+
+- (WDBezierNode *) lastNode
+{
+    return (closed_ ? nodes_[0] : [nodes_ lastObject]); 
+}
+
+- (NSSet *) nodesInRect:(CGRect)rect
+{
+	NSMutableSet *nodesInRect = nil;
+
+	for (WDBezierNode *node in nodes_)
+	{
+		if (CGRectContainsPoint(rect, node.anchorPoint))
+		{
+			if (nodesInRect == nil)
+			{ nodesInRect = [NSMutableSet set]; }
+			[nodesInRect addObject:node];
+		}
+	}
+
+	return nodesInRect;
+}
+
+- (NSArray *) nodesWithTransform:(CGAffineTransform)viewTransform
+				adjustmentTransform:(CGAffineTransform)adjustmentTransform
+{
+	// TODO: Why would closed be different for display?
+	BOOL closed = displayNodes_ ? displayClosed_ : closed_;
+	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
+
+    if (!nodes || nodes.count == 0) return nil;
+
+	BOOL transformAll = ![self anyNodesSelected];
+	CGAffineTransform combined =
+	CGAffineTransformConcat(adjustmentTransform, viewTransform);
+
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:nodes.count+1];
+
+	for (WDBezierNode *node in nodes)
+	{
+		// Apply relevant transform
+		CGAffineTransform T =
+		([node selected] || transformAll) ? combined : viewTransform;
+
+		WDBezierNode *newNode = [node copyWithTransform:T];
+		if (newNode != nil)
+		{ [result addObject:newNode]; }
+	}
+
+	if (closed)
+	[result addObject:[result firstObject]];
+
+	return result;
+}
+
+
+
+- (NSMutableArray *) nodesWithTransform:(CGAffineTransform)T
+{
+	if ([self nodes].count)
+	{ return [self _nodesWithTransform:T]; }
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSMutableArray *) nodesWithSelectionTransform:(CGAffineTransform)T
+{
+	if ([self anyNodesSelected])
+	{ return [self _nodesWithSelectionTransform:T]; }
+	else
+	if ([self nodes].count)
+	{ return [self _nodesWithTransform:T]; }
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSMutableArray *) _nodesWithTransform:(CGAffineTransform)T
+{
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:[self nodes].count];
+
+	for (WDBezierNode *node in [self nodes])
+	{ [result addObject:[node copyWithTransform:T]]; }
+
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSMutableArray *) _nodesWithSelectionTransform:(CGAffineTransform)T
+{
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:[self nodes].count];
+
+	for (WDBezierNode *node in [self nodes])
+	{
+		[result addObject:[node selected] ?
+		[node copyWithTransform:T] : node];
+	}
+
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSSet *) selectedNodesSet
+{
+	NSMutableSet *set = [NSMutableSet set];
+
+	for (WDBezierNode *node in [self nodes])
+	{ if ([node selected]) [set addObject:node]; }
+
+	return set;
+}
+
+
+- (NSArray *) selectedNodes
+{   
+    NSMutableArray *selected = [NSMutableArray array];
+    
+    for (WDBezierNode *node in nodes_) {
+        if (node.selected) {
+            [selected addObject:node];
+        }
+    }
+    
+    return selected;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -633,56 +829,6 @@ NSString *WDClosedKey = @"WDClosedKey";
     [self postDirtyBoundsChange];
 }
 
-- (BOOL) addNode:(WDBezierNode *)node scale:(float)scale
-{
-    [self cacheDirtyBounds];
-    
-    if (nodes_.count && WDDistance(node.anchorPoint, ((WDBezierNode *) nodes_[0]).anchorPoint) < (kNodeSelectionTolerance / scale)) {
-        self.closed = YES;
-    } else {
-        NSMutableArray *newNodes = [nodes_ mutableCopy];
-        [newNodes addObject:node];
-        self.nodes = newNodes;
-    }
-    
-    [self postDirtyBoundsChange];
-    
-    return closed_;
-}
-
-- (void) addNodeWithAnchorPoint:(CGPoint)P
-{ [self addNode:[WDBezierNode bezierNodeWithAnchorPoint:P]]; }
-
-- (void) addNode:(WDBezierNode *)node
-{
-	if (node != nil)
-	[self.nodes addObject:node];
-}
-
-- (void) replaceFirstNodeWithNode:(WDBezierNode *)node
-{
-    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
-    newNodes[0] = node;
-    self.nodes = newNodes;
-}
-
-- (void) replaceLastNodeWithNode:(WDBezierNode *)node
-{
-    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
-    [newNodes removeLastObject];
-    [newNodes addObject:node];
-    self.nodes = newNodes;
-}
-
-- (WDBezierNode *) firstNode
-{
-    return nodes_[0];
-}
-
-- (WDBezierNode *) lastNode
-{
-    return (closed_ ? nodes_[0] : [nodes_ lastObject]); 
-}
 
 - (void) reversePathDirection
 {
@@ -963,23 +1109,6 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 
 
-- (NSSet *) nodesInRect:(CGRect)rect
-{
-	NSMutableSet *nodesInRect = nil;
-
-	for (WDBezierNode *node in nodes_)
-	{
-		if (CGRectContainsPoint(rect, node.anchorPoint))
-		{
-			if (nodesInRect == nil)
-			{ nodesInRect = [NSMutableSet set]; }
-			[nodesInRect addObject:node];
-		}
-	}
-
-	return nodesInRect;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /*
 - (NSMutableArray *) nodesWithTransform:(CGAffineTransform)T
@@ -1006,40 +1135,6 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	return result;
 }
 */
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSArray *) nodesWithTransform:(CGAffineTransform)viewTransform
-				adjustmentTransform:(CGAffineTransform)adjustmentTransform
-{
-	// TODO: Why would closed be different for display?
-	BOOL closed = displayNodes_ ? displayClosed_ : closed_;
-	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
-
-    if (!nodes || nodes.count == 0) return nil;
-
-	BOOL transformAll = ![self anyNodesSelected];
-	CGAffineTransform combined =
-	CGAffineTransformConcat(adjustmentTransform, viewTransform);
-
-	NSMutableArray *result = [NSMutableArray arrayWithCapacity:nodes.count+1];
-
-	for (WDBezierNode *node in nodes)
-	{
-		// Apply relevant transform
-		CGAffineTransform T =
-		([node selected] || transformAll) ? combined : viewTransform;
-
-		WDBezierNode *newNode = [node copyWithTransform:T];
-		if (newNode != nil)
-		{ [result addObject:newNode]; }
-	}
-
-	if (closed)
-	[result addObject:[result firstObject]];
-
-	return result;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) renderGLOutlineWithNodes:(NSArray *)nodes
@@ -1219,87 +1314,8 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
     return exchangedNodes;
 }
 
-- (void) setNodes:(NSMutableArray *)nodes
-{
-    if ([nodes_ isEqualToArray:nodes]) {
-        return;
-    }
-    [[self.undoManager prepareWithInvocationTarget:self] setNodes:nodes_];
-
-    [self cacheDirtyBounds];
-    
-    nodes_ = nodes;
-    
-    [self invalidatePath];
-    
-    [self postDirtyBoundsChange];
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSMutableArray *) nodesWithTransform:(CGAffineTransform)T
-{
-	if ([self nodes].count)
-	{ return [self _nodesWithTransform:T]; }
-
-	return nil;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSMutableArray *) nodesWithSelectionTransform:(CGAffineTransform)T
-{
-	if ([self anyNodesSelected])
-	{ return [self _nodesWithSelectionTransform:T]; }
-	else
-	if ([self nodes].count)
-	{ return [self _nodesWithTransform:T]; }
-
-	return nil;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSMutableArray *) _nodesWithTransform:(CGAffineTransform)T
-{
-	NSMutableArray *result = [NSMutableArray arrayWithCapacity:[self nodes].count];
-
-	for (WDBezierNode *node in [self nodes])
-	{ [result addObject:[node copyWithTransform:T]]; }
-
-	return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSMutableArray *) _nodesWithSelectionTransform:(CGAffineTransform)T
-{
-	NSMutableArray *result = [NSMutableArray arrayWithCapacity:[self nodes].count];
-
-	for (WDBezierNode *node in [self nodes])
-	{
-		[result addObject:[node selected] ?
-		[node copyWithTransform:T] : node];
-	}
-
-	return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSSet *) selectedNodesSet
-{
-	NSMutableSet *set = [NSMutableSet set];
-
-	for (WDBezierNode *node in [self nodes])
-	{ if ([node selected]) [set addObject:node]; }
-
-	return set;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 - (NSSet *) transform:(CGAffineTransform)transform
@@ -1319,19 +1335,6 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (NSArray *) selectedNodes
-{   
-    NSMutableArray *selected = [NSMutableArray array];
-    
-    for (WDBezierNode *node in nodes_) {
-        if (node.selected) {
-            [selected addObject:node];
-        }
-    }
-    
-    return selected;
-}
 
 // When splitting a path there are two cases. Spliting a closed path (reopen it)
 // and splitting an open path (breaking it into two)
