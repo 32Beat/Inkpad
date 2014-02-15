@@ -103,13 +103,13 @@ WDShapeOptions;
 @interface WDShape : WDAbstractPath <WDShapeOptionsProtocol>
 {
 	// Model
+/*
 	CGSize mSize;
 	CGFloat mRotation;
 	CGPoint mPosition;
-	
+*/	
 	// Cache
 	CGRect mFrameRect; 		// boundingbox of transformed sourcerect
-	CGPathRef mFramePath; 	// transformed sourcerect cornerpoints
 	CGPathRef mResultPath; 	// transformed sourcepath
 	CGPathRef mSourcePath; 	// path from sourcenodes
 	NSArray *mSourceNodes; 	// beziernodes centered around 0,0
@@ -123,7 +123,6 @@ WDShapeOptions;
 
 - (void) flushCache;
 - (CGRect) frameRect; // framerect - framepath - framebounds ?
-- (CGPathRef) framePath;
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
 - (CGRect) sourceRect;

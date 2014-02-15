@@ -1,0 +1,138 @@
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDBlendStyle.m
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2009-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+#import "WDBlendStyle.h"
+#import "WDUtilities.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static int WDBlendStyleVersion = 1;
+static NSString *WDBlendStyleVersionKey = @"WDBlendStyleVersion";
+
+static NSString *WDBlendStyleModeKey = @"WDBlendStyleMode";
+static NSString *WDBlendStyleOpacityKey = @"WDBlendStyleOpacity";
+
+////////////////////////////////////////////////////////////////////////////////
+@implementation WDBlendStyle
+////////////////////////////////////////////////////////////////////////////////
+
+@synthesize mode = mMode;
+@synthesize opacity = mOpacity;
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) init
+{ return [self initWithMode:kCGBlendModeNormal opacity:1.0]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithMode:(CGBlendMode)mode opacity:(CGFloat)opacity
+{
+	self = [super init];
+	if (self != nil)
+	{
+		mMode = mode;
+		mOpacity = opacity;
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Encoding
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeInteger:WDBlendStyleVersion forKey:WDBlendStyleVersionKey];
+
+	[self encodeModeWithCoder:coder];
+	[self encodeOpacityWithCoder:coder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeModeWithCoder:(NSCoder *)coder
+{
+	NSString *str = [[NSNumber numberWithInteger:mMode] stringValue];
+	[coder encodeObject:str forKey:WDBlendStyleModeKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeOpacityWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGFloat(mOpacity);
+	[coder encodeObject:str forKey:WDBlendStyleOpacityKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Decoding
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithCoder:(NSCoder *)coder
+{
+	self = [[self class] new];
+	if (self != nil)
+	{
+		[self decodeWithCoder:coder];
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) decodeWithCoder:(NSCoder *)coder
+{
+	[self decodeModeWithCoder:coder];
+	[self decodeOpacityWithCoder:coder];
+
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeModeWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDBlendStyleModeKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDBlendStyleModeKey];
+		if (str != nil) { mMode = [str integerValue]; }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeOpacityWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDBlendStyleOpacityKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDBlendStyleOpacityKey];
+		if (str != nil) { mOpacity = CGFloatFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+@end
+////////////////////////////////////////////////////////////////////////////////
+
+
+

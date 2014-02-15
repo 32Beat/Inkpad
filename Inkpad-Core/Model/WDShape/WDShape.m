@@ -433,7 +433,6 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 - (void) flushResult
 {
 	[self flushResultPath];
-	[self flushFramePath];
 	[self flushFrameRect];
 }
 
@@ -488,7 +487,6 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) computeFrameRect
-//{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform]); }
 { return [self styleBounds]; }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,37 +495,6 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 {
 	mFrameRect.size.width = 0;
 	mFrameRect.size.height = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark Frame Path
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPathRef) framePath
-{
-	return mFramePath ? mFramePath :
-	(mFramePath = [self createFramePath]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPathRef) createFramePath
-{
-	CGRect B = [self styleBoundsForPath:[self sourcePath]];
-	CGAffineTransform T = [self sourceTransform];
-
-	return CGPathCreateWithRect(B, &T);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) flushFramePath
-{
-	if (mFramePath != nil)
-	{
-		CGPathRelease(mFramePath);
-		mFramePath = nil;
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,13 +687,6 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 
 - (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
-	WDGLRenderCGPathRef([self resultPath], &T);
-}
-
-- (void) drawOpenGLHighlightWithTransform:(CGAffineTransform)T
-{
-	[super drawOpenGLHighlightWithTransform:T];
-	WDGLRenderCGPathRef([self framePath], &T);
 	WDGLRenderCGPathRef([self resultPath], &T);
 }
 

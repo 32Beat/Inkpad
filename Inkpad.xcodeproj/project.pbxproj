@@ -317,6 +317,7 @@
 		BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */; };
 		BE2ACC99189AFF6600EC91EC /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC96189AFF6600EC91EC /* WDShape.m */; };
 		BE2C2744189FE17A0077A97C /* WDHeartShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2C2743189FE17A0077A97C /* WDHeartShape.m */; };
+		BE37E17D18AEB3B900A951C1 /* WDBlendStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = BE37E17C18AEB3B900A951C1 /* WDBlendStyle.m */; };
 		BE40990718A00CC500FA17B6 /* WDItem.m in Sources */ = {isa = PBXBuildFile; fileRef = BE40990618A00CC500FA17B6 /* WDItem.m */; };
 		BE41B302189FA7570021477A /* WDLeafShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE41B301189FA7570021477A /* WDLeafShape.m */; };
 		BE56D4D718A3F10A00B4374C /* WDSpadesShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE56D4D618A3F10A00B4374C /* WDSpadesShape.m */; };
@@ -817,6 +818,8 @@
 		BE2ACC96189AFF6600EC91EC /* WDShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShape.m; sourceTree = "<group>"; };
 		BE2C2742189FE17A0077A97C /* WDHeartShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDHeartShape.h; sourceTree = "<group>"; };
 		BE2C2743189FE17A0077A97C /* WDHeartShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDHeartShape.m; sourceTree = "<group>"; };
+		BE37E17B18AEB3B900A951C1 /* WDBlendStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDBlendStyle.h; sourceTree = "<group>"; };
+		BE37E17C18AEB3B900A951C1 /* WDBlendStyle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDBlendStyle.m; sourceTree = "<group>"; };
 		BE40990518A00CC500FA17B6 /* WDItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDItem.h; sourceTree = "<group>"; };
 		BE40990618A00CC500FA17B6 /* WDItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDItem.m; sourceTree = "<group>"; };
 		BE41B300189FA7570021477A /* WDLeafShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDLeafShape.h; sourceTree = "<group>"; };
@@ -1299,6 +1302,8 @@
 				6BABD911141ED30100F7E0A9 /* WDShadow.m */,
 				BE2ACC90189AFF6600EC91EC /* WDShape */,
 				6BABD912141ED30100F7E0A9 /* WDStrokeStyle.h */,
+				BE37E17B18AEB3B900A951C1 /* WDBlendStyle.h */,
+				BE37E17C18AEB3B900A951C1 /* WDBlendStyle.m */,
 				6BABD913141ED30100F7E0A9 /* WDStrokeStyle.m */,
 				6BABD914141ED30100F7E0A9 /* WDStylable.h */,
 				6BABD915141ED30100F7E0A9 /* WDStylable.m */,
@@ -1982,6 +1987,7 @@
 				6BB7F94513AB1F5A004081B3 /* WDHueShifter.m in Sources */,
 				6B308FB713B56A8A000665C3 /* WDColorAdjustmentController.m in Sources */,
 				BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */,
+				BE37E17D18AEB3B900A951C1 /* WDBlendStyle.m in Sources */,
 				6B308FBA13B56B59000665C3 /* WDColorBalanceController.m in Sources */,
 				BE056B6718A151A20081C8D6 /* WDEditableShape.m in Sources */,
 				5D348D891386FDA200BB0047 /* WDImportController.m in Sources */,

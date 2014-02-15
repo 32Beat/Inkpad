@@ -432,8 +432,10 @@
     }
     if (uiimage) {
         WDImage *wdimage = [WDImage imageWithUIImage:uiimage inDrawing:drawing_];
-        wdimage.transform = CGAffineTransformConcat([self preserveAspectRatio:preserve withSize:wdimage.naturalBounds.size andBounds:box], state_.transform);
-        [styleParser_ styleOpacityBlendAndShadow:wdimage];
+       // wdimage.transform = CGAffineTransformConcat([self preserveAspectRatio:preserve withSize:wdimage.sourceSize andBounds:box], state_.transform);
+		[wdimage setSourceTransform:CGAffineTransformConcat([self preserveAspectRatio:preserve withSize:wdimage.sourceSize andBounds:box], state_.transform)];
+
+		[styleParser_ styleOpacityBlendAndShadow:wdimage];
         state_.wdElement = [self clipAndGroup:wdimage];
     } else {
         [state_ reportError:@"could not load image"];

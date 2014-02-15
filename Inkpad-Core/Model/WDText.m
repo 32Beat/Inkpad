@@ -599,9 +599,9 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	WDQuad Q = [self frameQuad];
 
 	if (n == 0)
-	{ return WDCenterOfLine(Q.corners[3],Q.corners[0]); }
+	{ return WDCenterOfLine(Q.P[3],Q.P[0]); }
 	if (n == 1)
-	{ return WDCenterOfLine(Q.corners[1],Q.corners[2]); }
+	{ return WDCenterOfLine(Q.P[1],Q.P[2]); }
 
 	return (CGPoint){ INFINITY, INFINITY };
 }
@@ -613,9 +613,9 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	WDQuad Q = [self frameQuad];
 
 	if (n == 0)
-	{ return [NSValue valueWithCGPoint:WDCenterOfLine(Q.corners[3],Q.corners[0])]; }
+	{ return [NSValue valueWithCGPoint:WDCenterOfLine(Q.P[3],Q.P[0])]; }
 	if (n == 1)
-	{ return [NSValue valueWithCGPoint:WDCenterOfLine(Q.corners[1],Q.corners[2])]; }
+	{ return [NSValue valueWithCGPoint:WDCenterOfLine(Q.P[1],Q.P[2])]; }
 
 	return nil;
 }
@@ -652,8 +652,8 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 {
 	WDQuad Q = [self frameQuad];
 
-	CGPoint P0 = WDCenterOfLine(Q.corners[3],Q.corners[0]);
-	CGPoint P1 = WDCenterOfLine(Q.corners[1],Q.corners[2]);
+	CGPoint P0 = WDCenterOfLine(Q.P[3],Q.P[0]);
+	CGPoint P1 = WDCenterOfLine(Q.P[1],Q.P[2]);
 
 	P0 = CGPointApplyAffineTransform(P0, T);
 	P1 = CGPointApplyAffineTransform(P1, T);

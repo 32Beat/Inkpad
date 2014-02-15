@@ -14,6 +14,8 @@
 
 @class WDFillTransform;
 @class WDStrokeStyle;
+@class WDBlendStyle;
+
 @class WDXMLElement;
 
 @protocol WDPathPainter;
@@ -23,6 +25,8 @@
 @property (nonatomic, strong) id<WDPathPainter> fill;
 @property (nonatomic, strong) WDFillTransform *fillTransform;
 @property (nonatomic, strong) WDStrokeStyle *strokeStyle;
+@property (nonatomic, strong) WDBlendStyle *blendStyle;
+
 @property (nonatomic, strong) NSArray *maskedElements;
 
 // to simplify rendering

@@ -1256,8 +1256,9 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     
     CGAffineTransform transform = CGAffineTransformMakeTranslation(ul.x, ul.y);
     transform = CGAffineTransformScale(transform, scale, scale);
-    placedImage.transform = transform;
-    
+    //placedImage.transform = transform;
+	[placedImage setSourceTransform:transform];
+	
     // be sure to end any active path editing
     self.activePath = nil;
     

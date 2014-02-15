@@ -388,18 +388,16 @@ NSString *WDClosedKey = @"WDClosedKey";
 	return set;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSArray *) selectedNodes
 {   
-    NSMutableArray *selected = [NSMutableArray array];
-    
-    for (WDBezierNode *node in nodes_) {
-        if (node.selected) {
-            [selected addObject:node];
-        }
-    }
-    
-    return selected;
+	NSMutableArray *result = [NSMutableArray array];
+
+	for (WDBezierNode *node in [self nodes])
+	{ if (node.selected) [result addObject:node]; }
+
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -905,6 +903,13 @@ NSString *WDClosedKey = @"WDClosedKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) position
+{ return CGPointZero; }
+
+- (CGRect) sourceRect
+{ return [self styleBounds]; }
+
 
 - (CGRect) bounds
 {

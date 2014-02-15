@@ -83,10 +83,10 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 	WDQuad Q = WDQuadWithRect(R, CGAffineTransformIdentity);
 
 	int N =
-	[self containsPoint:Q.corners[0]]+
-	[self containsPoint:Q.corners[1]]+
-	[self containsPoint:Q.corners[2]]+
-	[self containsPoint:Q.corners[3]];
+	[self containsPoint:Q.P[0]]+
+	[self containsPoint:Q.P[1]]+
+	[self containsPoint:Q.P[2]]+
+	[self containsPoint:Q.P[3]];
 
 	return (N&0x03) != 0; // generally correct but not strictly correct
 }

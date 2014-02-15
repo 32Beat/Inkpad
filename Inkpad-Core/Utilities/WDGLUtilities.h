@@ -41,8 +41,6 @@ void WDGLStrokeDiamondMarker(CGPoint P);
 
 void WDGLDrawOverflowMarker(CGPoint);
 
-void WDGLDrawMarkersForCGPathRef(CGPathRef pathRef, const CGAffineTransform *T);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "WDBezierSegment.h"
@@ -52,6 +50,10 @@ void WDGLQueueFlush(GLenum type);
 void WDGLRenderCGPathRef
 (CGPathRef pathRef, const CGAffineTransform *T);
 // Draw path as sequence of lines (T may be nil)
+
+void WDGLRenderCGPathRefMarkers
+(CGPathRef pathRef, const CGAffineTransform *T);
+// Draw circular marker for each anchor in path
 
 ////////////////////////////////////////////////////////////////////////////////
 

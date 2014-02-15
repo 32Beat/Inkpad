@@ -508,53 +508,6 @@ void WDGLDrawOverflowMarker(CGPoint P)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static void WDGLDrawMarkersForCGPathElement
-	(void *info, const CGPathElement *element)
-{
-	const CGAffineTransform *T = (CGAffineTransform *)info;
-
-	switch (element->type)
-	{
-		case kCGPathElementMoveToPoint:
-			WDGLFillCircleMarker(T==nil?element->points[0]:
-			CGPointApplyAffineTransform(element->points[0],*T));
-			break;
-
-		case kCGPathElementAddLineToPoint:
-			WDGLFillCircleMarker(T==nil?element->points[0]:
-			CGPointApplyAffineTransform(element->points[0],*T));
-			break;
-
-
-		case kCGPathElementAddQuadCurveToPoint:
-			WDGLFillCircleMarker(T==nil?element->points[1]:
-			CGPointApplyAffineTransform(element->points[1],*T));
-			break;
-
-		case kCGPathElementAddCurveToPoint:
-			WDGLFillCircleMarker(T==nil?element->points[2]:
-			CGPointApplyAffineTransform(element->points[2],*T));
-			break;
-
-
-		case kCGPathElementCloseSubpath:
-			break;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void WDGLDrawMarkersForCGPathRef(CGPathRef pathRef, const CGAffineTransform *T)
-{
-	if (pathRef != nil)
-	{
-		// Process path elements
-		CGPathApply(pathRef, (void *)T, &WDGLDrawMarkersForCGPathElement);
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark OpenGL Path rendering with WDGLVertexBuffer
 ////////////////////////////////////////////////////////////////////////////////
@@ -758,6 +711,53 @@ void WDGLRenderCGPathRef
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static void WDGLRenderCGPathElementMarker
+	(void *info, const CGPathElement *element)
+{
+	const CGAffineTransform *T = (CGAffineTransform *)info;
+
+	switch (element->type)
+	{
+		case kCGPathElementMoveToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[0]:
+			CGPointApplyAffineTransform(element->points[0],*T));
+			break;
+
+		case kCGPathElementAddLineToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[0]:
+			CGPointApplyAffineTransform(element->points[0],*T));
+			break;
+
+
+		case kCGPathElementAddQuadCurveToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[1]:
+			CGPointApplyAffineTransform(element->points[1],*T));
+			break;
+
+		case kCGPathElementAddCurveToPoint:
+			WDGLFillCircleMarker(T==nil?element->points[2]:
+			CGPointApplyAffineTransform(element->points[2],*T));
+			break;
+
+
+		case kCGPathElementCloseSubpath:
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void WDGLRenderCGPathRefMarkers(CGPathRef pathRef, const CGAffineTransform *T)
+{
+	if (pathRef != nil)
+	{
+		// Process path elements
+		CGPathApply(pathRef, (void *)T, &WDGLRenderCGPathElementMarker);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Quad Rendering
 ////////////////////////////////////////////////////////////////////////////////
@@ -766,10 +766,10 @@ void WDGLDrawQuadStroke(WDQuad Q, const CGAffineTransform *T)
 {
 	if (T != nil)
 	{ Q = WDQuadApplyTransform(Q, *T); }
-	WDGLQueueAddPoint(Q.corners[0]);
-	WDGLQueueAddPoint(Q.corners[1]);
-	WDGLQueueAddPoint(Q.corners[2]);
-	WDGLQueueAddPoint(Q.corners[3]);
+	WDGLQueueAddPoint(Q.P[0]);
+	WDGLQueueAddPoint(Q.P[1]);
+	WDGLQueueAddPoint(Q.P[2]);
+	WDGLQueueAddPoint(Q.P[3]);
 	WDGLQueueFlush(GL_LINE_LOOP);
 }
 
@@ -779,10 +779,10 @@ void WDGLDrawQuadMarkers(WDQuad Q, const CGAffineTransform *T)
 {
 	if (T != nil)
 	{ Q = WDQuadApplyTransform(Q, *T); }
-	WDGLFillCircleMarker(Q.corners[0]);
-	WDGLFillCircleMarker(Q.corners[1]);
-	WDGLFillCircleMarker(Q.corners[2]);
-	WDGLFillCircleMarker(Q.corners[3]);
+	WDGLFillCircleMarker(Q.P[0]);
+	WDGLFillCircleMarker(Q.P[1]);
+	WDGLFillCircleMarker(Q.P[2]);
+	WDGLFillCircleMarker(Q.P[3]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

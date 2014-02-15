@@ -14,18 +14,15 @@
 @class WDImageData;
 @class WDDrawing;
 
-@interface WDImage : WDElement <NSCoding, NSCopying> {
-    CGMutablePathRef    pathRef_;
-    CGPoint             corner_[4];
+@interface WDImage : WDElement <NSCoding, NSCopying>
+{
 }
 
-@property (nonatomic, assign) CGAffineTransform transform;
 @property (nonatomic, readonly) WDImageData *imageData;
 
 + (WDImage *) imageWithUIImage:(UIImage *)image inDrawing:(WDDrawing *)drawing;
 - (id) initWithUIImage:(UIImage *)image inDrawing:(WDDrawing *)drawing;
 
-- (CGRect) naturalBounds;
 - (void) useTrackedImageData;
 
 @end

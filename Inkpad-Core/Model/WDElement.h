@@ -79,22 +79,25 @@ typedef enum {
 {
 	WDEditMode mEditMode;
 
-	CGSize _size;
-	CGPoint _position;
-	CGFloat _rotation;
+	CGSize mSize;
+	CGPoint mPosition;
+	CGFloat mRotation;
 
 	// Cached info
+	CGAffineTransform mTransform;
+	WDQuad mFrame;
+	CGRect mFrameBounds;
 	CGRect mStyleBounds;
 	CGRect mShadowBounds;
 	CGRect mRenderBounds;
 
 	CGRect dirtyBounds_;
 }
-/*
+
 @property (nonatomic, assign) CGSize size;
 @property (nonatomic, assign) CGPoint position;
 @property (nonatomic, assign) CGFloat rotation;
-*/
+
 // Owner references for convenience
 @property (nonatomic, weak) WDLayer *layer; // layer
 @property (nonatomic, weak) WDGroup *group;  // pointer to parent group, if any
@@ -109,6 +112,9 @@ typedef enum {
 
 - (void) awakeFromEncoding;
 
+- (void) saveState;
+- (void) resetState:(WDElement *)srcElement;
+- (void) takePropertiesFrom:(WDElement *)srcElement;
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -179,6 +185,11 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGSize) sourceSize;
+- (CGRect) sourceRect;
+- (CGAffineTransform) sourceTransform;
+- (CGAffineTransform) computeSourceTransform;
+
 - (CGRect) bounds;
 - (CGRect) styleBounds;
 - (CGRect) computeStyleBounds;
@@ -201,6 +212,8 @@ typedef enum {
 
 - (CGSize) sourceSize;
 - (CGRect) sourceRect;
+- (CGAffineTransform) sourceTransform;
+- (void) setSourceTransform:(CGAffineTransform)T;
 
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;

@@ -48,6 +48,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 @implementation WDElement
 
+@synthesize size = mSize;
+@synthesize position = mPosition;
+@synthesize rotation = mRotation;
+
 @synthesize layer = layer_;
 @synthesize group = group_;
 @synthesize opacity = opacity_;
@@ -57,21 +61,21 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-    [coder encodeConditionalObject:layer_ forKey:WDLayerKey];
-    
-    if (group_) {
-        [coder encodeConditionalObject:group_ forKey:WDGroupKey];
-    }
-    
-    if (shadow_) {
-        // If there's an initial shadow, we should save that. The user hasn't committed to the color shift yet.
-        WDShadow *shadowToSave = initialShadow_ ? initialShadow_ : shadow_;
-        [coder encodeObject:shadowToSave forKey:WDShadowKey];
-    }
-    
-    if (opacity_ != 1.0f) {
-        [coder encodeFloat:opacity_ forKey:WDObjectOpacityKey];
-    }
+	[coder encodeConditionalObject:layer_ forKey:WDLayerKey];
+	
+	if (group_) {
+		[coder encodeConditionalObject:group_ forKey:WDGroupKey];
+	}
+	
+	if (shadow_) {
+		// If there's an initial shadow, we should save that. The user hasn't committed to the color shift yet.
+		WDShadow *shadowToSave = initialShadow_ ? initialShadow_ : shadow_;
+		[coder encodeObject:shadowToSave forKey:WDShadowKey];
+	}
+	
+	if (opacity_ != 1.0f) {
+		[coder encodeFloat:opacity_ forKey:WDObjectOpacityKey];
+	}
 	
 	if (blendMode_ != kCGBlendModeNormal) {
 		[coder encodeInt:blendMode_ forKey:WDBlendModeKey];
@@ -80,35 +84,35 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (id)initWithCoder:(NSCoder *)coder
 {
-    self = [super init];
-    
-    layer_ = [coder decodeObjectForKey:WDLayerKey];
-    group_ = [coder decodeObjectForKey:WDGroupKey];
-    
-    shadow_ = [coder decodeObjectForKey:WDShadowKey];
-    
-    if ([coder containsValueForKey:WDObjectOpacityKey]) {
-        opacity_ = [coder decodeFloatForKey:WDObjectOpacityKey];
-    } else {
-        opacity_ = 1.0f;
-    }
+	self = [super init];
+	
+	layer_ = [coder decodeObjectForKey:WDLayerKey];
+	group_ = [coder decodeObjectForKey:WDGroupKey];
+	
+	shadow_ = [coder decodeObjectForKey:WDShadowKey];
+	
+	if ([coder containsValueForKey:WDObjectOpacityKey]) {
+		opacity_ = [coder decodeFloatForKey:WDObjectOpacityKey];
+	} else {
+		opacity_ = 1.0f;
+	}
 	
 	blendMode_ = [coder decodeIntForKey:WDBlendModeKey] ?: kCGBlendModeNormal;
-    
-    return self; 
+	
+	return self; 
 }
 
 - (id) init
 {
-    self = [super init];
-    
-    if (!self) {
-        return nil;
-    }
+	self = [super init];
+	
+	if (!self) {
+		return nil;
+	}
 
-    opacity_ = 1.0f;
-    
-    return self;
+	opacity_ = 1.0f;
+	
+	return self;
 }
 
 - (void) awakeFromEncoding
@@ -117,29 +121,288 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (NSUndoManager *) undoManager
 {
-    return self.layer.drawing.undoManager;
+	return self.layer.drawing.undoManager;
 }
 
 - (WDDrawing *) drawing
 {
-    return self.layer.drawing;
+	return self.layer.drawing;
 }
 
 - (void) setGroup:(WDGroup *)group
 {
-    if (group == group_) {
-        return;
-    }
-    
-    [[self.undoManager prepareWithInvocationTarget:self] setGroup:group_];
-    group_ = group;
+	if (group == group_) {
+		return;
+	}
+	
+	[[self.undoManager prepareWithInvocationTarget:self] setGroup:group_];
+	group_ = group;
 }
 
 - (WDShadow *) shadowForStyleBounds
 {
-    return self.shadow;
+	return self.shadow;
 }
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	TODO: move up in object chain or implement proper hierarchy
+*/
+- (void) saveState
+{
+	// Record current properties for undo
+	[[self.undoManager prepareWithInvocationTarget:self]
+	resetState:[self copy]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) resetState:(WDElement *)srcElement
+{
+	if (srcElement != nil)
+	{
+		// Save state for redo
+		[self saveState];
+
+		// Store update areas
+		[self cacheDirtyBounds];
+
+		// Copy properties from srcElement
+		[self takePropertiesFrom:srcElement];
+
+		// Notify drawingcontroller
+		[self postDirtyBoundsChange];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) takePropertiesFrom:(WDElement *)srcElement
+{
+	[self setSize:srcElement->mSize];
+	[self setPosition:srcElement->mPosition];
+	[self setRotation:srcElement->mRotation];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Properties
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) size
+{ return mSize; }
+
+- (void) setSize:(CGSize)size
+{
+	if ((mSize.width != size.width) ||
+		(mSize.height != size.height))
+	{
+		mSize = size;
+		[self flushCache];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) position
+{ return mPosition; }
+
+- (void) setPosition:(CGPoint)point
+{
+	if ((mPosition.x != point.x) ||
+		(mPosition.y != point.y))
+	{
+		mPosition = point;
+		[self flushCache];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) rotation
+{ return mRotation; }
+
+- (void) setRotation:(CGFloat)rotation
+{
+	if (mRotation != rotation)
+	{
+		mRotation = rotation;
+		[self flushCache];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushCache
+{
+	mTransform.a = 0.0;
+	mTransform.b = 0.0;
+	mTransform.c = 0.0;
+	mTransform.d = 0.0;
+	mFrame = WDQuadNull;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Frame Editing
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) sourceSize
+{ return [self size]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) sourceRect
+{
+	CGSize srcSize = [self sourceSize];
+	return (CGRect){{-0.5*srcSize.width, -0.5*srcSize.height}, srcSize };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGAffineTransform) sourceTransform
+{
+	return
+	mTransform.a != 0.0 ||
+	mTransform.b != 0.0 ||
+	mTransform.c != 0.0 ||
+	mTransform.d != 0.0 ?
+	mTransform : (mTransform = [self computeSourceTransform]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGAffineTransform) computeSourceTransform
+{
+	CGPoint P = [self position];
+	CGFloat r = [self rotation];
+
+	CGAffineTransform T =
+	{ 1.0, 0.0, 0.0, 1.0, P.x, P.y};
+
+	if (r != 0.0)
+	{
+		CGFloat angle = r * M_PI / 180.0;
+		T.a = cos(angle);
+		T.b = sin(angle);
+		T.c = -T.b;
+		T.d = +T.a;
+	}
+
+	return T;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setSourceTransform:(CGAffineTransform)T
+{
+	WDQuad F = WDQuadWithRect([self sourceRect], T);
+	CGPoint C = WDQuadGetCenter(F);
+
+	[self setSize:(CGSize){
+		0.5*(WDDistance(F.P[0], F.P[1])+WDDistance(F.P[2], F.P[3])),
+		0.5*(WDDistance(F.P[0], F.P[3])+WDDistance(F.P[1], F.P[2]))}];
+	[self setPosition:C];
+
+	CGPoint P = WDAddPoints(F.P[1], F.P[2]);
+	P = WDSubtractPoints(P, C);
+	[self setRotation:WDDegreesFromRadians(atan2(P.x, P.y))];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDQuad) frameQuad
+{
+	return WDQuadIsNull(mFrame)==NO ? mFrame :
+	(mFrame = WDQuadWithRect([self sourceRect], [self sourceTransform]));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// = position
+
+- (CGPoint) frameCenter
+{ return WDQuadGetCenter([self frameQuad]); }
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+- (id) frameControlWithIndex:(NSInteger)n
+{
+	WDQuad Q = [self frameQuad];
+	return ((0<=n)&&(n<=3)) ?
+	[NSValue valueWithCGPoint:Q.corners[n]] : nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) findFrameControlForRect:(CGRect)touchR
+{
+	for (NSInteger n=0; n!=4; n++)
+	{
+		id frameControl = [self frameControlWithIndex:n];
+		if (frameControl != nil)
+		{
+			CGPoint P = [frameControl CGPointValue];
+			if (CGRectContainsPoint(touchR, P))
+			{ return frameControl; }
+		}
+	}
+
+	return nil;
+}
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSInteger) findFrameControlIndexForRect:(CGRect)touchR
+{
+	for (NSInteger n=0; n!=4; n++)
+	{
+		CGPoint P = [self frameControlPointAtIndex:n];
+		if (CGRectContainsPoint(touchR, P))
+		{ return n; }
+	}
+
+	return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) frameControlPointAtIndex:(NSInteger)n
+{
+	WDQuad Q = [self frameQuad];
+	return ((0<=n)&&(n<=3)) ?
+	Q.P[n] : (CGPoint){ INFINITY, INFINITY };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)delta
+{
+	CGPoint P0 = [self frameControlPointAtIndex:n];
+	CGPoint P1 = WDAddPoints(P0, delta);
+
+	CGPoint C = mPosition;
+	CGPoint D0 = WDSubtractPoints(P0,C);
+	CGPoint D1 = WDSubtractPoints(P1,C);
+
+	CGFloat a0 = atan2(D0.y, D0.x);
+	CGFloat a1 = atan2(D1.y, D1.x);
+	CGFloat da = a1 - a0;
+
+	CGFloat d0 = WDDistance(P0, C);
+	CGFloat d1 = WDDistance(P1, C);
+	CGFloat d = d0 != 0.0 && d1 != 0.0 ? d1 / d0 : 1.0;
+
+	// Store update areas
+	[self cacheDirtyBounds];
+
+	[self setSize:WDScaleSize(mSize, d, d)];
+	[self setRotation:mRotation + 180.0*da/M_PI];
+
+	// Notify drawingcontroller
+	[self postDirtyBoundsChange];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -183,7 +446,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) computeStyleBounds
-{ return [self bounds]; }
+{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform]); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -310,7 +573,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (CGRect) subselectionBounds
 {
-    return [self bounds];
+	return [self bounds];
 }
 
 - (void) clearSubselection
@@ -319,7 +582,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (BOOL) containsPoint:(CGPoint)pt
 {
-    return CGRectContainsPoint([self bounds], pt);
+	return CGRectContainsPoint([self bounds], pt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -367,42 +630,42 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) tossCachedColorAdjustmentData
 {
-    self.initialShadow = nil;
+	self.initialShadow = nil;
 }
 
 - (void) restoreCachedColorAdjustmentData
 {
-    if (!self.initialShadow) {
-        return;
-    }
-    
-    self.shadow = self.initialShadow;
-    self.initialShadow = nil;
+	if (!self.initialShadow) {
+		return;
+	}
+	
+	self.shadow = self.initialShadow;
+	self.initialShadow = nil;
 }
 
 - (void) registerUndoWithCachedColorAdjustmentData
 {
-    if (!self.initialShadow) {
-        return;
-    }
-    
-    [(WDElement *)[self.undoManager prepareWithInvocationTarget:self] setShadow:self.initialShadow];
-    self.initialShadow = nil;
+	if (!self.initialShadow) {
+		return;
+	}
+	
+	[(WDElement *)[self.undoManager prepareWithInvocationTarget:self] setShadow:self.initialShadow];
+	self.initialShadow = nil;
 }
 
 - (void) adjustColor:(WDColor * (^)(WDColor *color))adjustment scope:(WDColorAdjustmentScope)scope
 {
-    if (self.shadow && scope & WDColorAdjustShadow) {
-        if (!self.initialShadow) {
-            self.initialShadow = self.shadow;
-        }
-        self.shadow = [self.initialShadow adjustColor:adjustment];
-    }
+	if (self.shadow && scope & WDColorAdjustShadow) {
+		if (!self.initialShadow) {
+			self.initialShadow = self.shadow;
+		}
+		self.shadow = [self.initialShadow adjustColor:adjustment];
+	}
 }
 
 - (NSSet *) transform:(CGAffineTransform)transform
 {
-    return nil;
+	return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -566,91 +829,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Frame Editing
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGSize) sourceSize
-{ return CGSizeZero; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) sourceRect
-{
-	CGSize srcSize = [self sourceSize];
-	return (CGRect){{-0.5*srcSize.width, -0.5*srcSize.height}, srcSize };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (WDQuad) frameQuad
-{
-	return WDQuadWithRect([self styleBounds], CGAffineTransformIdentity);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// = position
-
-- (CGPoint) frameCenter
-{ return WDQuadGetCenter([self frameQuad]); }
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-- (id) frameControlWithIndex:(NSInteger)n
-{
-	WDQuad Q = [self frameQuad];
-	return ((0<=n)&&(n<=3)) ?
-	[NSValue valueWithCGPoint:Q.corners[n]] : nil;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) findFrameControlForRect:(CGRect)touchR
-{
-	for (NSInteger n=0; n!=4; n++)
-	{
-		id frameControl = [self frameControlWithIndex:n];
-		if (frameControl != nil)
-		{
-			CGPoint P = [frameControl CGPointValue];
-			if (CGRectContainsPoint(touchR, P))
-			{ return frameControl; }
-		}
-	}
-
-	return nil;
-}
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-- (NSInteger) findFrameControlIndexForRect:(CGRect)touchR
-{
-	for (NSInteger n=0; n!=4; n++)
-	{
-		CGPoint P = [self frameControlPointAtIndex:n];
-		if (CGRectContainsPoint(touchR, P))
-		{ return n; }
-	}
-
-	return -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPoint) frameControlPointAtIndex:(NSInteger)n
-{
-	WDQuad Q = [self frameQuad];
-	return ((0<=n)&&(n<=3)) ?
-	Q.corners[n] : (CGPoint){ INFINITY, INFINITY };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
 #pragma mark OpenGL Rendering
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -719,24 +897,24 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) drawOpenGLAnchorAtPoint:(CGPoint)pt transform:(CGAffineTransform)transform selected:(BOOL)selected
 {
-    CGPoint P = CGPointApplyAffineTransform(pt, transform);
+	CGPoint P = CGPointApplyAffineTransform(pt, transform);
 
-    if (!selected) {
-        glColor4f(1, 1, 1, 1);
-        WDGLFillSquareMarker(P);
-        [self.layer.highlightColor openGLSet];
-        WDGLStrokeSquareMarker(P);
-    } else {
-        [self.layer.highlightColor openGLSet];
-        WDGLFillSquareMarker(P);
-    }
+	if (!selected) {
+		glColor4f(1, 1, 1, 1);
+		WDGLFillSquareMarker(P);
+		[self.layer.highlightColor openGLSet];
+		WDGLStrokeSquareMarker(P);
+	} else {
+		[self.layer.highlightColor openGLSet];
+		WDGLFillSquareMarker(P);
+	}
 }
 
 - (void) drawOpenGLZoomOutlineWithViewTransform:(CGAffineTransform)viewTransform visibleRect:(CGRect)visibleRect
 {
-    if (CGRectIntersectsRect(self.bounds, visibleRect)) {
-        [self drawOpenGLHighlightWithTransform:viewTransform];
-    }
+	if (CGRectIntersectsRect(self.bounds, visibleRect)) {
+		[self drawOpenGLHighlightWithTransform:viewTransform];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -795,53 +973,53 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (NSSet *) alignToRect:(CGRect)rect alignment:(WDAlignment)align
 {
-    CGRect              bounds = [self bounds];
-    CGAffineTransform	translate = CGAffineTransformIdentity;
-    CGPoint             center = WDCenterOfRect(bounds);
-    
-    CGPoint             topLeft = rect.origin;
-    CGPoint             rectCenter = WDCenterOfRect(rect);
-    CGPoint             bottomRight = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
-    
-    switch(align) {
-        case WDAlignLeft:
-            translate = CGAffineTransformMakeTranslation(topLeft.x - CGRectGetMinX(bounds), 0.0f);
-            break;
-        case WDAlignCenter:
-            translate = CGAffineTransformMakeTranslation(rectCenter.x - center.x, 0.0f);
-            break;
-        case WDAlignRight:
-            translate = CGAffineTransformMakeTranslation(bottomRight.x - CGRectGetMaxX(bounds), 0.0f);
-            break;
-        case WDAlignTop:
-            translate = CGAffineTransformMakeTranslation(0.0f, topLeft.y - CGRectGetMinY(bounds));  
-            break;
-        case WDAlignMiddle:
-            translate = CGAffineTransformMakeTranslation(0.0f, rectCenter.y - center.y);
-            break;
-        case WDAlignBottom:          
-            translate = CGAffineTransformMakeTranslation(0.0f, bottomRight.y - CGRectGetMaxY(bounds));
-            break;
-    }
-    
-    [self transform:translate];
-    
-    return nil;
+	CGRect              bounds = [self bounds];
+	CGAffineTransform	translate = CGAffineTransformIdentity;
+	CGPoint             center = WDCenterOfRect(bounds);
+	
+	CGPoint             topLeft = rect.origin;
+	CGPoint             rectCenter = WDCenterOfRect(rect);
+	CGPoint             bottomRight = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
+	
+	switch(align) {
+		case WDAlignLeft:
+			translate = CGAffineTransformMakeTranslation(topLeft.x - CGRectGetMinX(bounds), 0.0f);
+			break;
+		case WDAlignCenter:
+			translate = CGAffineTransformMakeTranslation(rectCenter.x - center.x, 0.0f);
+			break;
+		case WDAlignRight:
+			translate = CGAffineTransformMakeTranslation(bottomRight.x - CGRectGetMaxX(bounds), 0.0f);
+			break;
+		case WDAlignTop:
+			translate = CGAffineTransformMakeTranslation(0.0f, topLeft.y - CGRectGetMinY(bounds));  
+			break;
+		case WDAlignMiddle:
+			translate = CGAffineTransformMakeTranslation(0.0f, rectCenter.y - center.y);
+			break;
+		case WDAlignBottom:          
+			translate = CGAffineTransformMakeTranslation(0.0f, bottomRight.y - CGRectGetMaxY(bounds));
+			break;
+	}
+	
+	[self transform:translate];
+	
+	return nil;
 }
 
 - (WDPickResult *) hitResultForPoint:(CGPoint)pt viewScale:(float)viewScale snapFlags:(int)flags
 {
-    return [WDPickResult pickResult];
+	return [WDPickResult pickResult];
 }
 
 - (WDPickResult *) snappedPoint:(CGPoint)pt viewScale:(float)viewScale snapFlags:(int)flags
 {
-    return [WDPickResult pickResult];
+	return [WDPickResult pickResult];
 }
 
 - (void) addElementsToArray:(NSMutableArray *)array
 {
-    [array addObject:self];
+	[array addObject:self];
 }
 
 - (void) addBlendablesToArray:(NSMutableArray *)array
@@ -850,75 +1028,75 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (WDXMLElement *) SVGElement
 {
-    // must be overriden by concrete subclasses
-    return nil;
+	// must be overriden by concrete subclasses
+	return nil;
 }
 
 - (void) addSVGOpacityAndShadowAttributes:(WDXMLElement *)element
 {
-    [element setAttribute:@"opacity" floatValue:self.opacity];
-    if (blendMode_ != kCGBlendModeNormal) {
-        [element setAttribute:@"inkpad:blendMode" value:[[WDSVGHelper sharedSVGHelper] displayNameForBlendMode:self.blendMode]];;
-    }
-    [(initialShadow_ ?: shadow_) addSVGAttributes:element];
+	[element setAttribute:@"opacity" floatValue:self.opacity];
+	if (blendMode_ != kCGBlendModeNormal) {
+		[element setAttribute:@"inkpad:blendMode" value:[[WDSVGHelper sharedSVGHelper] displayNameForBlendMode:self.blendMode]];;
+	}
+	[(initialShadow_ ?: shadow_) addSVGAttributes:element];
 }
 
 - (NSSet *) changedShadowPropertiesFrom:(WDShadow *)from to:(WDShadow *)to
 {
-    NSMutableSet *changedProperties = [NSMutableSet set];
-    
-    if ((!from && to) || (!to && from)) {
-        [changedProperties addObject:WDShadowVisibleProperty];
-    }
-    
-    if (![from.color isEqual:to.color]) {
-        [changedProperties addObject:WDShadowColorProperty];
-    }
-    if (from.angle != to.angle) {
-        [changedProperties addObject:WDShadowAngleProperty];
-    }
-    if (from.offset != to.offset) {
-        [changedProperties addObject:WDShadowOffsetProperty];
-    }
-    if (from.radius != to.radius) {
-        [changedProperties addObject:WDShadowRadiusProperty];
-    }
-    
-    return changedProperties;
+	NSMutableSet *changedProperties = [NSMutableSet set];
+	
+	if ((!from && to) || (!to && from)) {
+		[changedProperties addObject:WDShadowVisibleProperty];
+	}
+	
+	if (![from.color isEqual:to.color]) {
+		[changedProperties addObject:WDShadowColorProperty];
+	}
+	if (from.angle != to.angle) {
+		[changedProperties addObject:WDShadowAngleProperty];
+	}
+	if (from.offset != to.offset) {
+		[changedProperties addObject:WDShadowOffsetProperty];
+	}
+	if (from.radius != to.radius) {
+		[changedProperties addObject:WDShadowRadiusProperty];
+	}
+	
+	return changedProperties;
 }
 
 - (void) setShadow:(WDShadow *)shadow
 {
-    if ([shadow_ isEqual:shadow]) {
-        return;
-    }
-    
-    [self cacheDirtyBounds];
-    
-    [(WDElement *)[self.undoManager prepareWithInvocationTarget:self] setShadow:shadow_];
-    
-    NSSet *changedProperties = [self changedShadowPropertiesFrom:shadow_ to:shadow];
-    
-    shadow_ = shadow;
-    
-    [self postDirtyBoundsChange];
-    [self propertiesChanged:changedProperties];
+	if ([shadow_ isEqual:shadow]) {
+		return;
+	}
+	
+	[self cacheDirtyBounds];
+	
+	[(WDElement *)[self.undoManager prepareWithInvocationTarget:self] setShadow:shadow_];
+	
+	NSSet *changedProperties = [self changedShadowPropertiesFrom:shadow_ to:shadow];
+	
+	shadow_ = shadow;
+	
+	[self postDirtyBoundsChange];
+	[self propertiesChanged:changedProperties];
 }
 
 - (void) setOpacity:(float)opacity
 {
-    if (opacity == opacity_) {
-        return;
-    }
-    
-    [self cacheDirtyBounds];
-    
-    [[self.undoManager prepareWithInvocationTarget:self] setOpacity:opacity_];
-    
-    opacity_ = WDClamp(0, 1, opacity);
+	if (opacity == opacity_) {
+		return;
+	}
+	
+	[self cacheDirtyBounds];
+	
+	[[self.undoManager prepareWithInvocationTarget:self] setOpacity:opacity_];
+	
+	opacity_ = WDClamp(0, 1, opacity);
 
-    [self postDirtyBoundsChange];
-    [self propertyChanged:WDOpacityProperty];
+	[self postDirtyBoundsChange];
+	[self propertyChanged:WDOpacityProperty];
 }
 
 - (void) setBlendMode:(CGBlendMode)blendMode
@@ -939,204 +1117,205 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager
 {
-    if (!value) {
-        return;
-    }
+	if (!value) {
+		return;
+	}
 
-    WDShadow *shadow = self.shadow;
-    
-    if ([property isEqualToString:WDOpacityProperty]) {
-        self.opacity = [value floatValue];
+	WDShadow *shadow = self.shadow;
+	
+	if ([property isEqualToString:WDOpacityProperty]) {
+		self.opacity = [value floatValue];
 	} else if ([property isEqualToString:WDBlendModeProperty]) {
 		self.blendMode = [value intValue];
-    } else if ([property isEqualToString:WDShadowVisibleProperty]) {
-        if ([value boolValue] && !shadow) { // shadow enabled
-            // shadow turned on and we don't have one so attach the default stroke
-            self.shadow = [propertyManager defaultShadow];
-        } else if (![value boolValue] && shadow) {
-            self.shadow = nil;
-        }
-    } else if ([[NSSet setWithObjects:WDShadowColorProperty, WDShadowOffsetProperty, WDShadowRadiusProperty, WDShadowAngleProperty, nil] containsObject:property]) {
-        if (!shadow) {
-            shadow = [propertyManager defaultShadow];
-        }
-        
-        if ([property isEqualToString:WDShadowColorProperty]) {
-            self.shadow = [WDShadow shadowWithColor:value radius:shadow.radius offset:shadow.offset angle:shadow.angle];
-        } else if ([property isEqualToString:WDShadowOffsetProperty]) {
-            self.shadow = [WDShadow shadowWithColor:shadow.color radius:shadow.radius offset:[value floatValue] angle:shadow.angle];
-        } else if ([property isEqualToString:WDShadowRadiusProperty]) {
-            self.shadow = [WDShadow shadowWithColor:shadow.color radius:[value floatValue] offset:shadow.offset angle:shadow.angle];
-        } else if ([property isEqualToString:WDShadowAngleProperty]) {
-            self.shadow = [WDShadow shadowWithColor:shadow.color radius:shadow.radius offset:shadow.offset angle:[value floatValue]];
-        }
-    } 
+	} else if ([property isEqualToString:WDShadowVisibleProperty]) {
+		if ([value boolValue] && !shadow) { // shadow enabled
+			// shadow turned on and we don't have one so attach the default stroke
+			self.shadow = [propertyManager defaultShadow];
+		} else if (![value boolValue] && shadow) {
+			self.shadow = nil;
+		}
+	} else if ([[NSSet setWithObjects:WDShadowColorProperty, WDShadowOffsetProperty, WDShadowRadiusProperty, WDShadowAngleProperty, nil] containsObject:property]) {
+		if (!shadow) {
+			shadow = [propertyManager defaultShadow];
+		}
+		
+		if ([property isEqualToString:WDShadowColorProperty]) {
+			self.shadow = [WDShadow shadowWithColor:value radius:shadow.radius offset:shadow.offset angle:shadow.angle];
+		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
+			self.shadow = [WDShadow shadowWithColor:shadow.color radius:shadow.radius offset:[value floatValue] angle:shadow.angle];
+		} else if ([property isEqualToString:WDShadowRadiusProperty]) {
+			self.shadow = [WDShadow shadowWithColor:shadow.color radius:[value floatValue] offset:shadow.offset angle:shadow.angle];
+		} else if ([property isEqualToString:WDShadowAngleProperty]) {
+			self.shadow = [WDShadow shadowWithColor:shadow.color radius:shadow.radius offset:shadow.offset angle:[value floatValue]];
+		}
+	} 
 }
 
 - (id) valueForProperty:(NSString *)property
 {
-    if ([property isEqualToString:WDOpacityProperty]) {
-        return @(opacity_);
+	if ([property isEqualToString:WDOpacityProperty]) {
+		return @(opacity_);
 	} else if ([property isEqualToString:WDBlendModeProperty]) {
 		return @(blendMode_);
-    } else if ([property isEqualToString:WDShadowVisibleProperty]) {
-        return @((self.shadow) ? YES : NO);
-    } else if (self.shadow) {
-        if ([property isEqualToString:WDShadowColorProperty]) {
-            return self.shadow.color;
-        } else if ([property isEqualToString:WDShadowOffsetProperty]) {
-            return @(self.shadow.offset);
-        } else if ([property isEqualToString:WDShadowRadiusProperty]) {
-            return @(self.shadow.radius);
-        } else if ([property isEqualToString:WDShadowAngleProperty]) {
-            return @(self.shadow.angle);
-        }
-    }
-    
-    return nil;
+	} else if ([property isEqualToString:WDShadowVisibleProperty]) {
+		return @((self.shadow) ? YES : NO);
+	} else if (self.shadow) {
+		if ([property isEqualToString:WDShadowColorProperty]) {
+			return self.shadow.color;
+		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
+			return @(self.shadow.offset);
+		} else if ([property isEqualToString:WDShadowRadiusProperty]) {
+			return @(self.shadow.radius);
+		} else if ([property isEqualToString:WDShadowAngleProperty]) {
+			return @(self.shadow.angle);
+		}
+	}
+	
+	return nil;
 }
 
 - (NSSet *) inspectableProperties
 {
-    return [NSSet setWithObjects:WDOpacityProperty, WDBlendModeProperty, WDShadowVisibleProperty,
-            WDShadowColorProperty, WDShadowAngleProperty, WDShadowRadiusProperty, WDShadowOffsetProperty,
-            nil];
+	return [NSSet setWithObjects:WDOpacityProperty, WDBlendModeProperty, WDShadowVisibleProperty,
+			WDShadowColorProperty, WDShadowAngleProperty, WDShadowRadiusProperty, WDShadowOffsetProperty,
+			nil];
 }
 
 - (BOOL) canInspectProperty:(NSString *)property
 {
-    return [[self inspectableProperties] containsObject:property];
+	return [[self inspectableProperties] containsObject:property];
 }
 
 - (void) propertiesChanged:(NSSet *)properties
 {   
-    if (self.drawing) {
-        NSDictionary *userInfo = @{WDPropertiesKey: properties};
-        [[NSNotificationCenter defaultCenter] postNotificationName:WDPropertiesChangedNotification object:self.drawing userInfo:userInfo];
-    }
+	if (self.drawing) {
+		NSDictionary *userInfo = @{WDPropertiesKey: properties};
+		[[NSNotificationCenter defaultCenter] postNotificationName:WDPropertiesChangedNotification object:self.drawing userInfo:userInfo];
+	}
 }
 
 - (void) propertyChanged:(NSString *)property
 {
-    if (self.drawing) {
-        NSDictionary *userInfo = @{WDPropertyKey: property};
-        [[NSNotificationCenter defaultCenter] postNotificationName:WDPropertyChangedNotification object:self.drawing userInfo:userInfo];
-    }
+	if (self.drawing) {
+		NSDictionary *userInfo = @{WDPropertyKey: property};
+		[[NSNotificationCenter defaultCenter] postNotificationName:WDPropertyChangedNotification object:self.drawing userInfo:userInfo];
+	}
 }
 
 - (id) pathPainterAtPoint:(CGPoint)pt
 {
-    return [self valueForProperty:WDFillProperty];
+	return [self valueForProperty:WDFillProperty];
 }
 
 - (BOOL) hasFill
 {
-    return ![[self valueForProperty:WDFillProperty] isEqual:[NSNull null]];
+	return ![[self valueForProperty:WDFillProperty] isEqual:[NSNull null]];
 }
 
 - (BOOL) canMaskElements
 {
-    return NO;
+	return NO;
 }
 
 - (BOOL) hasEditableText
 {
-    return NO;
+	return NO;
 }
 
 - (BOOL) canPlaceText
 {
-    return NO;
+	return NO;
 }
 
 - (BOOL) isErasable
 {
-    return NO;
+	return NO;
 }
 
 - (BOOL) canAdjustColor
 {
-    return self.shadow ? YES : NO;
+	return self.shadow ? YES : NO;
 }
 
 - (BOOL) needsToSaveGState:(float)scale
 {
-    if (opacity_ != 1) {
-        return YES;
-    }
-    
-    if (shadow_ && scale <= 3) {
-        return YES;
-    }
+	if (opacity_ != 1) {
+		return YES;
+	}
+	
+	if (shadow_ && scale <= 3) {
+		return YES;
+	}
 	
 	if (blendMode_ != kCGBlendModeNormal) {
 		return YES;
 	}
-    
-    return NO;
+	
+	return NO;
 }
 
 - (BOOL) needsTransparencyLayer:(float)scale
 {
-    return [self needsToSaveGState:scale];
+	return [self needsToSaveGState:scale];
 }
 
 - (void) beginTransparencyLayer:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-    if (![self needsToSaveGState:metaData.scale]) {
-        return;
-    }
-    
-    CGContextSaveGState(ctx);
-    
-    if (opacity_ != 1) {
-        CGContextSetAlpha(ctx, opacity_);
-    }
+	if (![self needsToSaveGState:metaData.scale]) {
+		return;
+	}
+	
+	CGContextSaveGState(ctx);
+	
+	if (opacity_ != 1) {
+		CGContextSetAlpha(ctx, opacity_);
+	}
 
-    if (shadow_ && metaData.scale <= 3) {
-        [shadow_ applyInContext:ctx metaData:metaData];
-    }
+	if (shadow_ && metaData.scale <= 3) {
+		[shadow_ applyInContext:ctx metaData:metaData];
+	}
 
-    if (blendMode_ != kCGBlendModeNormal) {
-        CGContextSetBlendMode(ctx, blendMode_);
-    }
-    
-    if ([self needsTransparencyLayer:metaData.scale])
+	if (blendMode_ != kCGBlendModeNormal) {
+		CGContextSetBlendMode(ctx, blendMode_);
+	}
+	
+	if ([self needsTransparencyLayer:metaData.scale])
 	{
 		/*
-			We don't need more than the stylebounds,
-			the shadow is apparently rendered separately.
+			We need render bounds,
+			otherwise shadow might become corrupted 
+			during editing of lower elements.
 		*/
 //		CGContextBeginTransparencyLayer(ctx, NULL);
 		CGRect B = CGContextGetClipBoundingBox(ctx);
-		CGRect R = [self styleBounds];
+		CGRect R = [self renderBounds];
 		R = CGRectIntersection(R, B);
 		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
-    }
+	}
 }
 
 - (void) endTransparencyLayer:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-    if (![self needsToSaveGState:metaData.scale]) {
-        return;
-    }
-    
-    if ([self needsTransparencyLayer:metaData.scale]) {
-        CGContextEndTransparencyLayer(ctx);
-    }
-    
-    CGContextRestoreGState(ctx);
+	if (![self needsToSaveGState:metaData.scale]) {
+		return;
+	}
+	
+	if ([self needsTransparencyLayer:metaData.scale]) {
+		CGContextEndTransparencyLayer(ctx);
+	}
+	
+	CGContextRestoreGState(ctx);
 }
 
 - (id) copyWithZone:(NSZone *)zone
 {       
-    WDElement *element = [[[self class] allocWithZone:zone] init];
-    
-    element->shadow_ = [shadow_ copy];
-    element->opacity_ = opacity_;
-    element->blendMode_ = blendMode_;
-    
-    return element;
+	WDElement *element = [[[self class] allocWithZone:zone] init];
+	
+	element->shadow_ = [shadow_ copy];
+	element->opacity_ = opacity_;
+	element->blendMode_ = blendMode_;
+	
+	return element;
 }
 
 @end

@@ -451,7 +451,7 @@ NSString *WDTextPathAlignmentKey = @"WDTextPathAlignmentKey";
     WDBezierSegment     segments[numSegments];
     float               lengths[numSegments];
     float               totalLength = 0;
-    WDQuad              glyphQuad, prevGlyphQuad = WDQuadNull();
+    WDQuad              glyphQuad, prevGlyphQuad = WDQuadNull;
     
     // precalculate the segments and their arc lengths
     totalLength = [self getSegments:segments andLengths:lengths naturalSpace:YES];
