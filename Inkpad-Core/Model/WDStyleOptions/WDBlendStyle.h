@@ -11,7 +11,7 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import <Foundation/Foundation.h>
+#import "WDStyleOptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -19,20 +19,23 @@
 	------------
 */
 ////////////////////////////////////////////////////////////////////////////////
+
+extern const NSString *WDBlendStyleOptionsKey;
+extern const NSString *WDBlendStyleModeKey;
+extern const NSString *WDBlendStyleOpacityKey;
+
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-@interface WDBlendStyle : NSObject
+@interface WDBlendStyle : WDStyleOptions
 {
-	CGBlendMode mMode;
-	CGFloat mOpacity;
 }
 
-@property (nonatomic, readonly) CGBlendMode mode;
-@property (nonatomic, readonly) CGFloat opacity;
+- (CGBlendMode) blendMode;
+- (void) setBlendMode:(CGBlendMode)blendMode;
+
+- (CGFloat)opacity;
+- (void) setOpacity:(CGFloat)opacity;
+
+- (void) applyInContext:(CGContextRef)context;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

@@ -19,6 +19,8 @@
 #import "WDUtilities.h"
 #include <CommonCrypto/CommonHMAC.h>
 
+
+
 #define kMiterLimit 10
 
 #pragma mark Color Conversion
@@ -737,7 +739,7 @@ BOOL WDQuadContainsPoint(WDQuad quad, CGPoint P)
 {
 	BOOL result = NO;
 
-	CGPathRef pathRef = WDCreateQuadPathRef(quad);
+	CGPathRef pathRef = WDQuadCreateCGPath(quad);
 	result = CGPathContainsPoint(pathRef, nil, P, false);
 	CGPathRelease(pathRef);
 
@@ -804,7 +806,7 @@ NSString * NSStringFromWDQuad(WDQuad quad)
 	NSStringFromCGPoint(quad.P[3])];
 }
 
-CGPathRef WDCreateQuadPathRef(WDQuad q)
+CGPathRef WDQuadCreateCGPath(WDQuad q)
 {
 	CGMutablePathRef pathRef = CGPathCreateMutable();
 

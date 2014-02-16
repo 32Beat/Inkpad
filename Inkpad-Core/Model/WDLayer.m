@@ -96,7 +96,11 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 {
     self = [super init];
     
-    elements_ = [coder decodeObjectForKey:WDElementsKey]; 
+    elements_ = [coder decodeObjectForKey:WDElementsKey];
+    [elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self];
+
+
+
     drawing_ = [coder decodeObjectForKey:WDDrawingKey]; 
     visible_ = [coder decodeBoolForKey:WDVisibleKey];
     locked_ = [coder decodeBoolForKey:WDLockedKey];

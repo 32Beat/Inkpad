@@ -1242,6 +1242,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 #pragma mark -
 #pragma mark Image Placement
 
+// TODO: rewrite for new transforms
 - (void) placeImage:(UIImage *)image
 {
     image = [image downsampleWithMaxDimension:1024];
@@ -1257,7 +1258,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
     CGAffineTransform transform = CGAffineTransformMakeTranslation(ul.x, ul.y);
     transform = CGAffineTransformScale(transform, scale, scale);
     //placedImage.transform = transform;
-	[placedImage setSourceTransform:transform];
+	[placedImage setTransform:transform];
 	
     // be sure to end any active path editing
     self.activePath = nil;

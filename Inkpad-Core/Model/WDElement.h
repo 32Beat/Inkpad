@@ -1,13 +1,15 @@
-//
-//  WDElement.h
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2009-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDElement.h
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2009-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import <Foundation/Foundation.h>
 #import "WDDrawing.h"
@@ -54,18 +56,18 @@ WDEditMode;
 
 
 typedef enum {
-    WDAlignLeft,
-    WDAlignCenter,
-    WDAlignRight,
-    WDAlignTop,
-    WDAlignMiddle,
-    WDAlignBottom
+	WDAlignLeft,
+	WDAlignCenter,
+	WDAlignRight,
+	WDAlignTop,
+	WDAlignMiddle,
+	WDAlignBottom
 } WDAlignment;
 
 typedef enum {
-    WDColorAdjustStroke = 1 << 0,
-    WDColorAdjustFill   = 1 << 1,
-    WDColorAdjustShadow = 1 << 2
+	WDColorAdjustStroke = 1 << 0,
+	WDColorAdjustFill   = 1 << 1,
+	WDColorAdjustShadow = 1 << 2
 } WDColorAdjustmentScope;
 
 @class WDGroup;
@@ -75,17 +77,47 @@ typedef enum {
 @class WDShadow;
 @class WDXMLElement;
 
+@class WDStyleOptions;
+@class WDBlendStyle;
+
+/*
+	ElementOwner
+	------------
+	Protocol for an element container
+	An element owner should be able to act as a kind of delegate for
+	element state changes, e.g. accumulate undo and update areas.
+	
+	It should also be able to report back renderAreas, so the core
+	drawing controller can request update areas through a bottom-up chain
+*/
+@protocol ElementOwner
+- (void)element:(WDElement*)element willChangeProperty:(id)propertyKey;
+- (void)element:(WDElement*)element didChangeProperty:(id)propertyKey;
+
+- (CGRect) renderAreaForRect:(CGRect)sourceRect;
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @interface WDElement : NSObject <NSCoding, NSCopying>
 {
-	WDEditMode mEditMode;
-
+	// Model properties
 	CGSize mSize;
 	CGPoint mPosition;
 	CGFloat mRotation;
 
+	WDStyleOptions *mStyleOptions;
+
+	// Active state vars
+	WDEditMode mEditMode;
+	__weak id<ElementOwner> mOwner;
+
 	// Cached info
 	CGAffineTransform mTransform;
+	
 	WDQuad mFrame;
+	CGPathRef mFramePath;
+
 	CGRect mFrameBounds;
 	CGRect mStyleBounds;
 	CGRect mShadowBounds;
@@ -94,9 +126,129 @@ typedef enum {
 	CGRect dirtyBounds_;
 }
 
+// Fundamental properties
 @property (nonatomic, assign) CGSize size;
 @property (nonatomic, assign) CGPoint position;
 @property (nonatomic, assign) CGFloat rotation;
+
+// Context properties
+@property (nonatomic, strong) WDStyleOptions *styleOptions;
+
+// "There can be only one!"
+@property (nonatomic, weak) id owner;
+
+
+//- (WDStyleOptions *) blendStyleOptions;
+//- (WDStyleOptions *) strokeStyleOptions;
+
+/*
+	styleProperties
+		blendStyleProperties
+			blendMode
+			blendOpacity
+		shadowStyleProperties
+		fillStyleProperties
+		strokeStyleProperties
+		textStyleProperties
+
+
+	while element is generic, we could technically consider it 
+	as always stylable:
+	
+	path = framepath
+	
+	drawing order: 
+	1. draw fill
+	2. draw content
+	3. draw stroke (as border)
+
+{ [[self styleOptions] valueForKey:WDBlendStyleOptionsKey]; }
+{ [[self styleOptions] valueForKey:WDStrokeStyleOptionsKey]; }
+*/
+
+/*
+	No undo manager,
+	No drawing 
+	
+	An element is fundamentally stupid and should preferably have 
+	no understanding of environment other than an owner reference 
+	to report changes.
+	
+	owner is technically no different than a delegate and should respond to:
+	
+		[owner element:self willChangeProperty:propertyKey];
+		[owner element:self didChangeProperty:propertyKey];
+
+	And likewise, layer should report back to its owner (drawing):
+	
+		[owner layer:self willChangeElement:element];
+		[owner layer:self didChangeElement:element];
+	
+	WDDrawing can make all necessary arrangements for undo and updates.
+
+	A group should pass these messages on to its owner:
+		[groupOwner element:initialElement willChangeProperty:propertyKey];
+
+	One additional call helps rendering updates while at the same time
+	synchronizing with styles:
+	
+		[owner renderAreaForRect:(CGRect)];
+		
+		? [owner renderAreaForArea:(WDQuad)???]
+	
+	
+	Styles
+	
+	Add WDStyleProperties object as a wrapper around dictionary which 
+	accommodates computations: 
+	
+		[[WDStyleProperties styleWithProperties:dictionary]
+			renderAreaForRect:(CGRect)sourceRect];
+		
+		derived objects:
+		[[WDShadowStyle styleWithProperties:dictionary] renderAreaForRect:];
+		[[WDStrokeStyle styleWithProperties:dictionary] renderAreaForRect:];
+
+		[WDStrokeStyle renderAreaWithProperties:props sourceRect:R];
+		[WDStrokeStyle renderAreaWithProperties:props sourcePath:path];
+
+		[WDStrokeStyle applyProperties:props toContext:cgcontext];
+		
+	de facto:
+	WD...Style acts as controller object for specific styledictionary, 
+	may use an internal mutable dictionary, returns a fixed dictionary 
+	with a copy of values. Values can be get/set normally.
+	
+	An element does not have WD...Style objects internally, just dictionaries
+	
+	style = [WDStrokeStyle styleWithProperties:dictionary];
+	[style setStrokeWidth:1.0];
+	newProperties = [style properties];
+	
+	//
+	[properties setValue:[NSValue valueWithCGFloat:1.0] 
+		forKey:WDPropertyStrokeStyleLineWidthKey];
+	
+	[element setValue: forKey:]
+	
+	
+	
+
+	[style setValue:forKey:]
+	{
+		if (![mProperties isKindOfClass:[NSMutableDictionary class]])
+		{ mProperties = [mProperties mutableCopy]; }
+		[mProperties setValue:forKey:];
+	}
+	
+	[strokeStyle setLineWidth:]
+	{
+		[self setValue:[NSValue valueWithCGFloat:lineWidth] 
+		forKey:WDPropertyStrokeStyleLineWidthKey];
+	}
+
+*/
+
 
 // Owner references for convenience
 @property (nonatomic, weak) WDLayer *layer; // layer
@@ -190,6 +342,11 @@ typedef enum {
 - (CGAffineTransform) sourceTransform;
 - (CGAffineTransform) computeSourceTransform;
 
+- (void) setTransform:(CGAffineTransform)T;
+- (void) setTransform:(CGAffineTransform)T sourceRect:(CGRect)sourceRect;
+
+
+
 - (CGRect) bounds;
 - (CGRect) styleBounds;
 - (CGRect) computeStyleBounds;
@@ -209,11 +366,6 @@ typedef enum {
 - (void) clearSubselection;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (CGSize) sourceSize;
-- (CGRect) sourceRect;
-- (CGAffineTransform) sourceTransform;
-- (void) setSourceTransform:(CGAffineTransform)T;
 
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;

@@ -155,6 +155,16 @@ NSString *WDDataKey = @"WDDataKey";
     return image_;
 }
 
+
+- (CGRect) naturalBounds
+{
+	if (CGRectIsEmpty(naturalBounds_))
+	{ naturalBounds_ = (CGRect){{0,0}, [self image].size }; }
+	return naturalBounds_;
+}
+
+
+
 - (UIImage *) thumbnailImage
 {
     if (!thumbnailImage_) {

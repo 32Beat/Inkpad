@@ -418,6 +418,7 @@
     }
 }
 
+// TODO: rewrite for new transforms
 - (void) startImage
 {
     CGRect box = [state_ x:@"x" y:@"y" width:@"width" height:@"height"];
@@ -433,7 +434,7 @@
     if (uiimage) {
         WDImage *wdimage = [WDImage imageWithUIImage:uiimage inDrawing:drawing_];
        // wdimage.transform = CGAffineTransformConcat([self preserveAspectRatio:preserve withSize:wdimage.sourceSize andBounds:box], state_.transform);
-		[wdimage setSourceTransform:CGAffineTransformConcat([self preserveAspectRatio:preserve withSize:wdimage.sourceSize andBounds:box], state_.transform)];
+		[wdimage setTransform:CGAffineTransformConcat([self preserveAspectRatio:preserve withSize:wdimage.sourceSize andBounds:box], state_.transform)];
 
 		[styleParser_ styleOpacityBlendAndShadow:wdimage];
         state_.wdElement = [self clipAndGroup:wdimage];

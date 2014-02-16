@@ -47,12 +47,10 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 - (id) initWithUIImage:(UIImage *)image inDrawing:(WDDrawing *)drawing
 {
 	self = [super init];
-	
-	if (!self) {
-		return nil;
+	if (self != nil)
+	{
+		imageData_ = [drawing imageDataForUIImage:image];
 	}
-	
-	imageData_ = [drawing imageDataForUIImage:image];
 
 	return self;
 }
@@ -94,7 +92,8 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 			CGAffineTransform T =
 			[coder decodeCGAffineTransformForKey:WDTransformKey];
 
-			[self setSourceTransform:T];
+			// Convert transform to size, position, rotation
+			[self setTransform:T sourceRect:imageData_.naturalBounds];
 		}
 	}
 
@@ -143,7 +142,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	CGFloat sx = mSize.width / [self sourceSize].width;
 	CGFloat sy = mSize.height / [self sourceSize].height;
 
-	T = CGAffineTransformScale(T, sx, sy);
+	T = CGAffineTransformScale(T, sx, -sy);
 
 	return T;
 }
@@ -176,7 +175,6 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		}
 		
 		CGContextConcatCTM(ctx, [self sourceTransform]);
-		CGContextConcatCTM(ctx, CGAffineTransformMakeScale(1,-1));
 
 		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
 		imageData_.thumbnailImage : imageData_.image;

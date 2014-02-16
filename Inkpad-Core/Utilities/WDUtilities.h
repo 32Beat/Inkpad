@@ -95,13 +95,17 @@ CGPathRef WDCreateTransformedCGPathRef(CGPathRef pathRef, CGAffineTransform tran
 // Misc
 //
 
+#define NSNumberFromCGFloat(v) \
+(sizeof(CGFloat)>32)?[NSNumber numberWithDouble:v]:[NSNumber numberWithFloat:v]
+
 #define NSStringFromCGFloat(v) \
-(sizeof(CGFloat)>32)?\
-[[NSNumber numberWithDouble:v] stringValue]:\
-[[NSNumber numberWithFloat:v] stringValue];
+[NSNumberFromCGFloat(v) stringValue]
 
 #define CGFloatFromString(str) \
 ((sizeof(CGFloat)>32)?[str doubleValue]:[str floatValue])
+
+
+
 
 NSString * WDSVGStringForCGAffineTransform(CGAffineTransform transform);
 
@@ -131,7 +135,7 @@ BOOL WDQuadIntersectsQuad(WDQuad a, WDQuad b);
 BOOL WDQuadIntersectsRect(WDQuad quad, CGRect R);
 BOOL WDQuadContainsPoint(WDQuad quad, CGPoint P);
 CGPoint WDQuadGetCenter(WDQuad Q);
-CGPathRef WDCreateQuadPathRef(WDQuad q);
+CGPathRef WDQuadCreateCGPath(WDQuad q);
 NSString * NSStringFromWDQuad(WDQuad quad);
 
 #pragma mark -

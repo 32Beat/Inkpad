@@ -16,6 +16,13 @@
 @class WDElement;
 @class WDXMLElement;
 
+@protocol WDLayerOwner
+- (void)layer:(WDLayer*)element willChangeElement:(WDElement *)element;
+- (void)layer:(WDLayer*)element didChangeElement:(WDElement *)element;
+@end
+
+
+
 @interface WDLayer : NSObject <NSCoding, NSCopying>
 
 @property (nonatomic, readonly) NSMutableArray *elements;

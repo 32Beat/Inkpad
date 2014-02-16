@@ -1,13 +1,15 @@
-//
-//  WDElement.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2009-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDElement.m
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2009-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import "UIColor+Additions.h"
 #import "WDColor.h"
@@ -22,6 +24,22 @@
 #import "WDShadow.h"
 #import "WDSVGHelper.h"
 #import "WDUtilities.h"
+#import "WDStyleOptions.h"
+#import "WDBlendStyle.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static int WDElementMasterVersion = 1;
+static NSString *WDElementMasterVersionKey = @"WDElementMasterVersion";
+
+static NSString *WDElementNameKey = @"WDElementName";
+static NSString *WDElementVersionKey = @"WDElementVersion";
+static NSString *WDElementSizeKey = @"WDElementSize";
+static NSString *WDElementPositionKey = @"WDElementPosition";
+static NSString *WDElementRotationKey = @"WDElementRotation";
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 NSString *WDElementChanged = @"WDElementChanged";
 NSString *WDPropertyChangedNotification = @"WDPropertyChangedNotification";
@@ -52,6 +70,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 @synthesize position = mPosition;
 @synthesize rotation = mRotation;
 
+@synthesize styleOptions = mStyleOptions;
+
+
 @synthesize layer = layer_;
 @synthesize group = group_;
 @synthesize opacity = opacity_;
@@ -59,7 +80,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 @synthesize shadow = shadow_;
 @synthesize initialShadow = initialShadow_;
 
-- (void)encodeWithCoder:(NSCoder *)coder
+- (void)__encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeConditionalObject:layer_ forKey:WDLayerKey];
 	
@@ -82,7 +103,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	}
 }
 
-- (id)initWithCoder:(NSCoder *)coder
+- (id)__initWithCoder:(NSCoder *)coder
 {
 	self = [super init];
 	
@@ -101,6 +122,161 @@ NSString *WDShadowKey = @"WDShadowKey";
 	
 	return self; 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) dealloc
+{
+	// Cleanup low level constructs
+	[self flushCache];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *) elementName
+{ return NSStringFromClass([self class]); }
+
+- (NSInteger) elementVersion
+{ return 0; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Encoding
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeInteger:WDElementMasterVersion forKey:WDElementMasterVersionKey];
+
+	[self encodeTypeWithCoder:coder];
+	[self encodeSizeWithCoder:coder];
+	[self encodePositionWithCoder:coder];
+	[self encodeRotationWithCoder:coder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeTypeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:[self elementName] forKey:WDElementNameKey];
+	[coder encodeInteger:[self elementVersion] forKey:WDElementVersionKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeSizeWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGSize(mSize);
+	[coder encodeObject:str forKey:WDElementSizeKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodePositionWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGPoint(mPosition);
+	[coder encodeObject:str forKey:WDElementPositionKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeRotationWithCoder:(NSCoder *)coder
+{
+	NSString *str = NSStringFromCGFloat(mRotation);
+	[coder encodeObject:str forKey:WDElementRotationKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Decoding
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithCoder:(NSCoder *)coder
+{
+	self = [super init];
+	if (self != nil)
+	{
+		mSize = (CGSize){ 2.0, 2.0 };
+		mPosition = (CGPoint){ 0.0, 0.0 };
+		mRotation = 0.0;
+
+		NSInteger version =
+		[coder decodeIntegerForKey:WDElementMasterVersionKey];
+
+		if (version == 0)
+			[self decodeWithCoder0:coder];
+		else
+			[self decodeWithCoder:coder];
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) decodeWithCoder:(NSCoder *)coder
+{
+	[self decodeSizeWithCoder:coder];
+	[self decodePositionWithCoder:coder];
+	[self decodeRotationWithCoder:coder];
+
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeSizeWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDElementSizeKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDElementSizeKey];
+		if (str != nil) { mSize = CGSizeFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodePositionWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDElementPositionKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDElementPositionKey];
+		if (str != nil) { mPosition = CGPointFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeRotationWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDElementRotationKey])
+	{
+		NSString *str = [coder decodeObjectForKey:WDElementRotationKey];
+		if (str != nil) { mRotation = CGFloatFromString(str); }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) decodeWithCoder0:(NSCoder *)coder
+{
+	// Decode blendStyleOptions without generating updates
+
+	if ([coder containsValueForKey:WDObjectOpacityKey])
+	{ 	[[self blendStyleOptions] setOpacity:
+		[coder decodeFloatForKey:WDObjectOpacityKey]]; }
+
+	if ([coder containsValueForKey:WDBlendModeKey])
+	{ 	[[self blendStyleOptions] setBlendMode:
+		[coder decodeIntForKey:WDBlendModeKey]]; }
+
+	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 - (id) init
 {
@@ -237,11 +413,53 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) flushCache
 {
+	// Reset transform
 	mTransform.a = 0.0;
 	mTransform.b = 0.0;
 	mTransform.c = 0.0;
 	mTransform.d = 0.0;
+
+	// Reset dependencies
 	mFrame = WDQuadNull;
+	if (mFramePath != nil)
+	{ CGPathRelease(mFramePath); }
+	mFramePath = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Style Options
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDStyleOptions *) styleOptions
+{ return mStyleOptions ? mStyleOptions : (mStyleOptions = [WDStyleOptions new]); }
+
+- (WDBlendStyle *) blendStyleOptions
+{
+	id options = [[self styleOptions] valueForKey:WDBlendStyleOptionsKey];
+	if (options == nil)
+	{
+		options = [WDBlendStyle new];
+		[[self styleOptions] setStyleOptions:options];
+	}
+
+	return options;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setBlendOpacity:(CGFloat)opacity
+{
+	[mOwner element:self willChangeProperty:WDBlendStyleOpacityKey];
+	[[self blendStyleOptions] setOpacity:opacity];
+	[mOwner element:self didChangeProperty:WDBlendStyleOpacityKey];
+}
+
+- (void) setBlendMode:(CGBlendMode)blendMode
+{
+	[mOwner element:self willChangeProperty:WDBlendStyleModeKey];
+	[[self blendStyleOptions] setBlendMode:blendMode];
+	[mOwner element:self didChangeProperty:WDBlendStyleModeKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,9 +514,12 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setSourceTransform:(CGAffineTransform)T
+- (void) setTransform:(CGAffineTransform)T
+{ [self setTransform:T sourceRect:[self sourceRect]]; }
+
+- (void) setTransform:(CGAffineTransform)T sourceRect:(CGRect)sourceRect
 {
-	WDQuad F = WDQuadWithRect([self sourceRect], T);
+	WDQuad F = WDQuadWithRect(sourceRect, T);
 	CGPoint C = WDQuadGetCenter(F);
 
 	[self setSize:(CGSize){
@@ -308,7 +529,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	CGPoint P = WDAddPoints(F.P[1], F.P[2]);
 	P = WDSubtractPoints(P, C);
-	[self setRotation:WDDegreesFromRadians(atan2(P.x, P.y))];
+	P = WDSubtractPoints(P, C);
+	[self setRotation:WDDegreesFromRadians(atan2(P.y, P.x))];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +542,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// = position
+
+- (CGPathRef) framePath
+{
+	return mFramePath != nil ? mFramePath :
+	(mFramePath = WDQuadCreateCGPath([self frameQuad]));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGPoint) frameCenter
 { return WDQuadGetCenter([self frameQuad]); }
@@ -1098,7 +1327,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self postDirtyBoundsChange];
 	[self propertyChanged:WDOpacityProperty];
 }
-
+/*
 - (void) setBlendMode:(CGBlendMode)blendMode
 {
 	if (blendMode == blendMode_) {
@@ -1114,7 +1343,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self postDirtyBoundsChange];
 	[self propertyChanged:WDBlendModeProperty];
 }
-
+*/
 - (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager
 {
 	if (!value) {
