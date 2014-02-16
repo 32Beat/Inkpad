@@ -78,7 +78,7 @@ typedef enum {
 @class WDXMLElement;
 
 @class WDStyleOptions;
-@class WDBlendStyle;
+@class WDBlendStyleOptions;
 
 /*
 	ElementOwner
@@ -378,6 +378,8 @@ typedef enum {
 - (CGPoint) frameControlPointAtIndex:(NSInteger)n;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context;
 
 
 // OpenGL-based selection rendering

@@ -25,7 +25,8 @@
 #import "WDSVGHelper.h"
 #import "WDUtilities.h"
 #import "WDStyleOptions.h"
-#import "WDBlendStyle.h"
+#import "WDBlendOptions.h"
+#import "WDShadowOptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +48,7 @@ NSString *WDPropertiesChangedNotification = @"WDPropertiesChangedNotification";
 NSString *WDPropertyKey = @"WDPropertyKey";
 NSString *WDPropertiesKey = @"WDPropertiesKey";
 
-NSString *WDBlendModeKey = @"WDBlendModeKey";
+//NSString *WDBlendModeKey = @"WDBlendModeKey";
 NSString *WDGroupKey = @"WDGroupKey";
 NSString *WDLayerKey = @"WDLayerKey";
 NSString *WDTransformKey = @"WDTransformKey";
@@ -262,13 +263,43 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 	// Decode blendStyleOptions without generating updates
 
-	if ([coder containsValueForKey:WDObjectOpacityKey])
-	{ 	[[self blendStyleOptions] setOpacity:
-		[coder decodeFloatForKey:WDObjectOpacityKey]]; }
+	if ([coder containsValueForKey:WDBlendModeKey]||
+		[coder containsValueForKey:WDObjectOpacityKey])
+	{
+		WDBlendOptions *blendOptions = [WDBlendOptions new];
 
-	if ([coder containsValueForKey:WDBlendModeKey])
-	{ 	[[self blendStyleOptions] setBlendMode:
-		[coder decodeIntForKey:WDBlendModeKey]]; }
+		if ([coder containsValueForKey:WDBlendModeKey])
+			[blendOptions setBlendMode:
+			[coder decodeIntForKey:WDBlendModeKey]];
+
+		if ([coder containsValueForKey:WDObjectOpacityKey])
+			[blendOptions setOpacity:
+			[coder decodeFloatForKey:WDObjectOpacityKey]];
+
+		[[self styleOptions] setStyleOptions:blendOptions];
+	}
+
+	if ([coder containsValueForKey:WDShadowKey])
+	{
+		WDShadow *shadow = [coder decodeObjectForKey:WDShadowKey];
+		if (shadow != nil)
+		{
+			WDColor *color = [shadow color];
+			float radius = [shadow radius];
+			float offset = [shadow offset];
+			float angle = [shadow angle];
+
+			CGSize shadowOffset = {
+				offset * cos(angle),
+				offset * sin(angle) };
+
+			WDShadowOptions *dstShadow = [WDShadowOptions new];
+			[dstShadow setShadowColor:[color UIColor]];
+			[dstShadow setShadowOffset:shadowOffset];
+			[dstShadow setShadowBlur:radius];
+			[[self styleOptions] setStyleOptions:dstShadow];
+		}
+	}
 
 	return YES;
 }
@@ -434,32 +465,41 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (WDStyleOptions *) styleOptions
 { return mStyleOptions ? mStyleOptions : (mStyleOptions = [WDStyleOptions new]); }
 
-- (WDBlendStyle *) blendStyleOptions
-{
-	id options = [[self styleOptions] valueForKey:WDBlendStyleOptionsKey];
-	if (options == nil)
-	{
-		options = [WDBlendStyle new];
-		[[self styleOptions] setStyleOptions:options];
-	}
+////////////////////////////////////////////////////////////////////////////////
 
-	return options;
-}
+- (WDBlendOptions *) blendOptions
+{ return [[self styleOptions] valueForKey:WDBlendOptionsKey]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDShadowOptions *) shadowOptions
+{ return [[self styleOptions] valueForKey:WDShadowOptionsKey]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setBlendOpacity:(CGFloat)opacity
 {
-	[mOwner element:self willChangeProperty:WDBlendStyleOpacityKey];
-	[[self blendStyleOptions] setOpacity:opacity];
-	[mOwner element:self didChangeProperty:WDBlendStyleOpacityKey];
+	[mOwner element:self willChangeProperty:WDBlendOpacityKey];
+	[[self blendOptions] setOpacity:opacity];
+	[mOwner element:self didChangeProperty:WDBlendOpacityKey];
 }
 
 - (void) setBlendMode:(CGBlendMode)blendMode
 {
-	[mOwner element:self willChangeProperty:WDBlendStyleModeKey];
-	[[self blendStyleOptions] setBlendMode:blendMode];
-	[mOwner element:self didChangeProperty:WDBlendStyleModeKey];
+	[mOwner element:self willChangeProperty:WDBlendModeKey];
+	[[self blendOptions] setBlendMode:blendMode];
+	[mOwner element:self didChangeProperty:WDBlendModeKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context
+{
+	if (context != nil)
+	{
+		[[self blendOptions] applyInContext:context];
+		[[self shadowOptions] applyInContext:context];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

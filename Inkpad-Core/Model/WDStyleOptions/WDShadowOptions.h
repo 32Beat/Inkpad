@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDBlendStyle.h
+	WDShadowOptions.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -15,27 +15,31 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDBlendStyle
-	------------
+	WDShadowOptions
+	---------------
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-extern const NSString *WDBlendStyleOptionsKey;
-extern const NSString *WDBlendStyleModeKey;
-extern const NSString *WDBlendStyleOpacityKey;
+NSString *const WDShadowOptionsKey;
+NSString *const WDShadowColorKey;
+NSString *const WDShadowOffsetKey;
+NSString *const WDShadowBlurKey;
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDBlendStyle : WDStyleOptions
+@interface WDShadowOptions : WDStyleOptions
 {
 }
 
-- (CGBlendMode) blendMode;
-- (void) setBlendMode:(CGBlendMode)blendMode;
-
-- (CGFloat)opacity;
-- (void) setOpacity:(CGFloat)opacity;
-
 - (void) applyInContext:(CGContextRef)context;
+
+- (CGSize) shadowOffset;
+- (void) setShadowOffset:(CGSize)offset;
+
+- (CGFloat) shadowBlur;
+- (void) setShadowBlur:(CGFloat)blurRadius;
+
+- (UIColor *) shadowColor;
+- (void) setShadowColor:(UIColor *)color;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

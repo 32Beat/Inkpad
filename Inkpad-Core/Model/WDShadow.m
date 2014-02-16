@@ -13,10 +13,10 @@
 #import "WDShadow.h"
 #import "WDXMLElement.h"
 
-NSString *WDShadowColorKey = @"WDShadowColorKey";
-NSString *WDShadowRadiusKey = @"WDShadowRadiusKey";
-NSString *WDShadowOffsetKey = @"WDShadowOffsetKey";
-NSString *WDShadowAngleKey = @"WDShadowAngleKey";
+NSString *_WDShadowColorKey = @"WDShadowColorKey";
+NSString *_WDShadowOffsetKey = @"WDShadowOffsetKey";
+NSString *_WDShadowRadiusKey = @"WDShadowRadiusKey";
+NSString *_WDShadowAngleKey = @"WDShadowAngleKey";
 
 @implementation WDShadow
 
@@ -50,20 +50,20 @@ NSString *WDShadowAngleKey = @"WDShadowAngleKey";
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-    [coder encodeObject:color_ forKey:WDShadowColorKey];
-    [coder encodeFloat:radius_ forKey:WDShadowRadiusKey];
-    [coder encodeFloat:offset_ forKey:WDShadowOffsetKey];
-    [coder encodeFloat:angle_ forKey:WDShadowAngleKey];
+    [coder encodeObject:color_ forKey:_WDShadowColorKey];
+    [coder encodeFloat:radius_ forKey:_WDShadowRadiusKey];
+    [coder encodeFloat:offset_ forKey:_WDShadowOffsetKey];
+    [coder encodeFloat:angle_ forKey:_WDShadowAngleKey];
 }
 
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super init];
     
-    color_ = [coder decodeObjectForKey:WDShadowColorKey];
-    radius_ = [coder decodeFloatForKey:WDShadowRadiusKey]; 
-    offset_ = [coder decodeFloatForKey:WDShadowOffsetKey]; 
-    angle_ = [coder decodeFloatForKey:WDShadowAngleKey]; 
+    color_ = [coder decodeObjectForKey:_WDShadowColorKey];
+    radius_ = [coder decodeFloatForKey:_WDShadowRadiusKey];
+    offset_ = [coder decodeFloatForKey:_WDShadowOffsetKey];
+    angle_ = [coder decodeFloatForKey:_WDShadowAngleKey]; 
     
     return self; 
 }

@@ -318,7 +318,8 @@
 		BE2ACC99189AFF6600EC91EC /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC96189AFF6600EC91EC /* WDShape.m */; };
 		BE2C2744189FE17A0077A97C /* WDHeartShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2C2743189FE17A0077A97C /* WDHeartShape.m */; };
 		BE404D0818B0F5CF00D67C5F /* WDStyleOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D0718B0F5CF00D67C5F /* WDStyleOptions.m */; };
-		BE404D0B18B0FC2A00D67C5F /* WDBlendStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D0A18B0FC2A00D67C5F /* WDBlendStyle.m */; };
+		BE404D1618B1488F00D67C5F /* WDBlendOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D1318B1488F00D67C5F /* WDBlendOptions.m */; };
+		BE404D1718B1488F00D67C5F /* WDShadowOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D1518B1488F00D67C5F /* WDShadowOptions.m */; };
 		BE40990718A00CC500FA17B6 /* WDItem.m in Sources */ = {isa = PBXBuildFile; fileRef = BE40990618A00CC500FA17B6 /* WDItem.m */; };
 		BE41B302189FA7570021477A /* WDLeafShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE41B301189FA7570021477A /* WDLeafShape.m */; };
 		BE56D4D718A3F10A00B4374C /* WDSpadesShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE56D4D618A3F10A00B4374C /* WDSpadesShape.m */; };
@@ -821,8 +822,10 @@
 		BE2C2743189FE17A0077A97C /* WDHeartShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDHeartShape.m; sourceTree = "<group>"; };
 		BE404D0618B0F5CF00D67C5F /* WDStyleOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDStyleOptions.h; sourceTree = "<group>"; };
 		BE404D0718B0F5CF00D67C5F /* WDStyleOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDStyleOptions.m; sourceTree = "<group>"; };
-		BE404D0918B0FC2A00D67C5F /* WDBlendStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDBlendStyle.h; sourceTree = "<group>"; };
-		BE404D0A18B0FC2A00D67C5F /* WDBlendStyle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDBlendStyle.m; sourceTree = "<group>"; };
+		BE404D1218B1488F00D67C5F /* WDBlendOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDBlendOptions.h; sourceTree = "<group>"; };
+		BE404D1318B1488F00D67C5F /* WDBlendOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDBlendOptions.m; sourceTree = "<group>"; };
+		BE404D1418B1488F00D67C5F /* WDShadowOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShadowOptions.h; sourceTree = "<group>"; };
+		BE404D1518B1488F00D67C5F /* WDShadowOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShadowOptions.m; sourceTree = "<group>"; };
 		BE40990518A00CC500FA17B6 /* WDItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDItem.h; sourceTree = "<group>"; };
 		BE40990618A00CC500FA17B6 /* WDItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDItem.m; sourceTree = "<group>"; };
 		BE41B300189FA7570021477A /* WDLeafShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDLeafShape.h; sourceTree = "<group>"; };
@@ -1678,8 +1681,10 @@
 			children = (
 				BE404D0618B0F5CF00D67C5F /* WDStyleOptions.h */,
 				BE404D0718B0F5CF00D67C5F /* WDStyleOptions.m */,
-				BE404D0918B0FC2A00D67C5F /* WDBlendStyle.h */,
-				BE404D0A18B0FC2A00D67C5F /* WDBlendStyle.m */,
+				BE404D1218B1488F00D67C5F /* WDBlendOptions.h */,
+				BE404D1318B1488F00D67C5F /* WDBlendOptions.m */,
+				BE404D1418B1488F00D67C5F /* WDShadowOptions.h */,
+				BE404D1518B1488F00D67C5F /* WDShadowOptions.m */,
 			);
 			path = WDStyleOptions;
 			sourceTree = "<group>";
@@ -1979,11 +1984,11 @@
 				6B95E6AF12618DAC00E54B56 /* WDFillController.m in Sources */,
 				6B95E7651261B63400E54B56 /* WDSwatchController.m in Sources */,
 				6B51BC3912650D3F000F6BF3 /* WDSwatchCell.m in Sources */,
-				BE404D0B18B0FC2A00D67C5F /* WDBlendStyle.m in Sources */,
 				6B51BCF0126522B6000F6BF3 /* WDButton.m in Sources */,
 				6B1E328C126CA0D900E89FA1 /* WDExportController.m in Sources */,
 				BE40990718A00CC500FA17B6 /* WDItem.m in Sources */,
 				BE56D4D718A3F10A00B4374C /* WDSpadesShape.m in Sources */,
+				BE404D1718B1488F00D67C5F /* WDShadowOptions.m in Sources */,
 				6BB1D0FD1309E9A300F0C22E /* WDEyedropper.m in Sources */,
 				6BDBC48B130D1A6F00BC3BCA /* WDEtchedLine.m in Sources */,
 				6B87C94A131258660027A482 /* WDHelpController.m in Sources */,
@@ -2000,6 +2005,7 @@
 				6B53FF9713A7D9CB0029574B /* WDHueSaturationController.m in Sources */,
 				6BB7F94513AB1F5A004081B3 /* WDHueShifter.m in Sources */,
 				6B308FB713B56A8A000665C3 /* WDColorAdjustmentController.m in Sources */,
+				BE404D1618B1488F00D67C5F /* WDBlendOptions.m in Sources */,
 				BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */,
 				6B308FBA13B56B59000665C3 /* WDColorBalanceController.m in Sources */,
 				BE056B6718A151A20081C8D6 /* WDEditableShape.m in Sources */,

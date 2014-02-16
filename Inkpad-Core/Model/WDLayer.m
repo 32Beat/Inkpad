@@ -403,6 +403,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 	for (WDElement *element in elements_) {
 		if (CGRectIntersectsRect([element renderBounds], clip)) {
+			[element prepareCGContext:ctx];
 			[element renderInContext:ctx metaData:metaData];
 		}
 	}

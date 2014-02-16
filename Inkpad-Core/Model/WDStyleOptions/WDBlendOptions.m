@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDBlendStyle.m
+	WDBlendOptions.m
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,21 +11,21 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import "WDBlendStyle.h"
+#import "WDBlendOptions.h"
 #import "WDUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const NSString *WDBlendStyleOptionsKey = @"WDBlendStyle";
-const NSString *WDBlendStyleModeKey = @"WDBlendStyleMode";
-const NSString *WDBlendStyleOpacityKey = @"WDBlendStyleOpacity";
+NSString *const WDBlendOptionsKey = @"WDBlendOptions";
+NSString *const WDBlendModeKey = @"WDBlendMode";
+NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-@implementation WDBlendStyle
+@implementation WDBlendOptions
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) applyInContext:(CGContextRef)context
@@ -43,23 +43,23 @@ const NSString *WDBlendStyleOpacityKey = @"WDBlendStyleOpacity";
 
 - (CGBlendMode) blendMode
 {
-	return [self containsValueForKey:WDBlendStyleModeKey]?
-	[[self valueForKey:WDBlendStyleModeKey] intValue] : kCGBlendModeNormal;
+	return [self containsValueForKey:WDBlendModeKey]?
+	[[self valueForKey:WDBlendModeKey] intValue] : kCGBlendModeNormal;
 }
 
 - (void) setBlendMode:(CGBlendMode)blendMode
-{ [self setValue:[NSNumber numberWithInt:blendMode] forKey:WDBlendStyleModeKey]; }
+{ [self setValue:[NSNumber numberWithInt:blendMode] forKey:WDBlendModeKey]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGFloat)opacity
 {
-	return [self containsValueForKey:WDBlendStyleOpacityKey]?
-	[[self valueForKey:WDBlendStyleOpacityKey] doubleValue] : 1.0;
+	return [self containsValueForKey:WDBlendOpacityKey]?
+	[[self valueForKey:WDBlendOpacityKey] doubleValue] : 1.0;
 }
 
 - (void) setOpacity:(CGFloat)opacity
-{ [self setValue:NSNumberFromCGFloat(opacity) forKey:WDBlendStyleOpacityKey]; }
+{ [self setValue:NSNumberFromCGFloat(opacity) forKey:WDBlendOpacityKey]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end
