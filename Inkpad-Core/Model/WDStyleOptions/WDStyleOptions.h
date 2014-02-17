@@ -20,10 +20,15 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
+@protocol WDStyleOptionsDelegate
+- (void) styleOptions:(id)options willSetOptions:(id)subOptions;
+- (void) styleOptions:(id)options didSetOptions:(id)subOptions;
+@end
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDStyleOptions : NSObject <NSCoding>
 {
+	__weak id mDelegate;
 	id mContainer;
 }
 

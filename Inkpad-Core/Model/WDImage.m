@@ -170,9 +170,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	{
 		CGContextSaveGState(ctx);
 		
-		if (self.shadow && metaData.scale <= 3) {
-			[self.shadow applyInContext:ctx metaData:metaData];
-		}
+		[self prepareCGContext:ctx];
 		
 		CGContextConcatCTM(ctx, [self sourceTransform]);
 

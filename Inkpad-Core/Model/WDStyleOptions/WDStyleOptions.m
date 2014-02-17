@@ -23,6 +23,20 @@
 @implementation WDStyleOptions
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) initWithDelegate:(id<WDStyleOptionsDelegate>)delegate
+{
+	self = [super init];
+	if (self != nil)
+	{
+		mDelegate = delegate;
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 + (id) styleOptionsWithContainer:(NSDictionary *)container
 { return [[self alloc] initWithContainer:container]; }
 
@@ -44,9 +58,7 @@
 	self = [super init];
 	if (self != nil)
 	{
-		NSString *classNameKey = NSStringFromClass([self class]);
-		if ([coder containsValueForKey:classNameKey])
-		{ mContainer = [coder decodeObjectForKey:classNameKey]; }
+		[self decodeContainerWithCoder:coder];
 	}
 
 	return self;
@@ -54,7 +66,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) encodeWithCoder:(NSCoder *)coder
+- (void) decodeContainerWithCoder:(NSCoder *)coder
+{
+	NSString *classNameKey = NSStringFromClass([self class]);
+	if ([coder containsValueForKey:classNameKey])
+	{ mContainer = [coder decodeObjectForKey:classNameKey]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeContainerWithCoder:(NSCoder *)coder
 {
 	if (mContainer != nil)
 	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
@@ -101,7 +122,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setStyleOptions:(WDStyleOptions *)options
-{ [self setValue:options forKey:NSStringFromClass([options class])]; }
+{
+	[mOwner styleOptions:self willSetOptions:options];
+	[self setValue:options forKey:NSStringFromClass([options class])];
+	[mOwner styleOptions:self didSetOptions:options];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /*

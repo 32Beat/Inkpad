@@ -28,38 +28,61 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 @implementation WDBlendOptions
 ////////////////////////////////////////////////////////////////////////////////
 
+@synthesize mode = mMode;
+@synthesize opacity = mOpacity;
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) init
+{
+	self = [super init];
+	if (self != nil)
+	{
+		[self setDefaults];
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithCoder:(NSCoder *)coder
+{
+	self = [super initWithCoder:coder];
+	if (self != nil)
+	{
+		[self setDefaults];
+
+		if ([coder containsValueForKey:WDBlendModeKey])
+		{ mMode = [coder decodeIntegerForKey:WDBlendModeKey]; }
+
+		if ([coder containsValueForKey:WDBlendOpacityKey])
+		{ mOpacity = [coder decodeFloatForKey:WDBlendOpacityKey]; }
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setDefaults
+{
+	mMode = kCGBlendModeNormal;
+	mOpacity = 1.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) applyInContext:(CGContextRef)context
 {
-	if (context != nil)
-	{
-		CGContextSetBlendMode(context, [self blendMode]);
-		CGContextSetAlpha(context, [self opacity]);
-	}
+	CGContextSetBlendMode(context, [self mode]);
+	CGContextSetAlpha(context, [self opacity]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////
 
-- (CGBlendMode) blendMode
-{
-	return [self containsValueForKey:WDBlendModeKey]?
-	[[self valueForKey:WDBlendModeKey] intValue] : kCGBlendModeNormal;
-}
 
-- (void) setBlendMode:(CGBlendMode)blendMode
-{ [self setValue:[NSNumber numberWithInt:blendMode] forKey:WDBlendModeKey]; }
 
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat)opacity
-{
-	return [self containsValueForKey:WDBlendOpacityKey]?
-	[[self valueForKey:WDBlendOpacityKey] doubleValue] : 1.0;
-}
-
-- (void) setOpacity:(CGFloat)opacity
-{ [self setValue:NSNumberFromCGFloat(opacity) forKey:WDBlendOpacityKey]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

@@ -266,10 +266,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if ([coder containsValueForKey:WDBlendModeKey]||
 		[coder containsValueForKey:WDObjectOpacityKey])
 	{
-		WDBlendOptions *blendOptions = [WDBlendOptions new];
+		WDMutableBlendOptions *blendOptions = [WDMutableBlendOptions new];
 
 		if ([coder containsValueForKey:WDBlendModeKey])
-			[blendOptions setBlendMode:
+			[blendOptions setMode:
 			[coder decodeIntForKey:WDBlendModeKey]];
 
 		if ([coder containsValueForKey:WDObjectOpacityKey])
@@ -463,12 +463,27 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDStyleOptions *) styleOptions
-{ return mStyleOptions ? mStyleOptions : (mStyleOptions = [WDStyleOptions new]); }
+{
+	return mStyleOptions ? mStyleOptions :
+	(mStyleOptions = [[WDStyleOptions alloc] initWithDelegate:self]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDBlendOptions *) blendOptions
 { return [[self styleOptions] valueForKey:WDBlendOptionsKey]; }
+
+- (void) setBlendOptions:(WDBlendOptions *)blendOptions
+{
+	if (mBlendOptions != blendOptions)
+	{
+		[mOwner element:self willChangeProperty:WDBlendOptionsKey];
+		[[self styleOptions] setStyleOptions:blendOptions];
+		[mOwner element:self didChangeProperty:WDBlendOptionsKey];
+
+		mBlendOptions = blendOptions;
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -479,9 +494,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) setBlendOpacity:(CGFloat)opacity
 {
-	[mOwner element:self willChangeProperty:WDBlendOpacityKey];
-	[[self blendOptions] setOpacity:opacity];
-	[mOwner element:self didChangeProperty:WDBlendOpacityKey];
+	WDBlendOptions *blendOptions = [self blendOptions];
+	if (blendOptions == nil)
+	{ blendOptions = [WDBlendOptions new]; }
+	[blendOptions setOpacity:opacity];
+	[self setBlendOptions:blendOptions];
 }
 
 - (void) setBlendMode:(CGBlendMode)blendMode
