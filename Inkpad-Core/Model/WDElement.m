@@ -153,6 +153,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self encodeSizeWithCoder:coder];
 	[self encodePositionWithCoder:coder];
 	[self encodeRotationWithCoder:coder];
+
+	[self encodeStyleOptionsWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,6 +190,13 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeStyleOptionsWithCoder:(NSCoder *)coder
+{
+	[[self styleOptions] encodeContainerWithCoder:coder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Decoding
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,6 +229,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self decodeSizeWithCoder:coder];
 	[self decodePositionWithCoder:coder];
 	[self decodeRotationWithCoder:coder];
+	[self decodeStyleOptionsWithCoder:coder];
 
 	return YES;
 }
@@ -259,6 +269,13 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) decodeStyleOptionsWithCoder:(NSCoder *)coder
+{
+	[[self styleOptions] decodeContainerWithCoder:coder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (BOOL) decodeWithCoder0:(NSCoder *)coder
 {
 	// Decode blendStyleOptions without generating updates
@@ -266,7 +283,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if ([coder containsValueForKey:WDBlendModeKey]||
 		[coder containsValueForKey:WDObjectOpacityKey])
 	{
-		WDMutableBlendOptions *blendOptions = [WDMutableBlendOptions new];
+		WDBlendOptions *blendOptions = [WDBlendOptions new];
 
 		if ([coder containsValueForKey:WDBlendModeKey])
 			[blendOptions setMode:
@@ -276,7 +293,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 			[blendOptions setOpacity:
 			[coder decodeFloatForKey:WDObjectOpacityKey]];
 
-		[[self styleOptions] setStyleOptions:blendOptions];
+		[[self styleOptions] _setOptions:blendOptions];
 	}
 
 	if ([coder containsValueForKey:WDShadowKey])
@@ -297,7 +314,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 			[dstShadow setShadowColor:[color UIColor]];
 			[dstShadow setShadowOffset:shadowOffset];
 			[dstShadow setShadowBlur:radius];
-			[[self styleOptions] setStyleOptions:dstShadow];
+			[[self styleOptions] _setOptions:dstShadow];
 		}
 	}
 
@@ -470,20 +487,19 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) styleOptions:(id)options willSetOptions:(id)subOptions
+{ [mOwner element:self willChangeProperty:NSStringFromClass(subOptions)]; }
+
+- (void) styleOptions:(id)options didSetOptions:(id)subOptions;
+{ [mOwner element:self didChangeProperty:NSStringFromClass(subOptions)]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (WDBlendOptions *) blendOptions
 { return [[self styleOptions] valueForKey:WDBlendOptionsKey]; }
 
 - (void) setBlendOptions:(WDBlendOptions *)blendOptions
-{
-	if (mBlendOptions != blendOptions)
-	{
-		[mOwner element:self willChangeProperty:WDBlendOptionsKey];
-		[[self styleOptions] setStyleOptions:blendOptions];
-		[mOwner element:self didChangeProperty:WDBlendOptionsKey];
-
-		mBlendOptions = blendOptions;
-	}
-}
+{ [[self styleOptions] setOptions:blendOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -492,30 +508,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setBlendOpacity:(CGFloat)opacity
-{
-	WDBlendOptions *blendOptions = [self blendOptions];
-	if (blendOptions == nil)
-	{ blendOptions = [WDBlendOptions new]; }
-	[blendOptions setOpacity:opacity];
-	[self setBlendOptions:blendOptions];
-}
-
-- (void) setBlendMode:(CGBlendMode)blendMode
-{
-	[mOwner element:self willChangeProperty:WDBlendModeKey];
-	[[self blendOptions] setBlendMode:blendMode];
-	[mOwner element:self didChangeProperty:WDBlendModeKey];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) prepareCGContext:(CGContextRef)context
 {
 	if (context != nil)
 	{
-		[[self blendOptions] applyInContext:context];
-		[[self shadowOptions] applyInContext:context];
+		[[self styleOptions] prepareCGContext:context];
 	}
 }
 

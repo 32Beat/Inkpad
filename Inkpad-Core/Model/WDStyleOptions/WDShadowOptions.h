@@ -30,8 +30,6 @@ NSString *const WDShadowBlurKey;
 {
 }
 
-- (void) applyInContext:(CGContextRef)context;
-
 - (CGSize) shadowOffset;
 - (void) setShadowOffset:(CGSize)offset;
 

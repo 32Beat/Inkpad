@@ -28,13 +28,11 @@ NSString *const WDBlendOpacityKey;
 @interface WDBlendOptions : WDStyleOptions
 {
 	CGBlendMode mMode;
-	CGFloat 	mOpacity;
+	CGFloat mOpacity;
 }
 
 @property (nonatomic, assign) CGBlendMode mode;
 @property (nonatomic, assign) CGFloat opacity;
-
-- (void) applyInContext:(CGContextRef)context;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

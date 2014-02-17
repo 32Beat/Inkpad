@@ -29,7 +29,7 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 @implementation WDShadowOptions
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) applyInContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context
 {
 	if (context != nil)
 	{

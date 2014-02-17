@@ -77,8 +77,7 @@ typedef enum {
 @class WDShadow;
 @class WDXMLElement;
 
-@class WDStyleOptions;
-@class WDBlendStyleOptions;
+#import "WDStyleOptions.h"
 
 /*
 	ElementOwner
@@ -99,7 +98,7 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface WDElement : NSObject <NSCoding, NSCopying>
+@interface WDElement : NSObject <NSCoding, NSCopying, WDStyleOptionsDelegate>
 {
 	// Model properties
 	CGSize mSize;

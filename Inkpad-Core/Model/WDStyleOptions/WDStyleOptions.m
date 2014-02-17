@@ -36,36 +36,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-+ (id) styleOptionsWithContainer:(NSDictionary *)container
-{ return [[self alloc] initWithContainer:container]; }
-
-- (id) initWithContainer:(id)container
-{
-	self = [super init];
-	if (self != nil)
-	{
-		mContainer = container;
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) initWithCoder:(NSCoder *)coder
-{
-	self = [super init];
-	if (self != nil)
-	{
-		[self decodeContainerWithCoder:coder];
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) decodeContainerWithCoder:(NSCoder *)coder
 {
 	NSString *classNameKey = NSStringFromClass([self class]);
@@ -81,22 +51,6 @@
 	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-- (id) copyWithZone:(NSZone *)zone
-{
-	WDItem *item = [[[self class] allocWithZone:zone] init];
-	if (item != nil)
-	{
-		item->mSize = self->mSize;
-		item->mPosition = self->mPosition;
-		item->mRotation = self->mRotation;
-	}
-
-	return item;
-}
-*/
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) container
@@ -121,50 +75,29 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setStyleOptions:(WDStyleOptions *)options
-{
-	[mOwner styleOptions:self willSetOptions:options];
-	[self setValue:options forKey:NSStringFromClass([options class])];
-	[mOwner styleOptions:self didSetOptions:options];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	sub options are considered immutable, so we simply return a default object
-	which is how the options are rendered.
-	caller must always store adjusted sub options for changes to take effect.
-*/
-- (id) styleOptionsForKey:(id)key
-{
-	id options = [self valueForKey:key];
-	if (options == nil)
-	{
-		options = [NSClassFromString(key) new];
-	}
-
-	return options;
-}
+- (void) _setOptions:(WDStyleOptions *)options
+{ [self setValue:options forKey:NSStringFromClass([options class])]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (CGRect) renderAreaForRect:(CGRect)sourceRect withOptions:(id)options
-{ return [[self styleOptionsWithContainer:options] renderAreaForRect:sourceRect]; }
+- (void) setOptions:(WDStyleOptions *)options
+{
+	[mDelegate styleOptions:self willSetOptions:options];
+	[self _setOptions:options];
+	[mDelegate styleOptions:self didSetOptions:options];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) renderAreaForRect:(CGRect)sourceRect
 { return sourceRect; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (void) applyOptions:(NSDictionary *)container inContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context
 {
-	if (container != nil)
-	{ [[self styleOptionsWithContainer:container] applyInContext:context]; }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) applyInContext:(CGContextRef)context
-{
+	for (id options in [mContainer objectEnumerator])
+	{ [options prepareCGContext:context]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

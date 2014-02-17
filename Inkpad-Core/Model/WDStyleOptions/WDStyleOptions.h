@@ -26,29 +26,27 @@
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDStyleOptions : NSObject <NSCoding>
+@interface WDStyleOptions : NSObject 
 {
 	__weak id mDelegate;
 	id mContainer;
 }
 
-+ (id) styleOptionsWithContainer:(NSDictionary *)container;
-- (id) initWithContainer:(NSDictionary *)container;
-- (id) initWithCoder:(NSCoder *)coder;
-- (void) encodeWithCoder:(NSCoder *)coder;
-// Stuffs mOptions with className as key in current coder context
+- (id) initWithDelegate:(id<WDStyleOptionsDelegate>)delegate;
 
+- (void) decodeContainerWithCoder:(NSCoder *)coder;
+- (void) encodeContainerWithCoder:(NSCoder *)coder;
+// Stuffs mContainer with className as key in current coder context
 
 - (BOOL) containsValueForKey:(id)key;
 - (id) valueForKey:(id)key;
 - (void) setValue:(id)value forKey:(id)key;
-- (void) setStyleOptions:(WDStyleOptions *)options;
 
-- (CGRect) renderAreaForRect:(CGRect)sourceRect;
-+ (CGRect) renderAreaForRect:(CGRect)sourceRect withOptions:(id)options;
+- (void) setOptions:(id)options;
+- (void) _setOptions:(id)options;
 
-+ (void) applyOptions:(NSDictionary *)container inContext:(CGContextRef)context;
-- (void) applyInContext:(CGContextRef)context;
+- (CGRect) resultAreaForRect:(CGRect)sourceRect;
+- (void) prepareCGContext:(CGContextRef)context;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

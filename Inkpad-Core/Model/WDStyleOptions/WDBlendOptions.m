@@ -45,7 +45,7 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 - (id) initWithCoder:(NSCoder *)coder
 {
 	self = [super initWithCoder:coder];
@@ -62,7 +62,7 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 	return self;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setDefaults
@@ -73,7 +73,7 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) applyInContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context
 {
 	CGContextSetBlendMode(context, [self mode]);
 	CGContextSetAlpha(context, [self opacity]);
