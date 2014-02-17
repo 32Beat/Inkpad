@@ -71,8 +71,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 @synthesize position = mPosition;
 @synthesize rotation = mRotation;
 
-@synthesize styleOptions = mStyleOptions;
-
+@synthesize renderOptions = mRenderOptions;
+@synthesize owner = mOwner;
 
 @synthesize layer = layer_;
 @synthesize group = group_;
@@ -154,7 +154,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self encodePositionWithCoder:coder];
 	[self encodeRotationWithCoder:coder];
 
-	[self encodeStyleOptionsWithCoder:coder];
+	[self encodeRenderOptionsWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,9 +191,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) encodeStyleOptionsWithCoder:(NSCoder *)coder
+- (void) encodeRenderOptionsWithCoder:(NSCoder *)coder
 {
-	[[self styleOptions] encodeContainerWithCoder:coder];
+	[[self renderOptions] encodeWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +229,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self decodeSizeWithCoder:coder];
 	[self decodePositionWithCoder:coder];
 	[self decodeRotationWithCoder:coder];
-	[self decodeStyleOptionsWithCoder:coder];
+	[self decodeRenderOptionsWithCoder:coder];
 
 	return YES;
 }
@@ -269,16 +269,19 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) decodeStyleOptionsWithCoder:(NSCoder *)coder
+- (void) decodeRenderOptionsWithCoder:(NSCoder *)coder
 {
-	[[self styleOptions] decodeContainerWithCoder:coder];
+	[[self renderOptions] decodeWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) decodeWithCoder0:(NSCoder *)coder
 {
-	// Decode blendStyleOptions without generating updates
+	/*
+		We don't have an owner yet, 
+		so updates are not propagated up the command chain
+	*/
 
 	if ([coder containsValueForKey:WDBlendModeKey]||
 		[coder containsValueForKey:WDObjectOpacityKey])
@@ -293,7 +296,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 			[blendOptions setOpacity:
 			[coder decodeFloatForKey:WDObjectOpacityKey]];
 
-		[[self styleOptions] _setOptions:blendOptions];
+		[[self renderOptions] setBlendOptions:blendOptions];
 	}
 
 	if ([coder containsValueForKey:WDShadowKey])
@@ -311,10 +314,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 				offset * sin(angle) };
 
 			WDShadowOptions *dstShadow = [WDShadowOptions new];
-			[dstShadow setShadowColor:[color UIColor]];
-			[dstShadow setShadowOffset:shadowOffset];
-			[dstShadow setShadowBlur:radius];
-			[[self styleOptions] _setOptions:dstShadow];
+			[dstShadow setOffset:shadowOffset];
+			[dstShadow setBlur:radius];
+			[dstShadow setColor:[color UIColor]];
+			[[self renderOptions] setShadowOptions:dstShadow];
 		}
 	}
 
@@ -472,39 +475,66 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (mFramePath != nil)
 	{ CGPathRelease(mFramePath); }
 	mFramePath = nil;
+
+	[self invalidateBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Style Options
+#pragma mark Render Options
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDStyleOptions *) styleOptions
+- (WDRenderOptions *) renderOptions
 {
-	return mStyleOptions ? mStyleOptions :
-	(mStyleOptions = [[WDStyleOptions alloc] initWithDelegate:self]);
+	return mRenderOptions ? mRenderOptions :
+	(mRenderOptions = [[WDRenderOptions alloc] initWithDelegate:self]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) styleOptions:(id)options willSetOptions:(id)subOptions
-{ [mOwner element:self willChangeProperty:NSStringFromClass(subOptions)]; }
+- (void) renderOptions:(id)options willSetOptionsForKey:(id)key
+{
+	[mOwner element:self willChangeProperty:key];
+}
 
-- (void) styleOptions:(id)options didSetOptions:(id)subOptions;
-{ [mOwner element:self didChangeProperty:NSStringFromClass(subOptions)]; }
+- (void) renderOptions:(id)options didSetOptionsForKey:(id)key;
+{
+	[self flushCache];
+	[mOwner element:self didChangeProperty:key];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDBlendOptions *) blendOptions
-{ return [[self styleOptions] valueForKey:WDBlendOptionsKey]; }
+- (id) blendOptions
+{ return [[self renderOptions] blendOptions]; }
 
 - (void) setBlendOptions:(WDBlendOptions *)blendOptions
-{ [[self styleOptions] setOptions:blendOptions]; }
+{ [[self renderOptions] setBlendOptions:blendOptions]; }
+
+- (void) setBlendMode:(CGBlendMode)mode
+{
+	WDBlendOptions *options = [[self renderOptions] blendOptions];
+	[options setMode:mode];
+	[self setBlendOptions:options];
+}
+
+- (void) setBlendOpacity:(float)value
+{
+	WDBlendOptions *options = [[self renderOptions] blendOptions];
+	if (options == nil)
+	{ options = [WDBlendOptions new]; }
+	
+	[options setOpacity:value];
+	[self setBlendOptions:options];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDShadowOptions *) shadowOptions
-{ return [[self styleOptions] valueForKey:WDShadowOptionsKey]; }
+- (id) shadowOptions
+{ return [[self renderOptions] shadowOptions]; }
+
+- (void) setShadowOptions:(WDShadowOptions *)blendOptions
+{ [[self renderOptions] setShadowOptions:blendOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -512,7 +542,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 	if (context != nil)
 	{
-		[[self styleOptions] prepareCGContext:context];
+		[[self renderOptions] prepareCGContext:context];
 	}
 }
 
@@ -745,8 +775,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (CGRect) computeShadowBounds
 {
 	CGRect R = [self styleBounds];
-	if (self.shadow != nil)
-	{ R = [self.shadow expandRenderArea:R]; }
+	if (self.shadowOptions != nil)
+	{ R = [self.shadowOptions resultAreaForRect:R]; }
 	return R;
 }
 
@@ -1404,25 +1434,51 @@ NSString *WDShadowKey = @"WDShadowKey";
 		return;
 	}
 
-	WDShadow *shadow = self.shadow;
-	
-	if ([property isEqualToString:WDOpacityProperty]) {
-		self.opacity = [value floatValue];
-	} else if ([property isEqualToString:WDBlendModeProperty]) {
-		self.blendMode = [value intValue];
-	} else if ([property isEqualToString:WDShadowVisibleProperty]) {
+	if ([property isEqualToString:WDBlendModeProperty])
+	{
+		[self setBlendMode:[value intValue]];
+	}
+	else
+	if ([property isEqualToString:WDOpacityProperty])
+	{
+		[self setBlendOpacity:[value floatValue]];
+	}
+
+	/* 
+		We should never get individual properties here!
+	*/
+	WDShadowOptions *shadow = self.shadowOptions;
+
+
+	if ([property isEqualToString:WDShadowVisibleProperty]) {
 		if ([value boolValue] && !shadow) { // shadow enabled
 			// shadow turned on and we don't have one so attach the default stroke
-			self.shadow = [propertyManager defaultShadow];
+			self.shadowOptions = [WDShadowOptions new]; //[propertyManager defaultShadow];
 		} else if (![value boolValue] && shadow) {
-			self.shadow = nil;
+			self.shadowOptions = nil;
 		}
-	} else if ([[NSSet setWithObjects:WDShadowColorProperty, WDShadowOffsetProperty, WDShadowRadiusProperty, WDShadowAngleProperty, nil] containsObject:property]) {
-		if (!shadow) {
-			shadow = [propertyManager defaultShadow];
-		}
-		
-		if ([property isEqualToString:WDShadowColorProperty]) {
+	}
+	else
+	if ([[NSSet setWithObjects:WDShadowColorProperty, WDShadowOffsetProperty, WDShadowRadiusProperty, WDShadowAngleProperty, nil] containsObject:property])
+	{
+		if (!shadow)
+		{ shadow = [WDShadowOptions new]; } //[propertyManager defaultShadow]; }
+
+		if ([property isEqualToString:WDShadowColorProperty])
+		[shadow setColor:value];
+
+//		if ([property isEqualToString:WDShadowOffsetProperty]) \
+		[shadow setOffset:[value CGSizeValue]];
+
+//		if ([property isEqualToString:WDShadowAngleProperty]) \
+		[shadow setOffset:[value CGSizeValue]];
+
+		if ([property isEqualToString:WDShadowRadiusProperty]) \
+		[shadow setBlur:[value floatValue]];
+
+		[self setShadowOptions:shadow];
+/*
+		{
 			self.shadow = [WDShadow shadowWithColor:value radius:shadow.radius offset:shadow.offset angle:shadow.angle];
 		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
 			self.shadow = [WDShadow shadowWithColor:shadow.color radius:shadow.radius offset:[value floatValue] angle:shadow.angle];
@@ -1430,7 +1486,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 			self.shadow = [WDShadow shadowWithColor:shadow.color radius:[value floatValue] offset:shadow.offset angle:shadow.angle];
 		} else if ([property isEqualToString:WDShadowAngleProperty]) {
 			self.shadow = [WDShadow shadowWithColor:shadow.color radius:shadow.radius offset:shadow.offset angle:[value floatValue]];
-		}
+		}*/
 	} 
 }
 

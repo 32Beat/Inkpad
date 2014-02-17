@@ -12,18 +12,44 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <Foundation/Foundation.h>
+#import "WDBlendOptions.h"
+#import "WDShadowOptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
+	Order is important, 
+
 */
 ////////////////////////////////////////////////////////////////////////////////
 
+@protocol WDRenderOptionsDelegate
+- (void) renderOptions:(id)options willSetOptionsForKey:(id)key;
+- (void) renderOptions:(id)options didSetOptionsForKey:(id)key;
+@end
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDRenderOptions : NSObject
 {
+	__weak id mDelegate;
+
+	id mContainer;
+
+	id mBlendOptions;
+	id mShadowOptions;
 }
 
+- (id) initWithDelegate:(id<WDRenderOptionsDelegate>)delegate;
+
+- (void) decodeWithCoder:(NSCoder *)coder;
+- (void) encodeWithCoder:(NSCoder *)coder;
+
+- (id) blendOptions;
+- (void) setBlendOptions:(id)options;
+
+- (id) shadowOptions;
+- (void) setShadowOptions:(id)options;
+
+- (CGRect) resultAreaForRect:(CGRect)sourceRect;
 - (void) prepareCGContext:(CGContextRef)context;
 
 @end

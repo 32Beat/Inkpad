@@ -33,43 +33,43 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) init
-{
-	self = [super init];
-	if (self != nil)
-	{
-		[self setDefaults];
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-- (id) initWithCoder:(NSCoder *)coder
-{
-	self = [super initWithCoder:coder];
-	if (self != nil)
-	{
-		[self setDefaults];
-
-		if ([coder containsValueForKey:WDBlendModeKey])
-		{ mMode = [coder decodeIntegerForKey:WDBlendModeKey]; }
-
-		if ([coder containsValueForKey:WDBlendOpacityKey])
-		{ mOpacity = [coder decodeFloatForKey:WDBlendOpacityKey]; }
-	}
-
-	return self;
-}
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setDefaults
+- (void) initProperties
 {
 	mMode = kCGBlendModeNormal;
 	mOpacity = 1.0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) takePropertiesFrom:(id)src
+{
+	[self setMode:[src mode]];
+	[self setOpacity:[src opacity]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeInteger:mMode forKey:WDBlendModeKey];
+	[coder encodeDouble:mOpacity forKey:WDBlendOpacityKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDBlendModeKey])
+	{ mMode = [coder decodeIntegerForKey:WDBlendModeKey]; }
+
+	if ([coder containsValueForKey:WDBlendOpacityKey])
+	{ mOpacity = [coder decodeFloatForKey:WDBlendOpacityKey]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) resultAreaForRect:(CGRect)srcR
+{ return srcR; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,11 +78,6 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 	CGContextSetBlendMode(context, [self mode]);
 	CGContextSetAlpha(context, [self opacity]);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

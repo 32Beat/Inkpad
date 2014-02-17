@@ -20,24 +20,22 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-NSString *const WDShadowOptionsKey;
-NSString *const WDShadowColorKey;
-NSString *const WDShadowOffsetKey;
-NSString *const WDShadowBlurKey;
+extern NSString *const WDShadowOptionsKey;
+extern NSString *const WDShadowOffsetKey;
+extern NSString *const WDShadowBlurKey;
+extern NSString *const WDShadowColorKey;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDShadowOptions : WDStyleOptions
 {
+	CGSize mOffset;
+	CGFloat mBlur;
+	UIColor *mColor;
 }
 
-- (CGSize) shadowOffset;
-- (void) setShadowOffset:(CGSize)offset;
-
-- (CGFloat) shadowBlur;
-- (void) setShadowBlur:(CGFloat)blurRadius;
-
-- (UIColor *) shadowColor;
-- (void) setShadowColor:(UIColor *)color;
+@property (nonatomic, assign) CGSize offset;
+@property (nonatomic, assign) CGFloat blur;
+@property (nonatomic, strong) UIColor *color;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

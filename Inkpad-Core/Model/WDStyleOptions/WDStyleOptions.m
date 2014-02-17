@@ -23,83 +23,60 @@
 @implementation WDStyleOptions
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) initWithDelegate:(id<WDStyleOptionsDelegate>)delegate
+- (id) init
 {
 	self = [super init];
 	if (self != nil)
-	{
-		mDelegate = delegate;
-	}
+	{ [self initProperties]; }
 
 	return self;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) decodeContainerWithCoder:(NSCoder *)coder
+- (id) initWithCoder:(NSCoder *)coder
 {
-	NSString *classNameKey = NSStringFromClass([self class]);
-	if ([coder containsValueForKey:classNameKey])
-	{ mContainer = [coder decodeObjectForKey:classNameKey]; }
+	self = [self init];
+
+	if (self != nil)
+	{ [self decodeWithCoder:coder]; }
+
+	return self;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) encodeContainerWithCoder:(NSCoder *)coder
+- (id) initWithPropertiesFrom:(id)src
 {
-	if (mContainer != nil)
-	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
+	self = [self init];
+
+	if (self != nil)
+	{ [self takePropertiesFrom:src]; }
+
+	return self;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) container
-{ return mContainer ? mContainer : (mContainer = [NSMutableDictionary new]); }
-
-- (id) mutableContainer
-{
-	return [[self container] isKindOfClass:[NSMutableDictionary class]] ?
-	mContainer : (mContainer = [mContainer mutableCopy]);
-}
+- (id) copyWithZone:(NSZone *)zone
+{ return [[[self class] alloc] initWithPropertiesFrom:self]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) containsValueForKey:(id)key
-{ return [[self container] containsValueForKey:key]; }
+- (void) initProperties {}
 
-- (id) valueForKey:(id)key
-{ return [[self container] valueForKey:key]; }
+- (void) takePropertiesFrom:(id)src {}
 
-- (void) setValue:(id)value forKey:(id)key
-{ [[self mutableContainer] setValue:value forKey:key]; }
+- (void) encodeWithCoder:(NSCoder *)coder {}
 
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) _setOptions:(WDStyleOptions *)options
-{ [self setValue:options forKey:NSStringFromClass([options class])]; }
+- (void) decodeWithCoder:(NSCoder *)coder {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setOptions:(WDStyleOptions *)options
-{
-	[mDelegate styleOptions:self willSetOptions:options];
-	[self _setOptions:options];
-	[mDelegate styleOptions:self didSetOptions:options];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) renderAreaForRect:(CGRect)sourceRect
+- (CGRect) resultAreaForRect:(CGRect)sourceRect
 { return sourceRect; }
 
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) prepareCGContext:(CGContextRef)context
-{
-	for (id options in [mContainer objectEnumerator])
-	{ [options prepareCGContext:context]; }
-}
-
+- (void) prepareCGContext:(CGContextRef)context {}
 ////////////////////////////////////////////////////////////////////////////////
 @end
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,39 +14,25 @@
 #import <Foundation/Foundation.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	WDStyleOptions objects are controller objects for internal dictionaries. 
-
-*/
-////////////////////////////////////////////////////////////////////////////////
-
-@protocol WDStyleOptionsDelegate
-- (void) styleOptions:(id)options willSetOptions:(id)subOptions;
-- (void) styleOptions:(id)options didSetOptions:(id)subOptions;
+@protocol WDStyleOptionsProtocol
+- (void) initProperties;
+- (void) takePropertiesFrom:(id)src;
+- (void) encodeWithCoder:(NSCoder *)coder;
+- (void) decodeWithCoder:(NSCoder *)coder;
+- (void) prepareCGContext:(CGContextRef)context;
 @end
+////////////////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDStyleOptions : NSObject 
-{
-	__weak id mDelegate;
-	id mContainer;
-}
+@interface WDStyleOptions : NSObject <WDStyleOptionsProtocol>
 
-- (id) initWithDelegate:(id<WDStyleOptionsDelegate>)delegate;
-
-- (void) decodeContainerWithCoder:(NSCoder *)coder;
-- (void) encodeContainerWithCoder:(NSCoder *)coder;
-// Stuffs mContainer with className as key in current coder context
-
-- (BOOL) containsValueForKey:(id)key;
-- (id) valueForKey:(id)key;
-- (void) setValue:(id)value forKey:(id)key;
-
-- (void) setOptions:(id)options;
-- (void) _setOptions:(id)options;
+- (id) init;
+- (id) initWithCoder:(NSCoder *)coder;
+- (id) initWithPropertiesFrom:(id)src;
+- (id) copyWithZone:(NSZone *)zone;
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
-- (void) prepareCGContext:(CGContextRef)context;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

@@ -13,7 +13,7 @@
 #import <UIKit/UIKit.h>
 #import "WDDrawing.h"
 
-@class WDElement;
+#import "WDElement.h"
 @class WDXMLElement;
 
 @protocol WDLayerOwner
@@ -23,7 +23,10 @@
 
 
 
-@interface WDLayer : NSObject <NSCoding, NSCopying>
+@interface WDLayer : NSObject <NSCoding, NSCopying, WDElementOwner>
+{
+	NSArray *mRefreshRects;
+}
 
 @property (nonatomic, readonly) NSMutableArray *elements;
 @property (nonatomic, strong) UIColor *highlightColor;

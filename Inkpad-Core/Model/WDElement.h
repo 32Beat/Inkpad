@@ -77,7 +77,7 @@ typedef enum {
 @class WDShadow;
 @class WDXMLElement;
 
-#import "WDStyleOptions.h"
+#import "WDRenderOptions.h"
 
 /*
 	ElementOwner
@@ -89,7 +89,7 @@ typedef enum {
 	It should also be able to report back renderAreas, so the core
 	drawing controller can request update areas through a bottom-up chain
 */
-@protocol ElementOwner
+@protocol WDElementOwner
 - (void)element:(WDElement*)element willChangeProperty:(id)propertyKey;
 - (void)element:(WDElement*)element didChangeProperty:(id)propertyKey;
 
@@ -98,20 +98,22 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface WDElement : NSObject <NSCoding, NSCopying, WDStyleOptionsDelegate>
+@interface WDElement : NSObject <NSCoding, NSCopying, WDRenderOptionsDelegate>
 {
 	// Model properties
 	CGSize mSize;
 	CGPoint mPosition;
 	CGFloat mRotation;
 
-	WDStyleOptions *mStyleOptions;
+	WDRenderOptions *mRenderOptions;
 
 	// Active state vars
 	WDEditMode mEditMode;
-	__weak id<ElementOwner> mOwner;
+	__weak id<WDElementOwner> mOwner;
 
 	// Cached info
+	NSUInteger mSourceState;
+	NSUInteger mCachedState;
 	CGAffineTransform mTransform;
 	
 	WDQuad mFrame;
@@ -131,10 +133,10 @@ typedef enum {
 @property (nonatomic, assign) CGFloat rotation;
 
 // Context properties
-@property (nonatomic, strong) WDStyleOptions *styleOptions;
+@property (nonatomic, strong) WDRenderOptions *renderOptions;
 
 // "There can be only one!"
-@property (nonatomic, weak) id owner;
+@property (nonatomic, weak) id<WDElementOwner> owner;
 
 
 //- (WDStyleOptions *) blendStyleOptions;

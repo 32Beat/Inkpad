@@ -129,7 +129,7 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
     drawing_ = drawing;
     
     // register for notifications
-    NSArray *invalidations = @[WDElementChanged,
+    NSArray *invalidations = @[ //WDElementChanged,
                                   WDDrawingChangedNotification,
                                   WDLayersReorderedNotification,
                                   WDLayerAddedNotification, 
@@ -142,6 +142,11 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
     
     [self registerInvalidateNotifications:invalidations];
     
+    [nc addObserver:self
+           selector:@selector(elementChangedNotification:)
+               name:WDElementChanged
+             object:drawing_];
+
     [nc addObserver:self
            selector:@selector(unitsChanged:)
                name:WDUnitsChangedNotification
@@ -886,6 +891,13 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 {
     [self setShowsPivot:[WDToolManager sharedInstance].activeTool.needsPivot];
     [self invalidateSelectionView];
+}
+
+
+- (void) elementChangedNotification:(NSNotification *)note
+{
+	for (NSValue *rectEntry in note.userInfo[@"rects"])
+	{ [self invalidateRect:[rectEntry CGRectValue]]; }
 }
 
 - (void) invalidateFromNotification:(NSNotification *)aNotification

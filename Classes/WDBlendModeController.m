@@ -76,6 +76,8 @@
 	return [blendModeNames_ count];
 }
 
+#define NSTranslatedString(str) NSLocalizedString(str, str)
+
 - (NSString *) localizedTitleForKey:(NSString *)key
 {
     // we could duplicate the BlendModes.plist for every localization, but this seems less error prone

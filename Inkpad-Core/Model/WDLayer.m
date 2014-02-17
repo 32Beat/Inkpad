@@ -195,10 +195,11 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 - (void) addObject:(WDElement *)obj
 {
     [[self.drawing.undoManager prepareWithInvocationTarget:self] removeObject:obj];
-     
-    [elements_ addObject:obj];
+
     obj.layer = self;
-    
+	obj.owner = self;
+    [elements_ addObject:obj];
+
     [self invalidateThumbnail];
     
     if (!self.isSuppressingNotifications) {
@@ -241,6 +242,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     [[self.drawing.undoManager prepareWithInvocationTarget:self] removeObject:element];
     
     element.layer = self;
+	element.owner = self;
     [elements_ insertObject:element atIndex:index];
     
     [self invalidateThumbnail];
@@ -348,6 +350,36 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) refreshRects
+{ return mRefreshRects ? mRefreshRects : (mRefreshRects=[NSMutableArray new]); }
+
+- (void)element:(WDElement*)element willChangeProperty:(id)propertyKey
+{
+	[[self refreshRects] addObject:
+	[NSValue valueWithCGRect:[element renderBounds]]];
+}
+
+- (void)element:(WDElement*)element didChangeProperty:(id)propertyKey
+{
+	[[self refreshRects] addObject:
+	[NSValue valueWithCGRect:[element renderBounds]]];
+
+	NSDictionary *userInfo = @{@"rects" : mRefreshRects };
+	[[NSNotificationCenter defaultCenter]
+	postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
+
+	mRefreshRects = nil;
+}
+
+- (CGRect) renderAreaForRect:(CGRect)sourceRect
+{
+	return CGRectNull;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
 #pragma mark Render Area
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -403,7 +435,6 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 	for (WDElement *element in elements_) {
 		if (CGRectIntersectsRect([element renderBounds], clip)) {
-			[element prepareCGContext:ctx];
 			[element renderInContext:ctx metaData:metaData];
 		}
 	}

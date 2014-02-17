@@ -17,9 +17,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 NSString *const WDShadowOptionsKey = @"WDShadowOptions";
-NSString *const WDShadowColorKey = @"WDShadowColor";
 NSString *const WDShadowOffsetKey = @"WDShadowOffset";
 NSString *const WDShadowBlurKey = @"WDShadowBlur";
+NSString *const WDShadowColorKey = @"WDShadowColor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,42 +29,72 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 @implementation WDShadowOptions
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context
+@synthesize offset = mOffset;
+@synthesize blur = mBlur;
+@synthesize color = mColor;
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) initProperties
 {
-	if (context != nil)
-	{
-		CGContextSetShadowWithColor(context,
-			[self shadowOffset],
-			[self shadowBlur],
-			[self shadowColor].CGColor);
-	}
+	mOffset = CGSizeZero;
+	mBlur = 0.0;
+	mColor = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////
 
-- (CGSize) shadowOffset
-{ return [[self valueForKey:WDShadowOffsetKey] CGSizeValue]; }
-
-- (void) setShadowOffset:(CGSize)offset
-{ [self setValue:[NSValue valueWithCGSize:offset] forKey:WDShadowOffsetKey]; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) shadowBlur
-{ return [[self valueForKey:WDShadowBlurKey] doubleValue]; }
-
-- (void) setShadowBlur:(CGFloat)blurRadius
-{ [self setValue:NSNumberFromCGFloat(blurRadius) forKey:WDShadowBlurKey]; }
+- (void) takePropertiesFrom:(id)src
+{
+	[self setOffset:[src offset]];
+	[self setBlur:[src blur]];
+	[self setColor:[src color]];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (UIColor *) shadowColor
-{ return [self valueForKey:WDShadowColorKey]; }
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeCGSize:mOffset forKey:WDShadowOffsetKey];
+	[coder encodeDouble:mBlur forKey:WDShadowBlurKey];
+	[coder encodeObject:mColor forKey:WDShadowColorKey];
+}
 
-- (void) setShadowColor:(UIColor *)color
-{ [self setValue:color forKey:WDShadowColorKey]; }
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDShadowOffsetKey])
+	{ mOffset = [coder decodeCGSizeForKey:WDShadowOffsetKey]; }
+
+	if ([coder containsValueForKey:WDShadowBlurKey])
+	{ mBlur = [coder decodeFloatForKey:WDShadowBlurKey]; }
+
+	if ([coder containsValueForKey:WDShadowColorKey])
+	{ mColor = [coder decodeObjectForKey:WDShadowColorKey]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) resultAreaForRect:(CGRect)srcR
+{
+	CGRect dstR = srcR;
+	dstR.origin.x += mOffset.width;
+	dstR.origin.y += mOffset.height;
+	dstR = CGRectInset(dstR, -mBlur, -mBlur);
+
+	return CGRectUnion(srcR, dstR);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context
+{
+	CGContextSetShadowWithColor(context,
+		[self offset],
+		[self blur],
+		[self color].CGColor);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

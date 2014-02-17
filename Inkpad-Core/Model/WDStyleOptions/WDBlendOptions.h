@@ -20,9 +20,9 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-NSString *const WDBlendOptionsKey;
-NSString *const WDBlendModeKey;
-NSString *const WDBlendOpacityKey;
+extern NSString *const WDBlendOptionsKey;
+extern NSString *const WDBlendModeKey;
+extern NSString *const WDBlendOpacityKey;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDBlendOptions : WDStyleOptions
