@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <Foundation/Foundation.h>
+#import "WDFrameOptions.h"
 #import "WDBlendOptions.h"
 #import "WDShadowOptions.h"
 
@@ -34,6 +35,7 @@
 
 	id mContainer;
 
+	id mFrameOptions;
 	id mBlendOptions;
 	id mShadowOptions;
 }
@@ -42,6 +44,11 @@
 
 - (void) decodeWithCoder:(NSCoder *)coder;
 - (void) encodeWithCoder:(NSCoder *)coder;
+
+- (void) copyPropertiesFrom:(WDRenderOptions *)srcOptions;
+
+- (id) frameOptions;
+- (void) setFrameOptions:(id)options;
 
 - (id) blendOptions;
 - (void) setBlendOptions:(id)options;

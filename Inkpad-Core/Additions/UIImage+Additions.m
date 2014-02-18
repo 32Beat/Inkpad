@@ -69,9 +69,10 @@
 {
     CGSize newSize, size = self.size;
     
-    if (size.width <= constraint && size.height <= constraint && self.imageOrientation == UIImageOrientationUp) {
-        return self;
-    }
+    if (size.width <= constraint &&
+		size.height <= constraint &&
+		self.imageOrientation == UIImageOrientationUp)
+		{ return self; }
     
     if (size.width > size.height) {
         newSize.height = size.height / size.width * constraint;

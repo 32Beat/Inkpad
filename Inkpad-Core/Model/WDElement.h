@@ -263,6 +263,10 @@ typedef enum {
 @property (weak, nonatomic, readonly) WDDrawing *drawing;
 @property (weak, nonatomic, readonly) NSSet *inspectableProperties;
 
+
+- (id) initWithSize:(CGSize)size;
+- (id) initWithFrame:(CGRect)frame;
+
 - (void) awakeFromEncoding;
 
 - (void) saveState;
@@ -338,6 +342,9 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) setFrameOptions:(WDFrameOptions *)frameOptions;
+
+
 - (CGSize) sourceSize;
 - (CGRect) sourceRect;
 - (CGAffineTransform) sourceTransform;
@@ -367,6 +374,8 @@ typedef enum {
 - (void) clearSubselection;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) setFrameRect:(CGRect)frame;
 
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;

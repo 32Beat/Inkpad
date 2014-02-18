@@ -46,7 +46,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 - (id) initWithUIImage:(UIImage *)image inDrawing:(WDDrawing *)drawing
 {
-	self = [super init];
+	self = [super initWithSize:[image size]];
 	if (self != nil)
 	{
 		imageData_ = [drawing imageDataForUIImage:image];
@@ -139,8 +139,9 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 {
 	CGAffineTransform T = [super computeSourceTransform];
 
-	CGFloat sx = mSize.width / [self sourceSize].width;
-	CGFloat sy = mSize.height / [self sourceSize].height;
+	CGSize size = [self size];
+	CGFloat sx = size.width / [self sourceSize].width;
+	CGFloat sy = size.height / [self sourceSize].height;
 
 	T = CGAffineTransformScale(T, sx, -sy);
 
@@ -172,8 +173,6 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		
 		[self prepareCGContext:ctx];
 		
-		CGContextConcatCTM(ctx, [self sourceTransform]);
-
 		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
 		imageData_.thumbnailImage : imageData_.image;
 
@@ -191,6 +190,19 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		CGContextRestoreGState(ctx);
 	}
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context
+{
+	[super prepareCGContext:context];
+	CGContextConcatCTM(context, [self sourceTransform]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 /*
 - (void) setTransform:(CGAffineTransform)transform

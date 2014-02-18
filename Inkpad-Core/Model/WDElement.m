@@ -134,6 +134,54 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) initWithSize:(CGSize)size
+{
+	self = [super init];
+	if (self != nil)
+	{
+		mSize = size;
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithFrame:(CGRect)frame
+{
+	self = [self initWithSize:frame.size];
+	if (self != nil)
+	{
+		mPosition = WDCenterOfRect(frame);
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) copyWithZone:(NSZone *)zone
+{       
+	WDElement *element = [[[self class] allocWithZone:zone] init];
+	if (element != nil)
+	{ [element copyPropertiesFrom:self]; }
+
+	return element;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) copyPropertiesFrom:(WDElement *)srcElement
+{
+	[self setSize:[srcElement size]];
+	[self setPosition:[srcElement position]];
+	[self setRotation:[srcElement rotation]];
+
+	[[self renderOptions] copyPropertiesFrom:[srcElement renderOptions]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (NSString *) elementName
 { return NSStringFromClass([self class]); }
 
@@ -327,8 +375,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
-
 - (id) init
 {
 	self = [super init];
@@ -505,45 +551,33 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) frameOptions
+{ return [[self renderOptions] frameOptions]; }
+
+- (void) setFrameOptions:(WDFrameOptions *)frameOptions
+{ [[self renderOptions] setFrameOptions:frameOptions]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (id) blendOptions
 { return [[self renderOptions] blendOptions]; }
 
 - (void) setBlendOptions:(WDBlendOptions *)blendOptions
 { [[self renderOptions] setBlendOptions:blendOptions]; }
 
-- (void) setBlendMode:(CGBlendMode)mode
-{
-	WDBlendOptions *options = [[self renderOptions] blendOptions];
-	[options setMode:mode];
-	[self setBlendOptions:options];
-}
-
-- (void) setBlendOpacity:(float)value
-{
-	WDBlendOptions *options = [[self renderOptions] blendOptions];
-	if (options == nil)
-	{ options = [WDBlendOptions new]; }
-	
-	[options setOpacity:value];
-	[self setBlendOptions:options];
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) shadowOptions
 { return [[self renderOptions] shadowOptions]; }
 
-- (void) setShadowOptions:(WDShadowOptions *)blendOptions
-{ [[self renderOptions] setShadowOptions:blendOptions]; }
+- (void) setShadowOptions:(WDShadowOptions *)shadowOptions
+{ [[self renderOptions] setShadowOptions:shadowOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) prepareCGContext:(CGContextRef)context
 {
-	if (context != nil)
-	{
-		[[self renderOptions] prepareCGContext:context];
-	}
+	[[self renderOptions] prepareCGContext:context];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,6 +649,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 	P = WDSubtractPoints(P, C);
 	P = WDSubtractPoints(P, C);
 	[self setRotation:WDDegreesFromRadians(atan2(P.y, P.x))];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setFrameRect:(CGRect)frame
+{
+	[self setSize:frame.size];
+	[self setPosition:WDCenterOfRect(frame)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1434,14 +1476,18 @@ NSString *WDShadowKey = @"WDShadowKey";
 		return;
 	}
 
+	WDBlendOptions *blendOptions = [self blendOptions];
+
 	if ([property isEqualToString:WDBlendModeProperty])
 	{
-		[self setBlendMode:[value intValue]];
+		[blendOptions setMode:[value intValue]];
+		[self setBlendOptions:blendOptions];
 	}
 	else
 	if ([property isEqualToString:WDOpacityProperty])
 	{
-		[self setBlendOpacity:[value floatValue]];
+		[blendOptions setOpacity:[value floatValue]];
+		[self setBlendOptions:blendOptions];
 	}
 
 	/* 
@@ -1644,17 +1690,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 	}
 	
 	CGContextRestoreGState(ctx);
-}
-
-- (id) copyWithZone:(NSZone *)zone
-{       
-	WDElement *element = [[[self class] allocWithZone:zone] init];
-	
-	element->shadow_ = [shadow_ copy];
-	element->opacity_ = opacity_;
-	element->blendMode_ = blendMode_;
-	
-	return element;
 }
 
 @end

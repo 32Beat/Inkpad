@@ -36,30 +36,43 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) copyPropertiesFrom:(WDRenderOptions *)srcOptions
+{
+	[self setBlendOptions:[[srcOptions blendOptions] copy]];
+	[self setShadowOptions:[[srcOptions shadowOptions] copy]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) decodeWithCoder:(NSCoder *)coder
 {
-	mContainer = [coder valueForKey:NSStringFromClass([self class])];
-	if (mContainer != nil) mContainer = [mContainer mutableCopy];
 /*
+	if ([coder containsValueForKey:NSStringFromClass([self class])])
+	{
+		mContainer = [coder valueForKey:NSStringFromClass([self class])];
+		if (mContainer != nil) mContainer = [mContainer mutableCopy];
+	}
+*/
+//*
 	if ([coder containsValueForKey:WDBlendOptionsKey])
 	{ [self setOptions:[coder decodeObjectForKey:WDBlendOptionsKey]]; }
 	if ([coder containsValueForKey:WDShadowOptionsKey])
 	{ [self setOptions:[coder decodeObjectForKey:WDShadowOptionsKey]]; }
-*/
+//*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
-	if (mContainer != nil)
+//	if (mContainer != nil) \
 	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
-/*
+//*
 	if (mBlendOptions != nil)
 	[coder encodeObject:mBlendOptions forKey:WDBlendOptionsKey];
 	if (mShadowOptions != nil)
 	[coder encodeObject:mShadowOptions forKey:WDShadowOptionsKey];
-*/
+//*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +118,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) frameOptions
+{ return mFrameOptions; }
+
+- (void) setFrameOptions:(id)options
+{
+	[self willSetOptionsForKey:WDFrameOptionsKey];
+	mFrameOptions = options;
+	[self didSetOptionsForKey:WDFrameOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (id) blendOptions
 { return mBlendOptions; }
 
@@ -141,11 +166,8 @@
 
 - (void) prepareCGContext:(CGContextRef)context
 {
-	[mBlendOptions prepareCGContext:context];
 	[mShadowOptions prepareCGContext:context];
-
-//	for (id options in [mContainer objectEnumerator])
-//	{ [options prepareCGContext:context]; }
+	[mBlendOptions prepareCGContext:context];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
