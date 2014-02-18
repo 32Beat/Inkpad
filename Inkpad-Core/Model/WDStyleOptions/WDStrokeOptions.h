@@ -23,21 +23,23 @@
 extern NSString *const WDStrokeOptionsKey;
 extern NSString *const WDStrokeColorKey;
 extern NSString *const WDStrokeLineWidthKey;
+extern NSString *const WDStrokeLineCapKey;
+extern NSString *const WDStrokeLineJoinKey;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDStrokeOptions : WDStyleOptions
 {
 	UIColor 	*mColor;
 	CGFloat 	mLineWidth;
-	CGLineJoin 	mLineJoin;
 	CGLineCap 	mLineCap;
+	CGLineJoin 	mLineJoin;
 	id 			mDashOptions;
 }
 
 @property (nonatomic, strong) UIColor *color;
 @property (nonatomic, assign) CGFloat lineWidth;
-@property (nonatomic, assign) CGLineJoin lineJoin;
 @property (nonatomic, assign) CGLineCap lineCap;
+@property (nonatomic, assign) CGLineJoin lineJoin;
 @property (nonatomic, strong) id dashOptions;
 
 @end

@@ -19,8 +19,8 @@
 NSString *const WDStrokeOptionsKey = @"WDStrokeOptions";
 NSString *const WDStrokeColorKey = @"WDStrokeColor";
 NSString *const WDStrokeLineWidthKey = @"WDStrokeLineWidth";
-NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 NSString *const WDStrokeLineCapKey = @"WDStrokeLineCap";
+NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,11 +32,20 @@ NSString *const WDStrokeLineCapKey = @"WDStrokeLineCap";
 
 @synthesize color = mColor;
 @synthesize lineWidth = mLineWidth;
-@synthesize lineJoin = mLineJoin;
 @synthesize lineCap = mLineCap;
+@synthesize lineJoin = mLineJoin;
+//@synthesize miterLimit = mMiterLimit;
 @synthesize dashOptions = mDashOptions;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context
+{
+	CGContextSetStrokeColorWithColor(context, [self color].CGColor);
+	CGContextSetLineWidth(context, [self lineWidth]);
+	CGContextSetLineCap(context, [self lineCap]);
+	CGContextSetLineJoin(context, [self lineJoin]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 @end
