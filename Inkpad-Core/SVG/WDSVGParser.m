@@ -715,7 +715,7 @@
             state_.wdElement = [self clipAndGroup:[elements lastObject]];
 
 			if ([state_ style:kWDPropertyOpacity])
-			state_.wdElement.opacity *= [[state_ style:kWDPropertyOpacity] floatValue];
+			state_.wdElement.blendOptions.opacity *= [[state_ style:kWDPropertyOpacity] floatValue];
         }
 		else
 		{

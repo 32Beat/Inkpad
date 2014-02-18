@@ -132,7 +132,7 @@ static int charHexValue(unichar c)
             WDStylable *prototype = [[WDStylable alloc] init];
             prototype.fill = painter.fill;
             prototype.fillTransform = [painter.fillTransform transform:stack_.transform];
-            prototype.opacity = alpha;
+            prototype.blendOptions.opacity = alpha;
             return prototype;
         } else {
             return painter;
@@ -398,14 +398,14 @@ NSArray *tokenizeStyle(NSString *source)
     NSString *visibility = [stack_ style:kWDPropertyVisibility];
     NSString *display= [stack_ style:kWDPropertyDisplay];
     if ([display isEqualToString:@"none"] || [visibility isEqualToString:@"hidden"]) {
-        element.opacity = 0;
+        element.blendOptions.opacity = 0;
     } else {
-        element.opacity = [opacity floatValue];
+        element.blendOptions.opacity = [opacity floatValue];
     }
 
     NSString *blendModeSource = [stack_ attribute:@"inkpad:blendMode"];
     if (blendModeSource) {
-        element.blendMode = [blendModeNames_[blendModeSource] intValue];
+        element.blendOptions.mode = [blendModeNames_[blendModeSource] intValue];
     }
     NSString *shadowColorSource = [stack_ attribute:@"inkpad:shadowColor"];
     if (shadowColorSource) {

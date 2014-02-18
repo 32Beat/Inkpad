@@ -129,9 +129,11 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	We always need blendOptions where opacity = 1.0
+*/
 - (id) blendOptions
-{ return mBlendOptions; }
+{ return mBlendOptions ? mBlendOptions : (mBlendOptions = [WDBlendOptions new]); }
 
 - (void) setBlendOptions:(id)options
 {
@@ -154,8 +156,22 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) strokeOptions
+{ return mStrokeOptions; }
+
+- (void) setStrokeOptions:(id)options
+{
+	[self willSetOptionsForKey:WDStrokeOptionsKey];
+	mStrokeOptions = options;
+	[self didSetOptionsForKey:WDStrokeOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) resultAreaForRect:(CGRect)R
 {
+	if (mStrokeOptions != nil)
+	{ R = [mStrokeOptions resultAreaForRect:R]; }
 	if (mShadowOptions != nil)
 	{ R = [mShadowOptions resultAreaForRect:R]; }
 
@@ -166,6 +182,7 @@
 
 - (void) prepareCGContext:(CGContextRef)context
 {
+	[mStrokeOptions prepareCGContext:context];
 	[mShadowOptions prepareCGContext:context];
 	[mBlendOptions prepareCGContext:context];
 }

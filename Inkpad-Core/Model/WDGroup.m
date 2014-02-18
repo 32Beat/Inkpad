@@ -92,13 +92,13 @@ NSString *WDGroupElements = @"WDGroupElements";
     [elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
     [elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self.layer];
 }
-
+/*
 - (void) awakeFromEncoding
 {
     [super awakeFromEncoding];
     [elements_ makeObjectsPerformSelector:@selector(awakeFromEncoding) withObject:nil];
 }
-
+*/
 - (void) setLayer:(WDLayer *)layer
 {
     [super setLayer:layer];    

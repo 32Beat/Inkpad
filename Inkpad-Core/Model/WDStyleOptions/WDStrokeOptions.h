@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDShadowOptions.h
+	WDStrokeOptions.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -15,32 +15,30 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDShadowOptions
+	WDStrokeOptions
 	---------------
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-extern NSString *const WDShadowOptionsKey;
-extern NSString *const WDShadowOffsetKey;
-extern NSString *const WDShadowBlurKey;
-extern NSString *const WDShadowColorKey;
+extern NSString *const WDStrokeOptionsKey;
+extern NSString *const WDStrokeColorKey;
+extern NSString *const WDStrokeLineWidthKey;
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDShadowOptions : WDStyleOptions
+@interface WDStrokeOptions : WDStyleOptions
 {
-	CGSize mOffset;
-	CGFloat mBlur;
-	UIColor *mColor;
+	UIColor 	*mColor;
+	CGFloat 	mLineWidth;
+	CGLineJoin 	mLineJoin;
+	CGLineCap 	mLineCap;
+	id 			mDashOptions;
 }
 
-@property (nonatomic, assign) CGSize offset;
-@property (nonatomic, assign) CGFloat blur;
 @property (nonatomic, strong) UIColor *color;
-
-- (CGFloat) offsetRadius;
-- (void) setOffsetRadius:(CGFloat)r;
-- (CGFloat) offsetAngle;
-- (void) setOffsetAngle:(CGFloat)angle;
+@property (nonatomic, assign) CGFloat lineWidth;
+@property (nonatomic, assign) CGLineJoin lineJoin;
+@property (nonatomic, assign) CGLineCap lineCap;
+@property (nonatomic, strong) id dashOptions;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

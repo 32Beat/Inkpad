@@ -98,6 +98,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
     
     elements_ = [coder decodeObjectForKey:WDElementsKey];
     [elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self];
+    [elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
 
 
 
@@ -373,9 +374,9 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 	mRefreshRects = nil;
 }
 
-- (CGRect) renderAreaForRect:(CGRect)sourceRect
+- (CGRect) resultAreaForRect:(CGRect)sourceRect
 {
-	return CGRectNull;
+	return sourceRect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,13 +409,6 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 - (CGRect) resultAreaForElement:(WDElement *)element
 {
 	CGRect area = [element renderBounds];
-
-	// Expand rendered area recursively tree-up
-	while (element.group != nil)
-	{
-		area = [element.group expandRenderArea:area];
-		element = element.group;
-	}
 
 	return area;
 }

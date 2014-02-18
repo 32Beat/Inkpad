@@ -354,7 +354,7 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 				item.fill = [canvas.drawingController.propertyManager activeFillStyle];
 			}
 			
-			item.opacity =
+			item.blendOptions.opacity =
 			[[canvas.drawingController.propertyManager
 			defaultValueForProperty:WDOpacityProperty] floatValue];
 

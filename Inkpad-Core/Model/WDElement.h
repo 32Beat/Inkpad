@@ -93,7 +93,7 @@ typedef enum {
 - (void)element:(WDElement*)element willChangeProperty:(id)propertyKey;
 - (void)element:(WDElement*)element didChangeProperty:(id)propertyKey;
 
-- (CGRect) renderAreaForRect:(CGRect)sourceRect;
+- (CGRect) resultAreaForRect:(CGRect)sourceRect;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,8 +112,6 @@ typedef enum {
 	__weak id<WDElementOwner> mOwner;
 
 	// Cached info
-	NSUInteger mSourceState;
-	NSUInteger mCachedState;
 	CGAffineTransform mTransform;
 	
 	WDQuad mFrame;
@@ -122,7 +120,6 @@ typedef enum {
 	CGRect mFrameBounds;
 	CGRect mStyleBounds;
 	CGRect mShadowBounds;
-	CGRect mRenderBounds;
 
 	CGRect dirtyBounds_;
 }
@@ -255,8 +252,7 @@ typedef enum {
 @property (nonatomic, weak) WDLayer *layer; // layer
 @property (nonatomic, weak) WDGroup *group;  // pointer to parent group, if any
 
-@property (nonatomic, assign) float opacity;
-@property (nonatomic, assign) CGBlendMode blendMode;
+
 @property (nonatomic, strong) WDShadow *shadow;
 @property (nonatomic, strong) WDShadow *initialShadow;
 @property (weak, nonatomic, readonly) NSUndoManager *undoManager;
@@ -267,7 +263,7 @@ typedef enum {
 - (id) initWithSize:(CGSize)size;
 - (id) initWithFrame:(CGRect)frame;
 
-- (void) awakeFromEncoding;
+//- (void) awakeFromEncoding;
 
 - (void) saveState;
 - (void) resetState:(WDElement *)srcElement;
@@ -342,7 +338,15 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setFrameOptions:(WDFrameOptions *)frameOptions;
+- (WDFrameOptions *) frameOptions;
+- (void) setFrameOptions:(WDFrameOptions *)options;
+
+- (WDBlendOptions *)blendOptions;
+- (void) setBlendOptions:(WDBlendOptions *)options;
+- (WDShadowOptions *)shadowOptions;
+- (void) setShadowOptions:(WDShadowOptions *)options;
+- (WDStrokeOptions *)strokeOptions;
+- (void) setStrokeOptions:(WDStrokeOptions *)options;
 
 
 - (CGSize) sourceSize;
@@ -356,6 +360,9 @@ typedef enum {
 
 
 - (CGRect) bounds;
+
+- (CGRect) frameBounds;
+- (CGRect) computeFrameBounds;
 - (CGRect) styleBounds;
 - (CGRect) computeStyleBounds;
 - (CGRect) shadowBounds;
@@ -363,11 +370,9 @@ typedef enum {
 - (CGRect) renderBounds;
 - (CGRect) computeRenderBounds;
 
-- (CGRect) expandRenderArea:(CGRect)R;
+- (CGRect) resultAreaForRect:(CGRect)R;
 
 - (void) invalidateBounds;
-- (void) invalidateStyleBounds;
-- (void) invalidateShadowBounds;
 
 
 - (CGRect) subselectionBounds;

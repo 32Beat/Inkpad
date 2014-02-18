@@ -1379,7 +1379,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
         sibling.fill = self.fill;
         sibling.fillTransform = self.fillTransform;
         sibling.strokeStyle = self.strokeStyle;
-        sibling.opacity = self.opacity;
+       // sibling.opacity = self.opacity;
         sibling.shadow = self.shadow;
         
         if (self.reversed) {

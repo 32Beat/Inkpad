@@ -57,13 +57,13 @@ NSString *WDSubpathsKey = @"WDSubpathsKey";
         [subpath setLayer:layer];
     }
 }
-
+/*
 - (void) awakeFromEncoding
 {
     [super awakeFromEncoding];
     [subpaths_ makeObjectsPerformSelector:@selector(awakeFromEncoding) withObject:nil];
 }
-
+*/
 - (void) setSubpaths:(NSMutableArray *)subpaths
 {
     [self cacheDirtyBounds];

@@ -98,7 +98,7 @@ NSString *WDDefaultFreehandTool = @"WDDefaultFreehandTool";
         if (smoothPath) {
             smoothPath.fill = [canvas.drawingController.propertyManager activeFillStyle];
             smoothPath.strokeStyle = [canvas.drawingController.propertyManager activeStrokeStyle];
-            smoothPath.opacity = [[canvas.drawingController.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
+            smoothPath.blendOptions.opacity = [[canvas.drawingController.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
             smoothPath.shadow = [canvas.drawingController.propertyManager activeShadow];
             
             [canvas.drawing addObject:smoothPath];

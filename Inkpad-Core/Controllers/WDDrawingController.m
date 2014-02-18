@@ -655,7 +655,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 				lastPath.fillTransform = superpath.fillTransform;
 				lastPath.fill = superpath.fill;
 				lastPath.shadow = superpath.shadow;
-				lastPath.opacity = superpath.opacity;
+				lastPath.blendOptions = superpath.blendOptions;
 				
 				[superpath.layer insertObject:lastPath above:superpath];
 				[objectsToRemove addObject:superpath];
@@ -877,7 +877,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 		if (outline) {
 			outline.fill = [self.propertyManager activeStrokeStyle].color;
 			outline.shadow = [self.propertyManager activeShadow];
-			outline.opacity = [[self.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
+			outline.blendOptions.opacity = [[self.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
 			
 			[path.layer insertObject:outline above:element];
 			[path.layer removeObject:element];
@@ -1094,7 +1094,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 	if (result) {
 		result.fill = [propertyManager_ activeFillStyle];
 		result.strokeStyle = [[propertyManager_ activeStrokeStyle] strokeStyleSansArrows];
-		result.opacity = [[propertyManager_ defaultValueForProperty:WDOpacityProperty] floatValue];
+		result.blendOptions.opacity = [[propertyManager_ defaultValueForProperty:WDOpacityProperty] floatValue];
 		result.shadow = [propertyManager_ activeShadow];
 		
 		WDElement *topObject = [objects lastObject];
@@ -1129,7 +1129,7 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 		result.fill = bottommost.fill;
 		result.strokeStyle = [bottommost.strokeStyle strokeStyleSansArrows];
 		result.fillTransform = bottommost.fillTransform;
-		result.opacity = bottommost.opacity;
+		result.blendOptions.opacity = bottommost.blendOptions.opacity;
 		result.shadow = bottommost.shadow;
 		
 		[bottommost.layer insertObject:result above:bottommost];
@@ -1534,7 +1534,7 @@ and rename to applyTransform
 	text.alignment = [[propertyManager_ defaultValueForProperty:WDTextAlignmentProperty] intValue];
 	// set this after width, so that the gradient will be set up properly
 	text.fill = [propertyManager_ activeFillStyle];
-	text.opacity = [[propertyManager_ defaultValueForProperty:WDOpacityProperty] floatValue];
+	text.blendOptions.opacity = [[propertyManager_ defaultValueForProperty:WDOpacityProperty] floatValue];
 	text.shadow = [propertyManager_ activeShadow];
 	
 	if (!text.fill) {
@@ -1607,7 +1607,7 @@ and rename to applyTransform
 		typePath.fill = [propertyManager_ defaultFillStyle];
 		typePath.fillTransform = path.fillTransform;
 		typePath.shadow = path.shadow;
-		typePath.opacity = path.opacity;
+		typePath.blendOptions.opacity = path.blendOptions.opacity;
 		
 		if (!typePath.fill) {
 			typePath.fill = [WDColor blackColor];
@@ -1630,7 +1630,7 @@ and rename to applyTransform
 		typePath.fill = text.fill;
 		typePath.strokeStyle = text.strokeStyle;
 		typePath.shadow = text.shadow;
-		typePath.opacity = text.opacity;
+		typePath.blendOptions.opacity = text.blendOptions.opacity;
 	}
 	
 	[path.layer insertObject:typePath above:path];
@@ -1660,7 +1660,7 @@ and rename to applyTransform
 				path.fill = text.fill;
 				path.fillTransform = text.fillTransform;
 				path.strokeStyle = text.strokeStyle;
-				path.opacity = text.opacity;
+				path.blendOptions.opacity = text.blendOptions.opacity;
 				path.shadow = text.shadow;
 				
 				[text.layer insertObject:path above:text];

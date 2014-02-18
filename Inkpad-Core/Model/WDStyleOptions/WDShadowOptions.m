@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDBlendOptions.m
+	WDStrokeOptions.m
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -72,6 +72,28 @@ NSString *const WDShadowColorKey = @"WDShadowColor";
 
 	if ([coder containsValueForKey:WDShadowColorKey])
 	{ mColor = [coder decodeObjectForKey:WDShadowColorKey]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) offsetRadius
+{ return sqrt(mOffset.width*mOffset.width + mOffset.height*mOffset.height); }
+
+- (void) setOffsetRadius:(CGFloat)r
+{
+	CGFloat angle = [self offsetAngle];
+	[self setOffset:(CGSize){ r * cos(angle), r * sin(angle) }];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) offsetAngle
+{ return atan2(mOffset.height, mOffset.width); }
+
+- (void) setOffsetAngle:(CGFloat)angle
+{
+	CGFloat r = [self offsetRadius];
+	[self setOffset:(CGSize){ r * cos(angle), r * sin(angle) }];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

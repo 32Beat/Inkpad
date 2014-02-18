@@ -15,6 +15,7 @@
 #import "WDFrameOptions.h"
 #import "WDBlendOptions.h"
 #import "WDShadowOptions.h"
+#import "WDStrokeOptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -38,6 +39,7 @@
 	id mFrameOptions;
 	id mBlendOptions;
 	id mShadowOptions;
+	id mStrokeOptions;
 }
 
 - (id) initWithDelegate:(id<WDRenderOptionsDelegate>)delegate;
@@ -55,6 +57,9 @@
 
 - (id) shadowOptions;
 - (void) setShadowOptions:(id)options;
+
+- (id) strokeOptions;
+- (void) setStrokeOptions:(id)options;
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
 - (void) prepareCGContext:(CGContextRef)context;

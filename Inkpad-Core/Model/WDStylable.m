@@ -143,13 +143,13 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     
     [self.maskedElements makeObjectsPerformSelector:@selector(addBlendablesToArray:) withObject:array];
 }
-
+/*
 - (void) awakeFromEncoding
 {
     [super awakeFromEncoding];
     [self.maskedElements makeObjectsPerformSelector:@selector(awakeFromEncoding) withObject:nil];
 }
-
+*/
 - (void) setLayer:(WDLayer *)layer
 {
     [super setLayer:layer];
@@ -605,7 +605,7 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     self.fill = obj.fill;
     self.fillTransform = obj.fillTransform;
     self.strokeStyle = obj.strokeStyle;
-    self.opacity = obj.opacity;
+//    self.opacity = obj.opacity;
     self.shadow = obj.shadow;
     self.maskedElements = obj.maskedElements;
 }
