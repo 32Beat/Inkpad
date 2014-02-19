@@ -109,10 +109,22 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 
 - (void) prepareCGContext:(CGContextRef)context
 {
-	CGContextSetShadowWithColor(context,
-		[self offsetVector],
-		[self blur],
-		[self color].CGColor);
+	CGSize offset = CGSizeZero;
+	CGFloat blurRadius = 0.0;
+	CGColorRef color = [self color].CGColor;
+
+	if (color != nil)
+	{
+		offset = [self offsetVector];
+		offset = CGContextConvertSizeToDeviceSpace(context, offset);
+
+//		CGFloat scale = sqrt(unit.width*unit.width+unit.height*unit.height);
+
+		blurRadius = [self blur];
+		blurRadius *= 1;
+	}
+
+	CGContextSetShadowWithColor(context, offset, blurRadius, color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

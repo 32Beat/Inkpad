@@ -40,8 +40,6 @@ extern NSString *const WDShadowBlurKey;
 @property (nonatomic, assign) float offset;
 @property (nonatomic, assign) float blur;
 
-- (CGSize) offsetVector;
-
 @end
 ////////////////////////////////////////////////////////////////////////////////
 
