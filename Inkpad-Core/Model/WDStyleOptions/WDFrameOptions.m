@@ -169,7 +169,7 @@ NSString *const WDFrameRotationKey = @"WDFrameRotation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
 	CGContextConcatCTM(context, [self transform]);
 }

@@ -352,6 +352,9 @@ typedef enum {
 - (WDStrokeOptions *)strokeOptions;
 - (void) setStrokeOptions:(WDStrokeOptions *)options;
 
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
+
+
 
 - (CGSize) sourceSize;
 - (CGRect) sourceRect;
@@ -396,7 +399,6 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context;
 
 
 // OpenGL-based selection rendering

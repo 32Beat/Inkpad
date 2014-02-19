@@ -181,11 +181,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
-	[mStrokeOptions prepareCGContext:context];
-	[mShadowOptions prepareCGContext:context];
-	[mBlendOptions prepareCGContext:context];
+	[mStrokeOptions prepareCGContext:context scale:scale];
+	[mShadowOptions prepareCGContext:context scale:scale];
+	[mBlendOptions prepareCGContext:context scale:scale];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

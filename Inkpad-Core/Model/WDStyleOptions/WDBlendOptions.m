@@ -92,7 +92,7 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
 	CGContextSetBlendMode(context, mMode);
 	CGContextSetAlpha(context, mOpacity);

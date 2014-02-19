@@ -531,9 +531,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
-	[[self styleOptions] prepareCGContext:context];
+	[[self styleOptions] prepareCGContext:context scale:scale];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -929,7 +929,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	return nil;
 }
 
-
+#pragma mark RenderInContext
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 }
@@ -1604,13 +1604,13 @@ NSString *WDShadowKey = @"WDShadowKey";
 	}
 	
 	CGContextSaveGState(ctx);
-
-	[self.blendOptions prepareCGContext:ctx];
+/*
+	[self.blendOptions prepareCGContext:ctx scale:metaData.scale];
 
 	if (shadow_ && metaData.scale <= 3) {
 		[shadow_ applyInContext:ctx metaData:metaData];
 	}
-
+*/
 	if ([self needsTransparencyLayer:metaData.scale])
 	{
 		/*

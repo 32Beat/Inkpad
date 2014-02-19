@@ -89,8 +89,13 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 - (void) decodeWithCoder0:(NSCoder *)coder
 {
+	// Decode old blend and shadow
 	[super decodeWithCoder0:coder];
 
+	// Fetch imagedata
+	imageData_ = [coder decodeObjectForKey:WDImageDataKey];
+
+	// Apply transform
 	if ([coder containsValueForKey:WDTransformKey])
 	{
 		CGAffineTransform T =
@@ -172,7 +177,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	{
 		CGContextSaveGState(ctx);
 		
-		[self prepareCGContext:ctx];
+		[self prepareCGContext:ctx scale:metaData.scale];
 		
 		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
 		imageData_.thumbnailImage : imageData_.image;
@@ -195,9 +200,9 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
-	[super prepareCGContext:context];
+	[super prepareCGContext:context scale:scale];
 	CGContextConcatCTM(context, [self sourceTransform]);
 }
 
