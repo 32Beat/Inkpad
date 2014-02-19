@@ -178,21 +178,32 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		CGContextSaveGState(ctx);
 		
 		[self prepareCGContext:ctx scale:metaData.scale];
-		
-		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
-		imageData_.thumbnailImage : imageData_.image;
 
-		CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+//*
+		// Required to eliminate path shadow on content
+		if ([self strokeOptions].color)
+		{
+			CGRect R = [[self strokeOptions] resultAreaForRect:[self sourceRect]];
+			CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
 
-/*
-		UIGraphicsPushContext(ctx);
+			UIImage *image = (metaData.flags & WDRenderThumbnail) ?
+			imageData_.thumbnailImage : imageData_.image;
 
-		[((metaData.flags & WDRenderThumbnail) ?
-		imageData_.thumbnailImage : imageData_.image)
-		drawInRect:[self sourceRect] blendMode:self.blendMode alpha:self.opacity];
+			CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
 
-		UIGraphicsPopContext();
-*/
+			CGContextAddRect(ctx, [self sourceRect]);
+			CGContextStrokePath(ctx);
+			CGContextEndTransparencyLayer(ctx);
+		}
+		else
+//*/
+		{
+			UIImage *image = (metaData.flags & WDRenderThumbnail) ?
+			imageData_.thumbnailImage : imageData_.image;
+
+			CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+		}
+
 		CGContextRestoreGState(ctx);
 	}
 }

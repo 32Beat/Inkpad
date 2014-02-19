@@ -85,6 +85,14 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGRect) resultAreaForRect:(CGRect)R
+{
+	CGFloat r = 0.5 * mLineWidth;
+	return CGRectInset(R, -r, -r);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
 	CGContextSetStrokeColorWithColor(context, [self color].CGColor);

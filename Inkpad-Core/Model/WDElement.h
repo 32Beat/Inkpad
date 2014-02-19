@@ -352,8 +352,10 @@ typedef enum {
 - (WDStrokeOptions *)strokeOptions;
 - (void) setStrokeOptions:(WDStrokeOptions *)options;
 
+- (CGRect) resultAreaForRect:(CGRect)R;
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
 
+////////////////////////////////////////////////////////////////////////////////
 
 
 - (CGSize) sourceSize;
@@ -375,9 +377,7 @@ typedef enum {
 - (CGRect) renderBounds;
 - (CGRect) computeRenderBounds;
 
-- (CGRect) resultAreaForRect:(CGRect)R;
-
-- (void) invalidateBounds;
+- (void) flushBounds;
 
 
 - (CGRect) subselectionBounds;
@@ -387,6 +387,7 @@ typedef enum {
 
 - (void) setFrameRect:(CGRect)frame;
 
+- (CGPathRef) framePath;
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;
 

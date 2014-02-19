@@ -870,7 +870,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 	self.displayNodes = nil;
 	
     bounds_ = CGRectNull;
-	[self invalidateBounds];
+	[self flushBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

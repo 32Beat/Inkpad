@@ -470,7 +470,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	{ CGPathRelease(mFramePath); }
 	mFramePath = nil;
 
-	[self invalidateBounds];
+	[self flushBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,23 +587,39 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	setTransform
+	------------
+	Set size, position, rotation based on transform
+	
+	Used to convert previous version transforms to new properties.
+*/
 - (void) setTransform:(CGAffineTransform)T
 { [self setTransform:T sourceRect:[self sourceRect]]; }
 
 - (void) setTransform:(CGAffineTransform)T sourceRect:(CGRect)sourceRect
 {
+	// Compute quad for sourceRect + transform
 	WDQuad F = WDQuadWithRect(sourceRect, T);
-	CGPoint C = WDQuadGetCenter(F);
 
+	// Compute midpoints of quadlines (@2x)
+	CGPoint X1 = WDAddPoints(F.P[0], F.P[3]);
+	CGPoint X2 = WDAddPoints(F.P[1], F.P[2]);
+
+	CGPoint Y1 = WDAddPoints(F.P[0], F.P[1]);
+	CGPoint Y2 = WDAddPoints(F.P[2], F.P[3]);
+
+	// Set size based on average width/height
 	[self setSize:(CGSize){
-		0.5*(WDDistance(F.P[0], F.P[1])+WDDistance(F.P[2], F.P[3])),
-		0.5*(WDDistance(F.P[0], F.P[3])+WDDistance(F.P[1], F.P[2]))}];
+		0.5 * WDDistance(X1, X2),
+		0.5 * WDDistance(Y1, Y2)}];
+
+	// Position element at center of quad
+	CGPoint C = WDQuadGetCenter(F);
 	[self setPosition:C];
 
-	CGPoint P = WDAddPoints(F.P[1], F.P[2]);
-	P = WDSubtractPoints(P, C);
-	P = WDSubtractPoints(P, C);
+	// Compute rotation
+	CGPoint P = WDSubtractPoints(X2, X1);
 	[self setRotation:WDDegreesFromRadians(atan2(P.y, P.x))];
 }
 
@@ -826,7 +842,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) invalidateBounds
+- (void) flushBounds
 {
 	mFrameBounds = CGRectNull;
 	mStyleBounds = CGRectNull;
@@ -839,7 +855,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	//dirtyBounds_ = [self renderBounds];
 
 	// We are appearantly going to affect bounds
-	[self invalidateBounds];
+	[self flushBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1483,8 +1499,28 @@ NSString *WDShadowKey = @"WDShadowKey";
 		[shadow setBlur:[value floatValue]];
 
 		[self setShadowOptions:shadow];
-	} 
+	}
+
+
+	WDStrokeOptions *stroke = [self strokeOptions];
+	if (stroke == nil)
+	{ stroke = [WDStrokeOptions new]; }
+
+	if ([property isEqualToString:WDStrokeColorProperty]) \
+	{
+		[stroke setColor:value];
+		[self setStrokeOptions:stroke];
+	}
+	else
+	if ([property isEqualToString:WDStrokeWidthProperty]) \
+	{
+		[stroke setLineWidth:[value floatValue]];
+		[self setStrokeOptions:stroke];
+	}
 }
+
+
+
 
 - (id) valueForProperty:(NSString *)property
 {
@@ -1514,9 +1550,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (NSSet *) inspectableProperties
 {
-	return [NSSet setWithObjects:WDOpacityProperty, WDBlendModeProperty, WDShadowVisibleProperty,
-			WDShadowColorProperty, WDShadowAngleProperty, WDShadowRadiusProperty, WDShadowOffsetProperty,
-			nil];
+	return [NSSet setWithObjects:
+		WDOpacityProperty,
+		WDBlendModeProperty,
+		WDShadowVisibleProperty,
+		WDShadowColorProperty,
+		WDShadowAngleProperty,
+		WDShadowRadiusProperty,
+		WDShadowOffsetProperty, nil];
 }
 
 - (BOOL) canInspectProperty:(NSString *)property
