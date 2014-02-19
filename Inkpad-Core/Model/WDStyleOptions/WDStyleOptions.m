@@ -51,7 +51,7 @@
 	self = [self init];
 
 	if (self != nil)
-	{ [self takePropertiesFrom:src]; }
+	{ [self copyPropertiesFrom:src]; }
 
 	return self;
 }
@@ -59,13 +59,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) copyWithZone:(NSZone *)zone
-{ return [[[self class] alloc] initWithPropertiesFrom:self]; }
+{ return [[[self class] allocWithZone:zone] initWithPropertiesFrom:self]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) initProperties {}
 
-- (void) takePropertiesFrom:(id)src {}
+- (void) copyPropertiesFrom:(id)src {}
 
 - (void) encodeWithCoder:(NSCoder *)coder {}
 

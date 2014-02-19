@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDRenderOptions.m
+	WDStyleContainer.m
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -11,7 +11,7 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import "WDRenderOptions.h"
+#import "WDStyleContainer.h"
 #import "WDUtilities.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,10 +20,10 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-@implementation WDRenderOptions
+@implementation WDStyleContainer
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) initWithDelegate:(id<WDRenderOptionsDelegate>)delegate
+- (id) initWithDelegate:(id<WDStyleContainerDelegate>)delegate
 {
 	self = [super init];
 	if (self != nil)
@@ -36,10 +36,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) copyPropertiesFrom:(WDRenderOptions *)srcOptions
+- (void) copyPropertiesFrom:(WDStyleContainer *)srcOptions
 {
-	[self setBlendOptions:[[srcOptions blendOptions] copy]];
-	[self setShadowOptions:[[srcOptions shadowOptions] copy]];
+	self->mBlendOptions = [srcOptions->mBlendOptions copy];
+	self->mShadowOptions = [srcOptions->mShadowOptions copy];
+	self->mStrokeOptions = [srcOptions->mStrokeOptions copy];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +96,9 @@
 
 - (void) setOptions:(id)options forKey:(id)key
 {
-	[mDelegate renderOptions:self willSetOptionsForKey:key];
+	[mDelegate styleContainer:self willSetOptionsForKey:key];
 	[self setValue:options forKey:key];
-	[mDelegate renderOptions:self didSetOptionsForKey:key];
+	[mDelegate styleContainer:self didSetOptionsForKey:key];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,10 +112,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) willSetOptionsForKey:(id)key
-{ [mDelegate renderOptions:self willSetOptionsForKey:key]; }
+{ [mDelegate styleContainer:self willSetOptionsForKey:key]; }
 
 - (void) didSetOptionsForKey:(id)key
-{ [mDelegate renderOptions:self didSetOptionsForKey:key]; }
+{ [mDelegate styleContainer:self didSetOptionsForKey:key]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,7 +125,7 @@
 - (void) setFrameOptions:(id)options
 {
 	[self willSetOptionsForKey:WDFrameOptionsKey];
-	mFrameOptions = options;
+	mFrameOptions = [options copy];
 	[self didSetOptionsForKey:WDFrameOptionsKey];
 }
 
@@ -138,7 +139,7 @@
 - (void) setBlendOptions:(id)options
 {
 	[self willSetOptionsForKey:WDBlendOptionsKey];
-	mBlendOptions = options;
+	mBlendOptions = [options copy];
 	[self didSetOptionsForKey:WDBlendOptionsKey];
 }
 
@@ -150,7 +151,7 @@
 - (void) setShadowOptions:(id)options
 {
 	[self willSetOptionsForKey:WDShadowOptionsKey];
-	mShadowOptions = options;
+	mShadowOptions = [options copy];
 	[self didSetOptionsForKey:WDShadowOptionsKey];
 }
 
@@ -162,7 +163,7 @@
 - (void) setStrokeOptions:(id)options
 {
 	[self willSetOptionsForKey:WDStrokeOptionsKey];
-	mStrokeOptions = options;
+	mStrokeOptions = [options copy];
 	[self didSetOptionsForKey:WDStrokeOptionsKey];
 }
 

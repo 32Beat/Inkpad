@@ -77,7 +77,7 @@ typedef enum {
 @class WDShadow;
 @class WDXMLElement;
 
-#import "WDRenderOptions.h"
+#import "WDStyleContainer.h"
 
 /*
 	ElementOwner
@@ -90,22 +90,22 @@ typedef enum {
 	drawing controller can request update areas through a bottom-up chain
 */
 @protocol WDElementOwner
-- (void)element:(WDElement*)element willChangeProperty:(id)propertyKey;
-- (void)element:(WDElement*)element didChangeProperty:(id)propertyKey;
+- (void)element:(WDElement*)element willChangePropertyForKey:(id)propertyKey;
+- (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey;
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface WDElement : NSObject <NSCoding, NSCopying, WDRenderOptionsDelegate>
+@interface WDElement : NSObject <NSCoding, NSCopying, WDStyleContainerDelegate>
 {
 	// Model properties
 	CGSize mSize;
 	CGPoint mPosition;
 	CGFloat mRotation;
 
-	WDRenderOptions *mRenderOptions;
+	WDStyleContainer *mStyleOptions;
 
 	// Active state vars
 	WDEditMode mEditMode;
@@ -119,9 +119,6 @@ typedef enum {
 
 	CGRect mFrameBounds;
 	CGRect mStyleBounds;
-	CGRect mShadowBounds;
-
-	CGRect dirtyBounds_;
 }
 
 // Fundamental properties
@@ -130,7 +127,7 @@ typedef enum {
 @property (nonatomic, assign) CGFloat rotation;
 
 // Context properties
-@property (nonatomic, strong) WDRenderOptions *renderOptions;
+@property (nonatomic, strong) WDStyleContainer *styleOptions;
 
 // "There can be only one!"
 @property (nonatomic, weak) id<WDElementOwner> owner;
@@ -268,6 +265,8 @@ typedef enum {
 - (void) saveState;
 - (void) resetState:(WDElement *)srcElement;
 - (void) takePropertiesFrom:(WDElement *)srcElement;
+- (void) willChangePropertyForKey:(id)key;
+- (void) didChangePropertyForKey:(id)key;
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -365,8 +364,6 @@ typedef enum {
 - (CGRect) computeFrameBounds;
 - (CGRect) styleBounds;
 - (CGRect) computeStyleBounds;
-- (CGRect) shadowBounds;
-- (CGRect) computeShadowBounds;
 - (CGRect) renderBounds;
 - (CGRect) computeRenderBounds;
 

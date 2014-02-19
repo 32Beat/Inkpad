@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDRenderOptions.h
+	WDStyleContainer.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -19,35 +19,41 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	Order is important, 
+	WDStyleContainer
+	----------------
+	Controller object for style options
+
+	- Order is important
+	
+	- Generally itemOptions are to be considered immutable units, 
+	they will be copied when set.
 
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-@protocol WDRenderOptionsDelegate
-- (void) renderOptions:(id)options willSetOptionsForKey:(id)key;
-- (void) renderOptions:(id)options didSetOptionsForKey:(id)key;
+@protocol WDStyleContainerDelegate
+- (void) styleContainer:(id)container willSetOptionsForKey:(id)key;
+- (void) styleContainer:(id)container didSetOptionsForKey:(id)key;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDRenderOptions : NSObject
+@interface WDStyleContainer : NSObject
 {
-	__weak id mDelegate;
-
-	id mContainer;
+	__weak id<WDStyleContainerDelegate> mDelegate;
 
 	id mFrameOptions;
 	id mBlendOptions;
 	id mShadowOptions;
 	id mStrokeOptions;
+
+	id mContainer;
 }
 
-- (id) initWithDelegate:(id<WDRenderOptionsDelegate>)delegate;
-
+- (id) initWithDelegate:(id<WDStyleContainerDelegate>)delegate;
 - (void) decodeWithCoder:(NSCoder *)coder;
 - (void) encodeWithCoder:(NSCoder *)coder;
 
-- (void) copyPropertiesFrom:(WDRenderOptions *)srcOptions;
+- (void) copyPropertiesFrom:(WDStyleContainer *)srcOptions;
 
 - (id) frameOptions;
 - (void) setFrameOptions:(id)options;

@@ -154,7 +154,7 @@ NSString *WDGroupElements = @"WDGroupElements";
 
 	// Combine result bounds of elements
 	for (WDElement *element in elements_)
-	{ R = CGRectUnion([element shadowBounds], R); }
+	{ R = CGRectUnion([element styleBounds], R); }
 
 	// Add expansion for shadow
 	if (self.shadow != nil)

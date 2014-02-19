@@ -356,13 +356,13 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 - (id) refreshRects
 { return mRefreshRects ? mRefreshRects : (mRefreshRects=[NSMutableArray new]); }
 
-- (void)element:(WDElement*)element willChangeProperty:(id)propertyKey
+- (void)element:(WDElement*)element willChangePropertyForKey:(id)propertyKey
 {
 	[[self refreshRects] addObject:
 	[NSValue valueWithCGRect:[element renderBounds]]];
 }
 
-- (void)element:(WDElement*)element didChangeProperty:(id)propertyKey
+- (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey
 {
 	[[self refreshRects] addObject:
 	[NSValue valueWithCGRect:[element renderBounds]]];

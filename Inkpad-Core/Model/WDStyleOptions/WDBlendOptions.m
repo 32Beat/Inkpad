@@ -41,10 +41,29 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) takePropertiesFrom:(id)src
+- (void) copyPropertiesFrom:(WDBlendOptions *)src
 {
-	[self setMode:[src mode]];
-	[self setOpacity:[src opacity]];
+	self->mMode = src->mMode;
+	self->mOpacity = src->mOpacity;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
++ (id) blendOptionsWithMode:(CGBlendMode)mode opacity:(CGFloat)opacity
+{ return [[self alloc] initWithMode:mode opacity:opacity]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithMode:(CGBlendMode)mode opacity:(CGFloat)opacity
+{
+	self = [super init];
+	if (self != nil)
+	{
+		mMode = mode;
+		mOpacity = opacity;
+	}
+
+	return self;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +94,8 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 - (void) prepareCGContext:(CGContextRef)context
 {
-	CGContextSetBlendMode(context, [self mode]);
-	CGContextSetAlpha(context, [self opacity]);
+	CGContextSetBlendMode(context, mMode);
+	CGContextSetAlpha(context, mOpacity);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

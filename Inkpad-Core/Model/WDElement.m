@@ -73,7 +73,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 @synthesize position = mPosition;
 @synthesize rotation = mRotation;
 
-@synthesize renderOptions = mRenderOptions;
+@synthesize styleOptions = mStyleOptions;
 @synthesize owner = mOwner;
 
 @synthesize layer = layer_;
@@ -136,7 +136,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self setPosition:[srcElement position]];
 	[self setRotation:[srcElement rotation]];
 
-	[[self renderOptions] copyPropertiesFrom:[srcElement renderOptions]];
+	[[self styleOptions] copyPropertiesFrom:[srcElement styleOptions]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self encodePositionWithCoder:coder];
 	[self encodeRotationWithCoder:coder];
 
-	[self encodeRenderOptionsWithCoder:coder];
+	[self encodeStyleOptionsWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,9 +198,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) encodeRenderOptionsWithCoder:(NSCoder *)coder
+- (void) encodeStyleOptionsWithCoder:(NSCoder *)coder
 {
-	[[self renderOptions] encodeWithCoder:coder];
+	[[self styleOptions] encodeWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self decodeSizeWithCoder:coder];
 	[self decodePositionWithCoder:coder];
 	[self decodeRotationWithCoder:coder];
-	[self decodeRenderOptionsWithCoder:coder];
+	[self decodeStyleOptionsWithCoder:coder];
 
 	return YES;
 }
@@ -276,9 +276,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) decodeRenderOptionsWithCoder:(NSCoder *)coder
+- (void) decodeStyleOptionsWithCoder:(NSCoder *)coder
 {
-	[[self renderOptions] decodeWithCoder:coder];
+	[[self styleOptions] decodeWithCoder:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +303,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 			[blendOptions setOpacity:
 			[coder decodeFloatForKey:WDObjectOpacityKey]];
 
-		[[self renderOptions] setBlendOptions:blendOptions];
+		[[self styleOptions] setBlendOptions:blendOptions];
 	}
 
 	if ([coder containsValueForKey:WDShadowKey])
@@ -324,7 +324,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 			[dstShadow setOffset:shadowOffset];
 			[dstShadow setBlur:radius];
 			[dstShadow setColor:[color UIColor]];
-			[[self renderOptions] setShadowOptions:dstShadow];
+			[[self styleOptions] setShadowOptions:dstShadow];
 		}
 	}
 
@@ -401,6 +401,29 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Send these so drawing can properly update view
+*/
+
+- (void) willChangePropertyForKey:(id)key
+{ [mOwner element:self willChangePropertyForKey:key]; }
+
+- (void) didChangePropertyForKey:(id)key
+{ [mOwner element:self didChangePropertyForKey:key]; }
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	If element = WDGroup or WDCompoundPath we might receive these, 
+	pass up the chain
+*/
+
+- (void)element:(WDElement*)element willChangePropertyForKey:(id)key
+{ [mOwner element:element willChangePropertyForKey:key]; }
+
+- (void)element:(WDElement*)element didChangePropertyForKey:(id)key
+{ [mOwner element:element didChangePropertyForKey:key]; }
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////
@@ -468,65 +491,65 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Render Options
+#pragma mark Style Options
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDRenderOptions *) renderOptions
+- (WDStyleContainer *) styleOptions
 {
-	return mRenderOptions ? mRenderOptions :
-	(mRenderOptions = [[WDRenderOptions alloc] initWithDelegate:self]);
+	return mStyleOptions ? mStyleOptions :
+	(mStyleOptions = [[WDStyleContainer alloc] initWithDelegate:self]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) renderOptions:(id)options willSetOptionsForKey:(id)key
+- (void) styleContainer:(id)container willSetOptionsForKey:(id)key
 {
-	[mOwner element:self willChangeProperty:key];
+	[self willChangePropertyForKey:key];
 }
 
-- (void) renderOptions:(id)options didSetOptionsForKey:(id)key;
+- (void) styleContainer:(id)container didSetOptionsForKey:(id)key;
 {
 	[self flushCache];
-	[mOwner element:self didChangeProperty:key];
+	[self didChangePropertyForKey:key];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) frameOptions
-{ return [[self renderOptions] frameOptions]; }
+{ return [[self styleOptions] frameOptions]; }
 
 - (void) setFrameOptions:(WDFrameOptions *)frameOptions
-{ [[self renderOptions] setFrameOptions:frameOptions]; }
+{ [[self styleOptions] setFrameOptions:frameOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) blendOptions
-{ return [[self renderOptions] blendOptions]; }
+{ return [[self styleOptions] blendOptions]; }
 
 - (void) setBlendOptions:(WDBlendOptions *)blendOptions
-{ [[self renderOptions] setBlendOptions:blendOptions]; }
+{ [[self styleOptions] setBlendOptions:blendOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) shadowOptions
-{ return [[self renderOptions] shadowOptions]; }
+{ return [[self styleOptions] shadowOptions]; }
 
 - (void) setShadowOptions:(WDShadowOptions *)shadowOptions
-{ [[self renderOptions] setShadowOptions:shadowOptions]; }
+{ [[self styleOptions] setShadowOptions:shadowOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) strokeOptions
-{ return [[self renderOptions] strokeOptions]; }
+{ return [[self styleOptions] strokeOptions]; }
 
 - (void) setStrokeOptions:(WDStrokeOptions *)strokeOptions
-{ [[self renderOptions] setStrokeOptions:strokeOptions]; }
+{ [[self styleOptions] setStrokeOptions:strokeOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) prepareCGContext:(CGContextRef)context
 {
-	[[self renderOptions] prepareCGContext:context];
+	[[self styleOptions] prepareCGContext:context];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -698,26 +721,31 @@ NSString *WDShadowKey = @"WDShadowKey";
 	CGFloat d1 = WDDistance(P1, C);
 	CGFloat d = d0 != 0.0 && d1 != 0.0 ? d1 / d0 : 1.0;
 
-	// Store update areas
-	[self cacheDirtyBounds];
+	[self willChangePropertyForKey:WDFrameOptionsKey];
 
 	[self setSize:WDScaleSize(mSize, d, d)];
 	[self setRotation:mRotation + 180.0*da/M_PI];
 
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	[self didChangePropertyForKey:WDFrameOptionsKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Bounds
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Levels of bounds:
+	1. sourceRect = size of source centered around origin
+	2. frameBounds = bounding box of transformed source
+	3. styleBounds = render area of all local style elements
+	4. renderBounds = render area of all local and recursive owner style elements
+*/
 
 - (void) glDrawBoundsWithViewTransform:(CGAffineTransform)viewTransform
 {
 #ifdef WD_DEBUG
 	glColor4f(0.0, 0.0, 1.0, .9);
-	CGRect R = [self bounds];
+	CGRect R = [self frameBounds];
 	R = CGRectApplyAffineTransform(R, viewTransform);
 	WDGLStrokeRect(R);
 
@@ -766,27 +794,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (CGRect) computeStyleBounds
 {
 	CGRect R = [self frameBounds];
-	if (self.strokeOptions != nil)
-	{ R = [self.strokeOptions resultAreaForRect:R]; }
-	return R;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) shadowBounds
-{
-	if (CGRectIsEmpty(mShadowBounds))
-	{ mShadowBounds = [self computeShadowBounds]; }
-	return mShadowBounds;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) computeShadowBounds
-{
-	CGRect R = [self styleBounds];
-	if (self.shadowOptions != nil)
-	{ R = [self.shadowOptions resultAreaForRect:R]; }
+	if (self.styleOptions != nil)
+	{ R = [self.styleOptions resultAreaForRect:R]; }
 	return R;
 }
 
@@ -802,18 +811,22 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (CGRect) computeRenderBounds
 {
-	CGRect R = [self shadowBounds];
+	CGRect R = [self styleBounds];
 	if (mOwner != nil)
 	{ R = [mOwner resultAreaForRect:R]; }
 	return R;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Element may be owner of elements, such as WDGroup 
+
+*/
 
 - (CGRect) resultAreaForRect:(CGRect)R
 {
-	if (mRenderOptions != nil)
-	{ R = [mRenderOptions resultAreaForRect:R]; }
+	if (mStyleOptions != nil)
+	{ R = [mStyleOptions resultAreaForRect:R]; }
 
 	if (mOwner != nil)
 	{ R = [mOwner resultAreaForRect:R]; }
@@ -827,14 +840,13 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 	mFrameBounds = CGRectNull;
 	mStyleBounds = CGRectNull;
-	mShadowBounds = CGRectNull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) cacheDirtyBounds
 {
-	dirtyBounds_ = [self renderBounds];
+	//dirtyBounds_ = [self renderBounds];
 
 	// We are appearantly going to affect bounds
 	[self invalidateBounds];
@@ -851,8 +863,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 	// the layer should dirty its thumbnail
 	[self.layer invalidateThumbnail];
 
-	CGRect sourceArea = dirtyBounds_;
+//	CGRect sourceArea = dirtyBounds_;
 	CGRect resultArea = [self renderBounds];
+	CGRect sourceArea = resultArea;
 
 	if (CGRectEqualToRect(sourceArea, resultArea))
 	{
@@ -861,6 +874,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 		[[NSNotificationCenter defaultCenter]
 		postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
 	}
+/*
 	else
 	{
 		NSArray *rects = @[
@@ -873,6 +887,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	}
 
 	dirtyBounds_ = CGRectNull;
+*/
 }
 
 
@@ -988,7 +1003,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (mEditMode != mode)
 	{
 		mEditMode = mode;
-		[self postDirtyBoundsChange];
+		//[self postDirtyBoundsChange];
 	}
 }
 
@@ -1144,6 +1159,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) glDrawWithTransform:(CGAffineTransform)T options:(long)options
 {
+	[self glDrawBoundsWithViewTransform:T];
+
 	[self glDrawContentWithTransform:T];
 	[self glDrawFrameWithTransform:T];
 
@@ -1155,8 +1172,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	if (options & eWDEditModeStyle)
 	{ [self glDrawStyleControlsWithTransform:T]; }
-
-	//[self glDrawBoundsWithViewTransform:T];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1339,7 +1354,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) addSVGOpacityAndShadowAttributes:(WDXMLElement *)element
 {
-	WDBlendOptions *blendOptions = [[self renderOptions] blendOptions];
+	WDBlendOptions *blendOptions = [[self styleOptions] blendOptions];
 
 	[element setAttribute:@"opacity" floatValue:blendOptions.opacity];
 	[element setAttribute:@"inkpad:blendMode"

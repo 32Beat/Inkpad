@@ -44,7 +44,7 @@ NSString *const WDShadowColorKey = @"WDShadowColor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) takePropertiesFrom:(id)src
+- (void) copyPropertiesFrom:(id)src
 {
 	[self setOffset:[src offset]];
 	[self setBlur:[src blur]];

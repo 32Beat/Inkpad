@@ -221,8 +221,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	// Record current state for undo
 	[self saveState];
 
-	// Store update areas
-	[self cacheDirtyBounds];
+	[self willChangePropertyForKey:WDFrameOptionsKey];
 
 /*
 	If we ever want to support numeric transformations,
@@ -256,8 +255,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	P = CGPointApplyAffineTransform(P, T);
 	[self setPosition:P];
 
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	[self didChangePropertyForKey:WDFrameOptionsKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

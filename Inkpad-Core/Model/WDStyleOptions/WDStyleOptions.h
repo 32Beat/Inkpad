@@ -16,7 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 @protocol WDStyleOptionsProtocol
 - (void) initProperties;
-- (void) takePropertiesFrom:(id)src;
+- (void) copyPropertiesFrom:(id)src;
 - (void) encodeWithCoder:(NSCoder *)coder;
 - (void) decodeWithCoder:(NSCoder *)coder;
 - (void) prepareCGContext:(CGContextRef)context;
