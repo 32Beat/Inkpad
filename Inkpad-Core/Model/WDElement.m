@@ -231,14 +231,12 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) decodeWithCoder:(NSCoder *)coder
+- (void) decodeWithCoder:(NSCoder *)coder
 {
 	[self decodeSizeWithCoder:coder];
 	[self decodePositionWithCoder:coder];
 	[self decodeRotationWithCoder:coder];
 	[self decodeStyleOptionsWithCoder:coder];
-
-	return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,7 +281,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) decodeWithCoder0:(NSCoder *)coder
+- (void) decodeWithCoder0:(NSCoder *)coder
 {
 	/*
 		We don't have an owner yet, 
@@ -316,19 +314,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 			float offset = [shadow offset];
 			float angle = [shadow angle];
 
-			CGSize shadowOffset = {
-				offset * cos(angle),
-				offset * sin(angle) };
-
 			WDShadowOptions *dstShadow = [WDShadowOptions new];
-			[dstShadow setOffset:shadowOffset];
+			[dstShadow setAngle:angle];
+			[dstShadow setOffset:offset];
 			[dstShadow setBlur:radius];
 			[dstShadow setColor:[color UIColor]];
 			[[self styleOptions] setShadowOptions:dstShadow];
 		}
 	}
-
-	return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,46 +355,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	TODO: move up in object chain or implement proper hierarchy
-*/
-- (void) saveState
-{
-	// Record current properties for undo
-	[[self.undoManager prepareWithInvocationTarget:self]
-	resetState:[self copy]];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) resetState:(WDElement *)srcElement
-{
-	if (srcElement != nil)
-	{
-		// Save state for redo
-		[self saveState];
-
-		// Store update areas
-		[self cacheDirtyBounds];
-
-		// Copy properties from srcElement
-		[self takePropertiesFrom:srcElement];
-
-		// Notify drawingcontroller
-		[self postDirtyBoundsChange];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) takePropertiesFrom:(WDElement *)srcElement
-{
-	[self setSize:srcElement->mSize];
-	[self setPosition:srcElement->mPosition];
-	[self setRotation:srcElement->mRotation];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
 	Send these so drawing can properly update view
 */
 
@@ -422,6 +375,37 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void)element:(WDElement*)element didChangePropertyForKey:(id)key
 { [mOwner element:element didChangePropertyForKey:key]; }
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	TODO: move up in object chain or implement proper hierarchy
+*/
+- (void) saveState
+{
+	// Record current properties for undo
+	[[self.undoManager prepareWithInvocationTarget:self]
+	resetState:[self copy]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) resetState:(WDElement *)srcElement
+{
+	if (srcElement != nil)
+	{
+		// Save state for redo
+		[self saveState];
+
+		// Store update areas
+		[self willChangePropertyForKey:nil];
+
+		// Copy properties from srcElement
+		[self copyPropertiesFrom:srcElement];
+
+		// Notify drawingcontroller
+		[self didChangePropertyForKey:nil];
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -744,6 +728,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (void) glDrawBoundsWithViewTransform:(CGAffineTransform)viewTransform
 {
 #ifdef WD_DEBUG
+	GLfloat clr[4];
+	glGetFloatv(GL_CURRENT_COLOR, clr);
+
 	glColor4f(0.0, 0.0, 1.0, .9);
 	CGRect R = [self frameBounds];
 	R = CGRectApplyAffineTransform(R, viewTransform);
@@ -758,6 +745,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 	R = [self renderBounds];
 	R = CGRectApplyAffineTransform(R, viewTransform);
 	WDGLStrokeRect(R);
+
+	glColor4f(clr[0], clr[1], clr[2], clr[3]);
+
 #endif
 }
 
@@ -1437,6 +1427,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 		return;
 	}
 
+	[self saveState];
+
 	WDBlendOptions *blendOptions = [self blendOptions];
 
 	if ([property isEqualToString:WDBlendModeProperty])
@@ -1458,27 +1450,34 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 
 	if ([property isEqualToString:WDShadowVisibleProperty]) {
-		if ([value boolValue] && !shadow) { // shadow enabled
+		if ([value boolValue] && !shadow)
+		{
 			// shadow turned on and we don't have one so attach the default stroke
-			self.shadowOptions = [WDShadowOptions new]; //[propertyManager defaultShadow];
-		} else if (![value boolValue] && shadow) {
+			self.shadowOptions = [propertyManager defaultShadowOptions];
+			
+		}
+		else if (![value boolValue] && shadow) {
 			self.shadowOptions = nil;
 		}
 	}
 	else
-	if ([[NSSet setWithObjects:WDShadowColorProperty, WDShadowOffsetProperty, WDShadowRadiusProperty, WDShadowAngleProperty, nil] containsObject:property])
+	if ([[NSSet setWithObjects:
+			WDShadowColorProperty,
+			WDShadowOffsetProperty,
+			WDShadowRadiusProperty,
+			WDShadowAngleProperty, nil] containsObject:property])
 	{
 		if (!shadow)
-		{ shadow = [WDShadowOptions new]; } //[propertyManager defaultShadow]; }
+		{ shadow = [propertyManager defaultShadowOptions]; }
 
 		if ([property isEqualToString:WDShadowColorProperty])
 		[shadow setColor:value];
 
 		if ([property isEqualToString:WDShadowOffsetProperty]) \
-		[shadow setOffsetRadius:[value floatValue]];
+		[shadow setOffset:[value floatValue]];
 
 		if ([property isEqualToString:WDShadowAngleProperty]) \
-		[shadow setOffsetAngle:[value floatValue]];
+		[shadow setAngle:[value floatValue]];
 
 		if ([property isEqualToString:WDShadowRadiusProperty]) \
 		[shadow setBlur:[value floatValue]];
@@ -1502,11 +1501,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 		if ([property isEqualToString:WDShadowColorProperty]) {
 			return shadowOptions.color;
 		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
-			return @(shadowOptions.offsetRadius);
+			return @(shadowOptions.offset);
 		} else if ([property isEqualToString:WDShadowRadiusProperty]) {
 			return @(shadowOptions.blur);
 		} else if ([property isEqualToString:WDShadowAngleProperty]) {
-			return @(shadowOptions.offsetAngle);
+			return @(shadowOptions.angle);
 		}
 	}
 	

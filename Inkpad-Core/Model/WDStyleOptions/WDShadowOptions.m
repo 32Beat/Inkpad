@@ -17,9 +17,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 NSString *const WDShadowOptionsKey = @"WDShadowOptions";
+NSString *const WDShadowColorKey = @"WDShadowColor";
+NSString *const WDShadowAngleKey = @"WDShadowAngle";
 NSString *const WDShadowOffsetKey = @"WDShadowOffset";
 NSString *const WDShadowBlurKey = @"WDShadowBlur";
-NSString *const WDShadowColorKey = @"WDShadowColor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,71 +30,66 @@ NSString *const WDShadowColorKey = @"WDShadowColor";
 @implementation WDShadowOptions
 ////////////////////////////////////////////////////////////////////////////////
 
+@synthesize color = mColor;
+@synthesize angle = mAngle;
 @synthesize offset = mOffset;
 @synthesize blur = mBlur;
-@synthesize color = mColor;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) initProperties
 {
-	mOffset = CGSizeZero;
-	mBlur = 0.0;
 	mColor = nil;
+	mAngle = 0.0;
+	mOffset = 0.0;
+	mBlur = 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) copyPropertiesFrom:(id)src
 {
+	[self setColor:[src color]];
+	[self setAngle:[src angle]];
 	[self setOffset:[src offset]];
 	[self setBlur:[src blur]];
-	[self setColor:[src color]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeCGSize:mOffset forKey:WDShadowOffsetKey];
-	[coder encodeDouble:mBlur forKey:WDShadowBlurKey];
 	[coder encodeObject:mColor forKey:WDShadowColorKey];
+	[coder encodeFloat:mAngle forKey:WDShadowAngleKey];
+	[coder encodeFloat:mOffset forKey:WDShadowOffsetKey];
+	[coder encodeFloat:mBlur forKey:WDShadowBlurKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) decodeWithCoder:(NSCoder *)coder
 {
+	if ([coder containsValueForKey:WDShadowColorKey])
+	{ mColor = [coder decodeObjectForKey:WDShadowColorKey]; }
+
+	if ([coder containsValueForKey:WDShadowAngleKey])
+	{ mAngle = [coder decodeFloatForKey:WDShadowAngleKey]; }
+
 	if ([coder containsValueForKey:WDShadowOffsetKey])
-	{ mOffset = [coder decodeCGSizeForKey:WDShadowOffsetKey]; }
+	{ mOffset = [coder decodeFloatForKey:WDShadowOffsetKey]; }
 
 	if ([coder containsValueForKey:WDShadowBlurKey])
 	{ mBlur = [coder decodeFloatForKey:WDShadowBlurKey]; }
 
-	if ([coder containsValueForKey:WDShadowColorKey])
-	{ mColor = [coder decodeObjectForKey:WDShadowColorKey]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGFloat) offsetRadius
-{ return sqrt(mOffset.width*mOffset.width + mOffset.height*mOffset.height); }
-
-- (void) setOffsetRadius:(CGFloat)r
+- (CGSize) offsetVector
 {
-	CGFloat angle = [self offsetAngle];
-	[self setOffset:(CGSize){ r * cos(angle), r * sin(angle) }];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) offsetAngle
-{ return atan2(mOffset.height, mOffset.width); }
-
-- (void) setOffsetAngle:(CGFloat)angle
-{
-	CGFloat r = [self offsetRadius];
-	[self setOffset:(CGSize){ r * cos(angle), r * sin(angle) }];
+	CGFloat r = [self offset];
+	CGFloat a = [self angle];
+	return (CGSize){ r*cos(a), r*sin(a) };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,8 +97,9 @@ NSString *const WDShadowColorKey = @"WDShadowColor";
 - (CGRect) resultAreaForRect:(CGRect)srcR
 {
 	CGRect dstR = srcR;
-	dstR.origin.x += mOffset.width;
-	dstR.origin.y += mOffset.height;
+	CGSize offset = [self offsetVector];
+	dstR.origin.x += offset.width;
+	dstR.origin.y += offset.height;
 	dstR = CGRectInset(dstR, -mBlur, -mBlur);
 
 	return CGRectUnion(srcR, dstR);
@@ -113,7 +110,7 @@ NSString *const WDShadowColorKey = @"WDShadowColor";
 - (void) prepareCGContext:(CGContextRef)context
 {
 	CGContextSetShadowWithColor(context,
-		[self offset],
+		[self offsetVector],
 		[self blur],
 		[self color].CGColor);
 }

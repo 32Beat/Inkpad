@@ -194,8 +194,13 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
     static NSSet *shadowProperties = nil;
     
     if (!shadowProperties) {
-        shadowProperties = [NSSet setWithObjects:WDOpacityProperty, WDShadowColorProperty, WDShadowAngleProperty,
-                            WDShadowOffsetProperty, WDShadowRadiusProperty, WDShadowVisibleProperty, nil];
+        shadowProperties = [NSSet setWithObjects:
+			WDOpacityProperty,
+			WDShadowColorProperty,
+			WDShadowAngleProperty,
+			WDShadowOffsetProperty,
+			WDShadowRadiusProperty,
+			WDShadowVisibleProperty, nil];
     }
     
     return [shadowProperties containsObject:property];
@@ -314,6 +319,27 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
                               offset:[[self defaultValueForProperty:WDShadowOffsetProperty] floatValue]
                                angle:[[self defaultValueForProperty:WDShadowAngleProperty] floatValue]];
 }
+
+- (WDShadowOptions *) activeShadowOptions
+{   
+    if (![[self defaultValueForProperty:WDShadowVisibleProperty] boolValue]) {
+        return nil;
+    }
+    
+    return [self defaultShadowOptions];
+}
+
+
+- (WDShadowOptions *)defaultShadowOptions
+{
+	WDShadowOptions *shadow = [WDShadowOptions new];
+	[shadow setColor:[self defaultValueForProperty:WDShadowColorProperty]];
+	[shadow setAngle:[[self defaultValueForProperty:WDShadowAngleProperty] floatValue]];
+	[shadow setOffset:[[self defaultValueForProperty:WDShadowOffsetProperty] floatValue]];
+	[shadow setBlur:[[self defaultValueForProperty:WDShadowRadiusProperty] floatValue]];
+	return shadow;
+}
+
 
 - (id<WDPathPainter>) activeFillStyle
 {

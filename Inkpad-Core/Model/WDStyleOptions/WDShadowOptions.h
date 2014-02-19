@@ -21,26 +21,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 extern NSString *const WDShadowOptionsKey;
+extern NSString *const WDShadowColorKey;
+extern NSString *const WDShadowAngleKey;
 extern NSString *const WDShadowOffsetKey;
 extern NSString *const WDShadowBlurKey;
-extern NSString *const WDShadowColorKey;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDShadowOptions : WDStyleOptions
 {
-	CGSize mOffset;
-	CGFloat mBlur;
 	UIColor *mColor;
+	float 	mAngle;
+	float 	mOffset;
+	float 	mBlur;
 }
 
-@property (nonatomic, assign) CGSize offset;
-@property (nonatomic, assign) CGFloat blur;
 @property (nonatomic, strong) UIColor *color;
+@property (nonatomic, assign) float angle;
+@property (nonatomic, assign) float offset;
+@property (nonatomic, assign) float blur;
 
-- (CGFloat) offsetRadius;
-- (void) setOffsetRadius:(CGFloat)r;
-- (CGFloat) offsetAngle;
-- (void) setOffsetAngle:(CGFloat)angle;
+- (CGSize) offsetVector;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

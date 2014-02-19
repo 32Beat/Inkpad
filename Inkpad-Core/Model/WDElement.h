@@ -100,12 +100,14 @@ typedef enum {
 
 @interface WDElement : NSObject <NSCoding, NSCopying, WDStyleContainerDelegate>
 {
-	// Model properties
+	// Fundamental properties
 	CGSize mSize;
 	CGPoint mPosition;
 	CGFloat mRotation;
 
+	// Context properties
 	WDStyleContainer *mStyleOptions;
+
 
 	// Active state vars
 	WDEditMode mEditMode;
@@ -113,12 +115,11 @@ typedef enum {
 
 	// Cached info
 	CGAffineTransform mTransform;
-	
-	WDQuad mFrame;
-	CGPathRef mFramePath;
-
 	CGRect mFrameBounds;
 	CGRect mStyleBounds;
+
+	WDQuad mFrame;
+	CGPathRef mFramePath;
 }
 
 // Fundamental properties
@@ -260,13 +261,17 @@ typedef enum {
 - (id) initWithSize:(CGSize)size;
 - (id) initWithFrame:(CGRect)frame;
 
+- (void) encodeWithCoder:(NSCoder *)coder;
+- (void) decodeWithCoder:(NSCoder *)coder;
+- (void) decodeWithCoder0:(NSCoder *)coder;
+
 //- (void) awakeFromEncoding;
 
-- (void) saveState;
-- (void) resetState:(WDElement *)srcElement;
-- (void) takePropertiesFrom:(WDElement *)srcElement;
 - (void) willChangePropertyForKey:(id)key;
 - (void) didChangePropertyForKey:(id)key;
+- (void) saveState;
+- (void) resetState:(WDElement *)srcElement;
+- (void) copyPropertiesFrom:(WDElement *)srcElement;
 
 ////////////////////////////////////////////////////////////////////////////////
 /*

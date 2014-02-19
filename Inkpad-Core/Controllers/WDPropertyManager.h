@@ -13,6 +13,7 @@
 
 @class WDDrawingController;
 @class WDShadow;
+@class WDShadowOptions;
 @class WDStrokeStyle;
 
 @protocol WDPathPainter;
@@ -39,6 +40,7 @@
 
 - (WDShadow *) activeShadow;
 - (WDShadow *) defaultShadow;
+- (WDShadowOptions *) defaultShadowOptions;
 
 - (void) updateUserDefaults;
 

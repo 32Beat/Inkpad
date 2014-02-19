@@ -56,9 +56,9 @@
 */
 //*
 	if ([coder containsValueForKey:WDBlendOptionsKey])
-	{ [self setOptions:[coder decodeObjectForKey:WDBlendOptionsKey]]; }
+	{ [self setBlendOptions:[coder decodeObjectForKey:WDBlendOptionsKey]]; }
 	if ([coder containsValueForKey:WDShadowOptionsKey])
-	{ [self setOptions:[coder decodeObjectForKey:WDShadowOptionsKey]]; }
+	{ [self setShadowOptions:[coder decodeObjectForKey:WDShadowOptionsKey]]; }
 //*/
 }
 

@@ -166,13 +166,11 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) decodeWithCoder:(NSCoder *)coder
+- (void) decodeWithCoder:(NSCoder *)coder
 {
 	[self decodeSizeWithCoder:coder];
 	[self decodePositionWithCoder:coder];
 	[self decodeRotationWithCoder:coder];
-
-	return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

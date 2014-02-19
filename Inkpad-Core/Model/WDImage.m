@@ -63,41 +63,42 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) takePropertiesFrom:(WDImage *)src
+- (void) copyPropertiesFrom:(WDImage *)src
 {
-	[super takePropertiesFrom:src];
+	[super copyPropertiesFrom:src];
 	self->imageData_ = [src->imageData_ copy];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void)encodeWithCoder:(NSCoder *)coder
+- (void) encodeWithCoder:(NSCoder *)coder
 {
 	[super encodeWithCoder:coder];
-	
 	[coder encodeObject:imageData_ forKey:WDImageDataKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id)initWithCoder:(NSCoder *)coder
+- (void) decodeWithCoder:(NSCoder *)coder
 {
-	self = [super initWithCoder:coder];
-	if (self != nil)
+	[super decodeWithCoder:coder];
+	imageData_ = [coder decodeObjectForKey:WDImageDataKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeWithCoder0:(NSCoder *)coder
+{
+	[super decodeWithCoder0:coder];
+
+	if ([coder containsValueForKey:WDTransformKey])
 	{
-		imageData_ = [coder decodeObjectForKey:WDImageDataKey];
+		CGAffineTransform T =
+		[coder decodeCGAffineTransformForKey:WDTransformKey];
 
-		if ([coder containsValueForKey:WDTransformKey])
-		{
-			CGAffineTransform T =
-			[coder decodeCGAffineTransformForKey:WDTransformKey];
-
-			// Convert transform to size, position, rotation
-			[self setTransform:T sourceRect:imageData_.naturalBounds];
-		}
+		// Convert transform to size, position, rotation
+		[self setTransform:T sourceRect:imageData_.naturalBounds];
 	}
-
-	return self; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,13 +364,4 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	return NO;
 }
 
-- (id) copyWithZone:(NSZone *)zone
-{
-	WDImage *image = [super copyWithZone:zone];
-
-	image->imageData_ = [imageData_ copy];
-	
-	return image;
-}
-	
 @end

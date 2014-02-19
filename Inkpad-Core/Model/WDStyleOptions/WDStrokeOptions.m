@@ -39,6 +39,52 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) initProperties
+{
+	mLineWidth = 1.0;
+	mLineCap = kCGLineCapButt;
+	mLineJoin = kCGLineJoinMiter;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) copyPropertiesFrom:(WDStrokeOptions *)src
+{
+	self->mColor = src->mColor;
+	self->mLineWidth = src->mLineWidth;
+	self->mLineCap = src->mLineCap;
+	self->mLineJoin = src->mLineJoin;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) encodeWithCoder:(NSCoder *)coder
+{
+	[coder encodeObject:mColor forKey:WDStrokeColorKey];
+	[coder encodeDouble:mLineWidth forKey:WDStrokeLineWidthKey];
+	[coder encodeInt:mLineCap forKey:WDStrokeLineCapKey];
+	[coder encodeInt:mLineJoin forKey:WDStrokeLineJoinKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeWithCoder:(NSCoder *)coder
+{
+	if ([coder containsValueForKey:WDStrokeColorKey])
+	{ mColor = [coder decodeObjectForKey:WDStrokeColorKey]; }
+
+	if ([coder containsValueForKey:WDStrokeLineWidthKey])
+	{ mLineWidth = [coder decodeFloatForKey:WDStrokeLineWidthKey]; }
+
+	if ([coder containsValueForKey:WDStrokeLineCapKey])
+	{ mLineCap = [coder decodeFloatForKey:WDStrokeLineCapKey]; }
+
+	if ([coder containsValueForKey:WDStrokeLineJoinKey])
+	{ mLineJoin = [coder decodeFloatForKey:WDStrokeLineJoinKey]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) prepareCGContext:(CGContextRef)context
 {
 	CGContextSetStrokeColorWithColor(context, [self color].CGColor);
