@@ -73,7 +73,7 @@
         CGContextRestoreGState(ctx);
         [[self color] set];
     } else {
-        [[[self color] opaqueUIColor] set];
+        [[[self color] colorWithAlphaComponent:1.0] set];
     }
     
     CGContextFillEllipseInRect(ctx, bounds);

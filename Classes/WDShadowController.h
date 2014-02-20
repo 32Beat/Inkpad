@@ -21,16 +21,19 @@
     WDColorController       *colorController_;
 	WDBlendModeController	*blendModeController_;
     
-    IBOutlet WDSparkSlider  *radius_;
-    IBOutlet WDSparkSlider  *offset_;
+    IBOutlet UISwitch       *shadowSwitch_;
     IBOutlet WDAnglePicker  *angle_;
+    IBOutlet WDSparkSlider  *offset_;
+    IBOutlet WDSparkSlider  *radius_;
+
     IBOutlet UISlider       *opacitySlider_;
     IBOutlet UILabel        *opacityLabel_;
-    IBOutlet UISwitch       *shadowSwitch_;
 	IBOutlet UITableView	*blendModeTableView_;
     IBOutlet UIButton       *increment;
     IBOutlet UIButton       *decrement;
 	CGBlendMode				blendMode_;
+
+	BOOL mDidAdjust;
 }
 
 @property (nonatomic, weak) WDDrawingController *drawingController;

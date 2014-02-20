@@ -15,7 +15,7 @@
 
 @class WDAbstractPath;
 @class WDBezierNode;
-@class WDColor;
+//@class WDColor;
 @class WDDrawing;
 @class WDElement;
 @class WDLayer;
@@ -37,6 +37,8 @@
 @property (nonatomic, assign) CGAffineTransform lastAppliedTransform;
 @property (nonatomic, strong) NSMutableArray *undoSelectionStack;
 @property (nonatomic, strong) NSMutableArray *redoSelectionStack;
+
+- (id) undoManager;
 
 // node selection
 - (void) selectNode:(WDBezierNode *)node;
@@ -112,6 +114,7 @@
 
 // styles
 - (void) setValue:(id)value forProperty:(NSString *)property;
+- (void) setValue:(id)value forProperty:(NSString *)property undo:(BOOL)shouldUndo;
 
 // arrange
 - (void) bringForward:(id)sender;

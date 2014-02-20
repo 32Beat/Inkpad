@@ -40,7 +40,14 @@
 
 - (WDShadow *) activeShadow;
 - (WDShadow *) defaultShadow;
+
+
+- (WDShadowOptions *) activeShadowOptions;
 - (WDShadowOptions *) defaultShadowOptions;
+- (WDStrokeOptions *) activeStrokeOptions;
+- (WDStrokeOptions *) defaultStrokeOptions;
+
+
 
 - (void) updateUserDefaults;
 

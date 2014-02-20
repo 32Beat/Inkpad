@@ -13,39 +13,56 @@
 
 @class WDColorSlider;
 @class WDColorWell;
-@class WDColor;
+//@class WDColor;
+#import "WDColor.h"
+#import "UIColor+Additions.h"
 
 typedef enum {
-    WDColorSpaceRGB,
-    WDColorSpaceHSB,
+	WDColorSpaceRGB,
+	WDColorSpaceHSB,
 } WDColorSpace;
 
-@interface WDColorController : UIViewController {
-    IBOutlet WDColorSlider      *component0Slider_;
-    IBOutlet WDColorSlider      *component1Slider_;
-    IBOutlet WDColorSlider      *component2Slider_;
-    IBOutlet WDColorSlider      *alphaSlider_;
-    
-    IBOutlet UILabel            *component0Name_;
-    IBOutlet UILabel            *component1Name_;
-    
-    IBOutlet UILabel            *component0Value_;
-    IBOutlet UILabel            *component1Value_;
-    IBOutlet UILabel            *component2Value_;
-    IBOutlet UILabel            *alphaValue_;
-    
-    IBOutlet UIButton           *colorSpaceButton_;
-    
-    WDColorSpace                 colorSpace_;
+@interface WDColorController : UIViewController
+{
+	IBOutlet WDColorSlider      *component0Slider_;
+	IBOutlet WDColorSlider      *component1Slider_;
+	IBOutlet WDColorSlider      *component2Slider_;
+	IBOutlet WDColorSlider      *alphaSlider_;
+	
+	IBOutlet UILabel            *component0Name_;
+	IBOutlet UILabel            *component1Name_;
+	IBOutlet UILabel            *component2Name_;
+
+	IBOutlet UILabel            *component0Value_;
+	IBOutlet UILabel            *component1Value_;
+	IBOutlet UILabel            *component2Value_;
+	IBOutlet UILabel            *alphaValue_;
+	
+	IBOutlet UIButton           *colorSpaceButton_;
+	
+	WDColorSpace                 colorSpace_;
+
+	BOOL mTracking;
 }
 
-@property (nonatomic, strong) WDColor *color;
+@property (nonatomic, assign, getter=isTracking) BOOL tracking;
+
 @property (nonatomic, weak) id target;
 @property (nonatomic, assign) SEL action;
 @property (weak, nonatomic, readonly) WDColorWell *colorWell;
+
+- (WDColor *)color;
+- (void) setColor:(WDColor *)color;
+
+- (UIColor *)UIColor;
+- (void) setUIColor:(UIColor *)color;
+
 
 - (IBAction) takeColorSpaceFrom:(id)sender;
 
 @end
 
 extern NSString *WDColorSpaceDefault;
+
+
+

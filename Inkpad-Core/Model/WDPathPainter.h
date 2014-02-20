@@ -11,6 +11,7 @@
 
 #import <Foundation/Foundation.h>
 #import "WDTextRenderer.h"
+//#import "WDColor.h"
 
 @class WDAbstractPath;
 @class WDColor;
@@ -27,3 +28,4 @@
 - (void) paintText:(id<WDTextRenderer>)text inContext:(CGContextRef)ctx;
 - (id) adjustColor:(WDColor * (^)(WDColor *color))adjustment;
 @end
+

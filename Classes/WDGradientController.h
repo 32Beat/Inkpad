@@ -15,7 +15,7 @@
 @class WDColorWell;
 @class WDGradientEditor;
 @class WDGradient;
-@class WDColor;
+//@class WDColor;
 
 @interface WDGradientController : UIViewController {
     IBOutlet WDGradientEditor       *gradientEditor_;

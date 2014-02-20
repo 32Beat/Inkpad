@@ -41,6 +41,12 @@ NSString *WDAlphaKey = @"WDAlphaKey";
     return [[WDColor alloc] initWithHue:components[0] saturation:components[1] brightness:components[2] alpha:components[3]];
 }
 
++ (WDColor *) colorWithUIColor:(UIColor *)color
+{
+	return [self colorWithRed:[color red]
+	green:[color green] blue:[color blue] alpha:[color alpha]];
+}
+
 + (WDColor *) colorWithWhite:(float)white alpha:(CGFloat)alpha
 {
     return [[WDColor alloc] initWithHue:0 saturation:0 brightness:white alpha:alpha];

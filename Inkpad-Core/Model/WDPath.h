@@ -14,7 +14,7 @@
 #import "WDPickResult.h"
 
 @class WDBezierNode;
-@class WDColor;
+//@class WDColor;
 @class WDCompoundPath;
 @class WDFillTransform;
 

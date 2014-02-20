@@ -27,91 +27,113 @@
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    self.title = NSLocalizedString(@"Shadow and Opacity", @"Shadow and Opacity");
-    
-    return self;
+	self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+	
+	if (!self) {
+		return nil;
+	}
+	
+	self.title = NSLocalizedString(@"Shadow and Opacity", @"Shadow and Opacity");
+	
+	return self;
 }
 
 - (void)dealloc
 {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void) setDrawingController:(WDDrawingController *)drawingController
 {
-    drawingController_ = drawingController;
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(invalidProperties:)
-                                                 name:WDInvalidPropertiesNotification
-                                               object:drawingController_.propertyManager];
+	drawingController_ = drawingController;
+	
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(invalidProperties:)
+												 name:WDInvalidPropertiesNotification
+											   object:drawingController_.propertyManager];
 }
 
-- (void) toggleShadow:(id)sender
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDShadowOptions *) shadowOptions
 {
-    [drawingController_ setValue:@([sender isOn]) forProperty:WDShadowVisibleProperty];
+	WDShadowOptions *shadow = [WDShadowOptions new];
+
+	[shadow setActive:[shadowSwitch_ isOn]];
+	[shadow setColor:[colorController_ UIColor]];
+	[shadow setAngle:[angle_ value]];
+	[shadow setOffset:[offset_ value]];
+	[shadow setBlur:[radius_ value]];
+
+	return shadow;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setShadowOptions:(WDShadowOptions *)shadowOptions
+{
+	[colorController_ setUIColor:[shadowOptions color]];
+	[shadowSwitch_ setOn:[shadowOptions active]];
+	[angle_ setValue:[shadowOptions angle]];
+	[offset_ setValue:[shadowOptions offset]];
+	[radius_ setValue:[shadowOptions blur]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction) toggleShadow:(id)sender
+{ [self adjustShadow:sender undo:!mDidAdjust]; }
+
+- (IBAction) adjustShadow:(id)sender
+{ [self adjustShadow:sender undo:![sender isTracking]]; }
+
+- (void) adjustShadow:(id)sender undo:(BOOL)shouldUndo
+{
+	[drawingController_
+	setValue:[self shadowOptions]
+	forProperty:WDShadowOptionsKey
+	undo:shouldUndo];
+
+	mDidAdjust = YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Will be sent by colorController 
 - (void) takeColorFrom:(id)sender
-{
-    WDColorController *controller = (WDColorController *)sender;
+{ [self adjustShadow:sender]; }
 
-    [drawingController_ setValue:controller.color forProperty:WDShadowColorProperty];
-}
-
-- (void) takeShadowAngleFrom:(id)sender
-{
-    WDAnglePicker *picker = (WDAnglePicker *)sender;
-    
-    [drawingController_ setValue:@(picker.value) forProperty:WDShadowAngleProperty];
-}
-
-- (void) takeShadowRadiusFrom:(id)sender
-{
-    [drawingController_ setValue:[sender numberValue] forProperty:WDShadowRadiusProperty];
-}
-
-- (void) takeShadowOffsetFrom:(id)sender
-{
-    [drawingController_ setValue:[sender numberValue] forProperty:WDShadowOffsetProperty];
-}
+////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction) increment:(id)sender
 {
-    opacitySlider_.value = opacitySlider_.value + 1;
-    [opacitySlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
+	opacitySlider_.value = opacitySlider_.value + 1;
+	[opacitySlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
 }
 
 - (IBAction) decrement:(id)sender
 {
-    opacitySlider_.value = opacitySlider_.value - 1;
-    [opacitySlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
+	opacitySlider_.value = opacitySlider_.value - 1;
+	[opacitySlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
 }
 
 - (IBAction) takeOpacityFrom:(id)sender
 {
-    UISlider *slider = (UISlider *)sender;
-    
-    int value = round(slider.value);
-    opacityLabel_.text = [NSString stringWithFormat:@"%d%%", value];
-    
-    decrement.enabled = value != 0;
-    increment.enabled = value != 100;
+	UISlider *slider = (UISlider *)sender;
+	
+	int value = round(slider.value);
+	opacityLabel_.text = [NSString stringWithFormat:@"%d%%", value];
+	
+	decrement.enabled = value != 0;
+	increment.enabled = value != 100;
 }
 
 - (IBAction) takeFinalOpacityFrom:(id)sender
 {
-    UISlider    *slider = (UISlider *)sender;
-    float       opacity = slider.value / 100.0f;
-    
-    [drawingController_ setValue:@(opacity) forProperty:WDOpacityProperty];
+	UISlider    *slider = (UISlider *)sender;
+	float       opacity = slider.value / 100.0f;
+	
+	[drawingController_ setValue:@(opacity) forProperty:WDOpacityProperty];
 }
 
 - (void) updateBlendMode
@@ -122,99 +144,104 @@
 
 - (void) updateOpacity:(float)opacity
 {
-    opacitySlider_.value = opacity * 100;
-    
-    int rounded = round(opacity * 100);
-    opacityLabel_.text = [NSString stringWithFormat:@"%d%%", rounded];
-    
-    decrement.enabled = opacity != 0.0f;
-    increment.enabled = opacity != 1.0f;
+	opacitySlider_.value = opacity * 100;
+	
+	int rounded = round(opacity * 100);
+	opacityLabel_.text = [NSString stringWithFormat:@"%d%%", rounded];
+	
+	decrement.enabled = opacity != 0.0f;
+	increment.enabled = opacity != 1.0f;
 }
 
 - (void) invalidProperties:(NSNotification *)aNotification
 {
-    NSSet *properties = [aNotification userInfo][WDInvalidPropertiesKey];
-    
-    for (NSString *property in properties) {
-        id value = [drawingController_.propertyManager defaultValueForProperty:property];
-        
-        if ([property isEqualToString:WDOpacityProperty]) {
-            [self updateOpacity:[value floatValue]];
+	NSSet *properties = [aNotification userInfo][WDInvalidPropertiesKey];
+	
+	for (NSString *property in properties) {
+
+		id value = [drawingController_.propertyManager defaultValueForProperty:property];
+
+		if (property == WDShadowOptionsKey)
+			[self setShadowOptions:value];
+		else
+
+		if ([property isEqualToString:WDOpacityProperty]) {
+			[self updateOpacity:[value floatValue]];
 		} else if ([property isEqualToString:WDBlendModeProperty]) {
 			[self updateBlendMode];
-        } else if ([property isEqualToString:WDShadowAngleProperty]) {
-            angle_.value = [value floatValue];
-        } else if ([property isEqualToString:WDShadowOffsetProperty]) {
-            offset_.value = [value floatValue];
-        } else if ([property isEqualToString:WDShadowRadiusProperty]) {
-            radius_.value = [value floatValue];
-        } else if ([property isEqualToString:WDShadowVisibleProperty]) {
-            shadowSwitch_.on = [value boolValue];
-        } else if ([property isEqualToString:WDShadowColorProperty]) {
-            colorController_.color = (WDColor *)value;
-        }
-    }
+		} else if ([property isEqualToString:WDShadowAngleProperty]) {
+			angle_.value = [value floatValue];
+		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
+			offset_.value = [value floatValue];
+		} else if ([property isEqualToString:WDShadowRadiusProperty]) {
+			radius_.value = [value floatValue];
+		} else if ([property isEqualToString:WDShadowVisibleProperty]) {
+			shadowSwitch_.on = [value boolValue];
+		} else if ([property isEqualToString:WDShadowColorProperty]) {
+			colorController_.color = (WDColor *)value;
+		}
+	}
 }
 
 // Implement loadView to create a view hierarchy programmatically, without using a nib.
 - (void) viewDidLoad
 {
-    [super viewDidLoad];
-    
-    colorController_ = [[WDColorController alloc] initWithNibName:@"Color" bundle:nil];
-    [self.view addSubview:colorController_.view];
-    colorController_.colorWell.shadowMode = YES;
-    
-    CGRect frame = colorController_.view.frame;
-    frame.origin = CGPointMake(5, 5);
-    colorController_.view.frame = frame;
+	[super viewDidLoad];
 	
-    blendModeController_ = [[WDBlendModeController alloc] initWithNibName:nil bundle:nil];
-    blendModeController_.preferredContentSize = self.view.frame.size;
-    blendModeController_.drawingController = self.drawingController;
+	colorController_ = [[WDColorController alloc]
+	initWithNibName:@"Color" bundle:nil];
+	[self.view addSubview:colorController_.view];
+	colorController_.colorWell.shadowMode = YES;
+	
+	CGRect frame = colorController_.view.frame;
+	frame.origin = CGPointMake(5, 5);
+	colorController_.view.frame = frame;
+
+	colorController_.target = self;
+	colorController_.action = @selector(takeColorFrom:);
+
+
+
+	blendModeController_ = [[WDBlendModeController alloc]
+	initWithNibName:nil bundle:nil];
+	blendModeController_.preferredContentSize = self.view.frame.size;
+	blendModeController_.drawingController = self.drawingController;
 	
 	blendModeTableView_.backgroundColor = [UIColor clearColor];
 	blendModeTableView_.opaque = NO;
 	blendModeTableView_.backgroundView = nil;
 	
-    colorController_.target = self;
-    colorController_.action = @selector(takeColorFrom:);
-    
-    radius_.title.text = NSLocalizedString(@"blur", @"blur");
-    radius_.maxValue = 50;
-    
-    offset_.title.text = NSLocalizedString(@"offset", @"offset");
-    offset_.maxValue = 50;
-    
-    angle_.backgroundColor = nil;
-    
-    [angle_ addTarget:self action:@selector(takeShadowAngleFrom:) forControlEvents:UIControlEventValueChanged];
-    
-    [offset_ addTarget:self action:@selector(takeShadowOffsetFrom:) forControlEvents:UIControlEventValueChanged];
-    [radius_ addTarget:self action:@selector(takeShadowRadiusFrom:) forControlEvents:UIControlEventValueChanged];
-    
-    self.preferredContentSize = self.view.frame.size;
+
+	radius_.title.text = NSLocalizedString(@"blur", @"blur");
+	radius_.maxValue = 50;
+	
+	offset_.title.text = NSLocalizedString(@"offset", @"offset");
+	offset_.maxValue = 50;
+	
+	angle_.backgroundColor = nil;
+	
+	[angle_ addTarget:self action:@selector(adjustShadow:)
+	forControlEvents:UIControlEventValueChanged];
+	
+	[offset_ addTarget:self action:@selector(adjustShadow:)
+	forControlEvents:UIControlEventValueChanged];
+
+	[radius_ addTarget:self action:@selector(adjustShadow:)
+	forControlEvents:UIControlEventValueChanged];
+	
+	self.preferredContentSize = self.view.frame.size;
 }
 
 - (void) viewWillAppear:(BOOL)animated
 {
-    [super viewWillAppear:animated];
-    
-    // set default colors/gradients first
-    colorController_.color = [drawingController_.propertyManager defaultValueForProperty:WDShadowColorProperty];
-    
-    // configure UI elements
-    WDShadow *shadow = [drawingController_.propertyManager defaultShadow];
-    
-    shadowSwitch_.on = [[drawingController_.propertyManager defaultValueForProperty:WDShadowVisibleProperty] boolValue];
-    colorController_.color = shadow.color;
-    angle_.value = shadow.angle;
-    offset_.value = shadow.offset;
-    radius_.value = shadow.radius;
-    
-    // opacity
-    float opacity = [[drawingController_.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
-    [self updateOpacity:opacity];
+	[super viewWillAppear:animated];
+
+	[self setShadowOptions:
+	[drawingController_.propertyManager defaultShadowOptions]];
+	
+	// opacity
+	float opacity = [[drawingController_.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
+	[self updateOpacity:opacity];
 	
 	[self updateBlendMode];
 }

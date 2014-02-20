@@ -12,7 +12,7 @@
 #import <Foundation/Foundation.h>
 #import "WDDrawing.h"
 
-@class WDColor;
+//@class WDColor;
 @class WDXMLElement;
 
 @interface WDShadow : NSObject <NSCoding, NSCopying>

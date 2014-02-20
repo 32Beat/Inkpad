@@ -11,7 +11,7 @@
 
 #import <UIKit/UIKit.h>
 
-@class WDColor;
+//@class WDColor;
 
 @interface WDEyedropper : UIView {
     float   borderWidth_;

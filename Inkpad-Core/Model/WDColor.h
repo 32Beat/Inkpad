@@ -11,8 +11,9 @@
 
 #import <UIKit/UIKit.h>
 #import "WDPathPainter.h"
+#import "UIColor+Additions.h"
 
-@interface WDColor : NSObject <NSCoding, NSCopying, WDPathPainter>
+@interface WDColor: NSObject <NSCoding, NSCopying, WDPathPainter>
 
 @property (nonatomic, readonly) CGFloat hue;
 @property (nonatomic, readonly) CGFloat saturation;
@@ -23,6 +24,7 @@
 @property (nonatomic, readonly) float blue;
 
 + (WDColor *) randomColor;
++ (WDColor *) colorWithUIColor:(UIColor *)color;
 + (WDColor *) colorWithHue:(CGFloat)hue saturation:(CGFloat)saturation brightness:(CGFloat)brightness alpha:(CGFloat)alpha;
 + (WDColor *) colorWithWhite:(float)white alpha:(CGFloat)alpha;
 + (WDColor *) colorWithRed:(float)red green:(float)green blue:(float)blue alpha:(CGFloat)alpha;
@@ -61,5 +63,5 @@
 - (NSString *) hexValue;
 
 - (WDColor *) blendedColorWithFraction:(float)fraction ofColor:(WDColor *)color;
-
 @end
+

@@ -12,7 +12,8 @@
 #import <UIKit/UIKit.h>
 
 @class WDColorIndicator;
-@class WDColor;
+//@class WDColor;
+#import "WDColor.h"
 
 typedef enum {
     WDColorSliderModeHue,
@@ -39,7 +40,7 @@ typedef enum {
 
 @property (nonatomic, assign) WDColorSliderMode mode;
 @property (nonatomic, readonly) float floatValue;
-@property (nonatomic, strong) WDColor *color;
+@property (nonatomic, strong) id color;
 @property (nonatomic, assign) BOOL reversed;
 @property (nonatomic, strong, readonly) WDColorIndicator *indicator;
 

@@ -11,7 +11,8 @@
 
 #import <UIKit/UIKit.h>
 
-@class WDColor;
+#import "WDColor.h"
+//@class WDColor;
 
 @interface WDColorIndicator : UIView
 

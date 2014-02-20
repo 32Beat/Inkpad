@@ -1463,7 +1463,12 @@ NSString *WDShadowKey = @"WDShadowKey";
 		return;
 	}
 
-	[self saveState];
+	if (property == WDShadowOptionsKey)
+	{
+		[self setShadowOptions:value];
+		return;
+	}
+	//[self saveState];
 
 	WDBlendOptions *blendOptions = [self blendOptions];
 
@@ -1519,7 +1524,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	WDStrokeOptions *stroke = [self strokeOptions];
 	if (stroke == nil)
-	{ stroke = [WDStrokeOptions new]; }
+	{ stroke = [propertyManager defaultStrokeOptions]; }
 
 	if ([property isEqualToString:WDStrokeVisibleProperty]) \
 	{
@@ -1545,6 +1550,15 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (id) valueForProperty:(NSString *)property
 {
+	if (property == WDBlendOptionsKey)
+		return [self blendOptions];
+	else
+	if (property == WDShadowOptionsKey)
+		return [self shadowOptions];
+	else
+	if (property == WDStrokeOptionsKey)
+		return [self strokeOptions];
+	else
 	if ([property isEqualToString:WDOpacityProperty]) {
 		return @([[self blendOptions] opacity]);
 	} else if ([property isEqualToString:WDBlendModeProperty]) {
@@ -1572,13 +1586,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (NSSet *) inspectableProperties
 {
 	return [NSSet setWithObjects:
-		WDOpacityProperty,
-		WDBlendModeProperty,
-		WDShadowVisibleProperty,
-		WDShadowColorProperty,
-		WDShadowAngleProperty,
-		WDShadowRadiusProperty,
-		WDShadowOffsetProperty, nil];
+		WDBlendOptionsKey,
+		WDShadowOptionsKey,
+		WDStrokeOptionsKey,
+		nil];
 }
 
 - (BOOL) canInspectProperty:(NSString *)property

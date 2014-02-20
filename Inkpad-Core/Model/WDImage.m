@@ -221,36 +221,32 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		CGContextSaveGState(ctx);
 
 		[self prepareCGContext:ctx scale:metaData.scale];
-//*
+
 		// TransparencyLayer required to prevent path shadow on content
-		if ([self strokeOptions].visible &&
+		if ([self strokeOptions].visible&&
 			[self shadowOptions].visible)
 		{
-			CGRect R = [[self strokeOptions] resultAreaForRect:[self sourceRect]];
+			CGRect R = [[self strokeOptions]
+			resultAreaForRect:[self sourceRect]];
 			CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
+		}
 
-			UIImage *image = (metaData.flags & WDRenderThumbnail) ?
-			imageData_.thumbnailImage : imageData_.image;
+		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
+		imageData_.thumbnailImage : imageData_.image;
 
-			CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+		CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
 
+		if ([self strokeOptions].visible)
+		{
 			CGContextAddRect(ctx, [self sourceRect]);
 			CGContextStrokePath(ctx);
-			CGContextEndTransparencyLayer(ctx);
-		}
-		else
-//*/
-		{
-			UIImage *image = (metaData.flags & WDRenderThumbnail) ?
-			imageData_.thumbnailImage : imageData_.image;
-
-			CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+			if ([self shadowOptions].visible)
+			{ CGContextEndTransparencyLayer(ctx); }
 		}
 
 		CGContextRestoreGState(ctx);
 	}
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

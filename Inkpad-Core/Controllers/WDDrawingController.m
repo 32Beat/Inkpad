@@ -140,6 +140,10 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 #pragma mark -
 #pragma mark Undo
 
+// Strange place for an undo manager...
+- (id) undoManager
+{ return drawing_.undoManager; }
+
 - (void) undo:(id)sender
 {
 	[drawing_.undoManager undo];
@@ -1301,16 +1305,28 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 }
 
 - (void) setValue:(id)value forProperty:(NSString *)property
+{ [self setValue:value forProperty:property undo:YES]; }
+
+- (void) setValue:(id)value forProperty:(NSString *)property undo:(BOOL)shouldUndo
 {
-	if (self.selectedObjects.count == 0 || ![self canAnySelectedObjectInspectProperty:property]) {
-		// no selection (or no selected object inspects this property), so directly set the default value on the property manager
+	if (self.selectedObjects.count == 0 ||
+		![self canAnySelectedObjectInspectProperty:property])
+	{
+		// no selection (or no selected object inspects this property),
+		// so directly set the default value on the property manager
 		[propertyManager_ setDefaultValue:value forProperty:property];
+		
 		// and invalidate it so that inspectors react properly
 		[propertyManager_ addToInvalidProperties:property];
 	}
-	
-	for (WDElement *element in [self.selectedObjects objectEnumerator]) {
-		[element setValue:value forProperty:property propertyManager:propertyManager_];
+	else
+	{
+		for (WDElement *element in [self.selectedObjects objectEnumerator])
+		{
+			if (shouldUndo)
+			{ [element saveState]; }
+			[element setValue:value forProperty:property propertyManager:propertyManager_];
+		}
 	}
 }
 

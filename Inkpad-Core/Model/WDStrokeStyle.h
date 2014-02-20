@@ -11,7 +11,8 @@
 
 #import <Foundation/Foundation.h>
 
-@class WDColor;
+#import "WDColor.h"
+
 @class WDXMLElement;
 
 typedef enum {

@@ -11,7 +11,8 @@
 
 #import <UIKit/UIKit.h>
 
-@class WDColor;
+//@class WDColor;
+#import "WDColor.h"
 @class WDGradient;
 @class WDGradientController;
 @class WDGradientStopIndicator;

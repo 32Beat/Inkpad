@@ -15,7 +15,7 @@
 #import "WDDocumentProtocol.h"
 #import "WDStrokeStyle.h"
 
-@class WDColor;
+//@class WDColor;
 @class WDDrawing;
 @class WDElement;
 @class WDGradient;

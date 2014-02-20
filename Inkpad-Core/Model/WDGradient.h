@@ -17,7 +17,7 @@ typedef enum {
     kWDRadialGradient
 } WDGradientType;
 
-@class WDColor;
+//@class WDColor;
 @class WDGradientStop;
 @class WDFillTransform;
 @class WDXMLElement;
