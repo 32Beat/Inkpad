@@ -68,6 +68,8 @@
 - (void) setStrokeOptions:(id)options;
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
+
+// 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
 
 @end

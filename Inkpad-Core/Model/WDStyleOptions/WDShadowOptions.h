@@ -17,6 +17,15 @@
 /*
 	WDShadowOptions
 	---------------
+	Parameters for shadow generation:
+	
+		angle = angle of shadowoffset
+		offset = radius of shadowoffset
+		blur = blur radius
+	
+	Note: uses CGContextShadowWithColor to apply shadow. 
+	CGContextShadowWithColor always operates independently from the CTM
+	but does seem to honor contentscalefactor.
 */
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +48,8 @@ extern NSString *const WDShadowBlurKey;
 @property (nonatomic, assign) float angle;
 @property (nonatomic, assign) float offset;
 @property (nonatomic, assign) float blur;
+
+- (id) optionsWithScale:(float)scale;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

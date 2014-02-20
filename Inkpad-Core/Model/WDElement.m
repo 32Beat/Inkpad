@@ -530,6 +530,23 @@ NSString *WDShadowKey = @"WDShadowKey";
 { [[self styleOptions] setStrokeOptions:strokeOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Element may be owner of elements, such as WDGroup/WDCompoundPath
+
+*/
+
+- (CGRect) resultAreaForRect:(CGRect)R
+{
+	if (mStyleOptions != nil)
+	{ R = [mStyleOptions resultAreaForRect:R]; }
+
+	if (mOwner != nil)
+	{ R = [mOwner resultAreaForRect:R]; }
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
@@ -820,23 +837,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 	CGRect R = [self styleBounds];
 	if (mOwner != nil)
 	{ R = [mOwner resultAreaForRect:R]; }
-	return R;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	Element may be owner of elements, such as WDGroup 
-
-*/
-
-- (CGRect) resultAreaForRect:(CGRect)R
-{
-	if (mStyleOptions != nil)
-	{ R = [mStyleOptions resultAreaForRect:R]; }
-
-	if (mOwner != nil)
-	{ R = [mOwner resultAreaForRect:R]; }
-
 	return R;
 }
 

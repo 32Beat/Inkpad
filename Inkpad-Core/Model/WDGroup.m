@@ -30,7 +30,9 @@ NSString *WDGroupElements = @"WDGroupElements";
     self = [super initWithCoder:coder];
     
     elements_ = [coder decodeObjectForKey:WDGroupElements];
-    
+
+    [elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
+
     // have to do this since elements were not properly setting their groups prior to v1.3
     [elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
     
@@ -89,6 +91,8 @@ NSString *WDGroupElements = @"WDGroupElements";
 {
     elements_ = elements;
     
+    [elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
+
     [elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
     [elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self.layer];
 }

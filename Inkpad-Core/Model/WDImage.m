@@ -156,6 +156,54 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGFloat) shadowScale
+{
+	// For unscaled shadow
+//	return 1.0;
+
+	CGSize size = [self size];
+	CGFloat sx = size.width / [self sourceSize].width;
+	CGFloat sy = size.height / [self sourceSize].height;
+	return MAX(sx, sy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDShadowOptions *)scaledShadowOptions
+{
+	return [[super shadowOptions] optionsWithScale:[self shadowScale]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	Overwrite because we apply transform to stroke,
+	but not to shadow which is scaled but not rotated
+*/
+- (CGRect) computeStyleBounds
+{
+	CGRect R = [self sourceRect];
+
+	if (self.strokeOptions != nil)
+	{ R = [self.strokeOptions resultAreaForRect:R]; }
+
+	R = CGRectApplyAffineTransform(R, [self sourceTransform]);
+
+	if (self.shadowOptions != nil)
+	{ R = [self.scaledShadowOptions resultAreaForRect:R]; }
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
+{
+	CGContextConcatCTM(context, [self sourceTransform]);
+	[super prepareCGContext:context scale:scale*[self shadowScale]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 	if (metaData.flags & WDRenderOutlineOnly)
@@ -176,9 +224,8 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	else
 	{
 		CGContextSaveGState(ctx);
-		
-		[self prepareCGContext:ctx scale:metaData.scale];
 
+		[self prepareCGContext:ctx scale:metaData.scale];
 //*
 		// Required to eliminate path shadow on content
 		if ([self strokeOptions].color)
@@ -208,14 +255,6 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	}
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
-{
-	[super prepareCGContext:context scale:scale];
-	CGContextConcatCTM(context, [self sourceTransform]);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

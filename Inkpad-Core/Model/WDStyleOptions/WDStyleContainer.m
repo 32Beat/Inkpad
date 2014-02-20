@@ -47,6 +47,14 @@
 
 - (void) decodeWithCoder:(NSCoder *)coder
 {
+//*
+	if ([coder containsValueForKey:WDBlendOptionsKey])
+	{ [self setBlendOptions:[coder decodeObjectForKey:WDBlendOptionsKey]]; }
+	if ([coder containsValueForKey:WDShadowOptionsKey])
+	{ [self setShadowOptions:[coder decodeObjectForKey:WDShadowOptionsKey]]; }
+	if ([coder containsValueForKey:WDStrokeOptionsKey])
+	{ [self setStrokeOptions:[coder decodeObjectForKey:WDStrokeOptionsKey]]; }
+//*/
 /*
 	if ([coder containsValueForKey:NSStringFromClass([self class])])
 	{
@@ -54,26 +62,22 @@
 		if (mContainer != nil) mContainer = [mContainer mutableCopy];
 	}
 */
-//*
-	if ([coder containsValueForKey:WDBlendOptionsKey])
-	{ [self setBlendOptions:[coder decodeObjectForKey:WDBlendOptionsKey]]; }
-	if ([coder containsValueForKey:WDShadowOptionsKey])
-	{ [self setShadowOptions:[coder decodeObjectForKey:WDShadowOptionsKey]]; }
-//*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
-//	if (mContainer != nil) \
-	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
 //*
 	if (mBlendOptions != nil)
 	[coder encodeObject:mBlendOptions forKey:WDBlendOptionsKey];
 	if (mShadowOptions != nil)
 	[coder encodeObject:mShadowOptions forKey:WDShadowOptionsKey];
+	if (mStrokeOptions != nil)
+	[coder encodeObject:mStrokeOptions forKey:WDStrokeOptionsKey];
 //*/
+//	if (mContainer != nil) \
+	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,9 +100,9 @@
 
 - (void) setOptions:(id)options forKey:(id)key
 {
-	[mDelegate styleContainer:self willSetOptionsForKey:key];
+	[self willSetOptionsForKey:key];
 	[self setValue:options forKey:key];
-	[mDelegate styleContainer:self didSetOptionsForKey:key];
+	[self didSetOptionsForKey:key];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

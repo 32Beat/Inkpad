@@ -85,6 +85,16 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) optionsWithScale:(float)scale
+{
+	WDShadowOptions *options = [self copy];
+	options->mOffset *= scale;
+	options->mBlur *= scale;
+	return options;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGSize) offsetVector
 {
 	CGFloat r = [self offset];

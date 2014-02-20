@@ -77,10 +77,10 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	{ mLineWidth = [coder decodeFloatForKey:WDStrokeLineWidthKey]; }
 
 	if ([coder containsValueForKey:WDStrokeLineCapKey])
-	{ mLineCap = [coder decodeFloatForKey:WDStrokeLineCapKey]; }
+	{ mLineCap = [coder decodeIntForKey:WDStrokeLineCapKey]; }
 
 	if ([coder containsValueForKey:WDStrokeLineJoinKey])
-	{ mLineJoin = [coder decodeFloatForKey:WDStrokeLineJoinKey]; }
+	{ mLineJoin = [coder decodeIntForKey:WDStrokeLineJoinKey]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
