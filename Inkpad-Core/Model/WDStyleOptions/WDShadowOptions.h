@@ -30,6 +30,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 extern NSString *const WDShadowOptionsKey;
+extern NSString *const WDShadowActiveKey;
 extern NSString *const WDShadowColorKey;
 extern NSString *const WDShadowAngleKey;
 extern NSString *const WDShadowOffsetKey;
@@ -38,17 +39,21 @@ extern NSString *const WDShadowBlurKey;
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDShadowOptions : WDStyleOptions
 {
+	BOOL 	mActive;
+
 	UIColor *mColor;
 	float 	mAngle;
 	float 	mOffset;
 	float 	mBlur;
 }
 
+@property (nonatomic, assign) BOOL active;
 @property (nonatomic, strong) UIColor *color;
 @property (nonatomic, assign) float angle;
 @property (nonatomic, assign) float offset;
 @property (nonatomic, assign) float blur;
 
+- (BOOL) visible;
 - (id) optionsWithScale:(float)scale;
 
 @end

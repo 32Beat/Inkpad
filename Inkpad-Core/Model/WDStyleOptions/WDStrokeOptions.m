@@ -17,6 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 NSString *const WDStrokeOptionsKey = @"WDStrokeOptions";
+NSString *const WDStrokeActiveKey = @"WDStrokeActive";
 NSString *const WDStrokeColorKey = @"WDStrokeColor";
 NSString *const WDStrokeLineWidthKey = @"WDStrokeLineWidth";
 NSString *const WDStrokeLineCapKey = @"WDStrokeLineCap";
@@ -30,6 +31,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 @implementation WDStrokeOptions
 ////////////////////////////////////////////////////////////////////////////////
 
+@synthesize active = mActive;
 @synthesize color = mColor;
 @synthesize lineWidth = mLineWidth;
 @synthesize lineCap = mLineCap;
@@ -41,6 +43,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 - (void) initProperties
 {
+	mActive = YES;
 	mLineWidth = 1.0;
 	mLineCap = kCGLineCapButt;
 	mLineJoin = kCGLineJoinMiter;
@@ -50,6 +53,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 - (void) copyPropertiesFrom:(WDStrokeOptions *)src
 {
+	self->mActive = src->mActive;
 	self->mColor = src->mColor;
 	self->mLineWidth = src->mLineWidth;
 	self->mLineCap = src->mLineCap;
@@ -60,6 +64,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
+	[coder encodeBool:mActive forKey:WDStrokeActiveKey];
 	[coder encodeObject:mColor forKey:WDStrokeColorKey];
 	[coder encodeDouble:mLineWidth forKey:WDStrokeLineWidthKey];
 	[coder encodeInt:mLineCap forKey:WDStrokeLineCapKey];
@@ -70,6 +75,9 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 - (void) decodeWithCoder:(NSCoder *)coder
 {
+	if ([coder containsValueForKey:WDStrokeActiveKey])
+	{ mActive = [coder decodeBoolForKey:WDStrokeActiveKey]; }
+
 	if ([coder containsValueForKey:WDStrokeColorKey])
 	{ mColor = [coder decodeObjectForKey:WDStrokeColorKey]; }
 
@@ -85,20 +93,29 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (BOOL) visible
+{ return mActive && (mColor != nil) && (mLineWidth > 0.0); }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) resultAreaForRect:(CGRect)R
 {
-	CGFloat r = 0.5 * mLineWidth;
-	return CGRectInset(R, -r, -r);
+	if ([self visible])
+	{ R = CGRectInset(R, -0.5 * mLineWidth, -0.5 * mLineWidth); }
+	return R;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
-	CGContextSetStrokeColorWithColor(context, [self color].CGColor);
-	CGContextSetLineWidth(context, [self lineWidth]);
-	CGContextSetLineCap(context, [self lineCap]);
-	CGContextSetLineJoin(context, [self lineJoin]);
+	if ([self visible])
+	{
+		CGContextSetStrokeColorWithColor(context, [self color].CGColor);
+		CGContextSetLineWidth(context, [self lineWidth]);
+		CGContextSetLineCap(context, [self lineCap]);
+		CGContextSetLineJoin(context, [self lineJoin]);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

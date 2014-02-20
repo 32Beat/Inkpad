@@ -210,7 +210,26 @@ CGFloat WDGetRotationFromTransform(CGAffineTransform T)
 {
 	double a1 = atan2(+T.b, +T.a);
 	double a2 = atan2(-T.c, +T.d);
-	return 0.5*(a1+a2);
+	return (CGFloat)(0.5*(a1+a2));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGSize WDGetScaleFromTransform(CGAffineTransform T)
+{
+	CGSize scale = { T.a, T.d };
+
+	if ((T.b != 0.0)||(T.c != 0.0))
+	{
+		CGVector x = { 1.0, 0.0 };
+		x = CGVectorApplyAffineTransform(x, T);
+		scale.width = sqrt(x.dx*x.dx + x.dy*x.dy);
+		CGVector y = { 0.0, 1.0 };
+		y = CGVectorApplyAffineTransform(y, T);
+		scale.height = sqrt(y.dx*y.dx + y.dy*y.dy);
+	}
+
+	return scale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -671,9 +690,10 @@ WDPickResult * WDSnapToRectangle(CGRect rect, CGAffineTransform *transform, CGPo
 	return pickResult;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark WDQuad
-
+////////////////////////////////////////////////////////////////////////////////
 
 WDQuad WDQuadMake(CGPoint a, CGPoint b, CGPoint c, CGPoint d)
 {
@@ -686,7 +706,6 @@ WDQuad WDQuadMake(CGPoint a, CGPoint b, CGPoint c, CGPoint d)
 	
 	return quad;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -713,6 +732,27 @@ WDQuad WDQuadApplyTransform(WDQuad quad, CGAffineTransform T)
 	quad.P[2] = CGPointApplyAffineTransform(quad.P[2], T);
 	quad.P[3] = CGPointApplyAffineTransform(quad.P[3], T);
 	return quad;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGFloat WDQuadGetRotation(WDQuad quad)
+{
+	CGPoint P1 = WDAddPoints(quad.P[0], quad.P[3]);
+	CGPoint P2 = WDAddPoints(quad.P[1], quad.P[2]);
+	return atan2(P2.y-P1.y, P2.x-P1.x);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGSize WDQuadGetSize(WDQuad quad)
+{
+	CGPoint X1 = WDAddPoints(quad.P[0], quad.P[3]);
+	CGPoint X2 = WDAddPoints(quad.P[1], quad.P[2]);
+	CGPoint Y1 = WDAddPoints(quad.P[0], quad.P[1]);
+	CGPoint Y2 = WDAddPoints(quad.P[3], quad.P[2]);
+
+	return (CGSize){ 0.5*WDDistance(X1,X2), 0.5*WDDistance(Y1,Y2) };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

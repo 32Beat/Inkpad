@@ -747,6 +747,31 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	TODO: change environment to degrees
+	Environment currently works in radians, 
+	but users don't do radians, so we shouldn't store radians in order to 
+	prevent rounding issues
+*/
+- (void) applyRotation:(CGFloat)r
+{
+	CGFloat degrees = WDDegreesFromRadians(r);
+	[self willChangePropertyForKey:WDFrameOptionsKey];
+	[self setRotation:mRotation+degrees];
+	[self didChangePropertyForKey:WDFrameOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) applyTransform:(CGAffineTransform)transform
+{
+	
+}
+
+- (NSSet *) transform:(CGAffineTransform)transform
+{ [self applyTransform:transform]; return nil; }
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Bounds
 ////////////////////////////////////////////////////////////////////////////////
@@ -987,11 +1012,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 		}
 		self.shadow = [self.initialShadow adjustColor:adjustment];
 	}
-}
-
-- (NSSet *) transform:(CGAffineTransform)transform
-{
-	return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1463,41 +1483,36 @@ NSString *WDShadowKey = @"WDShadowKey";
 		We should never get individual properties here!
 	*/
 	WDShadowOptions *shadow = self.shadowOptions;
+	if (shadow == nil)
+	{ shadow = [propertyManager defaultShadowOptions]; }
 
-
-	if ([property isEqualToString:WDShadowVisibleProperty]) {
-		if ([value boolValue] && !shadow)
-		{
-			// shadow turned on and we don't have one so attach the default stroke
-			self.shadowOptions = [propertyManager defaultShadowOptions];
-			
-		}
-		else if (![value boolValue] && shadow) {
-			self.shadowOptions = nil;
-		}
+	if ([property isEqualToString:WDShadowVisibleProperty])
+	{
+		[shadow setActive:[value boolValue]];
+		[self setShadowOptions:shadow];
 	}
 	else
-	if ([[NSSet setWithObjects:
-			WDShadowColorProperty,
-			WDShadowOffsetProperty,
-			WDShadowRadiusProperty,
-			WDShadowAngleProperty, nil] containsObject:property])
+	if ([property isEqualToString:WDShadowColorProperty])
 	{
-		if (!shadow)
-		{ shadow = [propertyManager defaultShadowOptions]; }
-
-		if ([property isEqualToString:WDShadowColorProperty])
 		[shadow setColor:value];
-
-		if ([property isEqualToString:WDShadowOffsetProperty]) \
+		[self setShadowOptions:shadow];
+	}
+	else
+	if ([property isEqualToString:WDShadowOffsetProperty]) \
+	{
 		[shadow setOffset:[value floatValue]];
-
-		if ([property isEqualToString:WDShadowAngleProperty]) \
+		[self setShadowOptions:shadow];
+	}
+	else
+	if ([property isEqualToString:WDShadowAngleProperty]) \
+	{
 		[shadow setAngle:[value floatValue]];
-
-		if ([property isEqualToString:WDShadowRadiusProperty]) \
+		[self setShadowOptions:shadow];
+	}
+	else
+	if ([property isEqualToString:WDShadowRadiusProperty]) \
+	{
 		[shadow setBlur:[value floatValue]];
-
 		[self setShadowOptions:shadow];
 	}
 
@@ -1506,6 +1521,12 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (stroke == nil)
 	{ stroke = [WDStrokeOptions new]; }
 
+	if ([property isEqualToString:WDStrokeVisibleProperty]) \
+	{
+		[stroke setActive:[value boolValue]];
+		[self setStrokeOptions:stroke];
+	}
+	else
 	if ([property isEqualToString:WDStrokeColorProperty]) \
 	{
 		[stroke setColor:value];
@@ -1529,7 +1550,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	} else if ([property isEqualToString:WDBlendModeProperty]) {
 		return @([[self blendOptions] mode]);
 	} else if ([property isEqualToString:WDShadowVisibleProperty]) {
-		return @((self.shadowOptions) ? YES : NO);
+		return @(self.shadowOptions.active);
 	} else if (self.shadowOptions)
 	{
 		WDShadowOptions *shadowOptions = [self shadowOptions];

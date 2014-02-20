@@ -393,10 +393,15 @@ typedef enum {
 
 //- (id) frameControlWithIndex:(NSInteger)n;
 //- (id) findFrameControlForRect:(CGRect)touchR;
-- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d;
 
 - (NSInteger) findFrameControlIndexForRect:(CGRect)touchR;
 - (CGPoint) frameControlPointAtIndex:(NSInteger)n;
+
+
+- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)d;
+- (void) applyRotation:(CGFloat)r;
+
+- (NSSet *) transform:(CGAffineTransform)transform;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -433,7 +438,6 @@ typedef enum {
 
 
 
-- (NSSet *) transform:(CGAffineTransform)transform;
 
 
 

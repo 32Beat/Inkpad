@@ -121,13 +121,6 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) awakeFromEncoding
-{
-	[self useTrackedImageData];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) setLayer:(WDLayer *)layer
 {
 	[super setLayer:layer];
@@ -171,13 +164,15 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 - (WDShadowOptions *)scaledShadowOptions
 {
-	return [[super shadowOptions] optionsWithScale:[self shadowScale]];
+	return [[self shadowOptions] optionsWithScale:[self shadowScale]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	Overwrite because we apply transform to stroke,
-	but not to shadow which is scaled but not rotated
+	Overwrite because we apply transform to style
+	(default behavior doesn't currently apply transform to style)
+
+	Transform is not applied to shadow which is scaled but not rotated
 */
 - (CGRect) computeStyleBounds
 {
@@ -227,8 +222,9 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 		[self prepareCGContext:ctx scale:metaData.scale];
 //*
-		// Required to eliminate path shadow on content
-		if ([self strokeOptions].color)
+		// TransparencyLayer required to prevent path shadow on content
+		if ([self strokeOptions].visible &&
+			[self shadowOptions].visible)
 		{
 			CGRect R = [[self strokeOptions] resultAreaForRect:[self sourceRect]];
 			CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
@@ -258,20 +254,6 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
-/*
-- (void) setTransform:(CGAffineTransform)transform
-{
-	[self cacheDirtyBounds];
-	
-	[(WDImage *)[self.undoManager prepareWithInvocationTarget:self] setTransform:transform_];
-
-	transform_ = transform;
-
-	[self postDirtyBoundsChange];
-}
-*/
 - (void) adjustTransform:(CGAffineTransform)T
 {
 	// Record current state for undo
@@ -288,21 +270,18 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	// Test for rotation
 	if ((T.b != 0.0)||(T.c != 0.0))
 	{
-		double a1 = atan2(+T.b, +T.a);
-		double a2 = atan2(-T.c, +T.d);
-		double a = 0.5*(a1+a2);
-		double degrees = 180.0*a/M_PI;
-
-		degrees += mRotation;
-		[self setRotation:degrees];
+		double a = WDGetRotationFromTransform(T);
+		double degrees = WDDegreesFromRadians(a);
+		[self setRotation:mRotation + degrees];
 	}
 	else
 	// Test for scale
 	if ((T.a != 1.0)||(T.d != 1.0))
 	{
 		CGSize size = mSize;
-		size.width *= T.a;
-		size.height *= T.d;
+		CGSize scale = WDGetScaleFromTransform(T);
+		size.width *= scale.width;
+		size.height *= scale.height;
 		[self setSize:size];
 	}
 

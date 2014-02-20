@@ -52,8 +52,20 @@ NSData * WDSHA1DigestForData(NSData *data);
 //
 // Geometry
 //
+#pragma mark -
+#pragma mark Geometry
+
+static inline CGVector
+CGVectorApplyAffineTransform(CGVector v, CGAffineTransform t)
+{
+	return (CGVector){
+	(CGFloat)((double)t.a * v.dx + (double)t.c * v.dy),
+	(CGFloat)((double)t.b * v.dx + (double)t.d * v.dy) };
+}
+
 
 CGFloat WDGetRotationFromTransform(CGAffineTransform T);
+CGSize WDGetScaleFromTransform(CGAffineTransform T);
 
 CGSize WDSizeOfRectWithAngle(CGRect rect, float angle, CGPoint *upperLeft, CGPoint *upperRight);
 
@@ -129,6 +141,10 @@ static const WDQuad WDQuadNull = {0,0, 0,0, 0,0, 0,0};
 WDQuad WDQuadMake(CGPoint a, CGPoint b, CGPoint c, CGPoint d);
 WDQuad WDQuadWithRect(CGRect rect, CGAffineTransform transform);
 WDQuad WDQuadApplyTransform(WDQuad quad, CGAffineTransform T);
+
+//CGFloat WDQuadGetRotation(WDQuad quad);
+//CGSize WDQuadGetSize(WDQuad quad);
+
 BOOL WDQuadIsNull(WDQuad Q);
 BOOL WDQuadEqualToQuad(WDQuad a, WDQuad b);
 BOOL WDQuadIntersectsQuad(WDQuad a, WDQuad b);

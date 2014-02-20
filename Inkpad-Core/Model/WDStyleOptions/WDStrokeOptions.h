@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 extern NSString *const WDStrokeOptionsKey;
+extern NSString *const WDStrokeActiveKey;
 extern NSString *const WDStrokeColorKey;
 extern NSString *const WDStrokeLineWidthKey;
 extern NSString *const WDStrokeLineCapKey;
@@ -29,6 +30,7 @@ extern NSString *const WDStrokeLineJoinKey;
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDStrokeOptions : WDStyleOptions
 {
+	BOOL 		mActive;
 	UIColor 	*mColor;
 	CGFloat 	mLineWidth;
 	CGLineCap 	mLineCap;
@@ -36,11 +38,14 @@ extern NSString *const WDStrokeLineJoinKey;
 	id 			mDashOptions;
 }
 
+@property (nonatomic, assign) BOOL active;
 @property (nonatomic, strong) UIColor *color;
 @property (nonatomic, assign) CGFloat lineWidth;
 @property (nonatomic, assign) CGLineCap lineCap;
 @property (nonatomic, assign) CGLineJoin lineJoin;
 @property (nonatomic, strong) id dashOptions;
+
+- (BOOL) visible;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
