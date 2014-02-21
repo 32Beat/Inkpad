@@ -46,9 +46,9 @@ WDColorType;
 	UIColor *mUIColor;
 }
 
-- (CGFloat)red;
-- (CGFloat)green;
-- (CGFloat)blue;
+- (CGFloat) red;
+- (CGFloat) green;
+- (CGFloat) blue;
 - (CGFloat) alpha;
 
 - (CGFloat) hue;

@@ -108,80 +108,25 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (IBAction) increment:(id)sender
-{
-	opacitySlider_.value = opacitySlider_.value + 1;
-	[opacitySlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
-}
-
-- (IBAction) decrement:(id)sender
-{
-	opacitySlider_.value = opacitySlider_.value - 1;
-	[opacitySlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
-}
-
-- (IBAction) takeOpacityFrom:(id)sender
-{
-	UISlider *slider = (UISlider *)sender;
-	
-	int value = round(slider.value);
-	opacityLabel_.text = [NSString stringWithFormat:@"%d%%", value];
-	
-	decrement.enabled = value != 0;
-	increment.enabled = value != 100;
-}
-
-- (IBAction) takeFinalOpacityFrom:(id)sender
-{
-	UISlider    *slider = (UISlider *)sender;
-	float       opacity = slider.value / 100.0f;
-	
-	[drawingController_ setValue:@(opacity) forProperty:WDOpacityProperty];
-}
-
-- (void) updateBlendMode
-{
-	blendMode_ = [[drawingController_.propertyManager defaultValueForProperty:WDBlendModeProperty] intValue];
-	[blendModeTableView_ reloadData];
-}
-
-- (void) updateOpacity:(float)opacity
-{
-	opacitySlider_.value = opacity * 100;
-	
-	int rounded = round(opacity * 100);
-	opacityLabel_.text = [NSString stringWithFormat:@"%d%%", rounded];
-	
-	decrement.enabled = opacity != 0.0f;
-	increment.enabled = opacity != 1.0f;
-}
-
 - (void) invalidProperties:(NSNotification *)aNotification
 {
 	NSSet *properties = [aNotification userInfo][WDInvalidPropertiesKey];
 	
-	for (NSString *property in properties) {
-
-		id value = [drawingController_.propertyManager defaultValueForProperty:property];
-
+	for (NSString *property in properties)
+	{
 		if (property == WDShadowOptionsKey)
+		{
+			id value = [drawingController_.propertyManager
+			defaultValueForProperty:property];
 			[self setShadowOptions:value];
+		}
 		else
+		if (property == WDBlendOptionsKey)
+		{
+			id value = [drawingController_.propertyManager
+			defaultValueForProperty:property];
 
-		if ([property isEqualToString:WDOpacityProperty]) {
-			[self updateOpacity:[value floatValue]];
-		} else if ([property isEqualToString:WDBlendModeProperty]) {
-			[self updateBlendMode];
-		} else if ([property isEqualToString:WDShadowAngleProperty]) {
-			angle_.angle = [value floatValue];
-		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
-			offset_.value = [value floatValue];
-		} else if ([property isEqualToString:WDShadowRadiusProperty]) {
-			radius_.value = [value floatValue];
-		} else if ([property isEqualToString:WDShadowVisibleProperty]) {
-			shadowSwitch_.on = [value boolValue];
-		} else if ([property isEqualToString:WDShadowColorProperty]) {
-			colorController_.color = (WDColor *)value;
+			[mBlendOptionsController setBlendOptions:value];
 		}
 	}
 }
@@ -213,8 +158,10 @@
 	srcFrame.origin.x += 5;
 	srcFrame.origin.y = CGRectGetMaxY(dstFrame)-srcFrame.size.height;
 	mBlendOptionsController.view.frame = srcFrame;
-	mBlendOptionsController.preferredContentSize = self.view.frame.size;
 
+	mBlendOptionsController.rootController = self;
+	mBlendOptionsController.delegate = self;
+/*
 	blendModeController_ = [[WDBlendModeController alloc]
 	initWithNibName:nil bundle:nil];
 	blendModeController_.preferredContentSize = self.view.frame.size;
@@ -223,7 +170,7 @@
 	blendModeTableView_.backgroundColor = [UIColor clearColor];
 	blendModeTableView_.opaque = NO;
 	blendModeTableView_.backgroundView = nil;
-	
+*/	
 
 	radius_.title.text = NSLocalizedString(@"blur", @"blur");
 	radius_.maxValue = 50;
@@ -251,39 +198,23 @@
 
 	[self setShadowOptions:
 	[drawingController_.propertyManager defaultShadowOptions]];
-	
-	// opacity
-	float opacity = [[drawingController_.propertyManager defaultValueForProperty:WDOpacityProperty] floatValue];
-	[self updateOpacity:opacity];
-	
-	[self updateBlendMode];
+
+	[mBlendOptionsController setBlendOptions:
+	[drawingController_.propertyManager
+	defaultValueForProperty:WDBlendOptionsKey]];
 }
 
-#pragma mark -
+-(void) blendOptionsController:(id)blender willAdjustValueForKey:(id)key
+{}
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+-(void) blendOptionsController:(id)blender didAdjustValueForKey:(id)key
 {
-	return 1;
+	[drawingController_
+	setValue:[blender blendOptions]
+	forProperty:WDBlendOptionsKey
+	undo:YES];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	static NSString *identifier = @"blendModeCell";
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
-	if (!cell) {
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:identifier];
-		cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-		cell.textLabel.text = NSLocalizedString(@"Blend Mode", @"Blend Mode");
-	}
-	cell.detailTextLabel.text = [blendModeController_ displayNameForBlendMode:blendMode_];
-	
-	return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	[blendModeTableView_ deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:NO];
-	[self.navigationController pushViewController:blendModeController_ animated:YES];
-}
-
+////////////////////////////////////////////////////////////////////////////////
 @end
+////////////////////////////////////////////////////////////////////////////////

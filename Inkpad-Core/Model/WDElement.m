@@ -1468,6 +1468,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 		[self setShadowOptions:value];
 		return;
 	}
+	if (property == WDBlendOptionsKey)
+	{
+		[self setBlendOptions:value];
+		return;
+	}
 	//[self saveState];
 
 	WDBlendOptions *blendOptions = [self blendOptions];

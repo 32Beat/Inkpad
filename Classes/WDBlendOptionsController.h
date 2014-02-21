@@ -12,24 +12,33 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <UIKit/UIKit.h>
+#import "WDBlendModeController.h"
+#import "WDBlendOptions.h"
 
+@protocol WDBlendOptionsControllerDelegate
+-(void) blendOptionsController:(id)blender willAdjustValueForKey:(id)key;
+-(void) blendOptionsController:(id)blender didAdjustValueForKey:(id)key;
+@end
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDBlendOptionsController : UIViewController
 <UITableViewDataSource, UITableViewDelegate>
 {
-	IBOutlet UISlider       *opacitySlider_;
-	IBOutlet UILabel        *opacityLabel_;
+	IBOutlet UISlider       *mOpacitySlider;
+	IBOutlet UILabel        *mOpacityLabel;
 	IBOutlet UIButton       *increment;
 	IBOutlet UIButton       *decrement;
 	IBOutlet UITableView	*blendModeTableView_;
-	CGBlendMode				blendMode_;
+	WDBlendModeController	*blendModeController_;
 
-	NSArray *mBlendModeNames;
-	NSUInteger selectedRow_;
+	WDBlendOptions *mBlendOptions;
 }
 
+@property (nonatomic, weak) id rootController;
+@property (nonatomic, weak) id<WDBlendOptionsControllerDelegate> delegate;
 
+- (id) blendOptions;
+- (void) setBlendOptions:(id)blendOptions;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

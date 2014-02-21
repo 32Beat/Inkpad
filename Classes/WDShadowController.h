@@ -11,30 +11,24 @@
 
 #import <UIKit/UIKit.h>
 
-@class WDAnglePicker;
-@class WDBlendModeController;
-@class WDBlendOptionsController;
-
-@class WDColorController;
 @class WDDrawingController;
-@class WDSparkSlider;
 
-@interface WDShadowController : UIViewController <UITableViewDelegate, UITableViewDataSource> {
+#import "WDColorController.h"
+#import "WDAnglePicker.h"
+#import "WDSparkSlider.h"
+#import "WDBlendOptionsController.h"
+
+
+@interface WDShadowController : UIViewController
+<WDBlendOptionsControllerDelegate>
+{
 	WDColorController       *colorController_;
-	WDBlendModeController	*blendModeController_;
-	WDBlendOptionsController *mBlendOptionsController;
-	
 	IBOutlet UISwitch       *shadowSwitch_;
 	IBOutlet WDAnglePicker  *angle_;
 	IBOutlet WDSparkSlider  *offset_;
 	IBOutlet WDSparkSlider  *radius_;
 
-	IBOutlet UISlider       *opacitySlider_;
-	IBOutlet UILabel        *opacityLabel_;
-	IBOutlet UITableView	*blendModeTableView_;
-	IBOutlet UIButton       *increment;
-	IBOutlet UIButton       *decrement;
-	CGBlendMode				blendMode_;
+	WDBlendOptionsController *mBlendOptionsController;
 
 	BOOL mDidAdjust;
 }

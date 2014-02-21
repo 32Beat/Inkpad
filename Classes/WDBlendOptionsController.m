@@ -21,68 +21,147 @@
 { return [self initWithNibName:@"BlendOptions" bundle:nil]; }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 - (void)loadView
 {
 	[super loadView];
-	
-	blendModeTableView_.backgroundColor = [UIColor clearColor];
-	blendModeTableView_.opaque = NO;
-	blendModeTableView_.backgroundView = nil;
-}
-
-
-- (NSArray *) blendModeNames
-{
-	if (mBlendModeNames == nil)
-	{ mBlendModeNames = [self _blendModeNames]; }
-
-	return mBlendModeNames;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (NSArray *) _blendModeNames
-{
-	NSArray *srcArray = [[NSArray alloc]
-	initWithContentsOfURL:[[NSBundle mainBundle]
-	URLForResource:@"BlendModes" withExtension:@"plist"]];
+- (WDBlendOptions *)blendOptions
+{ return mBlendOptions; }
 
-	return srcArray;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-- (NSString *) localizedTitleForKey:(NSString *)key
+- (void) setBlendOptions:(id)options
 {
-	// we could duplicate the BlendModes.plist for every localization, 
-	// but this seems less error prone
-	static NSMutableDictionary *map_ = nil;
-	if (!map_) {
-		map_ = [NSMutableDictionary dictionary];
-		map_[@"Normal"]     = NSLocalizedString(@"Normal", @"Normal");
-		map_[@"Darken"]     = NSLocalizedString(@"Darken", @"Darken");
-		map_[@"Multiply"]   = NSLocalizedString(@"Multiply", @"Multiply");
-		map_[@"Lighten"]    = NSLocalizedString(@"Lighten", @"Lighten");
-		map_[@"Screen"]     = NSLocalizedString(@"Screen", @"Screen");
-		map_[@"Overlay"]    = NSLocalizedString(@"Overlay", @"Overlay");
-		map_[@"Difference"] = NSLocalizedString(@"Difference", @"Difference");
-		map_[@"Exclusion"]  = NSLocalizedString(@"Exclusion", @"Exclusion");
-		map_[@"Hue"]        = NSLocalizedString(@"Hue", @"Hue");
-		map_[@"Saturation"] = NSLocalizedString(@"Saturation", @"Saturation");
-		map_[@"Color"]      = NSLocalizedString(@"Color", @"Color");
-		map_[@"Luminosity"] = NSLocalizedString(@"Luminosity", @"Luminosity");
+	if (mBlendOptions != options)
+	{
+		mBlendOptions = [options copy];
+		[self updateControls];
 	}
-	
-	return map_[key];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) willAdjustValueForKey:(id)key
+{ [_delegate blendOptionsController:self willAdjustValueForKey:(id)key]; }
+
+- (void) didAdjustValueForKey:(id)key
+{ [_delegate blendOptionsController:self didAdjustValueForKey:(id)key]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setBlendMode:(CGBlendMode)mode
+{
+	if (mBlendOptions.mode != mode)
+	{
+		[self willAdjustValueForKey:WDBlendModeKey];
+		[mBlendOptions setMode:mode];
+		[self didAdjustValueForKey:WDBlendModeKey];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setOpacity:(CGFloat)opacity
+{
+	if (mBlendOptions.opacity != opacity)
+	{
+		[self willAdjustValueForKey:WDBlendOpacityKey];
+		[mBlendOptions setOpacity:opacity];
+		[self updateControls];
+		[self didAdjustValueForKey:WDBlendOpacityKey];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateControls
+{
+	mOpacitySlider.value = 100*mBlendOptions.opacity;
+	[self updateLabel];
+}
+
+- (void) updateLabel
+{
+	int value = round(mOpacitySlider.value);
+	mOpacityLabel.text = [NSString stringWithFormat:@"%d%%", value];
+
+	decrement.enabled = value != 0;
+	increment.enabled = value != 100;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction) increment:(id)sender
+{
+	mOpacitySlider.value += 1;
+	[mOpacitySlider sendActionsForControlEvents:UIControlEventTouchUpInside];
+}
+
+- (IBAction) decrement:(id)sender
+{
+	mOpacitySlider.value -= 1;
+	[mOpacitySlider sendActionsForControlEvents:UIControlEventTouchUpInside];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction) takeOpacityFrom:(id)sender
+{
+	//mBlendOptions.opacity = 0.01*[mOpacitySlider value];
+	[self updateLabel];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction) takeFinalOpacityFrom:(id)sender
+{
+	[self setOpacity:0.01*[mOpacitySlider value]];
+}
+
+- (void) updateBlendMode
+{
+/*	blendMode_ = [[drawingController_.propertyManager defaultValueForProperty:WDBlendModeProperty] intValue];
+*/
+	[blendModeTableView_ reloadData];
+}
+
+- (void) updateOpacity:(float)opacity
+{
+	mOpacitySlider.value = opacity * 100;
+	
+	int rounded = round(opacity * 100);
+	mOpacityLabel.text = [NSString stringWithFormat:@"%d%%", rounded];
+	
+	decrement.enabled = opacity != 0.0f;
+	increment.enabled = opacity != 1.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) blendModeController
+{
+	if (blendModeController_ == nil)
+	{
+		blendModeController_ = [[WDBlendModeController alloc]
+		initWithNibName:nil bundle:nil];
+
+		CGSize size = self.view.superview.frame.size;
+		blendModeController_.preferredContentSize = size;
+	//	blendModeController_.drawingController = self.drawingController;
+	}
+
+	return blendModeController_;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (NSInteger)tableView:(UITableView *)tableView
 	numberOfRowsInSection:(NSInteger)section
-{
-	return [[self blendModeNames] count];
-}
+{ return 1; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,15 +169,19 @@
 	cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	static NSString *identifier = @"blendModeCell";
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
-	if (!cell) {
+	UITableViewCell *cell =
+	[tableView dequeueReusableCellWithIdentifier:identifier];
+	if (cell == nil)
+	{
 		cell = [[UITableViewCell alloc]
-		initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+		initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:identifier];
+		cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+		cell.textLabel.text = NSLocalizedString(@"Blend Mode", @"Blend Mode");
 	}
+
+	cell.detailTextLabel.text =
+	[blendModeController_ displayNameForBlendMode:mBlendOptions.mode];
 	
-	cell.accessoryType = (indexPath.row == selectedRow_) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
-	NSString *blendKey = self.blendModeNames[indexPath.row][@"name"];
-	cell.textLabel.text = [self localizedTitleForKey:blendKey];
 	return cell;
 }
 
@@ -107,13 +190,10 @@
 - (void)tableView:(UITableView *)tableView
 	didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	[[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:selectedRow_ inSection:0]] setAccessoryType:UITableViewCellAccessoryNone];
-	selectedRow_ = indexPath.row;
-	
-//	CGBlendMode blendMode = [mBlendModeNames[indexPath.row][@"value"] intValue];
-//	[self.drawingController setValue:@(blendMode) forProperty:WDBlendModeProperty];
-	[[tableView cellForRowAtIndexPath:indexPath] setAccessoryType:UITableViewCellAccessoryCheckmark];
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	[blendModeTableView_ deselectRowAtIndexPath:
+	[tableView indexPathForSelectedRow] animated:NO];
+	id nav = ((UIViewController *)(self.rootController)).navigationController;
+	[nav pushViewController:[self blendModeController] animated:YES];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

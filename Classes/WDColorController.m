@@ -42,11 +42,11 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 	self.view.opaque = NO;
 	self.view.backgroundColor = nil;
 
+	mSlider3.mode = WDColorSliderModeAlpha;
+
 	[self setColorSpace:(WDColorSpace)
 		[[NSUserDefaults standardUserDefaults]
 			integerForKey:WDColorSpaceDefault]];
-
-	mSlider3.mode = WDColorSliderModeAlpha;
 
 	// set up connections
 	[self setSliderAction:@selector(adjustColor:)
@@ -73,10 +73,8 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) updateGUI
+- (void) updateViewWithColor:(WDColor *)color
 {
-	WDColor *color = [self color];
-
 	// Update sliders
 	[mSlider0 setColor:color];
 	[mSlider1 setColor:color];
@@ -112,10 +110,8 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setColorSpace:(WDColorSpace)space
+- (void) updateViewWithColorSpace:(WDColorSpace)space
 {
-	colorSpace_ = space;
-	
 	if (space == WDColorSpaceRGB)
 	{
 		mSlider0.mode = WDColorSliderModeRed;
@@ -140,20 +136,22 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 		[colorSpaceButton_ setTitle:@"HSB" forState:UIControlStateNormal];
 	}
-	
-	[self updateGUI];
-	
-	[[NSUserDefaults standardUserDefaults]
-	setInteger:colorSpace_ forKey:WDColorSpaceDefault];
+
+	[self updateViewWithColor:[self color]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (IBAction) switchColorSpace:(id)sender
+- (void) setColorSpace:(WDColorSpace)space
 {
-	[self setColorSpace:
-	colorSpace_ == WDColorSpaceHSB ?
-	WDColorSpaceRGB : WDColorSpaceHSB];
+	if (colorSpace_ != space)
+	{
+		colorSpace_ = space;
+		[self updateViewWithColorSpace:space];
+
+		[[NSUserDefaults standardUserDefaults]
+		setInteger:colorSpace_ forKey:WDColorSpaceDefault];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +166,7 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 	if (mColor != color)
 	{
 		mColor = color;
-		[self updateGUI];
+		[self updateViewWithColor:color];
 	}
 }
 
@@ -190,8 +188,12 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (UIColor *) UIColor
-{ return [[self color] UIColor]; }
+- (IBAction) switchColorSpace:(id)sender
+{
+	[self setColorSpace:
+	colorSpace_ == WDColorSpaceHSB ?
+	WDColorSpaceRGB : WDColorSpaceHSB];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

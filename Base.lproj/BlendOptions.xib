@@ -10,14 +10,14 @@
                 <outlet property="blendModeTableView_" destination="78" id="81"/>
                 <outlet property="decrement" destination="FeG-R8-eH5" id="QEr-Fc-bCB"/>
                 <outlet property="increment" destination="LfG-i5-Gpn" id="N1H-Uh-Hqk"/>
-                <outlet property="opacityLabel_" destination="vDR-y7-VS4" id="E41-5p-Lr4"/>
-                <outlet property="opacitySlider_" destination="84" id="87"/>
+                <outlet property="mOpacityLabel" destination="vDR-y7-VS4" id="e14-K8-nzA"/>
+                <outlet property="mOpacitySlider" destination="84" id="emJ-y5-Nni"/>
                 <outlet property="view" destination="1" id="7"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
         <view contentMode="scaleToFill" id="1">
-            <rect key="frame" x="0.0" y="0.0" width="380" height="146"/>
+            <rect key="frame" x="0.0" y="0.0" width="380" height="150"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
             <subviews>
                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Opacity" lineBreakMode="tailTruncation" minimumFontSize="10" id="62">
