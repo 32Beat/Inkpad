@@ -1,27 +1,32 @@
-//
-//  WDColorController.h
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2010-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColorController.h
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2008-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import <UIKit/UIKit.h>
 
-@class WDColorSlider;
+@class WDColor;
 @class WDColorWell;
-//@class WDColor;
-#import "WDColor.h"
-#import "UIColor_Additions.h"
+@class WDColorSlider;
 
-typedef enum {
+////////////////////////////////////////////////////////////////////////////////
+
+typedef enum
+{
 	WDColorSpaceRGB,
 	WDColorSpaceHSB,
-} WDColorSpace;
+}
+WDColorSpace;
 
+////////////////////////////////////////////////////////////////////////////////
 @interface WDColorController : UIViewController
 {
 	IBOutlet WDColorWell 		*mColorWell;
@@ -62,7 +67,7 @@ typedef enum {
 
 @end
 
-extern NSString *WDColorSpaceDefault;
+extern NSString *const WDColorSpaceDefault;
 
 
 

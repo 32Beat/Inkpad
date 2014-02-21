@@ -139,10 +139,11 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 {
 	CGSize offset = CGSizeZero;
 	CGFloat blurRadius = 0.0;
-	CGColorRef color = [self color].CGColor;
+	CGColorRef color = nil;
 
 	if ([self visible])
 	{
+		color = [self color].CGColor;
 		offset = [self offsetVector];
 		blurRadius = [self blur];
 

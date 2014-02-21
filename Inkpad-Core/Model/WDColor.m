@@ -91,7 +91,7 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) colorWithAlphaComponent:(float)alpha
+- (id) colorWithAlphaComponent:(CGFloat)alpha
 {
 	CGFloat cmp[4] = {
 		mComponent[0],

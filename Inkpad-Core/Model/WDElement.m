@@ -1459,95 +1459,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 */
 - (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager
 {
-	if (!value) {
-		return;
-	}
-
+	if (property == WDStrokeOptionsKey)
+		[self setStrokeOptions:value];
+	else
 	if (property == WDShadowOptionsKey)
-	{
 		[self setShadowOptions:value];
-		return;
-	}
+	else
 	if (property == WDBlendOptionsKey)
-	{
 		[self setBlendOptions:value];
-		return;
-	}
-	//[self saveState];
-
-	WDBlendOptions *blendOptions = [self blendOptions];
-
-	if ([property isEqualToString:WDBlendModeProperty])
-	{
-		[blendOptions setMode:[value intValue]];
-		[self setBlendOptions:blendOptions];
-	}
-	else
-	if ([property isEqualToString:WDOpacityProperty])
-	{
-		[blendOptions setOpacity:[value floatValue]];
-		[self setBlendOptions:blendOptions];
-	}
-
-	/* 
-		We should never get individual properties here!
-	*/
-	WDShadowOptions *shadow = self.shadowOptions;
-	if (shadow == nil)
-	{ shadow = [propertyManager defaultShadowOptions]; }
-
-	if ([property isEqualToString:WDShadowVisibleProperty])
-	{
-		[shadow setActive:[value boolValue]];
-		[self setShadowOptions:shadow];
-	}
-	else
-	if ([property isEqualToString:WDShadowColorProperty])
-	{
-		[shadow setColor:value];
-		[self setShadowOptions:shadow];
-	}
-	else
-	if ([property isEqualToString:WDShadowOffsetProperty]) \
-	{
-		[shadow setOffset:[value floatValue]];
-		[self setShadowOptions:shadow];
-	}
-	else
-	if ([property isEqualToString:WDShadowAngleProperty]) \
-	{
-		[shadow setAngle:[value floatValue]];
-		[self setShadowOptions:shadow];
-	}
-	else
-	if ([property isEqualToString:WDShadowRadiusProperty]) \
-	{
-		[shadow setBlur:[value floatValue]];
-		[self setShadowOptions:shadow];
-	}
-
-
-	WDStrokeOptions *stroke = [self strokeOptions];
-	if (stroke == nil)
-	{ stroke = [propertyManager defaultStrokeOptions]; }
-
-	if ([property isEqualToString:WDStrokeVisibleProperty]) \
-	{
-		[stroke setActive:[value boolValue]];
-		[self setStrokeOptions:stroke];
-	}
-	else
-	if ([property isEqualToString:WDStrokeColorProperty]) \
-	{
-		[stroke setColor:value];
-		[self setStrokeOptions:stroke];
-	}
-	else
-	if ([property isEqualToString:WDStrokeWidthProperty]) \
-	{
-		[stroke setLineWidth:[value floatValue]];
-		[self setStrokeOptions:stroke];
-	}
 }
 
 

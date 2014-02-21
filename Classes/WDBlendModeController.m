@@ -96,9 +96,11 @@
 
 - (void)loadView
 {
+    CGRect frame = {{0.0,0.0},[self preferredContentSize]};
+
 	tableView_ = [[UITableView alloc]
-		initWithFrame:(CGRect){0,0,[self preferredContentSize]}
-		style:UITableViewStylePlain];
+	initWithFrame:frame style:UITableViewStylePlain];
+
 	tableView_.delegate = self;
 	tableView_.dataSource = self;
 	self.view = tableView_;

@@ -43,6 +43,8 @@ typedef enum {
     UISegmentedControl              *modeSegment_;
     
     WDStrokeMode                    mode_;
+
+	BOOL mDidAdjust;
 }
 
 @property (nonatomic, weak) WDDrawingController *drawingController;

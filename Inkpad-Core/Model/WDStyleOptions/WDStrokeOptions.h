@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDStyleOptions.h"
+#import "WDColor.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -31,7 +32,7 @@ extern NSString *const WDStrokeLineJoinKey;
 @interface WDStrokeOptions : WDStyleOptions
 {
 	BOOL 		mActive;
-	UIColor 	*mColor;
+	WDColor 	*mColor;
 	CGFloat 	mLineWidth;
 	CGLineCap 	mLineCap;
 	CGLineJoin 	mLineJoin;
@@ -39,7 +40,7 @@ extern NSString *const WDStrokeLineJoinKey;
 }
 
 @property (nonatomic, assign) BOOL active;
-@property (nonatomic, strong) UIColor *color;
+@property (nonatomic, strong) WDColor *color;
 @property (nonatomic, assign) CGFloat lineWidth;
 @property (nonatomic, assign) CGLineCap lineCap;
 @property (nonatomic, assign) CGLineJoin lineJoin;

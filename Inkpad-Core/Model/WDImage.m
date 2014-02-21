@@ -223,12 +223,16 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		[self prepareCGContext:ctx scale:metaData.scale];
 
 		// TransparencyLayer required to prevent path shadow on content
-		if ([self strokeOptions].visible&&
-			[self shadowOptions].visible)
+		// TransparencyLayer also required if blendMode is not CGBlendNormal
+		if ([self strokeOptions].visible)
 		{
-			CGRect R = [[self strokeOptions]
-			resultAreaForRect:[self sourceRect]];
-			CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
+			if ([self shadowOptions].visible ||
+				[self blendOptions].mode != kCGBlendModeNormal)
+			{
+				CGRect R = [[self strokeOptions]
+				resultAreaForRect:[self sourceRect]];
+				CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
+			}
 		}
 
 		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
@@ -240,7 +244,8 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 		{
 			CGContextAddRect(ctx, [self sourceRect]);
 			CGContextStrokePath(ctx);
-			if ([self shadowOptions].visible)
+			if ([self shadowOptions].visible ||
+				[self blendOptions].mode != kCGBlendModeNormal)
 			{ CGContextEndTransparencyLayer(ctx); }
 		}
 

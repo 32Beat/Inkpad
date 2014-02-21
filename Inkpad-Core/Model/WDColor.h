@@ -60,7 +60,7 @@ WDColorType;
 + (WDColor *) colorWithHSBA:(const CGFloat *)cmp;
 + (WDColor *) colorWithType:(WDColorType)type components:(const CGFloat *)cmp;
 - (WDColor *) initWithType:(WDColorType)type components:(const CGFloat *)cmp;
-- (WDColor *) colorWithAlphaComponent:(float)alpha;
+- (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
 
 + (WDColor *) colorWithWhite:(CGFloat)white
 		alpha:(CGFloat)alpha;

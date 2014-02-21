@@ -116,17 +116,14 @@
 	{
 		if (property == WDShadowOptionsKey)
 		{
-			id value = [drawingController_.propertyManager
-			defaultValueForProperty:property];
-			[self setShadowOptions:value];
+			[self setShadowOptions:
+			[drawingController_.propertyManager activeShadowOptions]];
 		}
 		else
 		if (property == WDBlendOptionsKey)
 		{
-			id value = [drawingController_.propertyManager
-			defaultValueForProperty:property];
-
-			[mBlendOptionsController setBlendOptions:value];
+			[mBlendOptionsController setBlendOptions:
+			[drawingController_.propertyManager activeBlendOptions]];
 		}
 	}
 }

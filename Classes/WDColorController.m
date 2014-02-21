@@ -1,22 +1,26 @@
-//
-//  WDColorController.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2011-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColorController.m
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2008-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import "WDColorController.h"
 #import "WDColorSlider.h"
 #import "WDColorWell.h"
 #import "WDColor.h"
 
-NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
+NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDColorController
+////////////////////////////////////////////////////////////////////////////////
 
 @synthesize tracking = mTracking;
 @synthesize target = target_;
@@ -32,6 +36,12 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 - (void) setStrokeMode:(BOOL)state
 { mColorWell.strokeMode = state; }
+
+////////////////////////////////////////////////////////////////////////////////
+// Allows mInstance = [WDColorController new];
+
+- (id) init
+{ return [self initWithNibName:@"Color" bundle:nil]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
