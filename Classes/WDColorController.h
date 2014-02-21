@@ -58,11 +58,11 @@ typedef enum {
 - (WDColor *)color;
 - (void) setColor:(WDColor *)color;
 
-- (UIColor *)UIColor;
-- (void) setUIColor:(UIColor *)color;
+//- (UIColor *)UIColor;
+//- (void) setUIColor:(UIColor *)color;
 
 
-- (IBAction) takeColorSpaceFrom:(id)sender;
+- (IBAction) switchColorSpace:(id)sender;
 
 @end
 

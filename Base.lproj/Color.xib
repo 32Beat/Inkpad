@@ -63,7 +63,7 @@
                     <fontDescription key="fontDescription" type="boldSystem" pointSize="13"/>
                     <state key="normal" title="RGB"/>
                     <connections>
-                        <action selector="takeColorSpaceFrom:" destination="-1" eventType="touchUpInside" id="112"/>
+                        <action selector="switchColorSpace:" destination="-1" eventType="touchUpInside" id="1d6-Ag-TNV"/>
                     </connections>
                 </button>
                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" text="360°" lineBreakMode="tailTruncation" minimumFontSize="10" id="97">

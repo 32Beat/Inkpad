@@ -64,7 +64,7 @@
 
 	[shadow setActive:[shadowSwitch_ isOn]];
 	[shadow setColor:[colorController_ color]];
-	[shadow setAngle:[angle_ value]];
+	[shadow setAngle:[angle_ angle]];
 	[shadow setOffset:[offset_ value]];
 	[shadow setBlur:[radius_ value]];
 
@@ -77,7 +77,7 @@
 {
 	[colorController_ setColor:[shadowOptions color]];
 	[shadowSwitch_ setOn:[shadowOptions active]];
-	[angle_ setValue:[shadowOptions angle]];
+	[angle_ setAngle:[shadowOptions angle]];
 	[offset_ setValue:[shadowOptions offset]];
 	[radius_ setValue:[shadowOptions blur]];
 }
@@ -173,7 +173,7 @@
 		} else if ([property isEqualToString:WDBlendModeProperty]) {
 			[self updateBlendMode];
 		} else if ([property isEqualToString:WDShadowAngleProperty]) {
-			angle_.value = [value floatValue];
+			angle_.angle = [value floatValue];
 		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
 			offset_.value = [value floatValue];
 		} else if ([property isEqualToString:WDShadowRadiusProperty]) {

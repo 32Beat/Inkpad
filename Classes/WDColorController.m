@@ -35,14 +35,6 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setColor:(WDColor *)color
-{ [self setColor:color notify:NO]; }
-
-- (void) setUIColor:(UIColor *)color
-{ [self setColor:[WDColor colorWithUIColor:color] notify:NO]; }
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
@@ -81,10 +73,10 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setColor:(WDColor *)color notify:(BOOL)notify
+- (void) updateGUI
 {
-	mColor = color;
-	
+	WDColor *color = [self color];
+
 	// Update sliders
 	[mSlider0 setColor:color];
 	[mSlider1 setColor:color];
@@ -116,14 +108,6 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 		alphaValue_.text =
 		[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
 	}
-	
-	// Never notify, we are only responsible for direct messaging between
-	// colorcontrols and represented object
-/*
-	if (notify) {
-		[[UIApplication sharedApplication] sendAction:action_ to:target_ from:self forEvent:nil];
-	}
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +141,7 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 		[colorSpaceButton_ setTitle:@"HSB" forState:UIControlStateNormal];
 	}
 	
-	[self setColor:[self color]];
+	[self updateGUI];
 	
 	[[NSUserDefaults standardUserDefaults]
 	setInteger:colorSpace_ forKey:WDColorSpaceDefault];
@@ -165,7 +149,7 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (IBAction) takeColorSpaceFrom:(id)sender
+- (IBAction) switchColorSpace:(id)sender
 {
 	[self setColorSpace:
 	colorSpace_ == WDColorSpaceHSB ?
@@ -176,6 +160,17 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 - (WDColor *) color
 { return mColor ? mColor : (mColor = [self colorFromGUI]); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setColor:(WDColor *)color
+{
+	if (mColor != color)
+	{
+		mColor = color;
+		[self updateGUI];
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -205,14 +200,6 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 	// Allow interface update
 	[self setColor:(sender != mSlider3) ? [self colorFromGUI]:
 	[[self color] colorWithAlphaComponent:[sender floatValue]]];
-
-/*
-	if ([sender isContinuous])
-	{
-		[[UIApplication sharedApplication]
-		sendAction:action_ to:target_ from:self forEvent:nil];
-	}
-*/
 	mTracking = YES;
 }
 
@@ -224,11 +211,8 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 	[self adjustColor:sender];
 	mTracking = NO;
 
-	//if (![sender isContinuous])
-	{
-		[[UIApplication sharedApplication]
-		sendAction:action_ to:target_ from:self forEvent:nil];
-	}
+	[[UIApplication sharedApplication]
+	sendAction:action_ to:target_ from:self forEvent:nil];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
