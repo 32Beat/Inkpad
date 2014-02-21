@@ -50,7 +50,7 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) copyPropertiesFrom:(id)src
+- (void) copyPropertiesFrom:(WDShadowOptions *)src
 {
 	[self setActive:[src active]];
 	[self setColor:[src color]];

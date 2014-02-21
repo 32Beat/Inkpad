@@ -19,13 +19,21 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 @implementation WDColorController
 
 @synthesize tracking = mTracking;
-
 @synthesize target = target_;
 @synthesize action = action_;
-@synthesize colorWell = colorWell_;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) setGradientStopMode:(BOOL)state
+{ mColorWell.gradientStopMode = state; }
+
+- (void) setShadowMode:(BOOL)state
+{ mColorWell.shadowMode = state; }
+
+- (void) setStrokeMode:(BOOL)state
+{ mColorWell.strokeMode = state; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) setColor:(WDColor *)color
 { [self setColor:color notify:NO]; }
@@ -35,16 +43,56 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void)viewDidLoad
+{
+	[super viewDidLoad];
+	
+	self.view.opaque = NO;
+	self.view.backgroundColor = nil;
+
+	[self setColorSpace:(WDColorSpace)
+		[[NSUserDefaults standardUserDefaults]
+			integerForKey:WDColorSpaceDefault]];
+
+	mSlider3.mode = WDColorSliderModeAlpha;
+
+	// set up connections
+	[self setSliderAction:@selector(adjustColor:)
+		forControlEvents:
+		//	UIControlEventTouchDown |
+			UIControlEventTouchDragInside |
+			UIControlEventTouchDragOutside];
+
+	[self setSliderAction:@selector(adjustColorFinal:)
+		forControlEvents:
+			UIControlEventTouchUpInside |
+			UIControlEventTouchUpOutside];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setSliderAction:(SEL)action forControlEvents:(UIControlEvents)eventMask
+{
+	[mSlider0 addTarget:self action:action forControlEvents:eventMask];
+	[mSlider1 addTarget:self action:action forControlEvents:eventMask];
+	[mSlider2 addTarget:self action:action forControlEvents:eventMask];
+	[mSlider3 addTarget:self action:action forControlEvents:eventMask];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) setColor:(WDColor *)color notify:(BOOL)notify
 {
+	mColor = color;
+	
 	// Update sliders
-	[component0Slider_ setColor:color];
-	[component1Slider_ setColor:color];
-	[component2Slider_ setColor:color];
-	[alphaSlider_ setColor:color];
+	[mSlider0 setColor:color];
+	[mSlider1 setColor:color];
+	[mSlider2 setColor:color];
+	[mSlider3 setColor:color];
 
 	// Update colorwell
-	[[self colorWell] setPainter:color];
+	[mColorWell setPainter:color];
 
 	// Update value labels
 	if (colorSpace_ == WDColorSpaceHSB) {
@@ -86,9 +134,9 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 	
 	if (space == WDColorSpaceRGB)
 	{
-		component0Slider_.mode = WDColorSliderModeRed;
-		component1Slider_.mode = WDColorSliderModeGreen;
-		component2Slider_.mode = WDColorSliderModeBlue;
+		mSlider0.mode = WDColorSliderModeRed;
+		mSlider1.mode = WDColorSliderModeGreen;
+		mSlider2.mode = WDColorSliderModeBlue;
 		
 		component0Name_.text = @"R";
 		component1Name_.text = @"G";
@@ -98,9 +146,9 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 	}
 	else
 	{
-		component0Slider_.mode = WDColorSliderModeHue;
-		component1Slider_.mode = WDColorSliderModeSaturation;
-		component2Slider_.mode = WDColorSliderModeBrightness;
+		mSlider0.mode = WDColorSliderModeHue;
+		mSlider1.mode = WDColorSliderModeSaturation;
+		mSlider2.mode = WDColorSliderModeBrightness;
 		
 		component0Name_.text = @"H";
 		component1Name_.text = @"S";
@@ -119,74 +167,52 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 - (IBAction) takeColorSpaceFrom:(id)sender
 {
-	if (colorSpace_ == WDColorSpaceRGB) {
-		[self setColorSpace:WDColorSpaceHSB];
-	} else {
-		[self setColorSpace:WDColorSpaceRGB];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void)viewDidLoad
-{
-	[super viewDidLoad];
-	
-	self.view.backgroundColor = nil;
-	self.view.opaque = NO;
-	
-	[self setColorSpace:(WDColorSpace)
-	[[NSUserDefaults standardUserDefaults] integerForKey:WDColorSpaceDefault]];
-	alphaSlider_.mode = WDColorSliderModeAlpha;
-	
-	// set up connections
-	UIControlEvents dragEvents =
-//	UIControlEventTouchDown |
-	UIControlEventTouchDragInside |
-	UIControlEventTouchDragOutside;
-	
-	[component0Slider_ addTarget:self action:@selector(adjustColor:) forControlEvents:dragEvents];
-	[component1Slider_ addTarget:self action:@selector(adjustColor:) forControlEvents:dragEvents];
-	[component2Slider_ addTarget:self action:@selector(adjustColor:) forControlEvents:dragEvents];
-	[alphaSlider_ addTarget:self action:@selector(adjustColor:) forControlEvents:dragEvents];
-	
-	UIControlEvents touchEndEvents =
-	UIControlEventTouchUpInside |
-	UIControlEventTouchUpOutside;
-	
-	[component0Slider_ addTarget:self action:@selector(adjustColorFinal:) forControlEvents:touchEndEvents];
-	[component1Slider_ addTarget:self action:@selector(adjustColorFinal:) forControlEvents:touchEndEvents];
-	[component2Slider_ addTarget:self action:@selector(adjustColorFinal:) forControlEvents:touchEndEvents];
-	[alphaSlider_ addTarget:self action:@selector(adjustColorFinal:) forControlEvents:touchEndEvents];
+	[self setColorSpace:
+	colorSpace_ == WDColorSpaceHSB ?
+	WDColorSpaceRGB : WDColorSpaceHSB];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDColor *) color
-{ return [WDColor colorWithUIColor:[self UIColor]]; }
+{ return mColor ? mColor : (mColor = [self colorFromGUI]); }
 
-- (UIColor *) UIColor
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDColor *) colorFromGUI
 {
 	CGFloat cmp[4] = {
-		[component0Slider_ floatValue],
-		[component1Slider_ floatValue],
-		[component2Slider_ floatValue],
-		[alphaSlider_ floatValue] };
+		[mSlider0 floatValue],
+		[mSlider1 floatValue],
+		[mSlider2 floatValue],
+		[mSlider3 floatValue] };
 
-	return (colorSpace_ == WDColorSpaceHSB) ?
-	[UIColor colorWithHSBA:cmp]:
-	[UIColor colorWithRGBA:cmp];
+	return
+	colorSpace_ == WDColorSpaceHSB ?
+	[WDColor colorWithHSBA:cmp]:
+	[WDColor colorWithRGBA:cmp];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (UIColor *) UIColor
+{ return [[self color] UIColor]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction) adjustColor:(id)sender
 {
 	// Allow interface update
-	[self setColor:[self color]];
+	[self setColor:(sender != mSlider3) ? [self colorFromGUI]:
+	[[self color] colorWithAlphaComponent:[sender floatValue]]];
 
-	[[UIApplication sharedApplication]
-	sendAction:action_ to:target_ from:self forEvent:nil];
+/*
+	if ([sender isContinuous])
+	{
+		[[UIApplication sharedApplication]
+		sendAction:action_ to:target_ from:self forEvent:nil];
+	}
+*/
 	mTracking = YES;
 }
 
@@ -194,8 +220,15 @@ NSString *WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 - (IBAction) adjustColorFinal:(id)sender
 {
+	//
 	[self adjustColor:sender];
 	mTracking = NO;
+
+	//if (![sender isContinuous])
+	{
+		[[UIApplication sharedApplication]
+		sendAction:action_ to:target_ from:self forEvent:nil];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

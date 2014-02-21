@@ -16,7 +16,7 @@
 
 #import <CoreText/CoreText.h>
 #import "NSString+Additions.h"
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDBezierNode.h"
 #import "WDBezierSegment.h"
 #import "WDColor.h"

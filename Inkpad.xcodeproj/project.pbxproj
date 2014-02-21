@@ -164,7 +164,6 @@
 		6BABD96D141ED30100F7E0A9 /* NSArray+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD886141ED30100F7E0A9 /* NSArray+Additions.m */; };
 		6BABD96F141ED30100F7E0A9 /* NSData+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD88A141ED30100F7E0A9 /* NSData+Additions.m */; };
 		6BABD970141ED30100F7E0A9 /* NSString+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD88C141ED30100F7E0A9 /* NSString+Additions.m */; };
-		6BABD971141ED30100F7E0A9 /* UIColor+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD88E141ED30100F7E0A9 /* UIColor+Additions.m */; };
 		6BABD972141ED30100F7E0A9 /* UIImage+Resize.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD890141ED30100F7E0A9 /* UIImage+Resize.m */; };
 		6BABD973141ED30100F7E0A9 /* UIImage+Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD892141ED30100F7E0A9 /* UIImage+Additions.m */; };
 		6BABD974141ED30100F7E0A9 /* WDDrawingController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BABD895141ED30100F7E0A9 /* WDDrawingController.m */; };
@@ -310,6 +309,9 @@
 		6BFA802C1249CEDB00D1749C /* WDLayerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BFA802B1249CEDB00D1749C /* WDLayerCell.m */; };
 		6BFBC4EB1335F4A000D5877F /* zoom_to_fit.png in Resources */ = {isa = PBXBuildFile; fileRef = 6BFBC4EA1335F4A000D5877F /* zoom_to_fit.png */; };
 		BE056B6718A151A20081C8D6 /* WDEditableShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE056B6618A151A20081C8D6 /* WDEditableShape.m */; };
+		BE0D612D18B6A336005191EA /* UIColor_Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE0D612C18B6A336005191EA /* UIColor_Additions.m */; };
+		BE0D613318B6B606005191EA /* WDBlendOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE0D613218B6B606005191EA /* WDBlendOptionsController.m */; };
+		BE0D613618B6B88F005191EA /* BlendOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE0D613418B6B88F005191EA /* BlendOptions.xib */; };
 		BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */; };
 		BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE28681D189E688F00F0594C /* WDShapeOptionsController.m */; };
 		BE28E3ED189EC9CD00FD4542 /* WDStarShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE28E3EB189EC9CD00FD4542 /* WDStarShape.m */; };
@@ -564,8 +566,6 @@
 		6BABD88A141ED30100F7E0A9 /* NSData+Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+Additions.m"; sourceTree = "<group>"; };
 		6BABD88B141ED30100F7E0A9 /* NSString+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Additions.h"; sourceTree = "<group>"; };
 		6BABD88C141ED30100F7E0A9 /* NSString+Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Additions.m"; sourceTree = "<group>"; };
-		6BABD88D141ED30100F7E0A9 /* UIColor+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIColor+Additions.h"; sourceTree = "<group>"; };
-		6BABD88E141ED30100F7E0A9 /* UIColor+Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIColor+Additions.m"; sourceTree = "<group>"; };
 		6BABD88F141ED30100F7E0A9 /* UIImage+Resize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+Resize.h"; sourceTree = "<group>"; };
 		6BABD890141ED30100F7E0A9 /* UIImage+Resize.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Resize.m"; sourceTree = "<group>"; };
 		6BABD891141ED30100F7E0A9 /* UIImage+Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+Additions.h"; sourceTree = "<group>"; };
@@ -809,6 +809,11 @@
 		8D1107310486CEB800E47090 /* Inkpad-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Inkpad-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		BE056B6518A151A20081C8D6 /* WDEditableShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDEditableShape.h; sourceTree = "<group>"; };
 		BE056B6618A151A20081C8D6 /* WDEditableShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDEditableShape.m; sourceTree = "<group>"; };
+		BE0D612B18B6A336005191EA /* UIColor_Additions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIColor_Additions.h; sourceTree = "<group>"; };
+		BE0D612C18B6A336005191EA /* UIColor_Additions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIColor_Additions.m; sourceTree = "<group>"; };
+		BE0D613118B6B606005191EA /* WDBlendOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDBlendOptionsController.h; sourceTree = "<group>"; };
+		BE0D613218B6B606005191EA /* WDBlendOptionsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDBlendOptionsController.m; sourceTree = "<group>"; };
+		BE0D613518B6B88F005191EA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BlendOptions.xib; sourceTree = "<group>"; };
 		BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = WDGLVertexBuffer.c; sourceTree = "<group>"; };
 		BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDGLVertexBuffer.h; sourceTree = "<group>"; };
 		BE28681C189E688F00F0594C /* WDShapeOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShapeOptionsController.h; sourceTree = "<group>"; };
@@ -1123,6 +1128,7 @@
 				6B5335311803538D00D46D5B /* MainStoryboard.storyboard */,
 				6B5335331803538D00D46D5B /* Samples.xib */,
 				6B5335351803538D00D46D5B /* Shadow.xib */,
+				BE0D613418B6B88F005191EA /* BlendOptions.xib */,
 				6B5335371803538D00D46D5B /* ShapeOptions.xib */,
 				6B5335391803538D00D46D5B /* Stroke.xib */,
 				6B53353B1803538D00D46D5B /* Text.xib */,
@@ -1166,8 +1172,8 @@
 			children = (
 				6BABD885141ED30100F7E0A9 /* NSArray+Additions.h */,
 				6BABD886141ED30100F7E0A9 /* NSArray+Additions.m */,
-				6BABD88D141ED30100F7E0A9 /* UIColor+Additions.h */,
-				6BABD88E141ED30100F7E0A9 /* UIColor+Additions.m */,
+				BE0D612B18B6A336005191EA /* UIColor_Additions.h */,
+				BE0D612C18B6A336005191EA /* UIColor_Additions.m */,
 				6BABD889141ED30100F7E0A9 /* NSData+Additions.h */,
 				6BABD88A141ED30100F7E0A9 /* NSData+Additions.m */,
 				6BABD88B141ED30100F7E0A9 /* NSString+Additions.h */,
@@ -1485,6 +1491,8 @@
 				6B00DA5C140604CE00E45409 /* WDActivityController.m */,
 				6BA4578F180F2B9200B51D7A /* WDArrowController.h */,
 				6BA45790180F2B9200B51D7A /* WDArrowController.m */,
+				BE0D613118B6B606005191EA /* WDBlendOptionsController.h */,
+				BE0D613218B6B606005191EA /* WDBlendOptionsController.m */,
 				5D62B27313CE866500E4D41B /* WDBlendModeController.h */,
 				5D62B27413CE866500E4D41B /* WDBlendModeController.m */,
 				6BCD52D812400017002FCB27 /* WDBrowserController.h */,
@@ -1909,6 +1917,7 @@
 				6B219C5A150EA22300761F18 /* dropbox_icon_directory@2x.png in Resources */,
 				6B219C5B150EA22300761F18 /* dropbox_icon_font@2x.png in Resources */,
 				6B219C5C150EA22300761F18 /* dropbox_icon_generic@2x.png in Resources */,
+				BE0D613618B6B88F005191EA /* BlendOptions.xib in Resources */,
 				6B4EF3C1187672B500E55D19 /* freehand_shape.png in Resources */,
 				6B219C5D150EA22300761F18 /* dropbox_icon_inkpad@2x.png in Resources */,
 				6B219C5E150EA22300761F18 /* dropbox_icon_svg@2x.png in Resources */,
@@ -1975,6 +1984,7 @@
 				6BCD533C12400017002FCB27 /* WDEventForwardingView.m in Sources */,
 				6BCD534412400017002FCB27 /* WDLineAttributePicker.m in Sources */,
 				BE41B302189FA7570021477A /* WDLeafShape.m in Sources */,
+				BE0D613318B6B606005191EA /* WDBlendOptionsController.m in Sources */,
 				6BCD534512400017002FCB27 /* WDMenu.m in Sources */,
 				6BCD534612400017002FCB27 /* WDMenuItem.m in Sources */,
 				6BCD534712400017002FCB27 /* WDPalette.m in Sources */,
@@ -2007,6 +2017,7 @@
 				BE404D1718B1488F00D67C5F /* WDShadowOptions.m in Sources */,
 				6BB1D0FD1309E9A300F0C22E /* WDEyedropper.m in Sources */,
 				6BDBC48B130D1A6F00BC3BCA /* WDEtchedLine.m in Sources */,
+				BE0D612D18B6A336005191EA /* UIColor_Additions.m in Sources */,
 				6B87C94A131258660027A482 /* WDHelpController.m in Sources */,
 				6BAACC7B1332A048000C6E74 /* WDSparkSlider.m in Sources */,
 				6B65D553133AF075004053D5 /* WDRulerView.m in Sources */,
@@ -2047,7 +2058,6 @@
 				6BABD96F141ED30100F7E0A9 /* NSData+Additions.m in Sources */,
 				BEFFB62518AA674D00DAF110 /* WDClubsShape.m in Sources */,
 				6BABD970141ED30100F7E0A9 /* NSString+Additions.m in Sources */,
-				6BABD971141ED30100F7E0A9 /* UIColor+Additions.m in Sources */,
 				6BABD972141ED30100F7E0A9 /* UIImage+Resize.m in Sources */,
 				6BABD973141ED30100F7E0A9 /* UIImage+Additions.m in Sources */,
 				6B6749C617F6270000E9A627 /* WDImageView.m in Sources */,
@@ -2303,6 +2313,14 @@
 				6BC9674B183149E300F46191 /* es */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		BE0D613418B6B88F005191EA /* BlendOptions.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BE0D613518B6B88F005191EA /* Base */,
+			);
+			name = BlendOptions.xib;
 			sourceTree = "<group>";
 		};
 		F43A1D6E183557770032933E /* Localizable.strings */ = {

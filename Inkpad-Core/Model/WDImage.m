@@ -14,7 +14,7 @@
 #import "NSCoderAdditions.h"
 #endif
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDBezierSegment.h"
 #import "WDColor.h"
 #import "WDDrawing.h"

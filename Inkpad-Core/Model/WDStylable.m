@@ -9,7 +9,7 @@
 //  Copyright (c) 2011-2013 Steve Sprang
 //
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDColor.h"
 #import "WDFillTransform.h"
 #import "WDGLUtilities.h"

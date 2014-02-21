@@ -15,7 +15,7 @@
 @class WDColorWell;
 //@class WDColor;
 #import "WDColor.h"
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 
 typedef enum {
 	WDColorSpaceRGB,
@@ -24,10 +24,12 @@ typedef enum {
 
 @interface WDColorController : UIViewController
 {
-	IBOutlet WDColorSlider      *component0Slider_;
-	IBOutlet WDColorSlider      *component1Slider_;
-	IBOutlet WDColorSlider      *component2Slider_;
-	IBOutlet WDColorSlider      *alphaSlider_;
+	IBOutlet WDColorWell 		*mColorWell;
+
+	IBOutlet WDColorSlider      *mSlider0;
+	IBOutlet WDColorSlider      *mSlider1;
+	IBOutlet WDColorSlider      *mSlider2;
+	IBOutlet WDColorSlider      *mSlider3;
 	
 	IBOutlet UILabel            *component0Name_;
 	IBOutlet UILabel            *component1Name_;
@@ -39,17 +41,19 @@ typedef enum {
 	IBOutlet UILabel            *alphaValue_;
 	
 	IBOutlet UIButton           *colorSpaceButton_;
+	WDColorSpace 				colorSpace_;
 	
-	WDColorSpace                 colorSpace_;
-
 	BOOL mTracking;
+	WDColor *mColor;
 }
 
 @property (nonatomic, assign, getter=isTracking) BOOL tracking;
-
 @property (nonatomic, weak) id target;
 @property (nonatomic, assign) SEL action;
-@property (weak, nonatomic, readonly) WDColorWell *colorWell;
+
+- (void) setGradientStopMode:(BOOL)state;
+- (void) setShadowMode:(BOOL)state;
+- (void) setStrokeMode:(BOOL)state;
 
 - (WDColor *)color;
 - (void) setColor:(WDColor *)color;

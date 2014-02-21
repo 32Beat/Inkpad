@@ -306,7 +306,7 @@
     CGRect frame = colorController_.view.frame;
     frame.origin = CGPointMake(5, 5);
     colorController_.view.frame = frame;
-    colorController_.colorWell.strokeMode = YES;
+    colorController_.strokeMode = YES;
     
     colorController_.target = self;
     colorController_.action = @selector(takeColorFrom:);

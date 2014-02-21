@@ -13,7 +13,7 @@
 #import "NSCoderAdditions.h"
 #endif
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDColor.h"
 #import "WDDocumentProtocol.h"
 #import "WDDrawing.h"

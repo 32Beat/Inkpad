@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import "WDStyleOptions.h"
+#import "WDColor.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -39,19 +40,19 @@ extern NSString *const WDShadowBlurKey;
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDShadowOptions : WDStyleOptions
 {
-	BOOL 	mActive;
+	BOOL 		mActive;
 
-	UIColor *mColor;
-	float 	mAngle;
-	float 	mOffset;
-	float 	mBlur;
+	WDColor 	*mColor;
+	CGFloat 	mAngle;
+	CGFloat 	mOffset;
+	CGFloat 	mBlur;
 }
 
 @property (nonatomic, assign) BOOL active;
-@property (nonatomic, strong) UIColor *color;
-@property (nonatomic, assign) float angle;
-@property (nonatomic, assign) float offset;
-@property (nonatomic, assign) float blur;
+@property (nonatomic, strong) WDColor *color;
+@property (nonatomic, assign) CGFloat angle;
+@property (nonatomic, assign) CGFloat offset;
+@property (nonatomic, assign) CGFloat blur;
 
 - (BOOL) visible;
 - (id) optionsWithScale:(float)scale;

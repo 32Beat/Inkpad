@@ -137,16 +137,16 @@
 {
     if (!fill || [fill isEqual:[NSNull null]]) {
         gradientController_.inactive = YES;
-        colorController_.colorWell.gradientStopMode = NO;
+        colorController_.gradientStopMode = NO;
         fillMode_ = kFillNone;
     } else if ([fill isKindOfClass:[WDColor class]]) {
         gradientController_.inactive = YES;
-        colorController_.colorWell.gradientStopMode = NO;
+        colorController_.gradientStopMode = NO;
         colorController_.color = (WDColor *) fill;
         fillMode_ = kFillColor;
     } else {
         gradientController_.inactive = NO;
-        colorController_.colorWell.gradientStopMode = YES;
+        colorController_.gradientStopMode = YES;
         gradientController_.gradient = (WDGradient *) fill;
         fillMode_ = kFillGradient;
     }

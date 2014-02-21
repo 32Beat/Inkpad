@@ -13,7 +13,7 @@
 
 #import "WDBezierNode.h"
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDGLUtilities.h"
 #import "WDUtilities.h"
 

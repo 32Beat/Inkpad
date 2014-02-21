@@ -11,6 +11,8 @@
 
 #import "WDAnglePicker.h"
 #import "WDBlendModeController.h"
+#import "WDBlendOptionsController.h"
+
 #import "WDColorController.h"
 #import "WDColor.h"
 #import "WDColorWell.h"
@@ -61,7 +63,7 @@
 	WDShadowOptions *shadow = [WDShadowOptions new];
 
 	[shadow setActive:[shadowSwitch_ isOn]];
-	[shadow setColor:[colorController_ UIColor]];
+	[shadow setColor:[colorController_ color]];
 	[shadow setAngle:[angle_ value]];
 	[shadow setOffset:[offset_ value]];
 	[shadow setBlur:[radius_ value]];
@@ -73,7 +75,7 @@
 
 - (void) setShadowOptions:(WDShadowOptions *)shadowOptions
 {
-	[colorController_ setUIColor:[shadowOptions color]];
+	[colorController_ setColor:[shadowOptions color]];
 	[shadowSwitch_ setOn:[shadowOptions active]];
 	[angle_ setValue:[shadowOptions angle]];
 	[offset_ setValue:[shadowOptions offset]];
@@ -99,7 +101,8 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Will be sent by colorController 
+// Will be sent by colorController
+
 - (void) takeColorFrom:(id)sender
 { [self adjustShadow:sender]; }
 
@@ -191,7 +194,7 @@
 	colorController_ = [[WDColorController alloc]
 	initWithNibName:@"Color" bundle:nil];
 	[self.view addSubview:colorController_.view];
-	colorController_.colorWell.shadowMode = YES;
+	colorController_.shadowMode = YES;
 	
 	CGRect frame = colorController_.view.frame;
 	frame.origin = CGPointMake(5, 5);
@@ -201,6 +204,16 @@
 	colorController_.action = @selector(takeColorFrom:);
 
 
+	mBlendOptionsController = [WDBlendOptionsController new];
+	[self.view addSubview:mBlendOptionsController.view];
+
+	CGRect srcFrame = mBlendOptionsController.view.frame;
+	CGRect dstFrame = self.view.frame;
+
+	srcFrame.origin.x += 5;
+	srcFrame.origin.y = CGRectGetMaxY(dstFrame)-srcFrame.size.height;
+	mBlendOptionsController.view.frame = srcFrame;
+	mBlendOptionsController.preferredContentSize = self.view.frame.size;
 
 	blendModeController_ = [[WDBlendModeController alloc]
 	initWithNibName:nil bundle:nil];

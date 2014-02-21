@@ -11,7 +11,7 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDColor.h"
 #import "WDDrawing.h"
 #import "WDElement.h"
@@ -315,10 +315,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 			float angle = [shadow angle];
 
 			WDShadowOptions *dstShadow = [WDShadowOptions new];
+			[dstShadow setColor:color];
 			[dstShadow setAngle:angle];
 			[dstShadow setOffset:offset];
 			[dstShadow setBlur:radius];
-			[dstShadow setColor:[color UIColor]];
 			[[self styleOptions] setShadowOptions:dstShadow];
 		}
 	}

@@ -9,7 +9,7 @@
 //  Copyright (c) 2009-2013 Steve Sprang
 //
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDArrowhead.h"
 #import "WDBezierNode.h"
 #import "WDBezierSegment.h"

@@ -14,7 +14,7 @@
 #import "WDGroup.h"
 #import "WDElement.h"
 
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 #import "WDSVGHelper.h"
 #import "WDUtilities.h"
 

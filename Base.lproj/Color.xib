@@ -7,19 +7,19 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="WDColorController">
             <connections>
-                <outlet property="alphaSlider_" destination="86" id="94"/>
                 <outlet property="alphaValue_" destination="100" id="108"/>
                 <outlet property="colorSpaceButton_" destination="96" id="113"/>
-                <outlet property="colorWell_" destination="74" id="95"/>
                 <outlet property="component0Name_" destination="75" id="101"/>
-                <outlet property="component0Slider_" destination="72" id="109"/>
                 <outlet property="component0Value_" destination="97" id="104"/>
                 <outlet property="component1Name_" destination="76" id="114"/>
-                <outlet property="component1Slider_" destination="80" id="110"/>
                 <outlet property="component1Value_" destination="98" id="106"/>
                 <outlet property="component2Name_" destination="77" id="mPV-q6-oYI"/>
-                <outlet property="component2Slider_" destination="83" id="111"/>
                 <outlet property="component2Value_" destination="99" id="107"/>
+                <outlet property="mColorWell" destination="74" id="DIt-un-8A4"/>
+                <outlet property="mSlider0" destination="72" id="2fJ-vg-95N"/>
+                <outlet property="mSlider1" destination="80" id="mig-xT-WxE"/>
+                <outlet property="mSlider2" destination="83" id="Lcj-1S-yAV"/>
+                <outlet property="mSlider3" destination="86" id="FxN-In-lYr"/>
                 <outlet property="view" destination="1" id="90"/>
             </connections>
         </placeholder>

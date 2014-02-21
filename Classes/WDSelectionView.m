@@ -23,7 +23,7 @@
 #import "WDSelectionView.h"
 #import "WDToolManager.h"
 #import "WDUtilities.h"
-#import "UIColor+Additions.h"
+#import "UIColor_Additions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDSelectionView

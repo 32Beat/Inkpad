@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	UIColor+Additions.h
+	UIColor_Additions.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
