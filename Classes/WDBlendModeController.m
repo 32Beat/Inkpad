@@ -15,48 +15,84 @@
 #import "WDInspectableProperties.h"
 
 @interface WDBlendModeController ()
-- (NSIndexPath *)indexPathForBlendMode:(CGBlendMode)blendMode;
-- (NSIndexPath *) updateSelectedRow;
+- (NSIndexPath *) indexPathForBlendMode:(CGBlendMode)blendMode;
 @end
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDBlendModeController
+////////////////////////////////////////////////////////////////////////////////
 
-@synthesize drawingController = drawingController_;
+- (NSArray *) blendNames
+{
+	static NSArray *gBlendNames = nil;
+	if (gBlendNames == nil)
+	{ gBlendNames = [self _blendNames]; }
+	return gBlendNames;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray *) _blendNames
+{
+	NSMutableArray *names = [NSMutableArray new];
+
+	for (CGBlendMode n=kCGBlendModeNormal; n<=kCGBlendModeLuminosity; n++)
+	{ [names addObject:[self blendNameForBlendMode:n]]; }
+
+	return [NSArray arrayWithArray:names];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *) displayNameForBlendMode:(CGBlendMode)blendMode
+{
+	return [self blendNameForBlendMode:blendMode];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *) blendNameForBlendMode:(CGBlendMode)mode
+{
+	switch(mode)
+	{
+		case kCGBlendModeNormal: return @"Normal";
+		case kCGBlendModeMultiply: return @"Multiply";
+		case kCGBlendModeScreen: return @"Screen";
+		case kCGBlendModeOverlay: return @"Overlay";
+		case kCGBlendModeDarken: return @"Darken";
+		case kCGBlendModeLighten: return @"Lighten";
+		case kCGBlendModeColorDodge: return @"Dodge";
+		case kCGBlendModeColorBurn: return @"Burn";
+		case kCGBlendModeSoftLight: return @"Soft Light";
+		case kCGBlendModeHardLight: return @"Hard Light";
+		case kCGBlendModeDifference: return @"Difference";
+		case kCGBlendModeExclusion: return @"Exclusion";
+		case kCGBlendModeHue: return @"Hue";
+		case kCGBlendModeSaturation: return @"Saturation";
+		case kCGBlendModeColor: return @"Color";
+		case kCGBlendModeLuminosity: return @"Luminosity";
+		default: return nil;
+	}
+
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
 	self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-	if (!self) {
-		return nil;
-	}	
-	
-	self.title = NSLocalizedString(@"Blend Mode", @"Blend Mode");    
-	blendModeNames_ = [[NSArray alloc]
-	initWithContentsOfURL:[[NSBundle mainBundle]
-	URLForResource:@"BlendModes" withExtension:@"plist"]];
+	if (self != nil)
+	{
+		self.title = NSLocalizedString(@"Blend Mode", @"Blend Mode");
+	}
 
-	selectedRow_ = NSUIntegerMax;
-	
 	return self;
 }
 
-- (void)dealloc
-{
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void) setDrawingController:(WDDrawingController *)drawingController
-{
-	drawingController_ = drawingController;
-	
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(invalidProperties:)
-												 name:WDInvalidPropertiesNotification
-											   object:drawingController_.propertyManager];
-}
-
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
 - (void)loadView
 {
@@ -68,117 +104,89 @@
 	self.view = tableView_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void)viewWillAppear:(BOOL)animated
 {
-	NSIndexPath *selectedIndexPath = [self updateSelectedRow];
-	[tableView_ scrollToRowAtIndexPath:selectedIndexPath atScrollPosition:UITableViewScrollPositionNone animated:NO];
+	selectedRow_ = [self _blendMode];
+
+	// Completely incomprehensible method of scrolling to selected row
+	NSIndexPath *activeMode =
+	[self indexPathForBlendMode:[self _blendMode]];
+
+	[tableView_ selectRowAtIndexPath:activeMode animated:NO
+	scrollPosition:UITableViewScrollPositionNone];
+
+	[tableView_ scrollToRowAtIndexPath:activeMode
+	atScrollPosition:UITableViewScrollPositionNone animated:NO];
+
+	[tableView_ deselectRowAtIndexPath:activeMode animated:NO];
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+- (CGBlendMode) _blendMode
 {
-	return [blendModeNames_ count];
+	return [[[self representedObject] valueForKey:WDBlendModeKey] intValue];
 }
 
-#define NSTranslatedString(str) NSLocalizedString(str, str)
-
-- (NSString *) localizedTitleForKey:(NSString *)key
+- (void) _setBlendMode:(CGBlendMode)mode
 {
-	// we could duplicate the BlendModes.plist for every localization, but this seems less error prone
-	static NSMutableDictionary *map_ = nil;
-	if (!map_) {
-		map_ = [NSMutableDictionary dictionary];
-		map_[@"Normal"]     = NSLocalizedString(@"Normal", @"Normal");
-		map_[@"Darken"]     = NSLocalizedString(@"Darken", @"Darken");
-		map_[@"Multiply"]   = NSLocalizedString(@"Multiply", @"Multiply");
-		map_[@"Lighten"]    = NSLocalizedString(@"Lighten", @"Lighten");
-		map_[@"Screen"]     = NSLocalizedString(@"Screen", @"Screen");
-		map_[@"Overlay"]    = NSLocalizedString(@"Overlay", @"Overlay");
-		map_[@"Difference"] = NSLocalizedString(@"Difference", @"Difference");
-		map_[@"Exclusion"]  = NSLocalizedString(@"Exclusion", @"Exclusion");
-		map_[@"Hue"]        = NSLocalizedString(@"Hue", @"Hue");
-		map_[@"Saturation"] = NSLocalizedString(@"Saturation", @"Saturation");
-		map_[@"Color"]      = NSLocalizedString(@"Color", @"Color");
-		map_[@"Luminosity"] = NSLocalizedString(@"Luminosity", @"Luminosity");
-	}
-	
-	return map_[key];
+	[[self representedObject] setValue:@(mode) forKey:WDBlendModeKey];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	static NSString *identifier = @"blendModeCell";
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
-	if (!cell) {
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
-	}
-	
-	cell.accessoryType = (indexPath.row == selectedRow_) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
-	NSString *blendKey = blendModeNames_[indexPath.row][@"name"];
-	cell.textLabel.text = [self localizedTitleForKey:blendKey];
-	return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	[[tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:selectedRow_ inSection:0]] setAccessoryType:UITableViewCellAccessoryNone];
-	selectedRow_ = indexPath.row;
-	
-	CGBlendMode blendMode = [blendModeNames_[indexPath.row][@"value"] intValue];	
-	[self.drawingController setValue:@(blendMode) forProperty:WDBlendModeProperty];
-	[[tableView cellForRowAtIndexPath:indexPath] setAccessoryType:UITableViewCellAccessoryCheckmark];
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
-}
-
-#pragma mark -
-
-- (void) invalidProperties:(NSNotification *)aNotification
-{
-	NSSet *properties = [aNotification userInfo][WDInvalidPropertiesKey];
-	
-	if ([properties containsObject:WDBlendModeProperty]) {
-		NSIndexPath *selectedIndexPath = [self updateSelectedRow];
-		[tableView_ scrollToRowAtIndexPath:selectedIndexPath atScrollPosition:UITableViewScrollPositionNone animated:YES];
-	}
-}
-
-- (NSIndexPath *) updateSelectedRow
-{
-	[[tableView_ cellForRowAtIndexPath:[NSIndexPath indexPathForRow:selectedRow_ inSection:0]] setAccessoryType:UITableViewCellAccessoryNone];
-	CGBlendMode blendMode = [[drawingController_.propertyManager defaultValueForProperty:WDBlendModeProperty] intValue];
-	NSIndexPath *selectedIndexPath = [self indexPathForBlendMode:blendMode];
-	[[tableView_ cellForRowAtIndexPath:selectedIndexPath] setAccessoryType:UITableViewCellAccessoryCheckmark];
-	selectedRow_ = selectedIndexPath.row;
-	return selectedIndexPath;
-}
-
-#pragma mark -
-
-- (NSString *) displayNameForBlendMode:(CGBlendMode)blendMode
-{
-	for (NSDictionary *dict in blendModeNames_) {
-		if ([dict[@"value"] intValue] == blendMode) {
-			return [self localizedTitleForKey:dict[@"name"]];
-		}
-	}
-	
-	return nil;
-}
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSIndexPath *) indexPathForBlendMode:(CGBlendMode)blendMode
 {
-	if ([tableView_ numberOfRowsInSection:0] > 1) {
-		[tableView_ reloadData]; // first viewWillAppear:
-	}
-	
-	for (NSDictionary *dict in blendModeNames_) {
-		if ([dict[@"value"] intValue] == blendMode) {
-			return  [NSIndexPath indexPathForRow:[blendModeNames_ indexOfObject:dict] inSection:0];
-		}
-	}
-	
-	return nil;
+	return [NSIndexPath indexPathForRow:blendMode inSection:0];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+	return [[self blendNames] count];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (UITableViewCell *)tableView:(UITableView *)tableView
+	cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	static NSString *identifier = @"blendModeCell";
+
+	UITableViewCell *cell =
+	[tableView dequeueReusableCellWithIdentifier:identifier];
+	if (cell == nil)
+	{
+		cell = [[UITableViewCell alloc]
+		initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+	}
+	
+	cell.accessoryType = (indexPath.row == selectedRow_) ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
+
+	cell.textLabel.text = [self blendNames][indexPath.row];
+	return cell;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void)tableView:(UITableView *)tableView
+	didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	// Set new selection
+	selectedRow_ = indexPath.row;
+
+	[tableView reloadSections:[NSIndexSet indexSetWithIndex:0]
+	withRowAnimation:UITableViewRowAnimationFade];
+
+	// Set new value
+	[self _setBlendMode:selectedRow_];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 @end
+////////////////////////////////////////////////////////////////////////////////

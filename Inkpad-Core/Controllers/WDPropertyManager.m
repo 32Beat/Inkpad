@@ -375,21 +375,28 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 }
 
 
+- (WDBlendOptions *) activeBlendOptions
+{
+	if (self.drawingController.singleSelection)
+	{ return self.drawingController.singleSelection.blendOptions; }
+	return [self defaultBlendOptions];
+}
+
+- (WDShadowOptions *)defaultBlendOptions
+{
+	return [self defaultValueForProperty:WDBlendOptionsKey];
+}
+
 - (WDShadowOptions *) activeShadowOptions
-{   
+{
+	if (self.drawingController.singleSelection)
+	{ return self.drawingController.singleSelection.shadowOptions; }
 	return [self defaultShadowOptions];
 }
 
 - (WDShadowOptions *)defaultShadowOptions
 {
 	return [self defaultValueForProperty:WDShadowOptionsKey];
-
-	WDShadowOptions *shadow = [WDShadowOptions new];
-	[shadow setColor:[self defaultValueForProperty:WDShadowColorProperty]];
-	[shadow setAngle:[[self defaultValueForProperty:WDShadowAngleProperty] floatValue]];
-	[shadow setOffset:[[self defaultValueForProperty:WDShadowOffsetProperty] floatValue]];
-	[shadow setBlur:[[self defaultValueForProperty:WDShadowRadiusProperty] floatValue]];
-	return shadow;
 }
 
 

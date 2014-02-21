@@ -42,6 +42,8 @@
 - (WDShadow *) defaultShadow;
 
 
+- (WDBlendOptions *) activeBlendOptions;
+- (WDBlendOptions *) defaultBlendOptions;
 - (WDShadowOptions *) activeShadowOptions;
 - (WDShadowOptions *) defaultShadowOptions;
 - (WDStrokeOptions *) activeStrokeOptions;

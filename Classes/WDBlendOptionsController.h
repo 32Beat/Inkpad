@@ -37,8 +37,8 @@
 @property (nonatomic, weak) id rootController;
 @property (nonatomic, weak) id<WDBlendOptionsControllerDelegate> delegate;
 
-- (id) blendOptions;
-- (void) setBlendOptions:(id)blendOptions;
+- (WDBlendOptions *) blendOptions;
+- (void) setBlendOptions:(WDBlendOptions *)blendOptions;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

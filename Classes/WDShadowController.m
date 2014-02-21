@@ -197,11 +197,10 @@
 	[super viewWillAppear:animated];
 
 	[self setShadowOptions:
-	[drawingController_.propertyManager defaultShadowOptions]];
+	[drawingController_.propertyManager activeShadowOptions]];
 
 	[mBlendOptionsController setBlendOptions:
-	[drawingController_.propertyManager
-	defaultValueForProperty:WDBlendOptionsKey]];
+	[drawingController_.propertyManager activeBlendOptions]];
 }
 
 -(void) blendOptionsController:(id)blender willAdjustValueForKey:(id)key

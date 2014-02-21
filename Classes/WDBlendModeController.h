@@ -15,12 +15,11 @@
 
 @interface WDBlendModeController : UIViewController <UITableViewDataSource, UITableViewDelegate>
 {
-	NSArray *blendModeNames_;
 	IBOutlet UITableView *tableView_;
 	NSUInteger selectedRow_;
 }
 
-@property (nonatomic, weak) WDDrawingController *drawingController;
+@property (nonatomic, weak) id representedObject;
 
 - (NSString *) displayNameForBlendMode:(CGBlendMode)blendMode;
 

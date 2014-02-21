@@ -57,6 +57,7 @@
 	{
 		[self willAdjustValueForKey:WDBlendModeKey];
 		[mBlendOptions setMode:mode];
+		[self updateTable];
 		[self didAdjustValueForKey:WDBlendModeKey];
 	}
 }
@@ -73,6 +74,11 @@
 		[self didAdjustValueForKey:WDBlendOpacityKey];
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateTable
+{ [blendModeTableView_ reloadData]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -122,8 +128,6 @@
 
 - (void) updateBlendMode
 {
-/*	blendMode_ = [[drawingController_.propertyManager defaultValueForProperty:WDBlendModeProperty] intValue];
-*/
 	[blendModeTableView_ reloadData];
 }
 
@@ -151,10 +155,27 @@
 
 		CGSize size = self.view.superview.frame.size;
 		blendModeController_.preferredContentSize = size;
-	//	blendModeController_.drawingController = self.drawingController;
+		blendModeController_.representedObject = self;
 	}
 
 	return blendModeController_;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) valueForKey:(id)key
+{
+	return key == WDBlendModeKey ?
+	@(self.blendOptions.mode) :
+	[super valueForKey:key];
+}
+
+- (void) setValue:(id)value forKey:(id)key
+{
+	if (key == WDBlendModeKey)
+	{ [self setBlendMode:[value intValue]]; }
+	else
+	{ [super setValue:value forKey:key]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +201,7 @@
 	}
 
 	cell.detailTextLabel.text =
-	[blendModeController_ displayNameForBlendMode:mBlendOptions.mode];
+	[[self blendModeController] displayNameForBlendMode:mBlendOptions.mode];
 	
 	return cell;
 }
@@ -190,8 +211,6 @@
 - (void)tableView:(UITableView *)tableView
 	didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	[blendModeTableView_ deselectRowAtIndexPath:
-	[tableView indexPathForSelectedRow] animated:NO];
 	id nav = ((UIViewController *)(self.rootController)).navigationController;
 	[nav pushViewController:[self blendModeController] animated:YES];
 }
