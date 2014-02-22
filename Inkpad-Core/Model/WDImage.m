@@ -192,20 +192,22 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	renderOutline will draw crossmarked rectangle by default, 
-	so we only overwrite renderContent
+	so we only need to implement renderContent
 */
 
 - (void) renderContent:(const WDRenderContext *)renderContext
 {
 	// Fetch CGContextRef
 	CGContextRef ctx = renderContext->contextRef;
+
+	// TODO: change to prepareCGContext:renderContext
+
 	// Shadow ignores the CTM, so needs separate scaling
 	CGFloat scale = renderContext->contextScale*[self shadowScale];
-
 	// Prepare context (may include transparencyLayer)
 	[self prepareCGContext:ctx scale:scale];
 
-	// Adjust CTM so everything scales according to frame scale
+	// Adjust CTM so everything scales according to frame adjustment
 	CGContextConcatCTM(ctx, [self sourceTransform]);
 
 	// Fetch appropriate image
@@ -218,6 +220,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	// Draw border if required
 	if ([self strokeOptions].visible)
 	{
+		[[self strokeOptions] prepareCGContext:ctx scale:scale];
 		CGContextAddRect(ctx, [self sourceRect]);
 		CGContextStrokePath(ctx);
 	}
@@ -247,6 +250,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	// Draw border if required
 	if ([self strokeOptions].visible)
 	{
+		[[self strokeOptions] prepareCGContext:ctx scale:scale];
 		CGContextAddRect(ctx, [self sourceRect]);
 		CGContextStrokePath(ctx);
 	}

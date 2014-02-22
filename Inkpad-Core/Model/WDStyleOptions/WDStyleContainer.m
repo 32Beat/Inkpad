@@ -184,21 +184,31 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	blendOptions transparent:
+	context uses already existing data in context to blend
+	any newly added information
+	
+	shadowOptions visible:
+	shadow is rendered for any newly added information
+	
+	If an element adds multiple drawing calls, these should be
+	composited prior to blending 
+*/
 
-- (BOOL) needTransparency
+- (BOOL) needsTransparencyLayer
 {
 	return
-	[[self blendOptions] isTransparent] ||
-	[[self shadowOptions] isVisible];
+	[[self blendOptions] transparent] ||
+	[[self shadowOptions] visible];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
-	[mStrokeOptions prepareCGContext:context scale:scale];
-	[mShadowOptions prepareCGContext:context scale:scale];
 	[mBlendOptions prepareCGContext:context scale:scale];
+	[mShadowOptions prepareCGContext:context scale:scale];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

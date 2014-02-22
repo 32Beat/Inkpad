@@ -111,6 +111,26 @@ NSString *WDGroupElements = @"WDGroupElements";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) renderOutline:(const WDRenderContext *)renderContext
+{
+	for (WDElement *element in elements_)
+	{ [element renderOutline:renderContext]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderContent:(const WDRenderContext *)renderContext
+{
+	[self beginTransparencyLayer:renderContext->contextRef];
+
+	for (WDElement *element in elements_)
+	{ [element renderContent:renderContext]; }
+
+	[self endTransparencyLayer:renderContext->contextRef];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 	[self beginTransparencyLayer:ctx];

@@ -43,8 +43,10 @@ WDRenderingMetaData WDRenderingMetaDataMake(float scale, UInt32 flags);
 BOOL WDRenderingMetaDataOutlineOnly(WDRenderingMetaData metaData);
 
 ////////////////////////////////////////////////////////////////////////////////
+// See pixelImage and canvas->drawRect:rect for examples
+
 // TODO: Separate file, and opaque dataType?
-// TODO: add printing context info?
+// TODO: add contexttype info?
 typedef struct
 {
 	NSUInteger flags;
@@ -67,6 +69,7 @@ WDRenderContext;
 #define WDRenderContextClipBoundsIntersectRect(rc, R) \
 (CGRectIntersectsRect((rc)->clipBounds, (R)))
 
+////////////////////////////////////////////////////////////////////////////////
 
 @protocol WDDocumentProtocol;
 @protocol WDPathPainter;

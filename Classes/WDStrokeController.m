@@ -212,6 +212,8 @@
 	[options setActive:[modeSegment_ selectedSegmentIndex]];
 	[options setColor:[colorController_ color]];
 	[options setLineWidth:[widthSlider_ value]];
+	[options setLineCap:[capPicker_ cap]];
+	[options setLineJoin:[joinPicker_ join]];
 
 	return options;
 }
@@ -221,17 +223,19 @@
 	[modeSegment_ setSelectedSegmentIndex:[options active]];
 	[colorController_ setColor:[options color]];
 	[widthSlider_ setValue:[options lineWidth]];
+	[capPicker_ setCap:[options lineCap]];
+	[joinPicker_ setJoin:[options lineJoin]];
 }
 
 
 
 - (IBAction) toggleStroke:(id)sender
-{ [self adjustStroke:sender undo:!mDidAdjust]; }
+{ [self adjustStroke:sender shouldUndo:!mDidAdjust]; }
 
 - (IBAction) adjustStroke:(id)sender
-{ [self adjustStroke:sender undo:![sender isTracking]]; }
+{ [self adjustStroke:sender shouldUndo:![sender isTracking]]; }
 
-- (void) adjustStroke:(id)sender undo:(BOOL)shouldUndo
+- (void) adjustStroke:(id)sender shouldUndo:(BOOL)shouldUndo
 {
 	[drawingController_
 	setValue:[self strokeOptions]
@@ -242,10 +246,16 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Will be sent by colorController
+// If not interactive, these should always undo
 
 - (void) takeColorFrom:(id)sender
-{ [self adjustStroke:sender]; }
+{ [self adjustStroke:sender shouldUndo:YES]; }
+
+- (void) takeCapFrom:(id)sender
+{ [self adjustStroke:sender shouldUndo:YES]; }
+
+- (void) takeJoinFrom:(id)sender
+{ [self adjustStroke:sender shouldUndo:YES]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,17 +267,6 @@
 	[self.navigationController pushViewController:arrowController animated:YES];
 }
 
-- (void) takeCapFrom:(id)sender
-{
-	WDLineAttributePicker *picker = (WDLineAttributePicker *)sender;
-	[drawingController_ setValue:@(picker.cap) forProperty:WDStrokeCapProperty];
-}
-
-- (void) takeJoinFrom:(id)sender
-{
-	WDLineAttributePicker *picker = (WDLineAttributePicker *)sender;
-	[drawingController_ setValue:@(picker.join) forProperty:WDStrokeJoinProperty];
-}
 
 - (IBAction) toggleDash:(id)sender
 {

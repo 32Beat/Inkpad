@@ -76,10 +76,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 @synthesize styleOptions = mStyleOptions;
 @synthesize owner = mOwner;
 
+
+// TODO: keep on going until these are no longer needed
 @synthesize layer = layer_;
 @synthesize group = group_;
-//@synthesize opacity = opacity_;
-//@synthesize blendMode = blendMode_;
 @synthesize shadow = shadow_;
 @synthesize initialShadow = initialShadow_;
 
@@ -122,6 +122,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (id) copyWithZone:(NSZone *)zone
 {       
 	WDElement *element = [[[self class] allocWithZone:zone] init];
+
 	if (element != nil)
 	{ [element copyPropertiesFrom:self]; }
 
@@ -137,6 +138,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 	[self setRotation:[srcElement rotation]];
 
 	[[self styleOptions] copyPropertiesFrom:[srcElement styleOptions]];
+
+	// mOwner ?
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -550,6 +553,23 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) prepareContext:(const WDRenderContext *)renderContext
+{
+	CGContextRef contextRef = renderContext->contextRef;
+	CGFloat scale = renderContext->contextScale;
+	[self prepareCGContext:contextRef scale:scale];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) restoreContext:(const WDRenderContext *)renderContext
+{
+	CGContextRef contextRef = renderContext->contextRef;
+	[self restoreCGContext:contextRef];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
 	CGContextSaveGState(context);
@@ -581,7 +601,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (BOOL) needsTransparencyLayer
 {
 	if (mTransparency < 0)
-	{ mTransparency = [[self styleOptions] needTransparency]; }
+	{ mTransparency = [[self styleOptions] needsTransparencyLayer]; }
 
 	return mTransparency;
 }
@@ -1054,8 +1074,15 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) renderContent:(const WDRenderContext *)renderContext
 {
-	[self renderFill:renderContext];
-	[self renderStroke:renderContext];
+	[self prepareContext:renderContext];
+
+//	if ([[self fillOptions] visible])
+	{ [self renderFill:renderContext]; }
+
+	if ([[self strokeOptions] visible])
+	{ [self renderStroke:renderContext]; }
+
+	[self restoreContext:renderContext];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1068,9 +1095,18 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) renderStroke:(const WDRenderContext *)renderContext
 {
+	CGContextRef ctx = renderContext->contextRef;
+	[[self strokeOptions] prepareCGContext:ctx scale:1.0];
+
+	// Draw quad outline
+	WDQuad frame = [self frameQuad];
+	CGContextAddLines(ctx, frame.P, 4);
+	CGContextClosePath(ctx);
+	CGContextStrokePath(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark OLD
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
