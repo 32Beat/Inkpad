@@ -313,7 +313,7 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
         
         [self drawTextInContext:ctx drawingMode:kCGTextFill];
     } else if ([self.strokeStyle willRender] || self.fill || self.maskedElements) {
-        [self beginTransparencyLayer:ctx metaData:metaData];
+        [self beginTransparencyLayer:ctx];
         
         if (self.fill) {
             CGContextSaveGState(ctx);
@@ -343,7 +343,7 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
             [self drawTextInContext:ctx drawingMode:kCGTextStroke];
         }
         
-        [self endTransparencyLayer:ctx metaData:metaData];
+        [self endTransparencyLayer:ctx];
     }
     
     UIGraphicsPopContext();

@@ -190,67 +190,68 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	renderOutline will draw crossmarked rectangle by default, 
+	so we only overwrite renderContent
+*/
 
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
+- (void) renderContent:(const WDRenderContext *)renderContext
 {
-	CGContextConcatCTM(context, [self sourceTransform]);
-	[super prepareCGContext:context scale:scale*[self shadowScale]];
+	// Fetch CGContextRef
+	CGContextRef ctx = renderContext->contextRef;
+	// Shadow ignores the CTM, so needs separate scaling
+	CGFloat scale = renderContext->contextScale*[self shadowScale];
+
+	// Prepare context (may include transparencyLayer)
+	[self prepareCGContext:ctx scale:scale];
+
+	// Adjust CTM so everything scales according to frame scale
+	CGContextConcatCTM(ctx, [self sourceTransform]);
+
+	// Fetch appropriate image
+	UIImage *image = (renderContext->flags & WDRenderThumbnail) ?
+	imageData_.thumbnailImage : imageData_.image;
+
+	// CTM is set, so destinationRect = sourceRect
+	CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+
+	// Draw border if required
+	if ([self strokeOptions].visible)
+	{
+		CGContextAddRect(ctx, [self sourceRect]);
+		CGContextStrokePath(ctx);
+	}
+
+	// Restore context (may include endTransparencyLayer)
+	[self restoreCGContext:ctx];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-	if (metaData.flags & WDRenderOutlineOnly)
+	// Shadow ignores the CTM, so needs separate scaling
+	CGFloat scale = metaData.scale*[self shadowScale];
+	[self prepareCGContext:ctx scale:scale];
+
+	// Adjust CTM so everything scales according to frame scale
+	CGContextConcatCTM(ctx, [self sourceTransform]);
+
+	// Fetch appropriate image
+	UIImage *image = (metaData.flags & WDRenderThumbnail) ?
+	imageData_.thumbnailImage : imageData_.image;
+
+	// CTM is set, so destinationRect = sourceRect
+	CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+
+	// Draw border if required
+	if ([self strokeOptions].visible)
 	{
-		WDQuad frame = [self frameQuad];
-
-		// Draw quad outline
-		CGContextAddLines(ctx, frame.P, 4);
-
-		// draw an X to mark the spot
-		CGContextMoveToPoint(ctx, frame.P[0].x, frame.P[0].y);
-		CGContextAddLineToPoint(ctx, frame.P[2].x, frame.P[2].y);
-		CGContextMoveToPoint(ctx, frame.P[1].x, frame.P[1].y);
-		CGContextAddLineToPoint(ctx, frame.P[3].x, frame.P[3].y);
-
+		CGContextAddRect(ctx, [self sourceRect]);
 		CGContextStrokePath(ctx);
 	}
-	else
-	{
-		CGContextSaveGState(ctx);
 
-		[self prepareCGContext:ctx scale:metaData.scale];
-
-		// TransparencyLayer required to prevent path shadow on content
-		// TransparencyLayer also required if blendMode is not CGBlendNormal
-		if ([self strokeOptions].visible)
-		{
-			if ([self shadowOptions].visible ||
-				[self blendOptions].mode != kCGBlendModeNormal)
-			{
-				CGRect R = [[self strokeOptions]
-				resultAreaForRect:[self sourceRect]];
-				CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
-			}
-		}
-
-		UIImage *image = (metaData.flags & WDRenderThumbnail) ?
-		imageData_.thumbnailImage : imageData_.image;
-
-		CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
-
-		if ([self strokeOptions].visible)
-		{
-			CGContextAddRect(ctx, [self sourceRect]);
-			CGContextStrokePath(ctx);
-			if ([self shadowOptions].visible ||
-				[self blendOptions].mode != kCGBlendModeNormal)
-			{ CGContextEndTransparencyLayer(ctx); }
-		}
-
-		CGContextRestoreGState(ctx);
-	}
+	[self restoreCGContext:ctx];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -689,42 +689,6 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	This would scale styling as well
-*/
-- (void) ___renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
-{
-	if (metaData.flags & WDRenderOutlineOnly)
-	{
-		//[self renderOutlineInContext:ctx metaData:metaData];
-	}
-	else
-	if ([self.strokeStyle willRender] || self.fill || self.maskedElements)
-	{
-		[self beginTransparencyLayer:ctx metaData:metaData];
-
-CGContextSaveGState(ctx);
-CGContextConcatCTM(ctx, [self sourceTransform]);
-
-		if (self.fill) {
-			//[self.fill paintPath:self inContext:ctx];
-		}
-		
-
-
-		if (self.strokeStyle && [self.strokeStyle willRender]) {
-			[self.strokeStyle applyInContext:ctx];
-			CGContextAddPath(ctx, self.sourcePath);
-			CGContextStrokePath(ctx);
-		}
-
-
-CGContextRestoreGState(ctx);
-		[self endTransparencyLayer:ctx metaData:metaData];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
 @end
 ////////////////////////////////////////////////////////////////////////////////
 

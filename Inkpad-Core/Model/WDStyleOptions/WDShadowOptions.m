@@ -112,14 +112,14 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) visible
+- (BOOL) isVisible
 { return mActive && (mColor != nil); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) resultAreaForRect:(CGRect)srcR
 {
-	if ([self visible])
+	if ([self isVisible])
 	{
 		CGRect dstR = srcR;
 		CGSize offset = [self offsetVector];
@@ -141,7 +141,7 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 	CGFloat blurRadius = 0.0;
 	CGColorRef color = nil;
 
-	if ([self visible])
+	if ([self isVisible])
 	{
 		color = [self color].CGColor;
 		offset = [self offsetVector];

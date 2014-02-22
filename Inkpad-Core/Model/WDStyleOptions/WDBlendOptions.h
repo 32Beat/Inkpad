@@ -34,6 +34,8 @@ extern NSString *const WDBlendOpacityKey;
 @property (nonatomic, assign) CGBlendMode mode;
 @property (nonatomic, assign) CGFloat opacity;
 
+- (BOOL) isTransparent;
+
 @end
 ////////////////////////////////////////////////////////////////////////////////
 

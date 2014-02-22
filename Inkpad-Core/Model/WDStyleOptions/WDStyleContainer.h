@@ -71,6 +71,7 @@
 
 // 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
+- (BOOL) needTransparency;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

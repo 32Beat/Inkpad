@@ -28,26 +28,52 @@ extern const float kMinimumDrawingDimension;
 extern const float kMaximumDrawingDimension;
 
 enum {
-    WDRenderDefault      = 0x0,
-    WDRenderOutlineOnly  = 0x1,
-    WDRenderThumbnail    = 0x1 << 1,
-    WDRenderFlipped      = 0x1 << 2
+	WDRenderDefault      = 0x0,
+	WDRenderOutlineOnly  = 0x1,
+	WDRenderThumbnail    = 0x1 << 1,
+	WDRenderFlipped      = 0x1 << 2
 };
 
 typedef struct {
-    float   scale;
-    UInt32  flags;
+	float   scale;
+	UInt32  flags;
 } WDRenderingMetaData;
 
 WDRenderingMetaData WDRenderingMetaDataMake(float scale, UInt32 flags);
 BOOL WDRenderingMetaDataOutlineOnly(WDRenderingMetaData metaData);
 
+////////////////////////////////////////////////////////////////////////////////
+// TODO: Separate file, and opaque dataType?
+// TODO: add printing context info?
+typedef struct
+{
+	NSUInteger flags;
+	CGContextRef contextRef;
+	CGFloat contextScale; // = like layer.contentsScale required for proper shadow scaling
+	CGRect contextBounds; // = pixelBounds or PDF bounds, context may be a tile within actual page
+
+	// Document coordinates
+	CGRect pageBounds; // are we really interested?
+	CGRect clipBounds; // clipBounds in document coordinates, guaranteed not to exceed contextBounds
+	CGAffineTransform transformToContext;
+}
+WDRenderContext;
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define WDRenderContextOutlineOnly(rc) \
+(((rc)->flags&WDRenderOutlineOnly)!=0)
+
+#define WDRenderContextClipBoundsIntersectRect(rc, R) \
+(CGRectIntersectsRect((rc)->clipBounds, (R)))
+
+
 @protocol WDDocumentProtocol;
 @protocol WDPathPainter;
 
 @interface WDDrawing : NSObject <NSCoding, NSCopying> {    
-    NSMutableDictionary     *imageDatas_;
-    NSInteger               suppressNotifications_;
+	NSMutableDictionary     *imageDatas_;
+	NSInteger               suppressNotifications_;
 }
 
 @property (nonatomic, readonly) CGSize dimensions;

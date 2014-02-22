@@ -129,7 +129,7 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 	else
 	if ([self.strokeStyle willRender] || self.fill || self.maskedElements)
 	{
-		[self beginTransparencyLayer:ctx metaData:metaData];
+		[self beginTransparencyLayer:ctx];
 		
 		if (self.fill) {
 			[self.fill paintPath:self inContext:ctx];
@@ -153,7 +153,7 @@ NSString *WDFillRuleKey = @"WDFillRuleKey";
 			[self renderStrokeInContext:ctx];
 		}
 		
-		[self endTransparencyLayer:ctx metaData:metaData];
+		[self endTransparencyLayer:ctx];
 	}
 }
 

@@ -54,7 +54,7 @@ extern NSString *const WDShadowBlurKey;
 @property (nonatomic, assign) CGFloat offset;
 @property (nonatomic, assign) CGFloat blur;
 
-- (BOOL) visible;
+- (BOOL) isVisible;
 - (id) optionsWithScale:(float)scale;
 
 @end

@@ -118,6 +118,8 @@ typedef enum {
 	CGRect mFrameBounds;
 	CGRect mStyleBounds;
 
+	NSInteger mTransparency;
+	
 	WDQuad mFrame;
 	CGPathRef mFramePath;
 }
@@ -301,12 +303,14 @@ typedef enum {
 
 - (void) cacheDirtyBounds;
 - (void) postDirtyBoundsChange;
-- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 - (void) tossCachedColorAdjustmentData;
 - (void) restoreCachedColorAdjustmentData;
 - (void) registerUndoWithCachedColorAdjustmentData;
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark EditMode
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDEditMode) editMode;
@@ -341,6 +345,9 @@ typedef enum {
 - (BOOL) hasTextControls;
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Styling
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDFrameOptions *) frameOptions;
 - (void) setFrameOptions:(WDFrameOptions *)options;
@@ -353,7 +360,25 @@ typedef enum {
 - (void) setStrokeOptions:(WDStrokeOptions *)options;
 
 - (CGRect) resultAreaForRect:(CGRect)R;
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Rendering
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderOutline:(const WDRenderContext *)renderContext;
+- (void) renderContent:(const WDRenderContext *)renderContext;
+- (void) renderFill:(const WDRenderContext *)renderContext;
+- (void) renderStroke:(const WDRenderContext *)renderContext;
+
+
+- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
+- (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
+- (void) restoreCGContext:(CGContextRef)context;
+- (BOOL) needsTransparencyLayer;
+- (void) beginTransparencyLayer:(CGContextRef)context;
+- (void) endTransparencyLayer:(CGContextRef)context;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -471,10 +496,6 @@ typedef enum {
 - (BOOL) hasFill;
 
 - (BOOL) needsToSaveGState:(float)scale;
-- (BOOL) needsTransparencyLayer:(float)scale;
-
-- (void) beginTransparencyLayer:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
-- (void) endTransparencyLayer:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 @end
 

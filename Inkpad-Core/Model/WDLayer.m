@@ -415,6 +415,41 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) _renderInContext:(const WDRenderContext *)renderContext
+{
+	BOOL useTransparencyLayer =
+	WDRenderContextOutlineOnly(renderContext) && (opacity_ != 1.0f) ? YES : NO;
+
+	if (useTransparencyLayer)
+	{
+		CGContextRef ctx = renderContext->contextRef;
+		CGContextSaveGState(ctx);
+		CGContextSetAlpha(ctx, opacity_);
+		CGContextBeginTransparencyLayer(ctx, NULL);
+	}
+
+	for (WDElement *element in elements_)
+	{
+		if (WDRenderContextClipBoundsIntersectRect(renderContext, [element renderBounds]))
+		{
+			if (WDRenderContextOutlineOnly(renderContext))
+			{ [element renderOutline:renderContext]; }
+			else
+			{ [element renderContent:renderContext]; }
+		}
+	}
+
+	if (useTransparencyLayer)
+	{
+		CGContextRef ctx = renderContext->contextRef;
+		CGContextEndTransparencyLayer(ctx);
+		CGContextRestoreGState(ctx);
+	}
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData
 {
 	BOOL useTransparencyLayer =
@@ -426,10 +461,14 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 		CGContextSetAlpha(ctx, opacity_);
 		CGContextBeginTransparencyLayer(ctx, NULL);
 	}
-
-	for (WDElement *element in elements_) {
-		if (CGRectIntersectsRect([element renderBounds], clip)) {
-			[element renderInContext:ctx metaData:metaData];
+	for (WDElement *element in elements_)
+	{
+		if (CGRectIntersectsRect([element renderBounds], clip))
+		{
+			if (WDRenderingMetaDataOutlineOnly(metaData))
+			{ [element outlineInContext:ctx metaData:metaData]; }
+			else
+			{ [element renderInContext:ctx metaData:metaData]; }
 		}
 	}
 

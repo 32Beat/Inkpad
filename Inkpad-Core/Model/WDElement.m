@@ -98,7 +98,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	self = [super init];
 	if (self != nil)
 	{
-		mSize = size;
+		[self setSize:size];
 	}
 
 	return self;
@@ -471,6 +471,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 	mFramePath = nil;
 
 	[self flushBounds];
+
+	mTransparency = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -550,7 +552,62 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
+	CGContextSaveGState(context);
+	
 	[[self styleOptions] prepareCGContext:context scale:scale];
+
+	if ([self needsTransparencyLayer])
+	{ [self beginTransparencyLayer:context]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) restoreCGContext:(CGContextRef)context
+{
+	if ([self needsTransparencyLayer])
+	{ [self endTransparencyLayer:context]; }
+
+	CGContextRestoreGState(context);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	Some settings require drawing in a transparancy layer prior to
+	compositing on the main page. This is a somewhat expensive operation, 
+	so we want to be specific about when to use the transparancy layer 
+	but we don't want to hold up drawing unnecessarily.
+	(this will be called twice during the rendering stage)
+*/
+- (BOOL) needsTransparencyLayer
+{
+	if (mTransparency < 0)
+	{ mTransparency = [[self styleOptions] needTransparency]; }
+
+	return mTransparency;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) beginTransparencyLayer:(CGContextRef)context
+{
+//	CGContextBeginTransparencyLayer(context, NULL);
+
+	/*
+		We need render bounds,
+		otherwise shadow might become corrupted 
+		during editing of lower elements.
+	*/
+	CGRect R = [self renderBounds];
+	CGRect B = CGContextGetClipBoundingBox(context);
+	R = CGRectIntersection(R, B);
+	CGContextBeginTransparencyLayerWithRect(context, R, NULL);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) endTransparencyLayer:(CGContextRef)context
+{
+	CGContextEndTransparencyLayer(context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -970,10 +1027,75 @@ NSString *WDShadowKey = @"WDShadowKey";
 	return nil;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark RenderInContext
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderOutline:(const WDRenderContext *)renderContext
+{
+	WDQuad frame = [self frameQuad];
+
+	CGContextRef ctx = renderContext->contextRef;
+
+	// Draw quad outline
+	CGContextAddLines(ctx, frame.P, 4);
+	CGContextClosePath(ctx);
+	
+	// draw an X to mark the spot
+	CGContextMoveToPoint(ctx, frame.P[0].x, frame.P[0].y);
+	CGContextAddLineToPoint(ctx, frame.P[2].x, frame.P[2].y);
+	CGContextMoveToPoint(ctx, frame.P[1].x, frame.P[1].y);
+	CGContextAddLineToPoint(ctx, frame.P[3].x, frame.P[3].y);
+
+	CGContextStrokePath(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderContent:(const WDRenderContext *)renderContext
+{
+	[self renderFill:renderContext];
+	[self renderStroke:renderContext];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderFill:(const WDRenderContext *)renderContext
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderStroke:(const WDRenderContext *)renderContext
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
+{
+	WDQuad frame = [self frameQuad];
+
+	// Draw quad outline
+	CGContextAddLines(ctx, frame.P, 4);
+	CGContextClosePath(ctx);
+	
+	// draw an X to mark the spot
+	CGContextMoveToPoint(ctx, frame.P[0].x, frame.P[0].y);
+	CGContextAddLineToPoint(ctx, frame.P[2].x, frame.P[2].y);
+	CGContextMoveToPoint(ctx, frame.P[1].x, frame.P[1].y);
+	CGContextAddLineToPoint(ctx, frame.P[3].x, frame.P[3].y);
+
+	CGContextStrokePath(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) addHighlightInContext:(CGContextRef)ctx
 {
@@ -1587,53 +1709,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 	}
 	
 	return NO;
-}
-
-- (BOOL) needsTransparencyLayer:(float)scale
-{
-	return [self needsToSaveGState:scale];
-}
-
-- (void) beginTransparencyLayer:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
-{
-	if (![self needsToSaveGState:metaData.scale]) {
-		return;
-	}
-	
-	CGContextSaveGState(ctx);
-/*
-	[self.blendOptions prepareCGContext:ctx scale:metaData.scale];
-
-	if (shadow_ && metaData.scale <= 3) {
-		[shadow_ applyInContext:ctx metaData:metaData];
-	}
-*/
-	if ([self needsTransparencyLayer:metaData.scale])
-	{
-		/*
-			We need render bounds,
-			otherwise shadow might become corrupted 
-			during editing of lower elements.
-		*/
-//		CGContextBeginTransparencyLayer(ctx, NULL);
-		CGRect B = CGContextGetClipBoundingBox(ctx);
-		CGRect R = [self renderBounds];
-		R = CGRectIntersection(R, B);
-		CGContextBeginTransparencyLayerWithRect(ctx, R, NULL);
-	}
-}
-
-- (void) endTransparencyLayer:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
-{
-	if (![self needsToSaveGState:metaData.scale]) {
-		return;
-	}
-	
-	if ([self needsTransparencyLayer:metaData.scale]) {
-		CGContextEndTransparencyLayer(ctx);
-	}
-	
-	CGContextRestoreGState(ctx);
 }
 
 @end

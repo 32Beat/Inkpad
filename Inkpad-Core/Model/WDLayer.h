@@ -49,6 +49,8 @@
 
 - (CGRect) resultArea;
 - (CGRect) resultAreaForElement:(WDElement *)element;
+
+- (void) _renderInContext:(const WDRenderContext *)renderContext;
 - (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData;
 
 - (void) addObject:(id)obj;
