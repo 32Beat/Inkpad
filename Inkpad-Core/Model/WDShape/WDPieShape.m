@@ -34,7 +34,7 @@
 	CGPoint M = { 0.5*R.size.width, 0.5*R.size.height };
 	CGPoint N = { R.origin.x + M.x, R.origin.y + M.y };
 
-	double t = mValue;
+	double t = 1-mValue;
 	double r = (1-t) * kWDShapeCircleFactor; // circlefactor length
 
 	NSMutableArray *nodes = [NSMutableArray array];

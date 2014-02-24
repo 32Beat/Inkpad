@@ -41,6 +41,7 @@
 	self->mBlendOptions = [srcOptions->mBlendOptions copy];
 	self->mShadowOptions = [srcOptions->mShadowOptions copy];
 	self->mStrokeOptions = [srcOptions->mStrokeOptions copy];
+	self->mFillOptions = [srcOptions->mFillOptions copy];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +55,8 @@
 	{ [self setShadowOptions:[coder decodeObjectForKey:WDShadowOptionsKey]]; }
 	if ([coder containsValueForKey:WDStrokeOptionsKey])
 	{ [self setStrokeOptions:[coder decodeObjectForKey:WDStrokeOptionsKey]]; }
+	if ([coder containsValueForKey:WDFillOptionsKey])
+	{ [self setFillOptions:[coder decodeObjectForKey:WDFillOptionsKey]]; }
 //*/
 /*
 	if ([coder containsValueForKey:NSStringFromClass([self class])])
@@ -75,6 +78,8 @@
 	[coder encodeObject:mShadowOptions forKey:WDShadowOptionsKey];
 	if (mStrokeOptions != nil)
 	[coder encodeObject:mStrokeOptions forKey:WDStrokeOptionsKey];
+	if (mFillOptions != nil)
+	[coder encodeObject:mFillOptions forKey:WDFillOptionsKey];
 //*/
 //	if (mContainer != nil) \
 	[coder encodeObject:mContainer forKey:NSStringFromClass([self class])];
@@ -216,7 +221,13 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	prepareCGContext
+	----------------
+	Prepare global options for context
+	
+	Other options are applied on requirement basis
+*/
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
 	[mBlendOptions prepareCGContext:context];
@@ -227,8 +238,8 @@
 
 - (void) applyScale:(CGFloat)scale
 {
-	[self setShadowOptions:[[self shadowOptions] optionsWithScale:scale]];
 	[self setStrokeOptions:[[self strokeOptions] optionsWithScale:scale]];
+	[self setShadowOptions:[[self shadowOptions] optionsWithScale:scale]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

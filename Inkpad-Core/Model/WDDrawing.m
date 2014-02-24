@@ -600,10 +600,9 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 	[self _renderInContext:&renderContext];
 
-//	[self renderInContext:ctx clipRect:self.bounds metaData:WDRenderingMetaDataMake(1, WDRenderDefault)];
-	
 	UIImage *result =
 	UIGraphicsGetImageFromCurrentImageContext();
+
 	UIGraphicsEndImageContext();
 	
 	return result; 
@@ -660,8 +659,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	CGContextTranslateCTM(ctx, -styleBounds.origin.x, -styleBounds.origin.y);
 
 	[self _renderInContext:&renderContext];
-	//[self renderInContext:ctx clipRect:self.bounds metaData:WDRenderingMetaDataMake(scale, WDRenderDefault)];
-	
+
 	UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
 	UIGraphicsEndImageContext();
 	
@@ -672,21 +670,33 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 + (UIImage *) imageForElements:(NSArray *)elements scale:(float)scaleFactor
 {
 	CGRect contentBounds = CGRectNull;
-	for (WDElement *element in elements) {
-		contentBounds = CGRectUnion(contentBounds, element.styleBounds);
-	}
+	for (WDElement *element in elements)
+	{ contentBounds = CGRectUnion(contentBounds, element.renderBounds); }
 	
-	UIGraphicsBeginImageContext(WDMultiplySizeScalar(contentBounds.size, scaleFactor));
+	UIGraphicsBeginImageContext
+	(WDMultiplySizeScalar(contentBounds.size, scaleFactor));
+
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
 	
 	// scale and offset the elements to render in the new image
 	CGContextSaveGState(ctx);
-	CGContextTranslateCTM(ctx, -contentBounds.origin.x * scaleFactor, -contentBounds.origin.y * scaleFactor);
+	CGContextTranslateCTM(ctx,
+	-contentBounds.origin.x * scaleFactor,
+	-contentBounds.origin.y * scaleFactor);
 	CGContextScaleCTM(ctx, scaleFactor, scaleFactor);
-	
-	for (WDElement *element in elements) {
-		[element renderInContext:ctx metaData:WDRenderingMetaDataMake(scaleFactor, WDRenderDefault)];   
-	}
+
+	WDRenderContext renderContext = {
+		WDRenderDefault,
+		UIGraphicsGetCurrentContext(),
+		scaleFactor,
+		contentBounds,
+		contentBounds,
+		contentBounds,
+		CGAffineTransformIdentity };
+
+
+	for (WDElement *element in elements)
+	{ [element renderContent:&renderContext]; }
 	
 	CGContextRestoreGState(ctx);
 	
@@ -796,24 +806,35 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	float   width = kMaximumThumbnailDimension, height = kMaximumThumbnailDimension;
 	float   aspectRatio = dimensions_.width / dimensions_.height;
 	
-	if (dimensions_.height > dimensions_.width) {
-		width = round(kMaximumThumbnailDimension * aspectRatio);
-	} else {
-		height = round(kMaximumThumbnailDimension / aspectRatio);
-	}
+	if (dimensions_.height > dimensions_.width)
+	{ width = round(kMaximumThumbnailDimension * aspectRatio); }
+	else
+	{ height = round(kMaximumThumbnailDimension / aspectRatio); }
 	
-	CGSize  size = CGSizeMake(width, height);
-	
+	CGSize size = CGSizeMake(width, height);
+	CGRect dstR = {{0,0}, size};
+	CGRect srcR = {{0,0}, dimensions_ };
+
 	// always generate the 2x icon
 	UIGraphicsBeginImageContextWithOptions(size, NO, 2);
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
 	
 	CGContextSetGrayFillColor(ctx, 1, 1);
-	CGContextFillRect(ctx, CGRectMake(0, 0, size.width, size.height));
+	CGContextFillRect(ctx, dstR);
 	
 	float scale = width / dimensions_.width;
 	CGContextScaleCTM(ctx, scale, scale);
-	[self renderInContext:ctx clipRect:self.bounds metaData:WDRenderingMetaDataMake(scale, WDRenderThumbnail)];
+
+	WDRenderContext renderContext = {
+		WDRenderThumbnail,
+		UIGraphicsGetCurrentContext(),
+		scale,
+		dstR,
+		srcR,
+		srcR,
+		CGAffineTransformMakeScale(scale, scale) };
+
+	[self _renderInContext:&renderContext];
 	
 	UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
 	UIGraphicsEndImageContext();
