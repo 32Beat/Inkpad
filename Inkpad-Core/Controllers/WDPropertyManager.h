@@ -48,6 +48,8 @@
 - (WDShadowOptions *) defaultShadowOptions;
 - (WDStrokeOptions *) activeStrokeOptions;
 - (WDStrokeOptions *) defaultStrokeOptions;
+- (WDFillOptions *) activeFillOptions;
+- (WDFillOptions *) defaultFillOptions;
 
 
 

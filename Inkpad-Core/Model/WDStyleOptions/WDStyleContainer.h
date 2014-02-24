@@ -16,6 +16,7 @@
 #import "WDBlendOptions.h"
 #import "WDShadowOptions.h"
 #import "WDStrokeOptions.h"
+#import "WDFillOptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -45,6 +46,7 @@
 	id mBlendOptions;
 	id mShadowOptions;
 	id mStrokeOptions;
+	id mFillOptions;
 
 	id mContainer;
 }
@@ -66,6 +68,9 @@
 
 - (id) strokeOptions;
 - (void) setStrokeOptions:(id)options;
+
+- (id) fillOptions;
+- (void) setFillOptions:(id)options;
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
 

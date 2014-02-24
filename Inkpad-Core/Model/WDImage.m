@@ -131,7 +131,7 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 - (void) renderFill:(const WDRenderContext *)renderContext
 {
-	// Allow super to draw background if necessary
+	// Allow super to draw background
 	[super renderFill:renderContext];
 
 	// Blit image over background

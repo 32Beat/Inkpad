@@ -539,11 +539,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) fillOptions
-{ return nil; }
-//{ return [[self styleOptions] fillOptions]; }
+{ return [[self styleOptions] fillOptions]; }
 
-//- (void) setFillOptions:(WDFillOptions *)fillOptions
-//{ [[self styleOptions] setFillOptions:fillOptions]; }
+- (void) setFillOptions:(WDFillOptions *)fillOptions
+{ [[self styleOptions] setFillOptions:fillOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -1073,7 +1072,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark 
 #pragma mark 
-#pragma mark 
+#pragma mark Intersection Test
+////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL) intersectsRect:(CGRect)R
 {
@@ -1105,6 +1105,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 #pragma mark RenderInContext
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1708,6 +1709,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 */
 - (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager
 {
+	if (property == WDFillOptionsKey)
+		[self setFillOptions:value];
+	else
 	if (property == WDStrokeOptionsKey)
 		[self setStrokeOptions:value];
 	else
@@ -1732,26 +1736,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (property == WDStrokeOptionsKey)
 		return [self strokeOptions];
 	else
-	if ([property isEqualToString:WDOpacityProperty]) {
-		return @([[self blendOptions] opacity]);
-	} else if ([property isEqualToString:WDBlendModeProperty]) {
-		return @([[self blendOptions] mode]);
-	} else if ([property isEqualToString:WDShadowVisibleProperty]) {
-		return @(self.shadowOptions.active);
-	} else if (self.shadowOptions)
-	{
-		WDShadowOptions *shadowOptions = [self shadowOptions];
-
-		if ([property isEqualToString:WDShadowColorProperty]) {
-			return shadowOptions.color;
-		} else if ([property isEqualToString:WDShadowOffsetProperty]) {
-			return @(shadowOptions.offset);
-		} else if ([property isEqualToString:WDShadowRadiusProperty]) {
-			return @(shadowOptions.blur);
-		} else if ([property isEqualToString:WDShadowAngleProperty]) {
-			return @(shadowOptions.angle);
-		}
-	}
+	if (property == WDFillOptionsKey)
+		return [self fillOptions];
 	
 	return nil;
 }
@@ -1759,9 +1745,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (NSSet *) inspectableProperties
 {
 	return [NSSet setWithObjects:
+//		WDFrameOptionsKey,
 		WDBlendOptionsKey,
 		WDShadowOptionsKey,
 		WDStrokeOptionsKey,
+		WDFillOptionsKey,
 		nil];
 }
 

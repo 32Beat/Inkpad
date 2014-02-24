@@ -334,6 +334,8 @@ typedef enum {
 - (void) setShadowOptions:(WDShadowOptions *)options;
 - (WDStrokeOptions *)strokeOptions;
 - (void) setStrokeOptions:(WDStrokeOptions *)options;
+- (WDFillOptions *)fillOptions;
+- (void) setFillOptions:(WDFillOptions *)options;
 
 - (CGRect) resultAreaForRect:(CGRect)R;
 
@@ -404,8 +406,8 @@ typedef enum {
 - (void) renderContent:(const WDRenderContext *)renderContext;
 	- (void) prepareContext:(const WDRenderContext *)renderContext;
 		- (void) renderFill:(const WDRenderContext *)renderContext;
-			//- (void) prepareFillOptions:(const WDRenderContext *)renderContext
-			//- (void) drawFill:(const WDRenderContext *)renderContext
+			- (void) prepareFillOptions:(const WDRenderContext *)renderContext;
+			- (void) drawFill:(const WDRenderContext *)renderContext;
 		- (void) renderStroke:(const WDRenderContext *)renderContext;
 			- (void) prepareStrokeOptions:(const WDRenderContext *)renderContext;
 			- (void) drawStroke:(const WDRenderContext *)renderContext;
@@ -480,8 +482,12 @@ typedef enum {
 - (BOOL) canAdjustColor;
 
 // inspection
-- (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager;
+- (void) setValue:(id)value
+	forProperty:(NSString *)property
+	propertyManager:(WDPropertyManager *)propertyManager;
 - (id) valueForProperty:(NSString *)property;
+
+
 - (NSSet *) inspectableProperties;
 - (BOOL) canInspectProperty:(NSString *)property;
 - (void) propertyChanged:(NSString *)property;

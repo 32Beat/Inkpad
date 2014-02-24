@@ -426,7 +426,7 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
         [super setValue:value forProperty:property propertyManager:propertyManager];
     }
 }
-
+/*
 - (id) valueForProperty:(NSString *)property
 {
     if (![[self inspectableProperties] containsObject:property]) {
@@ -466,7 +466,7 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
     
     return [super valueForProperty:property];
 }
-
+*/
 - (id) pathPainterAtPoint:(CGPoint)pt
 {
     id fill = [self valueForProperty:WDFillProperty];

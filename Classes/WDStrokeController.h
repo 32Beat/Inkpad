@@ -22,7 +22,8 @@ typedef enum {
     kStrokeColor,
 } WDStrokeMode;
 
-@interface WDStrokeController : UIViewController {
+@interface WDStrokeController : UIViewController
+{
     IBOutlet UISlider               *widthSlider_;
     IBOutlet UILabel                *widthLabel_;
     IBOutlet WDLineAttributePicker  *capPicker_;

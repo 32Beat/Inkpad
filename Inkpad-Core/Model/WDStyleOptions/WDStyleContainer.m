@@ -173,6 +173,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (id) fillOptions
+{ return mFillOptions; }
+
+- (void) setFillOptions:(id)options
+{
+	[self willSetOptionsForKey:WDFillOptionsKey];
+	mFillOptions = [options copy];
+	[self didSetOptionsForKey:WDFillOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) resultAreaForRect:(CGRect)R
 {
 	if (mStrokeOptions != nil)

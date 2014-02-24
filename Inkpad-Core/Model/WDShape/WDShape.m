@@ -73,8 +73,15 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGFloat) styleUnit
-{ return MIN(self.size.width, self.size.height); }
+- (void) drawFill:(const WDRenderContext *)renderContext
+{
+	CGContextRef ctx = renderContext->contextRef;
+	CGContextAddPath(ctx, [self sourcePath]);
+	// TODO: Fill rule from fill options, or path?
+	CGContextFillPath(ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) drawStroke:(const WDRenderContext *)renderContext
 {

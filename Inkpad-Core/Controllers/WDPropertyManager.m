@@ -231,36 +231,50 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	// key is const
 	if (property == WDBlendOptionsKey)
 	{
-		defaults_[WDBlendOptionsKey] = [NSKeyedArchiver archivedDataWithRootObject:value];
+		defaults_[WDBlendOptionsKey] =
+		[NSKeyedArchiver archivedDataWithRootObject:value];
 
 		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveBlendChangedNotification object:self userInfo:nil];
+		postNotificationName:WDActiveBlendChangedNotification
+		object:self userInfo:nil];
 		return;
 	}
 	else
 	if (property == WDShadowOptionsKey)
 	{
-		defaults_[WDShadowOptionsKey] = [NSKeyedArchiver archivedDataWithRootObject:value];
+		defaults_[WDShadowOptionsKey] =
+		[NSKeyedArchiver archivedDataWithRootObject:value];
 
 		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveShadowChangedNotification object:self userInfo:nil];
+		postNotificationName:WDActiveShadowChangedNotification
+		object:self userInfo:nil];
 		return;
 	}
 	else
 	if (property == WDStrokeOptionsKey)
 	{
-		defaults_[WDStrokeOptionsKey] = [NSKeyedArchiver archivedDataWithRootObject:value];
-
-		WDStrokeOptions *stroke = value;
-		defaults_[WDStrokeVisibleProperty] = @(stroke.active);
-		defaults_[WDStrokeColorProperty] = [NSKeyedArchiver archivedDataWithRootObject:stroke.color];
-		defaults_[WDStrokeWidthProperty] = @(stroke.lineWidth);
+		defaults_[WDStrokeOptionsKey] =
+		[NSKeyedArchiver archivedDataWithRootObject:value];
 
 		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveStrokeChangedNotification object:self userInfo:nil];
+		postNotificationName:WDActiveStrokeChangedNotification
+		object:self userInfo:nil];
 		return;
 	}
-	
+	else
+	if (property == WDFillOptionsKey)
+	{
+		defaults_[WDFillOptionsKey] =
+		[NSKeyedArchiver archivedDataWithRootObject:value];
+
+		[[NSNotificationCenter defaultCenter]
+		postNotificationName:WDActiveFillChangedNotification
+		object:self userInfo:nil];
+		return;
+	}
+
+	return;
+
 	if ([property isEqualToString:WDFillProperty]) {
 		// want to track the default color and gradient
 		if ([value isKindOfClass:[WDColor class]]) {
@@ -334,10 +348,6 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 - (WDStrokeStyle *) activeStrokeStyle
 {
-	if (![[self defaultValueForProperty:WDStrokeVisibleProperty] boolValue]) {
-		return nil;
-	}
-	
 	return [self defaultStrokeStyle];
 }
 
@@ -350,14 +360,11 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 								   dashPattern:[self defaultValueForProperty:WDStrokeDashPatternProperty]
 									startArrow:[self defaultValueForProperty:WDStartArrowProperty]
 									  endArrow:[self defaultValueForProperty:WDEndArrowProperty]];
+
 }
 
 - (WDShadow *) activeShadow
 {   
-	if (![[self defaultValueForProperty:WDShadowVisibleProperty] boolValue]) {
-		return nil;
-	}
-	
 	return [self defaultShadow];
 }
 
@@ -369,40 +376,41 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 							   angle:[[self defaultValueForProperty:WDShadowAngleProperty] floatValue]];
 }
 
-- (WDStrokeOptions *) activeStrokeOptions
-{   
-	return [self defaultStrokeOptions];
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) activeValueForKey:(id)key
+{
+	if (self.drawingController.singleSelection)
+	{ return [self.drawingController.singleSelection valueForProperty:key]; }
+	return [self defaultValueForProperty:key];
 }
+
+
+- (WDFillOptions *) activeFillOptions
+{ return [self activeValueForKey:WDFillOptionsKey]; }
+
+- (WDFillOptions *)defaultFillOptions
+{ return [self defaultValueForProperty:WDFillOptionsKey]; }
+
+- (WDStrokeOptions *) activeStrokeOptions
+{ return [self activeValueForKey:WDStrokeOptionsKey]; }
 
 - (WDStrokeOptions *)defaultStrokeOptions
-{
-	return [self defaultValueForProperty:WDStrokeOptionsKey];
-}
-
-
-- (WDBlendOptions *) activeBlendOptions
-{
-	if (self.drawingController.singleSelection)
-	{ return self.drawingController.singleSelection.blendOptions; }
-	return [self defaultBlendOptions];
-}
-
-- (WDShadowOptions *)defaultBlendOptions
-{
-	return [self defaultValueForProperty:WDBlendOptionsKey];
-}
+{ return [self defaultValueForProperty:WDStrokeOptionsKey]; }
 
 - (WDShadowOptions *) activeShadowOptions
-{
-	if (self.drawingController.singleSelection)
-	{ return self.drawingController.singleSelection.shadowOptions; }
-	return [self defaultShadowOptions];
-}
+{ return [self activeValueForKey:WDShadowOptionsKey]; }
 
 - (WDShadowOptions *)defaultShadowOptions
-{
-	return [self defaultValueForProperty:WDShadowOptionsKey];
-}
+{ return [self defaultValueForProperty:WDShadowOptionsKey]; }
+
+- (WDBlendOptions *) activeBlendOptions
+{ return [self activeValueForKey:WDBlendOptionsKey]; }
+
+- (WDBlendOptions *)defaultBlendOptions
+{ return [self defaultValueForProperty:WDBlendOptionsKey]; }
+
+
 
 
 - (id<WDPathPainter>) activeFillStyle
