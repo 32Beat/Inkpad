@@ -18,9 +18,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int WDShapeMasterVersion = 1;
-static NSString *WDShapeMasterVersionKey = @"WDShapeMasterVersion";
-
 static NSString *WDShapeNameKey = @"WDShapeName";
 static NSString *WDShapeVersionKey = @"WDShapeVersion";
 static NSString *WDShapeSizeKey = @"WDShapeSize";
@@ -54,40 +51,6 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 + (id) shapeWithFrame:(CGRect)frame
 { return [[self alloc] initWithFrame:frame]; }
 
-- (id) initWithFrame:(CGRect)frame
-{
-	self = [super init];
-	if (self != nil)
-	{
-		[self setFrame:frame];
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) copyWithZone:(NSZone *)zone
-{
-	WDShape *shape = [super copyWithZone:zone];
-	if (shape != nil)
-	{
-		[shape takePropertiesFrom:self];
-	}
-
-	return shape;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) takePropertiesFrom:(WDShape *)shape
-{
-	// super...
-	[self setSize:shape->mSize];
-	[self setPosition:shape->mPosition];
-	[self setRotation:shape->mRotation];
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Encoding
@@ -97,322 +60,105 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 {
 	[super encodeWithCoder:coder];
 
-	[coder encodeInteger:WDShapeMasterVersion forKey:WDShapeMasterVersionKey];
-
-	[self encodeTypeWithCoder:coder];
-	[self encodeSizeWithCoder:coder];
-	[self encodePositionWithCoder:coder];
-	[self encodeRotationWithCoder:coder];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) encodeTypeWithCoder:(NSCoder *)coder
-{
 	[coder encodeObject:[self shapeName] forKey:WDShapeNameKey];
 	[coder encodeInteger:[self shapeVersion] forKey:WDShapeVersionKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (void) encodeSizeWithCoder:(NSCoder *)coder
-{
-	NSString *str = NSStringFromCGSize(mSize);
-	[coder encodeObject:str forKey:WDShapeSizeKey];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) encodePositionWithCoder:(NSCoder *)coder
-{
-	NSString *str = NSStringFromCGPoint(mPosition);
-	[coder encodeObject:str forKey:WDShapePositionKey];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) encodeRotationWithCoder:(NSCoder *)coder
-{
-	NSString *str = sizeof(mRotation) > 32 ?
-	[[NSNumber numberWithDouble:mRotation] stringValue]:
-	[[NSNumber numberWithFloat:mRotation] stringValue];
-	[coder encodeObject:str forKey:WDShapeRotationKey];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark Decoding
-////////////////////////////////////////////////////////////////////////////////
-
-- (id) initWithCoder:(NSCoder *)coder
-{
-	self = [super initWithCoder:coder];
-	if (self != nil)
-	{
-		mSize = (CGSize){ 2.0, 2.0 };
-		mPosition = (CGPoint){ 0.0, 0.0 };
-		mRotation = 0.0;
-
-		NSInteger version =
-		[coder decodeIntegerForKey:WDShapeMasterVersionKey];
-
-		if (version == WDShapeMasterVersion)
-		{ }
-		[self decodeWithCoder:coder];
-	}
-
-	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) decodeWithCoder:(NSCoder *)coder
-{
-	[self decodeSizeWithCoder:coder];
-	[self decodePositionWithCoder:coder];
-	[self decodeRotationWithCoder:coder];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) decodeSizeWithCoder:(NSCoder *)coder
-{
-	if ([coder containsValueForKey:WDShapeSizeKey])
-	{
-		NSString *str = [coder decodeObjectForKey:WDShapeSizeKey];
-		if (str != nil) { mSize = CGSizeFromString(str); }
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) decodePositionWithCoder:(NSCoder *)coder
-{
-	if ([coder containsValueForKey:WDShapePositionKey])
-	{
-		NSString *str = [coder decodeObjectForKey:WDShapePositionKey];
-		if (str != nil) { mPosition = CGPointFromString(str); }
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) decodeRotationWithCoder:(NSCoder *)coder
-{
-	if ([coder containsValueForKey:WDShapeRotationKey])
-	{
-		NSString *str = [coder decodeObjectForKey:WDShapeRotationKey];
-		if (str != nil)
-		{
-			mRotation = sizeof(mRotation)>32 ?
-			[str doubleValue] : [str floatValue];
-		}
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark Properties
-////////////////////////////////////////////////////////////////////////////////
-/*
-	setSize
-	-------
-	Set size of original source shape
-	
-	Some shapes do not scale proportionally so instead of 
-	applying a scale, flush the source so beziernodes can 
-	be rebuild properly .
-*/
-
-- (void) setSize:(CGSize)size
-{
-	if ((mSize.width!=size.width)||
-		(mSize.height!=size.height))
-	{
-		mSize = size;
-		[self flushSource];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	setPosition
-	-----------
-	Set position of result shape
-*/
-
-- (void) setPosition:(CGPoint)P
-{
-	if ((mPosition.x != P.x)||
-		(mPosition.y != P.y))
-	{
-		mPosition.x = P.x;
-		mPosition.y = P.y;
-		[self flushResult];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	setRotation
-	-----------
-	Set rotation of result shape
-*/
-
-- (void) setRotation:(CGFloat)degrees
-{
-	if (mRotation != degrees)
-	{
-		mRotation = degrees;
-		[self flushResult];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
-/*
-	setFrame
-	--------
-	Set size and position, reset rotation
-*/
-
-- (void) setFrame:(CGRect)frame
-{
-	[self setSize:frame.size];
-	[self setPosition:(CGPoint){ CGRectGetMidX(frame), CGRectGetMidY(frame) }];
-	[self setRotation:0.0];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) adjustTransform:(CGAffineTransform)T
-{
-	// Record current state for undo
-	[self saveState];
-
-	// Store update areas
-	[self cacheDirtyBounds];
-
-/*
-	If we ever want to support numeric transformations,
-	we need to limit our transforms to normal rotation, scale, and move.
-	
-	They currently are, attempt breaking it down.
-*/
-	// Test for rotation
-	if ((T.b != 0.0)||(T.c != 0.0))
-	{
-		double a1 = atan2(+T.b, +T.a);
-		double a2 = atan2(-T.c, +T.d);
-		double a = 0.5*(a1+a2);
-		double degrees = 180.0*a/M_PI;
-
-		degrees += mRotation;
-		[self setRotation:degrees];
-	}
-	else
-	// Test for scale
-	if ((T.a != 1.0)||(T.d != 1.0))
-	{
-		CGSize size = mSize;
-		size.width *= T.a;
-		size.height *= T.d;
-		[self setSize:size];
-	}
-
-	// Always move
-	CGPoint P = mPosition;
-	P = CGPointApplyAffineTransform(P, T);
-	[self setPosition:P];
-
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	TODO: move up in object chain or implement proper hierarchy
-*/
-- (void) saveState
-{
-	// Record current properties for undo
-	[[self.undoManager prepareWithInvocationTarget:self]
-	resetState:[self copy]];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) resetState:(WDShape *)shape
-{
-	if (shape != nil)
-	{
-		// Save state for redo
-		[self saveState];
-
-		// Store update areas
-		[self cacheDirtyBounds];
-
-		// Copy properties from shape
-		[self takePropertiesFrom:shape];
-
-		// Notify drawingcontroller
-		[self postDirtyBoundsChange];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) bounds
-{ return [self frameRect]; }
 
 - (CGPathRef) pathRef
 { return [self resultPath]; }
 
-- (WDQuad) frameQuad
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) styleUnit
+{ return MIN(self.size.width, self.size.height); }
+
+- (void) drawStroke:(const WDRenderContext *)renderContext
 {
-	CGRect B = [self styleBoundsForPath:[self sourcePath]];
-	CGAffineTransform T = [self sourceTransform];
-	return WDQuadWithRect(B, T);
-}
-
-
-- (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)delta
-{
-	CGPoint P0 = [self frameControlPointAtIndex:n];
-	CGPoint P1 = WDAddPoints(P0, delta);
-
-	CGPoint C = mPosition;
-	CGPoint D0 = WDSubtractPoints(P0,C);
-	CGPoint D1 = WDSubtractPoints(P1,C);
-
-	CGFloat a0 = atan2(D0.y, D0.x);
-	CGFloat a1 = atan2(D1.y, D1.x);
-	CGFloat da = a1 - a0;
-
-	CGFloat d0 = WDDistance(P0, C);
-	CGFloat d1 = WDDistance(P1, C);
-	CGFloat d = d0 != 0.0 && d1 != 0.0 ? d1 / d0 : 1.0;
-
-	// Store update areas
-	[self cacheDirtyBounds];
-
-	[self setSize:WDScaleSize(mSize, d, d)];
-	[self setRotation:mRotation + 180.0*da/M_PI];
-
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	CGContextRef ctx = renderContext->contextRef;
+	CGContextAddPath(ctx, [self sourcePath]);
+	CGContextStrokePath(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 
+- (WDQuad) frameQuad
+{
+	return WDQuadWithRect([self sourceStrokeBounds], [self sourceTransform]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) sourceStrokeBounds
+{
+	if (CGRectIsEmpty(mSourceStrokeBounds))
+	{ mSourceStrokeBounds = [self computeSourceStrokeBounds]; }
+	return mSourceStrokeBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeSourceStrokeBounds
+{
+	CGRect R = self.strokeOptions != nil ?
+	[self.strokeOptions resultAreaForPath:[self sourcePath]
+	scale:1.0/[self resizeScale]]:
+	[self sourceRect];
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) resultStrokeBounds
+{
+	if (CGRectIsEmpty(mResultStrokeBounds))
+	{ mResultStrokeBounds = [self computeResultStrokeBounds]; }
+	return mResultStrokeBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeResultStrokeBounds
+{
+	CGRect R = self.strokeOptions != nil ?
+	[self.strokeOptions resultAreaForPath:[self resultPath] scale:1.0]:
+	[self frameBounds];
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	For an arbitrary path the bounding box of the resultPath
+	has no direct relation to the bounding box of the sourcePath 
+*/
+- (CGRect) computeStyleBounds
+{
+	CGRect R = [self frameBounds];
+
+	if (self.strokeOptions != nil)
+	{ R = [self.strokeOptions resultAreaForPath:[self resultPath] scale:1.0]; }
+
+	if (self.shadowOptions != nil)
+	{ R = [self.shadowOptions resultAreaForRect:R]; }
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) flushCache
 {
-	// [super flushSource];
+	[super flushCache];
+
+	mSourceStrokeBounds = CGRectZero;
+	mResultStrokeBounds = CGRectZero;
 	[self flushSource];
 }
 
@@ -437,29 +183,25 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) sourceRect
-{ return (CGRect){{-0.5*mSize.width, -0.5*mSize.height}, mSize }; }
+/*
+- (CGSize) sourceSize
+{ return (CGSize){ 2.0, 2.0 }; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGAffineTransform) sourceTransform
+- (CGAffineTransform) computeSourceTransform
 {
-	CGAffineTransform T =
-	{ 1.0, 0.0, 0.0, 1.0, mPosition.x, mPosition.y};
+	CGAffineTransform T = [super computeSourceTransform];
 
-	if (mRotation != 0.0)
-	{
-		CGFloat angle = mRotation * M_PI / 180.0;
-		T.a = cos(angle);
-		T.b = sin(angle);
-		T.c = -T.b;
-		T.d = +T.a;
-	}
+	CGSize size = [self size];
+	CGFloat sx = size.width / [self sourceSize].width;
+	CGFloat sy = size.height / [self sourceSize].height;
+
+	T = CGAffineTransformScale(T, sx, -sy);
 
 	return T;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	frameRect
@@ -628,25 +370,6 @@ CGPoint CGRectPointFromNormalizedPoint(CGRect R, CGPoint P)
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
-////////////////////////////////////////////////////////////////////////////////
-// TODO:remove for better mvc separation
-/*
-	Make encompassing path object which holds WDShape 
-	which acts like a kind of controller on WDShape
-	it should handle drawing, and conversion
-*/
-////////////////////////////////////////////////////////////////////////////////
-// TODO: rename to applyTransform: or appendTransform:
-
-- (NSSet *) transform:(CGAffineTransform)T
-{
-	[super transform:T];
-
-	[self adjustTransform:T];
-
-	return nil;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDPickResult *) hitResultForPoint:(CGPoint)point viewScale:(float)viewScale snapFlags:(int)flags

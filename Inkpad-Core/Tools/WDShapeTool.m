@@ -346,20 +346,12 @@ NSString *WDShapeToolSpiralDecay = @"WDShapeToolSpiralDecay";
 		{
 			WDStylable *item =
 			[self pathWithPoint:theEvent.snappedLocation constrain:[self constrain]];
-			
-			WDStrokeStyle *stroke = [canvas.drawingController.propertyManager activeStrokeStyle];
-			item.strokeStyle = (shapeMode_ == WDShapeModeLine) ? stroke : [stroke strokeStyleSansArrows];
-			
-			if (shapeMode_ != WDShapeModeLine) {
-				item.fill = [canvas.drawingController.propertyManager activeFillStyle];
-			}
-			
-			item.blendOptions.opacity =
-			[[canvas.drawingController.propertyManager
-			defaultValueForProperty:WDOpacityProperty] floatValue];
 
-			item.shadow = [canvas.drawingController.propertyManager activeShadow];
-			
+			WDPropertyManager *pm = canvas.drawingController.propertyManager;
+			[item setBlendOptions:[pm activeBlendOptions]];
+			[item setShadowOptions:[pm activeShadowOptions]];
+			[item setStrokeOptions:[pm activeStrokeOptions]];
+
 			[canvas.drawing addObject:item];
 			[canvas.drawingController selectObject:item];
 		}

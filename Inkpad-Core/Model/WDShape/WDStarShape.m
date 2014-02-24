@@ -156,19 +156,15 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 
 - (void) adjustPointCount:(long)count withUndo:(BOOL)shouldUndo
 {
-	// Record undo
 	if (shouldUndo)
 	[[self.undoManager prepareWithInvocationTarget:self]
 	adjustPointCount:mCount withUndo:YES];
 
-	// Store update areas
-	[self cacheDirtyBounds];
+	[self willChangePropertyForKey:WDParamPointCountKey];
 
-	// Set new radius
 	[self setPointCount:count];
 
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	[self didChangePropertyForKey:WDParamPointCountKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,19 +174,15 @@ static NSString *WDParamInnerRadiusKey = @"WDStarShapeInnerRadius";
 
 - (void) adjustInnerRadius:(float)radius withUndo:(BOOL)shouldUndo
 {
-	// Record undo
 	if (shouldUndo)
 	[[self.undoManager prepareWithInvocationTarget:self]
-	adjustInnerRadius:mRadius withUndo:YES];
+	adjustPointCount:mCount withUndo:YES];
 
-	// Store update areas
-	[self cacheDirtyBounds];
+	[self willChangePropertyForKey:WDParamInnerRadiusKey];
 
-	// Set new radius
 	[self setInnerRadius:radius];
 
-	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	[self didChangePropertyForKey:WDParamInnerRadiusKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

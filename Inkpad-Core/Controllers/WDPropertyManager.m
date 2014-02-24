@@ -19,9 +19,12 @@
 #import "WDShadow.h"
 
 NSString *WDInvalidPropertiesNotification = @"WDInvalidPropertiesNotification";
-NSString *WDActiveStrokeChangedNotification = @"WDActiveStrokeChangedNotification";
+
+NSString *const WDActiveBlendChangedNotification = @"WDActiveBlendChangedNotification";
+NSString *const WDActiveShadowChangedNotification = @"WDActiveShadowChangedNotification";
+NSString *const WDActiveStrokeChangedNotification = @"WDActiveStrokeChangedNotification";
+
 NSString *WDActiveFillChangedNotification = @"WDActiveFillChangedNotification";
-NSString *WDActiveShadowChangedNotification = @"WDActiveShadowChangedNotification";
 NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 @interface WDPropertyManager (private)
@@ -230,6 +233,8 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	{
 		defaults_[WDBlendOptionsKey] = [NSKeyedArchiver archivedDataWithRootObject:value];
 
+		[[NSNotificationCenter defaultCenter]
+		postNotificationName:WDActiveBlendChangedNotification object:self userInfo:nil];
 		return;
 	}
 	else

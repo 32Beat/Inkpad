@@ -100,10 +100,34 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 - (CGRect) resultAreaForRect:(CGRect)R
 {
+	CGFloat min = MIN(R.size.width, R.size.height);
+	return [self resultAreaForRect:R scale:0.01*min];
+}
+
+- (CGRect) resultAreaForRect:(CGRect)R  scale:(CGFloat)scale
+{
 	if ([self visible])
-	{ R = CGRectInset(R, -0.5 * mLineWidth, -0.5 * mLineWidth); }
+	{
+		CGFloat r = 0.5 * mLineWidth * scale;
+		R = CGRectInset(R, -r, -r);
+	}
+
 	return R;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) optionsWithScale:(float)scale
+{
+	WDStrokeOptions *options = [self copy];
+	options->mLineWidth *= scale;
+	return options;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) resultAreaForPath:(CGPathRef)path scale:(CGFloat)scale
+{ return WDStrokeOptionsStyleBoundsForPath([self optionsWithScale:scale], path); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -112,7 +136,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	if ([self visible])
 	{
 		CGContextSetStrokeColorWithColor(context, [self color].CGColor);
-		CGContextSetLineWidth(context, [self lineWidth]);
+		CGContextSetLineWidth(context, [self lineWidth]*scale);
 		CGContextSetLineCap(context, [self lineCap]);
 		CGContextSetLineJoin(context, [self lineJoin]);
 	}

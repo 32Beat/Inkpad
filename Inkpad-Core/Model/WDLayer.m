@@ -415,12 +415,21 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) _renderInContext:(const WDRenderContext *)renderContext
+- (void) renderOutline:(const WDRenderContext *)renderContext
 {
-	BOOL useTransparencyLayer =
-	WDRenderContextOutlineOnly(renderContext) && (opacity_ != 1.0f) ? YES : NO;
+	for (WDElement *element in elements_)
+	{
+		if (WDRenderContextClipBoundsIntersectRect
+			(renderContext, [element renderBounds]))
+		{ [element renderOutline:renderContext]; }
+	}
+}
 
-	if (useTransparencyLayer)
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderContent:(const WDRenderContext *)renderContext
+{
+	if (opacity_ != 1.0)
 	{
 		CGContextRef ctx = renderContext->contextRef;
 		CGContextSaveGState(ctx);
@@ -430,22 +439,27 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 	for (WDElement *element in elements_)
 	{
-		if (WDRenderContextClipBoundsIntersectRect(renderContext, [element renderBounds]))
-		{
-			if (WDRenderContextOutlineOnly(renderContext))
-			{ [element renderOutline:renderContext]; }
-			else
-			{ [element renderContent:renderContext]; }
-		}
+		if (WDRenderContextClipBoundsIntersectRect
+			(renderContext, [element renderBounds]))
+		{ [element renderContent:renderContext]; }
 	}
 
-	if (useTransparencyLayer)
+	if (opacity_ != 1.0)
 	{
 		CGContextRef ctx = renderContext->contextRef;
 		CGContextEndTransparencyLayer(ctx);
 		CGContextRestoreGState(ctx);
 	}
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _renderInContext:(const WDRenderContext *)renderContext
+{
+	if (WDRenderContextOutlineOnly(renderContext))
+	{ [self renderOutline:renderContext]; }
+	else
+	{ [self renderContent:renderContext]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

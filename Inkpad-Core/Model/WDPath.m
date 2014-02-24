@@ -804,7 +804,7 @@ NSString *WDClosedKey = @"WDClosedKey";
             newNodes[0] = closedNode;
             [newNodes removeLastObject];
             
-            self.nodes = newNodes;
+            nodes_ = newNodes;
         }
     }
     

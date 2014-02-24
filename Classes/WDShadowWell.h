@@ -11,12 +11,15 @@
 
 #import <UIKit/UIKit.h>
 
-@class WDShadow;
+#import "WDBlendOptions.h"
+#import "WDShadowOptions.h"
 
+////////////////////////////////////////////////////////////////////////////////
 @interface WDShadowWell : UIButton  
 
-@property (nonatomic, strong) WDShadow *shadow;
-@property (nonatomic, assign) float opacity;
+@property (nonatomic) WDBlendOptions *blendOptions;
+@property (nonatomic) WDShadowOptions *shadowOptions;
 @property (nonatomic, weak) UIBarButtonItem *barButtonItem;
 
 @end
+////////////////////////////////////////////////////////////////////////////////

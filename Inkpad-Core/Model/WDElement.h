@@ -26,6 +26,21 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
+	WDElement
+	---------
+	Base class for all drawable objects in a document
+	
+	Manages the size, position, and rotation of drawable objects, 
+	as well as its stylable properties. Default behavior will 
+	draw a rectangular frame in correct position and orientation with 
+	fill properties applied to its interior, and stroke properties 
+	applied to its border.
+	
+	Contains granular drawing drill-down with several hooks to allow 
+	for easy customization.
+*/
+////////////////////////////////////////////////////////////////////////////////
+/*
 	WDEditMode
 	----------
 	Indicates the current edit mode of an object
@@ -51,6 +66,24 @@ typedef enum
 	eWDEditModeText 	= (1<<3)
 }
 WDEditMode;
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	ElementOwner
+	------------
+	Protocol for an element container
+	An element owner should be able to act as a kind of delegate for
+	element state changes, e.g. accumulate undo and update areas.
+	
+	It should also be able to report back renderAreas, so the core
+	drawing controller can request update areas through a bottom-up chain
+*/
+@protocol WDElementOwner
+- (void)element:(WDElement*)element willChangePropertyForKey:(id)propertyKey;
+- (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey;
+
+- (CGRect) resultAreaForRect:(CGRect)sourceRect;
+@end
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,27 +112,13 @@ typedef enum {
 
 #import "WDStyleContainer.h"
 
-/*
-	ElementOwner
-	------------
-	Protocol for an element container
-	An element owner should be able to act as a kind of delegate for
-	element state changes, e.g. accumulate undo and update areas.
-	
-	It should also be able to report back renderAreas, so the core
-	drawing controller can request update areas through a bottom-up chain
-*/
-@protocol WDElementOwner
-- (void)element:(WDElement*)element willChangePropertyForKey:(id)propertyKey;
-- (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey;
-
-- (CGRect) resultAreaForRect:(CGRect)sourceRect;
-@end
-
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface WDElement : NSObject <NSCoding, NSCopying, WDStyleContainerDelegate>
 {
+	// Only need one owner reference
+	__weak id<WDElementOwner> mOwner;
+
 	// Fundamental properties
 	CGSize mSize;
 	CGPoint mPosition;
@@ -111,7 +130,6 @@ typedef enum {
 
 	// Active state vars
 	WDEditMode mEditMode;
-	__weak id<WDElementOwner> mOwner;
 
 	// Cached info
 	CGAffineTransform mTransform;
@@ -124,6 +142,9 @@ typedef enum {
 	CGPathRef mFramePath;
 }
 
+// "There can be only one!"
+@property (nonatomic, weak) id<WDElementOwner> owner;
+
 // Fundamental properties
 @property (nonatomic, assign) CGSize size;
 @property (nonatomic, assign) CGPoint position;
@@ -132,36 +153,31 @@ typedef enum {
 // Context properties
 @property (nonatomic, strong) WDStyleContainer *styleOptions;
 
-// "There can be only one!"
-@property (nonatomic, weak) id<WDElementOwner> owner;
-
-
-//- (WDStyleOptions *) blendStyleOptions;
-//- (WDStyleOptions *) strokeStyleOptions;
-
 /*
 	styleProperties
 		blendStyleProperties
 			blendMode
 			blendOpacity
 		shadowStyleProperties
-		fillStyleProperties
+			shadowActive
+			shadowColor
+			shadowAngle
+			shadowOffset (distance)
+			shadowBlur
 		strokeStyleProperties
+			strokeActive
+			strokeColor
+			strokeLineWidth
+			strokeLineCap
+			strokeLineJoin
+			strokeDashOptions
+				<dash properties>
+		fillStyleProperties
+			fillActive
+			fillType
+			fillColor
+			...
 		textStyleProperties
-
-
-	while element is generic, we could technically consider it 
-	as always stylable:
-	
-	path = framepath
-	
-	drawing order: 
-	1. draw fill
-	2. draw content
-	3. draw stroke (as border)
-
-{ [[self styleOptions] valueForKey:WDBlendStyleOptionsKey]; }
-{ [[self styleOptions] valueForKey:WDStrokeStyleOptionsKey]; }
 */
 
 /*
@@ -193,60 +209,7 @@ typedef enum {
 		[owner renderAreaForRect:(CGRect)];
 		
 		? [owner renderAreaForArea:(WDQuad)???]
-	
-	
-	Styles
-	
-	Add WDStyleProperties object as a wrapper around dictionary which 
-	accommodates computations: 
-	
-		[[WDStyleProperties styleWithProperties:dictionary]
-			renderAreaForRect:(CGRect)sourceRect];
-		
-		derived objects:
-		[[WDShadowStyle styleWithProperties:dictionary] renderAreaForRect:];
-		[[WDStrokeStyle styleWithProperties:dictionary] renderAreaForRect:];
-
-		[WDStrokeStyle renderAreaWithProperties:props sourceRect:R];
-		[WDStrokeStyle renderAreaWithProperties:props sourcePath:path];
-
-		[WDStrokeStyle applyProperties:props toContext:cgcontext];
-		
-	de facto:
-	WD...Style acts as controller object for specific styledictionary, 
-	may use an internal mutable dictionary, returns a fixed dictionary 
-	with a copy of values. Values can be get/set normally.
-	
-	An element does not have WD...Style objects internally, just dictionaries
-	
-	style = [WDStrokeStyle styleWithProperties:dictionary];
-	[style setStrokeWidth:1.0];
-	newProperties = [style properties];
-	
-	//
-	[properties setValue:[NSValue valueWithCGFloat:1.0] 
-		forKey:WDPropertyStrokeStyleLineWidthKey];
-	
-	[element setValue: forKey:]
-	
-	
-	
-
-	[style setValue:forKey:]
-	{
-		if (![mProperties isKindOfClass:[NSMutableDictionary class]])
-		{ mProperties = [mProperties mutableCopy]; }
-		[mProperties setValue:forKey:];
-	}
-	
-	[strokeStyle setLineWidth:]
-	{
-		[self setValue:[NSValue valueWithCGFloat:lineWidth] 
-		forKey:WDPropertyStrokeStyleLineWidthKey];
-	}
-
 */
-
 
 // Owner references for convenience
 @property (nonatomic, weak) WDLayer *layer; // layer
@@ -267,7 +230,6 @@ typedef enum {
 - (void) decodeWithCoder:(NSCoder *)coder;
 - (void) decodeWithCoder0:(NSCoder *)coder;
 
-//- (void) awakeFromEncoding;
 
 - (void) willChangePropertyForKey:(id)key;
 - (void) didChangePropertyForKey:(id)key;
@@ -346,6 +308,20 @@ typedef enum {
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
+#pragma mark Properties
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) size;
+- (void) setSize:(CGSize)size;
+- (CGPoint) position;
+- (void) setPosition:(CGPoint)point;
+- (CGFloat) rotation;
+- (void) setRotation:(CGFloat)rotation;
+
+- (void) flushCache;
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 #pragma mark Styling
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -362,35 +338,11 @@ typedef enum {
 - (CGRect) resultAreaForRect:(CGRect)R;
 
 ////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark Rendering
+#pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) renderOutline:(const WDRenderContext *)renderContext;
-- (void) renderContent:(const WDRenderContext *)renderContext;
-- (void) renderFill:(const WDRenderContext *)renderContext;
-- (void) renderStroke:(const WDRenderContext *)renderContext;
-
-
-- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
-- (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
-- (void) restoreCGContext:(CGContextRef)context;
-- (BOOL) needsTransparencyLayer;
-- (void) beginTransparencyLayer:(CGContextRef)context;
-- (void) endTransparencyLayer:(CGContextRef)context;
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-- (CGSize) sourceSize;
-- (CGRect) sourceRect;
-- (CGAffineTransform) sourceTransform;
-- (CGAffineTransform) computeSourceTransform;
-
-- (void) setTransform:(CGAffineTransform)T;
-- (void) setTransform:(CGAffineTransform)T sourceRect:(CGRect)sourceRect;
-
+//- (WDQuad) frame;
+//- (void) setFrame:(WDQuad)frame;
 
 
 - (CGRect) bounds;
@@ -403,6 +355,21 @@ typedef enum {
 - (CGRect) computeRenderBounds;
 
 - (void) flushBounds;
+
+
+
+- (CGSize) sourceSize;
+- (CGRect) sourceRect;
+- (CGAffineTransform) sourceTransform;
+- (CGAffineTransform) computeSourceTransform;
+
+- (CGFloat) resizeScale;
+
+- (void) setTransform:(CGAffineTransform)T;
+- (void) setTransform:(CGAffineTransform)T sourceRect:(CGRect)sourceRect;
+
+
+
 
 
 - (CGRect) subselectionBounds;
@@ -427,6 +394,33 @@ typedef enum {
 - (void) applyRotation:(CGFloat)r;
 
 - (NSSet *) transform:(CGAffineTransform)transform;
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Rendering
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) renderOutline:(const WDRenderContext *)renderContext;
+- (void) renderContent:(const WDRenderContext *)renderContext;
+	- (void) prepareContext:(const WDRenderContext *)renderContext;
+		- (void) renderFill:(const WDRenderContext *)renderContext;
+			//- (void) prepareFillOptions:(const WDRenderContext *)renderContext
+			//- (void) drawFill:(const WDRenderContext *)renderContext
+		- (void) renderStroke:(const WDRenderContext *)renderContext;
+			- (void) prepareStrokeOptions:(const WDRenderContext *)renderContext;
+			- (void) drawStroke:(const WDRenderContext *)renderContext;
+	- (void) restoreContext:(const WDRenderContext *)renderContext;
+
+////////////////////////////////////////////////////////////////////////////////
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
+- (void) restoreCGContext:(CGContextRef)context;
+- (BOOL) needsTransparencyLayer;
+- (void) beginTransparencyLayer:(CGContextRef)context;
+- (void) endTransparencyLayer:(CGContextRef)context;
+
+// OLD
+- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
+- (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 ////////////////////////////////////////////////////////////////////////////////
 

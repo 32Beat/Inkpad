@@ -77,6 +77,9 @@
 - (CGRect) resultAreaForRect:(CGRect)sourceRect
 { return sourceRect; }
 
+- (void) prepareCGContext:(CGContextRef)context
+{ [self prepareCGContext:context scale:1.0]; }
+
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale {}
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -97,7 +97,7 @@
 
 
 		if ([property isEqualToString:WDStrokeWidthProperty]) {
-			widthSlider_.value = [self strokeWidthToSliderValue:[value floatValue]];
+			widthSlider_.value = [self sliderValueFromStrokeWidth:[value floatValue]];
 			widthLabel_.text = [NSString stringWithFormat:@"%.1f pt", [value floatValue]];
 			
 			decrement.enabled = widthSlider_.value != widthSlider_.minimumValue;
@@ -122,48 +122,68 @@
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Width Slider
+////////////////////////////////////////////////////////////////////////////////
 
-#define kX 40.0f
-#define kXLog log(kX + 1)
+- (float) lineWidth
+{ return [self strokeWidthFromSliderValue:widthSlider_.value]; }
 
-- (float) widthSliderDelta
+- (void) setLineWidth:(float)lineWidth
 {
-	return (widthSlider_.maximumValue - widthSlider_.minimumValue);
-}
+	UISlider *slider = widthSlider_;
+	UILabel *label = widthLabel_;
 
-- (float) strokeWidthToSliderValue:(float)strokeWidth
-{
-	float delta = [self widthSliderDelta];
-	float v = (strokeWidth - widthSlider_.minimumValue) * (kX / delta) + 1.0f;
-	v = log(v);
-	v /= kXLog;
+	slider.value = [self sliderValueFromStrokeWidth:lineWidth];
+	label.text = [NSString stringWithFormat:@"%.1f pt", lineWidth];
 	
-	return (v * 100);
-}
-
-- (float) sliderValueToStrokeWidth
-{
-	float percentage = WDClamp(0.0f, 1.0f, (widthSlider_.value) / 100.0f);
-	float delta = [self widthSliderDelta];
-	float v = delta * (exp(kXLog * percentage) - 1.0f) / kX + widthSlider_.minimumValue;
-	
-	return v;
-}
-
-- (IBAction) takeStrokeWidthFrom:(id)sender
-{
-	widthLabel_.text = [NSString stringWithFormat:@"%.1f pt", [self sliderValueToStrokeWidth]];
-	
-	UISlider *slider = (UISlider *)sender;
 	decrement.enabled = slider.value != slider.minimumValue;
 	increment.enabled = slider.value != slider.maximumValue;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) sliderValueFromStrokeWidth:(float)strokeWidth
+{
+	float v = strokeWidth - widthSlider_.minimumValue;
+	float r = widthSlider_.maximumValue - widthSlider_.minimumValue;
+
+	return widthSlider_.minimumValue + r * sqrt(v/r);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) strokeWidthFromSliderValue:(float)sliderValue
+{
+	float v = sliderValue - widthSlider_.minimumValue;
+	float r = widthSlider_.maximumValue - widthSlider_.minimumValue;
+
+	return widthSlider_.minimumValue + v * v / r;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction) takeStrokeWidthFrom:(id)sender
+{
+	UISlider *slider = (UISlider *)sender;
+
+	float sliderValue = slider.value;
+	float strokeWidth = [self strokeWidthFromSliderValue:sliderValue];
+	widthLabel_.text = [NSString stringWithFormat:@"%.1f pt", strokeWidth];
+	
+	decrement.enabled = slider.value != slider.minimumValue;
+	increment.enabled = slider.value != slider.maximumValue;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (IBAction) takeFinalStrokeWidthFrom:(id)sender
 {
+	[self takeStrokeWidthFrom:sender];
 	[self adjustStroke:sender];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (float) roundingFactor:(float)strokeWidth
 {
@@ -178,9 +198,12 @@
 	return 1.0f;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) changeSliderBy:(float)change
 {
-	float strokeWidth = [self sliderValueToStrokeWidth];
+	float sliderValue = widthSlider_.value;
+	float strokeWidth = [self strokeWidthFromSliderValue:sliderValue];
 	float roundingFactor = [self roundingFactor:strokeWidth];
 	
 	strokeWidth *= roundingFactor;
@@ -188,9 +211,11 @@
 	strokeWidth = roundf(strokeWidth);
 	strokeWidth /= roundingFactor;
 	
-	widthSlider_.value = [self strokeWidthToSliderValue:strokeWidth];
+	widthSlider_.value = [self sliderValueFromStrokeWidth:strokeWidth];
 	[widthSlider_ sendActionsForControlEvents:UIControlEventTouchUpInside];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction) increment:(id)sender
 {
@@ -202,8 +227,9 @@
 	[self changeSliderBy:(-1)];
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Actions
-
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDStrokeOptions *) strokeOptions
 {
@@ -211,7 +237,7 @@
 
 	[options setActive:[modeSegment_ selectedSegmentIndex]];
 	[options setColor:[colorController_ color]];
-	[options setLineWidth:[widthSlider_ value]];
+	[options setLineWidth:[self lineWidth]];
 	[options setLineCap:[capPicker_ cap]];
 	[options setLineJoin:[joinPicker_ join]];
 
@@ -222,7 +248,7 @@
 {
 	[modeSegment_ setSelectedSegmentIndex:[options active]];
 	[colorController_ setColor:[options color]];
-	[widthSlider_ setValue:[options lineWidth]];
+	[self setLineWidth:[options lineWidth]];
 	[capPicker_ setCap:[options lineCap]];
 	[joinPicker_ setJoin:[options lineJoin]];
 }

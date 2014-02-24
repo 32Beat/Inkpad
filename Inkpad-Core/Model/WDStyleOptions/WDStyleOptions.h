@@ -19,6 +19,7 @@
 - (void) copyPropertiesFrom:(id)src;
 - (void) encodeWithCoder:(NSCoder *)coder;
 - (void) decodeWithCoder:(NSCoder *)coder;
+- (void) prepareCGContext:(CGContextRef)context;
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
 @end
 ////////////////////////////////////////////////////////////////////////////////

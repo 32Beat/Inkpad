@@ -27,12 +27,14 @@
 extern const float kMinimumDrawingDimension;
 extern const float kMaximumDrawingDimension;
 
-enum {
+typedef enum
+{
 	WDRenderDefault      = 0x0,
 	WDRenderOutlineOnly  = 0x1,
 	WDRenderThumbnail    = 0x1 << 1,
 	WDRenderFlipped      = 0x1 << 2
-};
+}
+WDRenderMode;
 
 typedef struct {
 	float   scale;

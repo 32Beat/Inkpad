@@ -146,13 +146,13 @@ static NSString *WDEditableShapeVersionKey = @"WDEditableShapeVersion";
 	adjustValue:mValue withUndo:YES];
 
 	// Store update areas
-	[self cacheDirtyBounds];
+	[self willChangePropertyForKey:[self paramKey]];
 
 	// Set new value
 	[self setValue:value];
 
 	// Notify drawingcontroller
-	[self postDirtyBoundsChange];
+	[self didChangePropertyForKey:[self paramKey]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

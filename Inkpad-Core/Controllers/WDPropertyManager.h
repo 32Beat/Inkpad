@@ -56,8 +56,9 @@
 @end
 
 // notifications
-extern NSString *WDActiveStrokeChangedNotification;
+extern NSString *const WDActiveBlendChangedNotification;
+extern NSString *const WDActiveShadowChangedNotification;
+extern NSString *const WDActiveStrokeChangedNotification;
 extern NSString *WDActiveFillChangedNotification;
-extern NSString *WDActiveShadowChangedNotification;
 extern NSString *WDInvalidPropertiesNotification;
 extern NSString *WDInvalidPropertiesKey;

@@ -519,10 +519,12 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 	CGContextConcatCTM(ctx, transform_);
 
 
+	WDRenderMode mode = outlineMode ? WDRenderOutlineOnly : WDRenderDefault;
+
 	WDRenderContext renderContext = {
-		WDRenderDefault,
+		mode,
 		ctx,
-		self.layer.contentsScale,
+		self.layer.contentsScale * viewScale_,
 		self.bounds,
 
 		CGRectNull,
@@ -540,28 +542,24 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 	}
 	
 	WDLayer *activeLayer = drawing_.activeLayer;
-	
+	WDLayer *isolatedLayer = drawingIsolatedLayer ? activeLayer : nil;
+
 	if (!controlGesture_) {
 		CGContextSaveGState(ctx);
 		
-		// make sure blending modes behave correctly
+		// make sure blending modes behave correctly // relative to what?
 		if (!outlineMode) {
 			CGContextBeginTransparencyLayer(ctx, NULL);
 		}
 		
-		for (WDLayer *layer in drawing_.layers) {
-			if (layer.hidden || (drawingIsolatedLayer && (layer == activeLayer))) {
-				continue;
-			}
-			[layer _renderInContext:&renderContext];
-/*
-			[layer renderInContext:ctx
-						  clipRect:rect
-						  metaData:WDRenderingMetaDataMake(viewScale_, outlineMode ? WDRenderOutlineOnly : WDRenderDefault)];
-*/
+		for (WDLayer *layer in drawing_.layers)
+		{
+			if (!layer.hidden && (layer != isolatedLayer))
+			{ [layer _renderInContext:&renderContext]; }
 		}
 		
-		if (drawingIsolatedLayer) {
+		if (drawingIsolatedLayer)
+		{
 			// gray out lower contents
 			[self drawIsolationInContext:ctx rect:rect];
 			

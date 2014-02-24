@@ -130,7 +130,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	Also used for state changes
+*/
 - (void) copyPropertiesFrom:(WDElement *)srcElement
 {
 	[self setSize:[srcElement size]];
@@ -139,7 +141,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[[self styleOptions] copyPropertiesFrom:[srcElement styleOptions]];
 
-	// mOwner ?
+	// mOwner/editmode ?
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,6 +537,15 @@ NSString *WDShadowKey = @"WDShadowKey";
 { [[self styleOptions] setStrokeOptions:strokeOptions]; }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (id) fillOptions
+{ return nil; }
+//{ return [[self styleOptions] fillOptions]; }
+
+//- (void) setFillOptions:(WDFillOptions *)fillOptions
+//{ [[self styleOptions] setFillOptions:fillOptions]; }
+
+////////////////////////////////////////////////////////////////////////////////
 /*
 	Element may be owner of elements, such as WDGroup/WDCompoundPath
 
@@ -556,8 +567,26 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (void) prepareContext:(const WDRenderContext *)renderContext
 {
 	CGContextRef contextRef = renderContext->contextRef;
-	CGFloat scale = renderContext->contextScale;
-	[self prepareCGContext:contextRef scale:scale];
+	CGFloat contextScale = renderContext->contextScale;
+	[self prepareCGContext:contextRef scale:contextScale];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
+{
+	CGContextSaveGState(context);
+
+	// Prepare composite options
+	[[self blendOptions] prepareCGContext:context];
+	[[self shadowOptions] prepareCGContext:context scale:scale];
+//		scale:scale*[self resizeScale]];
+
+	// If necessary create transparencyLayer for composite
+	if ([self needsTransparencyLayer])
+	{ [self beginTransparencyLayer:context]; }
+
+	CGContextConcatCTM(context, [self sourceTransform]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -570,18 +599,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
-{
-	CGContextSaveGState(context);
-	
-	[[self styleOptions] prepareCGContext:context scale:scale];
-
-	if ([self needsTransparencyLayer])
-	{ [self beginTransparencyLayer:context]; }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) restoreCGContext:(CGContextRef)context
 {
 	if ([self needsTransparencyLayer])
@@ -590,6 +607,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 	CGContextRestoreGState(context);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	Some settings require drawing in a transparancy layer prior to
@@ -681,6 +700,31 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyScale:(CGVector)scale
+{
+	if ((scale.dx!=0.0)&&(scale.dy!=0.0))
+	{
+		[self setSize:WDScaleSize(mSize, scale.dx, scale.dy)];
+		if (scale.dx == scale.dy)
+		{ [[self styleOptions] applyScale:scale.dx]; }
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) resizeScale
+{
+	CGSize srcSize = [self sourceSize];
+	CGSize dstSize = [self size];
+	CGFloat sx = dstSize.width / srcSize.width;
+	CGFloat sy = dstSize.height / srcSize.height;
+	return MIN(fabs(sx), fabs(sy));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 /*
 	setTransform
 	------------
@@ -813,10 +857,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	CGFloat d0 = WDDistance(P0, C);
 	CGFloat d1 = WDDistance(P1, C);
-	CGFloat d = d0 != 0.0 && d1 != 0.0 ? d1 / d0 : 1.0;
+	CGFloat d = d0 != 0.0 && d0 != d1 ? d1 / d0 : 1.0;
 
 	[self willChangePropertyForKey:WDFrameOptionsKey];
 
+	[[self styleOptions] applyScale:d];
 	[self setSize:WDScaleSize(mSize, d, d)];
 	[self setRotation:mRotation + 180.0*da/M_PI];
 
@@ -915,12 +960,24 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	Shadow options are not affected by CTM, 
+	so they need to be transformed separately if desired
+	
+*/
 - (CGRect) computeStyleBounds
 {
-	CGRect R = [self frameBounds];
-	if (self.styleOptions != nil)
-	{ R = [self.styleOptions resultAreaForRect:R]; }
+	CGRect R = [self sourceRect];
+
+	if (self.strokeOptions != nil)
+	{ R = [self.strokeOptions resultAreaForRect:R
+			scale:1.0/[self resizeScale]]; }
+
+	R = CGRectApplyAffineTransform(R, [self sourceTransform]);
+
+	if (self.shadowOptions != nil)
+	{ R = [self.shadowOptions resultAreaForRect:R]; }
+
 	return R;
 }
 
@@ -1074,14 +1131,14 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) renderContent:(const WDRenderContext *)renderContext
 {
+	// Prepare context (may include transparencyLayer)
 	[self prepareContext:renderContext];
 
-//	if ([[self fillOptions] visible])
-	{ [self renderFill:renderContext]; }
+	// Render fill & stroke
+	[self renderFill:renderContext];
+	[self renderStroke:renderContext];
 
-	if ([[self strokeOptions] visible])
-	{ [self renderStroke:renderContext]; }
-
+	// Restore context (may include endTransparencyLayer)
 	[self restoreContext:renderContext];
 }
 
@@ -1089,24 +1146,58 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) renderFill:(const WDRenderContext *)renderContext
 {
+	if ([[self fillOptions] visible])
+	{
+		[self prepareFillOptions:renderContext];
+		[self drawFill:renderContext];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareFillOptions:(const WDRenderContext *)renderContext
+{
+	[[self fillOptions] prepareCGContext:renderContext->contextRef];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) drawFill:(const WDRenderContext *)renderContext
+{
+	CGContextFillRect(renderContext->contextRef, [self sourceRect]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) renderStroke:(const WDRenderContext *)renderContext
 {
-	CGContextRef ctx = renderContext->contextRef;
-	[[self strokeOptions] prepareCGContext:ctx scale:1.0];
-
-	// Draw quad outline
-	WDQuad frame = [self frameQuad];
-	CGContextAddLines(ctx, frame.P, 4);
-	CGContextClosePath(ctx);
-	CGContextStrokePath(ctx);
+	if ([[self strokeOptions] visible])
+	{
+		[self prepareStrokeOptions:renderContext];
+		[self drawStroke:renderContext];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareStrokeOptions:(const WDRenderContext *)renderContext
+{
+	[[self strokeOptions] prepareCGContext:renderContext->contextRef];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) drawStroke:(const WDRenderContext *)renderContext
+{
+	CGContextStrokeRect(renderContext->contextRef, [self sourceRect]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+#pragma mark
+#pragma mark
 #pragma mark OLD
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {

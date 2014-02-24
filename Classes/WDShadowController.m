@@ -23,22 +23,36 @@
 #import "WDShadow.h"
 #import "WDSparkSlider.h"
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDShadowController
+////////////////////////////////////////////////////////////////////////////////
 
-@synthesize drawingController = drawingController_;
-
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id) init
 {
-	self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-	
-	if (!self) {
-		return nil;
+	self = [super initWithNibName:@"Shadow" bundle:nil];
+	if (self != nil)
+	{
+		self.title =
+		NSLocalizedString(@"Shadow and Opacity", @"Shadow and Opacity");
 	}
-	
-	self.title = NSLocalizedString(@"Shadow and Opacity", @"Shadow and Opacity");
-	
+
 	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) initWithDelegate:(id)delegate
+{
+	self = [super init];
+	if (self != nil)
+	{
+		//self.delegate = delegate;
+	}
+
+	return self;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void)dealloc
 {
@@ -47,13 +61,13 @@
 
 - (void) setDrawingController:(WDDrawingController *)drawingController
 {
-	drawingController_ = drawingController;
+	_drawingController = drawingController;
 	
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(invalidProperties:)
 												 name:WDInvalidPropertiesNotification
-											   object:drawingController_.propertyManager];
+											   object:_drawingController.propertyManager];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +106,7 @@
 
 - (void) adjustShadow:(id)sender undo:(BOOL)shouldUndo
 {
-	[drawingController_
+	[_drawingController
 	setValue:[self shadowOptions]
 	forProperty:WDShadowOptionsKey
 	undo:shouldUndo];
@@ -117,13 +131,13 @@
 		if (property == WDShadowOptionsKey)
 		{
 			[self setShadowOptions:
-			[drawingController_.propertyManager activeShadowOptions]];
+			[_drawingController.propertyManager activeShadowOptions]];
 		}
 		else
 		if (property == WDBlendOptionsKey)
 		{
 			[mBlendOptionsController setBlendOptions:
-			[drawingController_.propertyManager activeBlendOptions]];
+			[_drawingController.propertyManager activeBlendOptions]];
 		}
 	}
 }
@@ -133,8 +147,7 @@
 {
 	[super viewDidLoad];
 	
-	colorController_ = [[WDColorController alloc]
-	initWithNibName:@"Color" bundle:nil];
+	colorController_ = [WDColorController new];
 	[self.view addSubview:colorController_.view];
 	colorController_.shadowMode = YES;
 	
@@ -194,10 +207,10 @@
 	[super viewWillAppear:animated];
 
 	[self setShadowOptions:
-	[drawingController_.propertyManager activeShadowOptions]];
+	[_drawingController.propertyManager activeShadowOptions]];
 
 	[mBlendOptionsController setBlendOptions:
-	[drawingController_.propertyManager activeBlendOptions]];
+	[_drawingController.propertyManager activeBlendOptions]];
 }
 
 -(void) blendOptionsController:(id)blender willAdjustValueForKey:(id)key
@@ -205,10 +218,13 @@
 
 -(void) blendOptionsController:(id)blender didAdjustValueForKey:(id)key
 {
-	[drawingController_
+	[_drawingController
 	setValue:[blender blendOptions]
 	forProperty:WDBlendOptionsKey
 	undo:YES];
+
+	[[NSNotificationCenter defaultCenter]
+	postNotificationName:WDActiveBlendChangedNotification object:self userInfo:nil];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

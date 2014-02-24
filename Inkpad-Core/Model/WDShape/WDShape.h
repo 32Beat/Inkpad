@@ -110,13 +110,16 @@ WDShapeOptions;
 */	
 	// Cache
 	CGRect mFrameRect; 		// boundingbox of transformed sourcerect
+
+	CGRect mResultStrokeBounds;
+	CGRect mSourceStrokeBounds;
+
 	CGPathRef mResultPath; 	// transformed sourcepath
 	CGPathRef mSourcePath; 	// path from sourcenodes
 	NSArray *mSourceNodes; 	// beziernodes centered around 0,0
 }
 
 + (id) shapeWithFrame:(CGRect)frame;
-- (id) initWithFrame:(CGRect)frame;
 
 - (NSString *) shapeName; // defaults to classname
 - (NSInteger) shapeVersion; // defaults to 0
@@ -125,7 +128,6 @@ WDShapeOptions;
 - (CGRect) frameRect; // framerect - framepath - framebounds ?
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
-- (CGRect) sourceRect;
 
 - (id) bezierNodes;
 - (id) bezierNodesWithShapeInRect:(CGRect)R;

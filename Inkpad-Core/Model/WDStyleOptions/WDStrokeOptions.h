@@ -46,7 +46,11 @@ extern NSString *const WDStrokeLineJoinKey;
 @property (nonatomic, assign) CGLineJoin lineJoin;
 @property (nonatomic, strong) id dashOptions;
 
+- (id) optionsWithScale:(float)scale;
+
 - (BOOL) visible;
+- (CGRect) resultAreaForRect:(CGRect)R  scale:(CGFloat)scale;
+- (CGRect) resultAreaForPath:(CGPathRef)path scale:(CGFloat)scale;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

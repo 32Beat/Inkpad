@@ -1327,6 +1327,8 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 			{ [element saveState]; }
 			[element setValue:value forProperty:property propertyManager:propertyManager_];
 		}
+
+		[propertyManager_ setDefaultValue:value forProperty:property];
 	}
 }
 

@@ -563,6 +563,72 @@ CGRect WDStrokeBoundsForPath(CGPathRef pathRef, WDStrokeStyle *strokeStyle)
 	
 	return styleBounds;
 }
+
+
+CGRect WDStrokeOptionsStyleBoundsForPath
+(WDStrokeOptions *strokeOptions, CGPathRef pathRef)
+{
+	CGRect basicBounds = CGPathGetPathBoundingBox(pathRef);
+	
+	if (![strokeOptions visible]) {
+		return basicBounds;
+	}
+	
+	float halfWidth = strokeOptions.lineWidth / 2.0f;
+	float outset = sqrt((halfWidth * halfWidth) * 2);
+	
+	// expand by half the stroke width to find the basic bounding box
+	CGRect styleBounds = CGRectInset(basicBounds, -outset, -outset);
+	
+	// include miter joins on corners
+	if (strokeOptions.lineJoin == kCGLineJoinMiter) {
+		NSMutableArray *subpaths = [NSMutableArray array];
+		CGPathApply(pathRef, (__bridge void *)(subpaths), &WDPathApplyAccumulateElement);
+		
+		for (WDPath *subpath in subpaths) {
+			NSArray         *nodes = subpath.nodes;
+			NSInteger       nodeCount = subpath.closed ? nodes.count + 1 : nodes.count;
+			
+			if (nodeCount < 3) {
+				continue;
+			}
+			
+			WDBezierNode    *prev = nodes[0];
+			WDBezierNode    *curr = nodes[1];
+			WDBezierNode    *next;
+			CGPoint         inPoint, outPoint, inVec, outVec;
+			float           miterLength, angle;
+			
+			for (int i = 1; i < nodeCount; i++) {
+				next = nodes[(i+1) % nodes.count];
+				
+				inPoint = [curr hasInPoint] ? curr.inPoint : prev.outPoint;
+				outPoint = [curr hasOutPoint] ? curr.outPoint : next.inPoint;
+				
+				inVec = WDSubtractPoints(inPoint, curr.anchorPoint);
+				outVec = WDSubtractPoints(outPoint, curr.anchorPoint);
+				
+				inVec = WDNormalizePoint(inVec);
+				outVec = WDNormalizePoint(outVec);
+				
+				angle = acos(inVec.x * outVec.x + inVec.y * outVec.y);
+				miterLength = strokeOptions.lineWidth / sin(angle / 2.0f);
+				
+				if ((miterLength / strokeOptions.lineWidth) < kMiterLimit) {
+					CGPoint avg = WDAveragePoints(inVec, outVec);
+					CGPoint directed = WDMultiplyPointScalar(WDNormalizePoint(avg), -miterLength / 2.0f);
+					
+					styleBounds = WDGrowRectToPoint(styleBounds, WDAddPoints(curr.anchorPoint, directed));
+				}
+				
+				prev = curr;
+				curr = next;
+			}
+		}
+	}
+	
+	return styleBounds;
+}
 /*
 typedef struct {
 	CGMutablePathRef mutablePath;

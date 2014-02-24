@@ -100,6 +100,12 @@ CGPathRef WDCreateCubicPathFromQuadraticPath(CGPathRef pathRef);
 void WDPathApplyAccumulateElement(void *info, const CGPathElement *element);
 CGRect WDStrokeBoundsForPath(CGPathRef pathRef, WDStrokeStyle *strokeStyle);
 
+
+#import "WDStrokeOptions.h"
+CGRect WDStrokeOptionsStyleBoundsForPath
+(WDStrokeOptions *strokeOptions, CGPathRef pathRef);
+
+
 CGPathRef WDCreateTransformedCGPathRef(CGPathRef pathRef, CGAffineTransform transform);
 
 

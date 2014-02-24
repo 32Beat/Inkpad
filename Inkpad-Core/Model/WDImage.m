@@ -129,133 +129,38 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGSize) sourceSize
-{ return imageData_.image.size; }
+- (void) renderFill:(const WDRenderContext *)renderContext
+{
+	// Allow super to draw background if necessary
+	[super renderFill:renderContext];
+
+	// Blit image over background
+	[self drawImage:renderContext];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGAffineTransform) computeSourceTransform
+- (void) drawImage:(const WDRenderContext *)renderContext
 {
-	CGAffineTransform T = [super computeSourceTransform];
-
+	// CTM only sets origin and rotation
 	CGSize size = [self size];
-	CGFloat sx = size.width / [self sourceSize].width;
-	CGFloat sy = size.height / [self sourceSize].height;
+	CGRect dstR = {{-0.5*size.width, -0.5*size.height}, size};
 
-	T = CGAffineTransformScale(T, sx, -sy);
-
-	return T;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) shadowScale
-{
-	// For unscaled shadow
-//	return 1.0;
-
-	CGSize size = [self size];
-	CGFloat sx = size.width / [self sourceSize].width;
-	CGFloat sy = size.height / [self sourceSize].height;
-	return MAX(sx, sy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (WDShadowOptions *)scaledShadowOptions
-{
-	return [[self shadowOptions] optionsWithScale:[self shadowScale]];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	Overwrite because we apply transform to style
-	(default behavior doesn't currently apply transform to style)
-
-	Transform is not applied to shadow which is scaled but not rotated
-*/
-- (CGRect) computeStyleBounds
-{
-	CGRect R = [self sourceRect];
-
-	if (self.strokeOptions != nil)
-	{ R = [self.strokeOptions resultAreaForRect:R]; }
-
-	R = CGRectApplyAffineTransform(R, [self sourceTransform]);
-
-	if (self.shadowOptions != nil)
-	{ R = [self.scaledShadowOptions resultAreaForRect:R]; }
-
-	return R;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	renderOutline will draw crossmarked rectangle by default, 
-	so we only need to implement renderContent
-*/
-
-- (void) renderContent:(const WDRenderContext *)renderContext
-{
-	// Fetch CGContextRef
-	CGContextRef ctx = renderContext->contextRef;
-
-	// TODO: change to prepareCGContext:renderContext
-
-	// Shadow ignores the CTM, so needs separate scaling
-	CGFloat scale = renderContext->contextScale*[self shadowScale];
-	// Prepare context (may include transparencyLayer)
-	[self prepareCGContext:ctx scale:scale];
-
-	// Adjust CTM so everything scales according to frame adjustment
-	CGContextConcatCTM(ctx, [self sourceTransform]);
+	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
 
 	// Fetch appropriate image
 	UIImage *image = (renderContext->flags & WDRenderThumbnail) ?
 	imageData_.thumbnailImage : imageData_.image;
 
-	// CTM is set, so destinationRect = sourceRect
-	CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
+	CGContextDrawImage(renderContext->contextRef, dstR, [image CGImage]);
 
-	// Draw border if required
-	if ([self strokeOptions].visible)
-	{
-		[[self strokeOptions] prepareCGContext:ctx scale:scale];
-		CGContextAddRect(ctx, [self sourceRect]);
-		CGContextStrokePath(ctx);
-	}
-
-	// Restore context (may include endTransparencyLayer)
-	[self restoreCGContext:ctx];
+	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-	// Shadow ignores the CTM, so needs separate scaling
-	CGFloat scale = metaData.scale*[self shadowScale];
-	[self prepareCGContext:ctx scale:scale];
-
-	// Adjust CTM so everything scales according to frame scale
-	CGContextConcatCTM(ctx, [self sourceTransform]);
-
-	// Fetch appropriate image
-	UIImage *image = (metaData.flags & WDRenderThumbnail) ?
-	imageData_.thumbnailImage : imageData_.image;
-
-	// CTM is set, so destinationRect = sourceRect
-	CGContextDrawImage(ctx, [self sourceRect], [image CGImage]);
-
-	// Draw border if required
-	if ([self strokeOptions].visible)
-	{
-		[[self strokeOptions] prepareCGContext:ctx scale:scale];
-		CGContextAddRect(ctx, [self sourceRect]);
-		CGContextStrokePath(ctx);
-	}
-
-	[self restoreCGContext:ctx];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -399,9 +304,10 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	return image;
 }
 
-- (BOOL) needsTransparencyLayer:(float)scale
-{
-	return NO;
-}
-
+////////////////////////////////////////////////////////////////////////////////
 @end
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+
