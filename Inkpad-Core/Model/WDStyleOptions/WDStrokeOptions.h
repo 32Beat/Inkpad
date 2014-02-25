@@ -13,6 +13,7 @@
 
 #import "WDStyleOptions.h"
 #import "WDColor.h"
+#import "WDDashOptions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -31,12 +32,12 @@ extern NSString *const WDStrokeLineJoinKey;
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDStrokeOptions : WDStyleOptions
 {
-	BOOL 		mActive;
-	WDColor 	*mColor;
-	CGFloat 	mLineWidth;
-	CGLineCap 	mLineCap;
-	CGLineJoin 	mLineJoin;
-	id 			mDashOptions;
+	BOOL 			mActive;
+	WDColor 		*mColor;
+	CGFloat 		mLineWidth;
+	CGLineCap 		mLineCap;
+	CGLineJoin 		mLineJoin;
+	WDDashOptions 	*mDashOptions;
 }
 
 @property (nonatomic, assign) BOOL active;
@@ -44,7 +45,7 @@ extern NSString *const WDStrokeLineJoinKey;
 @property (nonatomic, assign) CGFloat lineWidth;
 @property (nonatomic, assign) CGLineCap lineCap;
 @property (nonatomic, assign) CGLineJoin lineJoin;
-@property (nonatomic, strong) id dashOptions;
+@property (nonatomic, strong) WDDashOptions *dashOptions;
 
 - (id) optionsWithScale:(float)scale;
 

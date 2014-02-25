@@ -58,6 +58,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	self->mLineWidth = src->mLineWidth;
 	self->mLineCap = src->mLineCap;
 	self->mLineJoin = src->mLineJoin;
+	self->mDashOptions = [src->mDashOptions copy];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +70,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	[coder encodeDouble:mLineWidth forKey:WDStrokeLineWidthKey];
 	[coder encodeInt:mLineCap forKey:WDStrokeLineCapKey];
 	[coder encodeInt:mLineJoin forKey:WDStrokeLineJoinKey];
+	[coder encodeObject:mDashOptions forKey:WDDashOptionsKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +91,9 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 	if ([coder containsValueForKey:WDStrokeLineJoinKey])
 	{ mLineJoin = [coder decodeIntForKey:WDStrokeLineJoinKey]; }
+
+	if ([coder containsValueForKey:WDDashOptionsKey])
+	{ mDashOptions = [coder decodeObjectForKey:WDDashOptionsKey]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +126,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 {
 	WDStrokeOptions *options = [self copy];
 	options->mLineWidth *= scale;
+	options->mDashOptions = [self->mDashOptions optionsWithScale:scale];
 	return options;
 }
 
@@ -139,6 +145,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 		CGContextSetLineWidth(context, [self lineWidth]*scale);
 		CGContextSetLineCap(context, [self lineCap]);
 		CGContextSetLineJoin(context, [self lineJoin]);
+		[mDashOptions prepareCGContext:context];
 	}
 }
 

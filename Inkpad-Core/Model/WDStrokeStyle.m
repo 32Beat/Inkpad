@@ -18,7 +18,7 @@ NSString *WDColorKey = @"WDColorKey";
 NSString *WDWeightKey = @"WDWeightKey";
 NSString *WDCapKey = @"WDCapKey";
 NSString *WDJoinKey = @"WDJoinKey";
-NSString *WDDashPatternKey = @"WDDashPatternKey";
+//NSString *WDDashPatternKey = @"WDDashPatternKey";
 NSString *WDStartArrowKey = @"WDStartArrowKey";
 NSString *WDEndArrowKey = @"WDEndArrowKey";
 

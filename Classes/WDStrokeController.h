@@ -12,45 +12,43 @@
 #import <UIKit/UIKit.h>
 
 @class WDDrawingController;
-@class WDColorController;
+#import "WDColorController.h"
+#import "WDDashOptionsController.h"
+
 @class WDLineAttributePicker;
 @class WDSparkSlider;
 @class WDStrokeStyle;
 
 typedef enum {
-    kStrokeNone,
-    kStrokeColor,
+	kStrokeNone,
+	kStrokeColor,
 } WDStrokeMode;
 
 @interface WDStrokeController : UIViewController
 {
-    IBOutlet UISlider               *widthSlider_;
-    IBOutlet UILabel                *widthLabel_;
-    IBOutlet WDLineAttributePicker  *capPicker_;
-    IBOutlet WDLineAttributePicker  *joinPicker_;
-    
-    IBOutlet UIButton               *increment;
-    IBOutlet UIButton               *decrement;
-    
-    IBOutlet UISwitch               *dashSwitch_;
-    IBOutlet WDSparkSlider          *dash0_;
-    IBOutlet WDSparkSlider          *dash1_;
-    IBOutlet WDSparkSlider          *gap0_;
-    IBOutlet WDSparkSlider          *gap1_;
-    
-    IBOutlet UIButton               *arrowButton_;
-    
-    WDColorController               *colorController_;
-    UISegmentedControl              *modeSegment_;
-    
-    WDStrokeMode                    mode_;
+	IBOutlet UISlider               *widthSlider_;
+	IBOutlet UILabel                *widthLabel_;
+	IBOutlet WDLineAttributePicker  *capPicker_;
+	IBOutlet WDLineAttributePicker  *joinPicker_;
+	
+	IBOutlet UIButton               *increment;
+	IBOutlet UIButton               *decrement;
+
+	IBOutlet UILabel 				*mColorPickerView;
+	IBOutlet UILabel 				*mDashOptionsView;
+
+	IBOutlet UIButton               *arrowButton_;
+	
+	UISegmentedControl              *modeSegment_;
+	WDColorController               *mColorController;
+	WDDashOptionsController 		*mDashController;
+	
+	WDStrokeMode                    mode_;
 
 	BOOL mDidAdjust;
 }
 
 @property (nonatomic, weak) WDDrawingController *drawingController;
-
-- (IBAction) toggleDash:(id)sender;
 
 - (IBAction) increment:(id)sender;
 - (IBAction) decrement:(id)sender;

@@ -335,6 +335,9 @@
 		BE8AC40E18B2C36D008F9C41 /* WDFrameOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE8AC40D18B2C36D008F9C41 /* WDFrameOptions.m */; };
 		BEB2A76918BB99B200C4037C /* WDFillOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEB2A76818BB99B200C4037C /* WDFillOptions.m */; };
 		BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */; };
+		BED5700D18BBE32300BCDCD8 /* WDDashOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BED5700C18BBE32300BCDCD8 /* WDDashOptions.m */; };
+		BED8A82A18BC94ED00774649 /* WDDashOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BED8A82918BC94ED00774649 /* WDDashOptionsController.m */; };
+		BED8A82D18BC95DF00774649 /* DashOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BED8A82B18BC95DF00774649 /* DashOptions.xib */; };
 		BEFFB62518AA674D00DAF110 /* WDClubsShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BEFFB62418AA674D00DAF110 /* WDClubsShape.m */; };
 		F43A1D76183557770032933E /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F43A1D6E183557770032933E /* Localizable.strings */; };
 /* End PBXBuildFile section */
@@ -859,6 +862,11 @@
 		BEB2A76718BB99B200C4037C /* WDFillOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDFillOptions.h; sourceTree = "<group>"; };
 		BEB2A76818BB99B200C4037C /* WDFillOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDFillOptions.m; sourceTree = "<group>"; };
 		BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeOptions.xib; sourceTree = "<group>"; };
+		BED5700B18BBE32300BCDCD8 /* WDDashOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDDashOptions.h; sourceTree = "<group>"; };
+		BED5700C18BBE32300BCDCD8 /* WDDashOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDDashOptions.m; sourceTree = "<group>"; };
+		BED8A82818BC94ED00774649 /* WDDashOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDDashOptionsController.h; sourceTree = "<group>"; };
+		BED8A82918BC94ED00774649 /* WDDashOptionsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDDashOptionsController.m; sourceTree = "<group>"; };
+		BED8A82C18BC95DF00774649 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/DashOptions.xib; sourceTree = "<group>"; };
 		BEFFB62318AA674D00DAF110 /* WDClubsShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDClubsShape.h; sourceTree = "<group>"; };
 		BEFFB62418AA674D00DAF110 /* WDClubsShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDClubsShape.m; sourceTree = "<group>"; };
 		F43A1D6F183557770032933E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
@@ -1134,6 +1142,7 @@
 				BE0D613418B6B88F005191EA /* BlendOptions.xib */,
 				6B5335371803538D00D46D5B /* ShapeOptions.xib */,
 				6B5335391803538D00D46D5B /* Stroke.xib */,
+				BED8A82B18BC95DF00774649 /* DashOptions.xib */,
 				6B53353B1803538D00D46D5B /* Text.xib */,
 			);
 			name = XIB;
@@ -1508,6 +1517,8 @@
 				6B308FB913B56B58000665C3 /* WDColorBalanceController.m */,
 				6BF0C078125E8345009BB05C /* WDColorController.h */,
 				6BF0C079125E8345009BB05C /* WDColorController.m */,
+				BED8A82818BC94ED00774649 /* WDDashOptionsController.h */,
+				BED8A82918BC94ED00774649 /* WDDashOptionsController.m */,
 				6B1E328A126CA0D900E89FA1 /* WDExportController.h */,
 				6B1E328B126CA0D900E89FA1 /* WDExportController.m */,
 				6B95E6AD12618DAC00E54B56 /* WDFillController.h */,
@@ -1711,6 +1722,8 @@
 				BE404D1518B1488F00D67C5F /* WDShadowOptions.m */,
 				BE76D46918B4079F00E7E993 /* WDStrokeOptions.h */,
 				BE76D46A18B4079F00E7E993 /* WDStrokeOptions.m */,
+				BED5700B18BBE32300BCDCD8 /* WDDashOptions.h */,
+				BED5700C18BBE32300BCDCD8 /* WDDashOptions.m */,
 				BEB2A76718BB99B200C4037C /* WDFillOptions.h */,
 				BEB2A76818BB99B200C4037C /* WDFillOptions.m */,
 			);
@@ -1916,6 +1929,7 @@
 				6B74B7E9150E82F0000A08D4 /* checkmark@2x.png in Resources */,
 				6B53355B18035B3F00D46D5B /* Activity.xib in Resources */,
 				6B5335491803538D00D46D5B /* Stroke.xib in Resources */,
+				BED8A82D18BC95DF00774649 /* DashOptions.xib in Resources */,
 				6B219C4F150E8BD000761F18 /* table_checkmark@2x.png in Resources */,
 				6B219C51150EA04000761F18 /* visible@2x.png in Resources */,
 				6B219C53150EA1B800761F18 /* hidden@2x.png in Resources */,
@@ -2007,6 +2021,7 @@
 				6B98C140124D63B1008FB8E1 /* WDTextController.m in Sources */,
 				6B27E7ED12564B8F0066E24F /* WDPageSizeController.m in Sources */,
 				6B3A2A5F1256E5D300574B41 /* WDSimpleColorView.m in Sources */,
+				BED8A82A18BC94ED00774649 /* WDDashOptionsController.m in Sources */,
 				6BF0C07A125E8345009BB05C /* WDColorController.m in Sources */,
 				6BF0C250125F9F63009BB05C /* WDStrokeController.m in Sources */,
 				6BF0C307125FB46A009BB05C /* WDGradientEditor.m in Sources */,
@@ -2057,6 +2072,7 @@
 				6B00DA531405F65F00E45409 /* WDActivity.m in Sources */,
 				6B00DA5A1406022B00E45409 /* WDActivityManager.m in Sources */,
 				6B00DA5D140604CE00E45409 /* WDActivityController.m in Sources */,
+				BED5700D18BBE32300BCDCD8 /* WDDashOptions.m in Sources */,
 				6B74182B140617F100A00C76 /* WDProgressView.m in Sources */,
 				BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */,
 				6BABD96D141ED30100F7E0A9 /* NSArray+Additions.m in Sources */,
@@ -2327,6 +2343,14 @@
 				BE0D613518B6B88F005191EA /* Base */,
 			);
 			name = BlendOptions.xib;
+			sourceTree = "<group>";
+		};
+		BED8A82B18BC95DF00774649 /* DashOptions.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BED8A82C18BC95DF00774649 /* Base */,
+			);
+			name = DashOptions.xib;
 			sourceTree = "<group>";
 		};
 		F43A1D6E183557770032933E /* Localizable.strings */ = {
