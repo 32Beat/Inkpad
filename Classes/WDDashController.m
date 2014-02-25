@@ -101,7 +101,6 @@
 
 - (IBAction) adjustOptions:(id)sender
 {
-	// Allow interface update
 	_tracking = YES;
 }
 
@@ -109,7 +108,6 @@
 
 - (IBAction) adjustOptionsFinal:(id)sender
 {
-	//
 	[self adjustOptions:sender];
 	_tracking = NO;
 

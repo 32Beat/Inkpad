@@ -247,7 +247,7 @@
 - (void) p_buildHueImage
 {
     int             x, y;
-    float           r,g,b;
+    CGFloat           r,g,b;
     int             width = CGRectGetWidth(self.bounds);
     int             height = kHueImageHeight;
     int             bpr = width * 4;

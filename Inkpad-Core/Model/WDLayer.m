@@ -142,13 +142,16 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 }
 
 
+- (void) undoSetOpacity:(float)opacity
+{ [self setOpacity:opacity]; }
+
 - (void) setOpacity:(float)opacity
 {
     if (opacity == opacity_) {
         return;
     }
     
-    [[[self.drawing undoManager] prepareWithInvocationTarget:self] setOpacity:opacity_];
+    [[[self.drawing undoManager] prepareWithInvocationTarget:self] undoSetOpacity:opacity_];
     
     opacity_ = WDClamp(0.0f, 1.0f, opacity);
     

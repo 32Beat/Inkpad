@@ -134,6 +134,15 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 { return mPattern.count > 3 ? [mPattern[3] floatValue] : 0.0; }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Idea:
+	encode relative segments:
+
+	{ segmentLength, gapPercentage }
+	{ segmentLength, gapPercentage }
+	
+	At least from a user perspective...
+*/
 
 - (void) prepareCGContext:(CGContextRef)context
 {

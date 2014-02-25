@@ -29,10 +29,10 @@ static void evaluateShading(void *info, const CGFloat *in, CGFloat *out)
     WDColorSlider   *slider = (__bridge WDColorSlider *) info;
     WDColor         *color = slider.color;
     CGFloat         blend = in[0];
-    float           hue, saturation, brightness;
-    float           r1 = 0, g1 = 0, b1 = 0;
-    float           r2 = 0, g2 = 0, b2 = 0;
-    float           r = 0, g = 0, b = 0;
+    CGFloat           hue, saturation, brightness;
+    CGFloat           r1 = 0, g1 = 0, b1 = 0;
+    CGFloat           r2 = 0, g2 = 0, b2 = 0;
+    CGFloat           r = 0, g = 0, b = 0;
     BOOL            blendRGB = YES;
     
     hue = color.hue;
@@ -336,7 +336,7 @@ static void release(void *info) {
 - (void) p_buildHueImage
 {
     int             x, y;
-    float           r,g,b;
+    CGFloat           r,g,b;
     int             width = CGRectGetWidth(self.bounds);
     int             height = CGRectGetHeight(self.bounds);
     int             bpr = width * 4;

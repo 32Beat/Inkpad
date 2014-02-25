@@ -186,7 +186,7 @@
 	withRowAnimation:UITableViewRowAnimationFade];
 
 	// Set new value
-	[self _setBlendMode:selectedRow_];
+	[self _setBlendMode:(CGBlendMode)selectedRow_];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,10 +45,12 @@ NSString *const WDStrokeMiterLimitKey = @"WDStrokeMiterLimit";
 - (void) initProperties
 {
 	mActive = YES;
+	mColor = nil;
 	mLineWidth = 1.0;
 	mLineCap = kCGLineCapButt;
 	mLineJoin = kCGLineJoinMiter;
 	mMiterLimit = 0.0;
+	mDashOptions = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +75,6 @@ NSString *const WDStrokeMiterLimitKey = @"WDStrokeMiterLimit";
 	[coder encodeFloat:mLineWidth forKey:WDStrokeLineWidthKey];
 	[coder encodeInt:mLineCap forKey:WDStrokeLineCapKey];
 	[coder encodeInt:mLineJoin forKey:WDStrokeLineJoinKey];
-	if (mMiterLimit > 0.0)
 	[coder encodeFloat:mMiterLimit forKey:WDStrokeMiterLimitKey];
 	[coder encodeObject:mDashOptions forKey:WDDashOptionsKey];
 }

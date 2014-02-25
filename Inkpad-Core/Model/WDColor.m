@@ -61,7 +61,7 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-+ (id) colorWithWhite:(float)white alpha:(CGFloat)alpha
++ (id) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha
 {
 	CGFloat cmp[] = { white, white, white, alpha };
 	return [self colorWithType:kWDColorTypeRGB components:cmp];

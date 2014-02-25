@@ -173,7 +173,7 @@
 	return @((int)self.value);
 }
 
-- (CGFloat)value \
+- (float)value \
 { return minValue_ + value_ * (maxValue_ - minValue_); }
 
 
@@ -207,7 +207,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setMaxValue:(CGFloat)value
+- (void) setMaxValue:(float)value
 {
 	if (maxValue_ != value)
 	{

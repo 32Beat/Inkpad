@@ -70,7 +70,7 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 
 - (void) encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeInteger:mMode forKey:WDBlendModeKey];
+	[coder encodeInt:mMode forKey:WDBlendModeKey];
 	[coder encodeDouble:mOpacity forKey:WDBlendOpacityKey];
 }
 
@@ -79,7 +79,7 @@ NSString *const WDBlendOpacityKey = @"WDBlendOpacity";
 - (void) decodeWithCoder:(NSCoder *)coder
 {
 	if ([coder containsValueForKey:WDBlendModeKey])
-	{ mMode = [coder decodeIntegerForKey:WDBlendModeKey]; }
+	{ mMode = [coder decodeIntForKey:WDBlendModeKey]; }
 
 	if ([coder containsValueForKey:WDBlendOpacityKey])
 	{ mOpacity = [coder decodeFloatForKey:WDBlendOpacityKey]; }

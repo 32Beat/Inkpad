@@ -21,8 +21,8 @@
 // Color Conversion
 //
 
-void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b);
-void RGBtoHSV(float r, float g, float b, float *h, float *s, float *v);
+void HSVtoRGB(CGFloat h, CGFloat s, CGFloat v, CGFloat *r, CGFloat *g, CGFloat *b);
+void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *h, CGFloat *s, CGFloat *v);
 
 //
 // Drawing Functions

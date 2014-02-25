@@ -25,7 +25,7 @@
 
 #pragma mark Color Conversion
 
-void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)
+void HSVtoRGB(CGFloat h, CGFloat s, CGFloat v, CGFloat *r, CGFloat *g, CGFloat *b)
 {
 	if (s == 0) {
 		*r = *g = *b = v;
@@ -58,7 +58,7 @@ void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)
 	}
 }   
 
-void RGBtoHSV(float r, float g, float b, float *h, float *s, float *v)
+void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *h, CGFloat *s, CGFloat *v)
 {
 	float max = MAX(r, MAX(g, b));
 	float min = MIN(r, MIN(g, b));
