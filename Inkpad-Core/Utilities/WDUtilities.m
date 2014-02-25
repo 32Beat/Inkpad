@@ -215,18 +215,18 @@ CGFloat WDGetRotationFromTransform(CGAffineTransform T)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CGSize WDGetScaleFromTransform(CGAffineTransform T)
+CGVector WDGetScaleFromTransform(CGAffineTransform T)
 {
-	CGSize scale = { T.a, T.d };
+	CGVector scale = { T.a, T.d };
 
 	if ((T.b != 0.0)||(T.c != 0.0))
 	{
 		CGVector x = { 1.0, 0.0 };
 		x = CGVectorApplyAffineTransform(x, T);
-		scale.width = sqrt(x.dx*x.dx + x.dy*x.dy);
+		scale.dx = sqrt(x.dx*x.dx + x.dy*x.dy);
 		CGVector y = { 0.0, 1.0 };
 		y = CGVectorApplyAffineTransform(y, T);
-		scale.height = sqrt(y.dx*y.dx + y.dy*y.dy);
+		scale.dy = sqrt(y.dx*y.dx + y.dy*y.dy);
 	}
 
 	return scale;

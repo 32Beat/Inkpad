@@ -24,16 +24,19 @@
 extern NSString *const WDFillOptionsKey;
 extern NSString *const WDFillActiveKey;
 extern NSString *const WDFillColorKey;
+extern NSString *const WDFillRuleKey;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDFillOptions : WDStyleOptions
 {
 	BOOL 		mActive;
 	WDColor 	*mColor;
+	int 		mFillRule;
 }
 
 @property (nonatomic, assign) BOOL active;
 @property (nonatomic, strong) WDColor *color;
+@property (nonatomic, assign) int fillRule;
 
 - (BOOL) visible;
 

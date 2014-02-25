@@ -22,6 +22,7 @@ NSString *const WDStrokeColorKey = @"WDStrokeColor";
 NSString *const WDStrokeLineWidthKey = @"WDStrokeLineWidth";
 NSString *const WDStrokeLineCapKey = @"WDStrokeLineCap";
 NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
+NSString *const WDStrokeMiterLimitKey = @"WDStrokeMiterLimit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +37,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 @synthesize lineWidth = mLineWidth;
 @synthesize lineCap = mLineCap;
 @synthesize lineJoin = mLineJoin;
-//@synthesize miterLimit = mMiterLimit;
+@synthesize miterLimit = mMiterLimit;
 @synthesize dashOptions = mDashOptions;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +48,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	mLineWidth = 1.0;
 	mLineCap = kCGLineCapButt;
 	mLineJoin = kCGLineJoinMiter;
+	mMiterLimit = 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +60,7 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	self->mLineWidth = src->mLineWidth;
 	self->mLineCap = src->mLineCap;
 	self->mLineJoin = src->mLineJoin;
+	self->mMiterLimit = src->mMiterLimit;
 	self->mDashOptions = [src->mDashOptions copy];
 }
 
@@ -67,9 +70,11 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 {
 	[coder encodeBool:mActive forKey:WDStrokeActiveKey];
 	[coder encodeObject:mColor forKey:WDStrokeColorKey];
-	[coder encodeDouble:mLineWidth forKey:WDStrokeLineWidthKey];
+	[coder encodeFloat:mLineWidth forKey:WDStrokeLineWidthKey];
 	[coder encodeInt:mLineCap forKey:WDStrokeLineCapKey];
 	[coder encodeInt:mLineJoin forKey:WDStrokeLineJoinKey];
+	if (mMiterLimit > 0.0)
+	[coder encodeFloat:mMiterLimit forKey:WDStrokeMiterLimitKey];
 	[coder encodeObject:mDashOptions forKey:WDDashOptionsKey];
 }
 
@@ -92,6 +97,9 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 	if ([coder containsValueForKey:WDStrokeLineJoinKey])
 	{ mLineJoin = [coder decodeIntForKey:WDStrokeLineJoinKey]; }
 
+	if ([coder containsValueForKey:WDStrokeMiterLimitKey])
+	{ mMiterLimit = [coder decodeFloatForKey:WDStrokeMiterLimitKey]; }
+
 	if ([coder containsValueForKey:WDDashOptionsKey])
 	{ mDashOptions = [coder decodeObjectForKey:WDDashOptionsKey]; }
 }
@@ -105,8 +113,8 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 
 - (CGRect) resultAreaForRect:(CGRect)R
 {
-	CGFloat min = MIN(R.size.width, R.size.height);
-	return [self resultAreaForRect:R scale:0.01*min];
+//	CGFloat min = MIN(R.size.width, R.size.height);
+	return [self resultAreaForRect:R scale:1.0];
 }
 
 - (CGRect) resultAreaForRect:(CGRect)R  scale:(CGFloat)scale
@@ -141,10 +149,14 @@ NSString *const WDStrokeLineJoinKey = @"WDStrokeLineJoin";
 {
 	if ([self visible])
 	{
-		CGContextSetStrokeColorWithColor(context, [self color].CGColor);
-		CGContextSetLineWidth(context, [self lineWidth]*scale);
-		CGContextSetLineCap(context, [self lineCap]);
-		CGContextSetLineJoin(context, [self lineJoin]);
+		CGContextSetStrokeColorWithColor(context, mColor.CGColor);
+		CGContextSetLineWidth(context, mLineWidth*scale);
+		CGContextSetLineCap(context, mLineCap);
+		CGContextSetLineJoin(context, mLineJoin);
+
+		if (mMiterLimit > 0.0)
+		CGContextSetMiterLimit(context, mMiterLimit);
+
 		[mDashOptions prepareCGContext:context];
 	}
 }

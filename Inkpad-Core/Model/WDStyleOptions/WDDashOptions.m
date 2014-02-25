@@ -18,6 +18,7 @@
 
 NSString *const WDDashOptionsKey = @"WDDashOptions";
 NSString *const WDDashActiveKey = @"WDDashActive";
+NSString *const WDDashPhaseKey = @"WDDashPhase";
 NSString *const WDDashPatternKey = @"WDDashPattern";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +30,7 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 ////////////////////////////////////////////////////////////////////////////////
 
 @synthesize active = mActive;
+@synthesize phase = mPhase;
 @synthesize pattern = mPattern;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +38,8 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 - (void) initProperties
 {
 	mActive = YES;
-	mPattern = @[@(10)];
+	mPhase = 0.0;
+	mPattern = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +47,7 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 - (void) copyPropertiesFrom:(WDDashOptions *)src
 {
 	self->mActive = src->mActive;
+	self->mPhase = src->mPhase;
 	self->mPattern = src->mPattern;
 }
 
@@ -52,6 +56,7 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 - (void) encodeWithCoder:(NSCoder *)coder
 {
 	[coder encodeBool:mActive forKey:WDDashActiveKey];
+	[coder encodeFloat:mPhase forKey:WDDashPhaseKey];
 	[coder encodeObject:mPattern forKey:WDDashPatternKey];
 }
 
@@ -61,6 +66,9 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 {
 	if ([coder containsValueForKey:WDDashActiveKey])
 	{ mActive = [coder decodeBoolForKey:WDDashActiveKey]; }
+
+	if ([coder containsValueForKey:WDDashPhaseKey])
+	{ mPhase = [coder decodeFloatForKey:WDDashPhaseKey]; }
 
 	if ([coder containsValueForKey:WDDashPatternKey])
 	{ mPattern = [coder decodeObjectForKey:WDDashPatternKey]; }
@@ -76,7 +84,7 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 	if (mActive)
 	{
 		for (id value in mPattern)
-		{ if ([value floatValue] > 0.0) return YES; }
+		{ if ([value floatValue] != 0.0) return YES; }
 	}
 
 	return NO;
@@ -91,8 +99,8 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 		NSMutableArray *scaledPattern =
 		[NSMutableArray arrayWithCapacity:mPattern.count];
 
-		for (NSNumber *V in mPattern)
-		{ [scaledPattern addObject:@(scale * V.floatValue)]; }
+		for (id value in mPattern)
+		{ [scaledPattern addObject:@(scale * [value floatValue])]; }
 
 		return scaledPattern;
 	}
@@ -106,6 +114,7 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 {
 	WDDashOptions *options = [[self class] new];
 	options->mActive = self->mActive;
+	options->mPhase *= scale;
 	options->mPattern = [self patternWithScale:scale];
 	return options;
 }
@@ -134,7 +143,7 @@ NSString *const WDDashPatternKey = @"WDDashPattern";
 		for (int i=0; i!=mPattern.count; i++)
 		{ pattern[i] = [mPattern[i] floatValue]; }
 
-		CGContextSetLineDash(context, 0.0, pattern, mPattern.count);
+		CGContextSetLineDash(context, mPhase, pattern, mPattern.count);
 	}
 	else
 		CGContextSetLineDash(context, 0.0, nil, 0);

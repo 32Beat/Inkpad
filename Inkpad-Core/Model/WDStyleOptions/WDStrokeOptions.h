@@ -28,6 +28,7 @@ extern NSString *const WDStrokeColorKey;
 extern NSString *const WDStrokeLineWidthKey;
 extern NSString *const WDStrokeLineCapKey;
 extern NSString *const WDStrokeLineJoinKey;
+extern NSString *const WDStrokeMiterLimitKey;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDStrokeOptions : WDStyleOptions
@@ -37,6 +38,7 @@ extern NSString *const WDStrokeLineJoinKey;
 	CGFloat 		mLineWidth;
 	CGLineCap 		mLineCap;
 	CGLineJoin 		mLineJoin;
+	CGFloat 		mMiterLimit;
 	WDDashOptions 	*mDashOptions;
 }
 
@@ -45,6 +47,7 @@ extern NSString *const WDStrokeLineJoinKey;
 @property (nonatomic, assign) CGFloat lineWidth;
 @property (nonatomic, assign) CGLineCap lineCap;
 @property (nonatomic, assign) CGLineJoin lineJoin;
+@property (nonatomic, assign) CGFloat miterLimit;
 @property (nonatomic, strong) WDDashOptions *dashOptions;
 
 - (id) optionsWithScale:(float)scale;

@@ -23,7 +23,7 @@
 #import "WDSVGHelper.h"
 #import "WDUtilities.h"
 
-NSString *WDFillRuleKey = @"WDFillRuleKey";
+//NSString *WDFillRuleKey = @"WDFillRuleKey";
 
 @implementation WDAbstractPath
 

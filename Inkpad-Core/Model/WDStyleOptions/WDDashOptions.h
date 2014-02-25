@@ -29,10 +29,12 @@ extern NSString *const WDDashPatternKey;
 @interface WDDashOptions : WDStyleOptions
 {
 	BOOL 		mActive;
+	CGFloat 	mPhase;
 	NSArray 	*mPattern;
 }
 
 @property (nonatomic, assign) BOOL active;
+@property (nonatomic, assign) CGFloat phase;
 @property (nonatomic, strong) NSArray *pattern;
 
 - (BOOL) visible;

@@ -26,6 +26,13 @@ typedef enum {
 
 @interface WDStrokeController : UIViewController
 {
+	UISegmentedControl              *modeSegment_;
+
+
+	WDColorController               *mColorController;
+	IBOutlet UILabel 				*mColorPickerView;
+
+
 	IBOutlet UISlider               *widthSlider_;
 	IBOutlet UILabel                *widthLabel_;
 	IBOutlet WDLineAttributePicker  *capPicker_;
@@ -34,15 +41,12 @@ typedef enum {
 	IBOutlet UIButton               *increment;
 	IBOutlet UIButton               *decrement;
 
-	IBOutlet UILabel 				*mColorPickerView;
+
+	WDDashController 				*mDashController;
 	IBOutlet UILabel 				*mDashOptionsView;
 
 	IBOutlet UIButton               *arrowButton_;
-	
-	UISegmentedControl              *modeSegment_;
-	WDColorController               *mColorController;
-	WDDashController 				*mDashController;
-	
+
 	WDStrokeMode                    mode_;
 
 	BOOL mDidAdjust;

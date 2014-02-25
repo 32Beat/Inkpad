@@ -387,6 +387,27 @@ NSString *WDSelectionChangedNotification = @"WDSelectionChangedNotification";
 	return [selectedObjects_ containsObject:element];
 }
 
+- (CGPoint) selectionPivot
+{
+	if (selectedObjects_.count)
+	{
+		CGPoint pivot = CGPointZero;
+	
+		for (WDElement *element in selectedObjects_)
+		{ pivot = WDAddPoints(pivot, element.position); }
+
+		pivot.x /= selectedObjects_.count;
+		pivot.y /= selectedObjects_.count;
+
+		return pivot;
+	}
+	
+	return (CGPoint){
+	0.5*drawing_.dimensions.width,
+	0.5*drawing_.dimensions.height };
+
+}
+
 - (CGRect) selectionBounds
 {
 	CGRect bounds = CGRectNull;

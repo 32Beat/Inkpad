@@ -982,7 +982,8 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 	showingPivot_ = showsPivot;
 	
 	if (showsPivot) {
-		[self setPivot:WDCenterOfRect([self.drawingController selectionBounds])];
+//		[self setPivot:WDCenterOfRect([self.drawingController selectionBounds])];
+		[self setPivot:[self.drawingController selectionPivot]];
 	} else if (pivotView_) {
 		[pivotView_ removeFromSuperview];
 		pivotView_ = nil;

@@ -120,6 +120,8 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
 
 - (NSSet *) transform:(CGAffineTransform)transform
 {
+	[super transform:transform];
+
     self.fillTransform = [fillTransform_ transform:transform];
     
     for (WDElement *element in self.maskedElements) {

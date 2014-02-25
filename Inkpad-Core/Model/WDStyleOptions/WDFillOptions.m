@@ -19,6 +19,7 @@
 NSString *const WDFillOptionsKey = @"WDFillOptions";
 NSString *const WDFillActiveKey = @"WDFillActive";
 NSString *const WDFillColorKey = @"WDFillColor";
+NSString *const WDFillRuleKey = @"WDFillRule";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +45,7 @@ NSString *const WDFillColorKey = @"WDFillColor";
 {
 	self->mActive = src->mActive;
 	self->mColor = src->mColor;
+	self->mFillRule = src->mFillRule;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +54,7 @@ NSString *const WDFillColorKey = @"WDFillColor";
 {
 	[coder encodeBool:mActive forKey:WDFillActiveKey];
 	[coder encodeObject:mColor forKey:WDFillColorKey];
+	[coder encodeInt:mFillRule forKey:WDFillRuleKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +66,9 @@ NSString *const WDFillColorKey = @"WDFillColor";
 
 	if ([coder containsValueForKey:WDFillColorKey])
 	{ mColor = [coder decodeObjectForKey:WDFillColorKey]; }
+
+	if ([coder containsValueForKey:WDFillRuleKey])
+	{ mFillRule = [coder decodeObjectForKey:WDFillRuleKey]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

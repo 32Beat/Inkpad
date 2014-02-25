@@ -54,6 +54,7 @@
 - (BOOL) isSelected:(WDElement *)element;
 - (BOOL) isSelectedOrSubelementIsSelected:(WDElement *)element;
 
+- (CGPoint) selectionPivot;
 - (CGRect) selectionBounds;
 - (NSSet *) selectedPaths;
 - (BOOL) allSelectedObjectsAreRootObjects;

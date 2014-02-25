@@ -65,7 +65,7 @@ CGVectorApplyAffineTransform(CGVector v, CGAffineTransform t)
 
 
 CGFloat WDGetRotationFromTransform(CGAffineTransform T);
-CGSize WDGetScaleFromTransform(CGAffineTransform T);
+CGVector WDGetScaleFromTransform(CGAffineTransform T);
 
 CGSize WDSizeOfRectWithAngle(CGRect rect, float angle, CGPoint *upperLeft, CGPoint *upperRight);
 

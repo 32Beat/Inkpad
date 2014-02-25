@@ -884,9 +884,39 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) applyTransform:(CGAffineTransform)transform
+- (void) applyTransform:(CGAffineTransform)T
 {
+	// Record current state for undo
+	[self saveState];
+
+	[self willChangePropertyForKey:WDFrameOptionsKey];
+
+/*
+	If we ever want to support numeric transformations,
+	we need to limit our transforms to normal rotation, scale, and move.
 	
+	They currently are, attempt breaking it down.
+*/
+	// Test for rotation
+	if ((T.b != 0.0)||(T.c != 0.0))
+	{
+		double a = WDGetRotationFromTransform(T);
+		double degrees = WDDegreesFromRadians(a);
+		[self setRotation:mRotation + degrees];
+	}
+	else
+	// Test for scale
+	if ((T.a != 1.0)||(T.d != 1.0))
+	{
+		[self _applyScale:WDGetScaleFromTransform(T)];
+	}
+
+	// Always move
+	CGPoint P = mPosition;
+	P = CGPointApplyAffineTransform(P, T);
+	[self setPosition:P];
+
+	[self didChangePropertyForKey:WDFrameOptionsKey];
 }
 
 - (NSSet *) transform:(CGAffineTransform)transform
@@ -933,7 +963,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) bounds
-{ return [self sourceRect]; }
+{ return self.frameBounds; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
