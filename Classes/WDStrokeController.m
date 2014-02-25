@@ -258,7 +258,7 @@
 { [self adjustStroke:sender shouldUndo:YES]; }
 
 - (void) takeDashFrom:(id)sender
-{ [self adjustStroke:sender shouldUndo:YES]; }
+{ [self adjustStroke:sender shouldUndo:YES]; } 
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -272,33 +272,16 @@
 
 
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark - View Life Cycle
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) viewDidLoad
 {
 	[super viewDidLoad];
 
-	mColorController = [WDColorController new];
-	mColorController.strokeMode = YES;
-	mColorController.target = self;
-	mColorController.action = @selector(takeColorFrom:);
-
-	[mColorController.view setFrame:mColorPickerView.frame];
-	[self.view addSubview:mColorController.view];
-	[mColorPickerView removeFromSuperview];
-	mColorPickerView = nil;
-
-	[self.view addSubview:mColorController.view];
-
-	mDashController = [WDDashOptionsController new];
-	mDashController.target = self;
-	mDashController.action = @selector(takeDashFrom:);
-
-	[mDashController.view setFrame:mDashOptionsView.frame];
-	[self.view addSubview:mDashController.view];
-	[mDashOptionsView removeFromSuperview];
-	mDashOptionsView = nil;
-
+	[self prepareColorController];
+	[self prepareDashController];
 
 	widthSlider_.minimumValue = 0.1f;
 	widthSlider_.maximumValue = 100.0f;
@@ -317,23 +300,53 @@
 	self.preferredContentSize = self.view.frame.size;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareColorController
+{
+	mColorController = [WDColorController new];
+	mColorController.strokeMode = YES;
+	mColorController.target = self;
+	mColorController.action = @selector(takeColorFrom:);
+
+	// Exchange labelView stub with controller view
+	[mColorController.view setFrame:mColorPickerView.frame];
+	[self.view addSubview:mColorController.view];
+	[mColorPickerView removeFromSuperview];
+	mColorPickerView = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareDashController
+{
+	mDashController = [WDDashController new];
+	mDashController.target = self;
+	mDashController.action = @selector(takeDashFrom:);
+
+	// Exchange labelView stub with controller view
+	[mDashController.view setFrame:mDashOptionsView.frame];
+	[self.view addSubview:mDashController.view];
+	[mDashOptionsView removeFromSuperview];
+	mDashOptionsView = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
 
-	WDStrokeOptions *options = [drawingController_.propertyManager activeStrokeOptions];
-	[self setStrokeOptions:options];
-
+	// Update for most recently active options
+	[self setStrokeOptions:
+	[drawingController_.propertyManager activeStrokeOptions]];
 
 	[self updateArrowPreview];
-/*
-	[modeSegment_ removeTarget:self action:@selector(toggleStroke:) forControlEvents:UIControlEventValueChanged];
-	modeSegment_.selectedSegmentIndex = [[drawingController_.propertyManager defaultValueForProperty:WDStrokeVisibleProperty] boolValue] ? 1 : 0;
-	[modeSegment_ addTarget:self action:@selector(toggleStroke:) forControlEvents:UIControlEventValueChanged];
-*/
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Arrow Previews
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateArrowPreview
 {

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDDashOptionsController.h
+	WDDashController.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -16,7 +16,7 @@
 #import "WDSparkSlider.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDDashOptionsController : UIViewController
+@interface WDDashController : UIViewController
 {
 	IBOutlet UISwitch               *mSwitch;
 	IBOutlet WDSparkSlider          *mSlider0;

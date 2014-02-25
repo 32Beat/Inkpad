@@ -13,7 +13,7 @@
 
 @class WDDrawingController;
 #import "WDColorController.h"
-#import "WDDashOptionsController.h"
+#import "WDDashController.h"
 
 @class WDLineAttributePicker;
 @class WDSparkSlider;
@@ -41,7 +41,7 @@ typedef enum {
 	
 	UISegmentedControl              *modeSegment_;
 	WDColorController               *mColorController;
-	WDDashOptionsController 		*mDashController;
+	WDDashController 				*mDashController;
 	
 	WDStrokeMode                    mode_;
 
