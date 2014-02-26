@@ -1,13 +1,17 @@
-//
-//  WDPath.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2009-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDPath.h
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2008-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+#include "WDPath.h"
 
 #import "UIColor_Additions.h"
 #import "WDArrowhead.h"
@@ -23,8 +27,7 @@
 #import "WDShadow.h"
 #import "WDUtilities.h"
 
-const float kMiterLimit  = 10;
-
+////////////////////////////////////////////////////////////////////////////////
 // Fit t = 0.5
 //const float circleFactor = 0.5522847498307936;
 
@@ -33,22 +36,24 @@ const float circleFactor = 0.551915024494;
 
 static NSString *WDPathVersionKey = @"WDPathVersion";
 
-//static NSInteger WDPathVersion = 100;
-static NSString *WDPathReversedKey = @"WDPathReversed";
-static NSString *WDPathClosedKey = @"WDPathClosed";
+//static NSInteger WDPathVersion = 1;
 static NSString *WDPathNodesKey = @"WDPathNodes";
 
 //static NSInteger WDPathVersion0 = 0;
+NSString *WDPathClosedKey = @"WDPathClosedKey";
 NSString *WDReversedPathKey = @"WDReversedPathKey";
 NSString *WDSuperpathKey = @"WDSuperpathKey";
 NSString *WDNodesKey = @"WDNodesKey";
 NSString *WDClosedKey = @"WDClosedKey";
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDPath
+////////////////////////////////////////////////////////////////////////////////
+
+@synthesize nodes = nodes_;
 
 @synthesize closed = closed_;
 @synthesize reversed = reversed_;
-@synthesize nodes = nodes_;
 @synthesize superpath = superpath_;
 
 // to simplify rendering
@@ -56,55 +61,60 @@ NSString *WDClosedKey = @"WDClosedKey";
 @synthesize displayColor = displayColor_;   
 @synthesize displayClosed = displayClosed_;
 
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (id) init
 {
 	self = [super init];
 	if (self != nil)
 	{
 		nodes_ = [[NSMutableArray alloc] init];
-//		boundsDirty_ = YES;
 	}
 
 	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (id) initWithNode:(WDBezierNode *)node
 {
-    self = [self init];
-    if (self != nil)
+	self = [self init];
+	if (self != nil)
 	{
-		[nodes_ addObject:node];
-//		boundsDirty_ = YES;
+		[self.nodes addObject:node];
 	}
 
 	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 
 
 - (void) dealloc
 {
-    if (pathRef_) {
-        CGPathRelease(pathRef_);
-    }
-    
-    if (strokePathRef_) {
-        CGPathRelease(strokePathRef_);
-    }
+	if (pathRef_) {
+		CGPathRelease(pathRef_);
+	}
+	
+	if (strokePathRef_) {
+		CGPathRelease(strokePathRef_);
+	}
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-    [super encodeWithCoder:coder];
-    
-    [coder encodeObject:nodes_ forKey:WDNodesKey];
-    [coder encodeBool:closed_ forKey:WDClosedKey];
-    [coder encodeBool:reversed_ forKey:WDReversedPathKey];
-    
-    if (superpath_) {
-        [coder encodeConditionalObject:superpath_ forKey:WDSuperpathKey];
-    }
+	[super encodeWithCoder:coder];
+	
+	[coder encodeObject:nodes_ forKey:WDNodesKey];
+	[coder encodeBool:closed_ forKey:WDClosedKey];
+	[coder encodeBool:reversed_ forKey:WDReversedPathKey];
+	
+	if (superpath_) {
+		[coder encodeConditionalObject:superpath_ forKey:WDSuperpathKey];
+	}
 }
 
 - (id)initWithCoder:(NSCoder *)coder
@@ -131,18 +141,18 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (void) setNodes:(NSMutableArray *)nodes
 {
-    if ([nodes_ isEqualToArray:nodes]) {
-        return;
-    }
-    [[self.undoManager prepareWithInvocationTarget:self] setNodes:nodes_];
+	if ([nodes_ isEqualToArray:nodes]) {
+		return;
+	}
+	[[self.undoManager prepareWithInvocationTarget:self] setNodes:nodes_];
 
-    [self cacheDirtyBounds];
-    
-    nodes_ = nodes;
-    
-    [self invalidatePath];
-    
-    [self postDirtyBoundsChange];
+	[self cacheDirtyBounds];
+	
+	nodes_ = nodes;
+	
+	[self invalidatePath];
+	
+	[self postDirtyBoundsChange];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,12 +167,12 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (NSMutableArray *) reversedNodes
 {
-    NSMutableArray *reversed = [NSMutableArray array];
-    
-    for (WDBezierNode *node in [[self nodes] reverseObjectEnumerator])
+	NSMutableArray *reversed = [NSMutableArray array];
+	
+	for (WDBezierNode *node in [[self nodes] reverseObjectEnumerator])
 	{ [reversed addObject:[node flippedNode]]; }
-    
-    return reversed;
+	
+	return reversed;
 }
 
 - (NSArray *) orderedNodes
@@ -228,19 +238,19 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (BOOL) addNode:(WDBezierNode *)node scale:(float)scale
 {
-    [self cacheDirtyBounds];
-    
-    if (nodes_.count && WDDistance(node.anchorPoint, ((WDBezierNode *) nodes_[0]).anchorPoint) < (kNodeSelectionTolerance / scale)) {
-        self.closed = YES;
-    } else {
-        NSMutableArray *newNodes = [nodes_ mutableCopy];
-        [newNodes addObject:node];
-        self.nodes = newNodes;
-    }
-    
-    [self postDirtyBoundsChange];
-    
-    return closed_;
+	[self cacheDirtyBounds];
+	
+	if (nodes_.count && WDDistance(node.anchorPoint, ((WDBezierNode *) nodes_[0]).anchorPoint) < (kNodeSelectionTolerance / scale)) {
+		self.closed = YES;
+	} else {
+		NSMutableArray *newNodes = [nodes_ mutableCopy];
+		[newNodes addObject:node];
+		self.nodes = newNodes;
+	}
+	
+	[self postDirtyBoundsChange];
+	
+	return closed_;
 }
 
 - (void) addNodeWithAnchorPoint:(CGPoint)P
@@ -254,27 +264,27 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (void) replaceFirstNodeWithNode:(WDBezierNode *)node
 {
-    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
-    newNodes[0] = node;
-    self.nodes = newNodes;
+	NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
+	newNodes[0] = node;
+	self.nodes = newNodes;
 }
 
 - (void) replaceLastNodeWithNode:(WDBezierNode *)node
 {
-    NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
-    [newNodes removeLastObject];
-    [newNodes addObject:node];
-    self.nodes = newNodes;
+	NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
+	[newNodes removeLastObject];
+	[newNodes addObject:node];
+	self.nodes = newNodes;
 }
 
 - (WDBezierNode *) firstNode
 {
-    return nodes_[0];
+	return nodes_[0];
 }
 
 - (WDBezierNode *) lastNode
 {
-    return (closed_ ? nodes_[0] : [nodes_ lastObject]); 
+	return (closed_ ? nodes_[0] : [nodes_ lastObject]); 
 }
 
 - (NSSet *) nodesInRect:(CGRect)rect
@@ -301,7 +311,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 	BOOL closed = displayNodes_ ? displayClosed_ : closed_;
 	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
 
-    if (!nodes || nodes.count == 0) return nil;
+	if (!nodes || nodes.count == 0) return nil;
 
 	BOOL transformAll = ![self anyNodesSelected];
 	CGAffineTransform combined =
@@ -431,146 +441,146 @@ NSString *WDClosedKey = @"WDClosedKey";
 				attachment:(CGPoint *)attachment
 				angle:(float *)angle
 {
-    NSMutableArray  *newNodes = [NSMutableArray array];
-    NSInteger       numNodes = nodes.count;
-    WDBezierNode    *firstNode = nodes[0];
-    CGPoint         arrowTip = firstNode.anchorPoint;
-    CGPoint         result;
-    WDStrokeStyle   *stroke = [self effectiveStrokeStyle];
-    float           t, scale = stroke.width;
-    BOOL            butt = (stroke.cap == kCGLineCapButt) ? YES : NO;
-    
-    for (int i = 0; i < numNodes-1; i++) {
-        WDBezierNode    *a = nodes[i];
-        WDBezierNode    *b = nodes[i+1];
-        WDBezierSegment segment = WDBezierSegmentMakeWithNodes(a, b);
-        WDBezierSegment L, R;
-        
-        if (WDBezierSegmentPointDistantFromPoint
+	NSMutableArray  *newNodes = [NSMutableArray array];
+	NSInteger       numNodes = nodes.count;
+	WDBezierNode    *firstNode = nodes[0];
+	CGPoint         arrowTip = firstNode.anchorPoint;
+	CGPoint         result;
+	WDStrokeStyle   *stroke = [self effectiveStrokeStyle];
+	float           t, scale = stroke.width;
+	BOOL            butt = (stroke.cap == kCGLineCapButt) ? YES : NO;
+	
+	for (int i = 0; i < numNodes-1; i++) {
+		WDBezierNode    *a = nodes[i];
+		WDBezierNode    *b = nodes[i+1];
+		WDBezierSegment segment = WDBezierSegmentMakeWithNodes(a, b);
+		WDBezierSegment L, R;
+		
+		if (WDBezierSegmentPointDistantFromPoint
 			(segment, [arrowhead insetLength:butt] * scale, arrowTip, &result, &t))
 		{
-            WDBezierSegmentSplitAtT(segment, &L, &R, t);
-            [newNodes addObject:[WDBezierNode
+			WDBezierSegmentSplitAtT(segment, &L, &R, t);
+			[newNodes addObject:[WDBezierNode
 			bezierNodeWithAnchorPoint:result
 							outPoint:R.out_
 							inPoint:result]];
 
-            [newNodes addObject:[b copyWithNewInPoint:R.in_]];
+			[newNodes addObject:[b copyWithNewInPoint:R.in_]];
 
-            for (int n = i+2; n < numNodes; n++) {
-                [newNodes addObject:nodes[n % numNodes]];
-            }
-            
-            *attachment = result;
-            CGPoint delta = WDSubtractPoints(arrowTip, result);
-            *angle = atan2(delta.y, delta.x);
-            
-            break;
-        }
-    }
-    
-    return newNodes;
+			for (int n = i+2; n < numNodes; n++) {
+				[newNodes addObject:nodes[n % numNodes]];
+			}
+			
+			*attachment = result;
+			CGPoint delta = WDSubtractPoints(arrowTip, result);
+			*angle = atan2(delta.y, delta.x);
+			
+			break;
+		}
+	}
+	
+	return newNodes;
 }
 
 - (void) computeStrokePathRef
 {
-    WDStrokeStyle *stroke = [self effectiveStrokeStyle];
-    
-    if (strokePathRef_) {
-        CGPathRelease(strokePathRef_);
-    }
-    
-    if (![stroke hasArrow]) {
-        // since we don't have arrowheads, the stroke path is the same as the fill path
-        strokePathRef_ = (CGMutablePathRef) CGPathRetain(self.pathRef);
-        return;
-    }
-    
-    // need to calculate arrowhead positions and inset the path appropriately
-    
-    NSArray *nodes = [nodes_ copy];
-    if (closed_) {
-        nodes = [nodes arrayByAddingObject:nodes[0]];
-    }
-    
-    // by default, we can fit an arrow
-    canFitStartArrow_ = canFitEndArrow_ = YES;
-    
-    // start arrow?
-    WDArrowhead *startArrowhead = [WDArrowhead arrowheads][stroke.startArrow];
-    if (startArrowhead) {
-        nodes = [self insetForArrowhead:startArrowhead nodes:nodes attachment:&arrowStartAttachment_ angle:&arrowStartAngle_];
-        // if we ate up the path, we can't fit
-        canFitStartArrow_ = nodes.count;
-    }
-    
-    // end arrow?
-    WDArrowhead *endArrowhead = [WDArrowhead arrowheads][stroke.endArrow];
-    if (endArrowhead && nodes.count) {
-        NSMutableArray *reversed = [NSMutableArray array];
-        for (WDBezierNode *node in [nodes reverseObjectEnumerator]) {
-            [reversed addObject:[node flippedNode]];
-        }
-        
-        NSArray *result = [self insetForArrowhead:endArrowhead nodes:reversed attachment:&arrowEndAttachment_ angle:&arrowEndAngle_];
-        // if we ate up the path, we can't fit
-        canFitEndArrow_ = result.count;
-        
-        if (canFitEndArrow_) {
-            nodes = result;
-        }
-    }
-    
-    if (!canFitStartArrow_ || !canFitEndArrow_) {
-        // we either fit both arrows or no arrows
-        canFitStartArrow_ = canFitEndArrow_ = NO;
-        strokePathRef_ = (CGMutablePathRef) CGPathRetain(pathRef_);
-        return;
-    }
+	WDStrokeStyle *stroke = [self effectiveStrokeStyle];
+	
+	if (strokePathRef_) {
+		CGPathRelease(strokePathRef_);
+	}
+	
+	if (![stroke hasArrow]) {
+		// since we don't have arrowheads, the stroke path is the same as the fill path
+		strokePathRef_ = (CGMutablePathRef) CGPathRetain(self.pathRef);
+		return;
+	}
+	
+	// need to calculate arrowhead positions and inset the path appropriately
+	
+	NSArray *nodes = [nodes_ copy];
+	if (closed_) {
+		nodes = [nodes arrayByAddingObject:nodes[0]];
+	}
+	
+	// by default, we can fit an arrow
+	canFitStartArrow_ = canFitEndArrow_ = YES;
+	
+	// start arrow?
+	WDArrowhead *startArrowhead = [WDArrowhead arrowheads][stroke.startArrow];
+	if (startArrowhead) {
+		nodes = [self insetForArrowhead:startArrowhead nodes:nodes attachment:&arrowStartAttachment_ angle:&arrowStartAngle_];
+		// if we ate up the path, we can't fit
+		canFitStartArrow_ = nodes.count;
+	}
+	
+	// end arrow?
+	WDArrowhead *endArrowhead = [WDArrowhead arrowheads][stroke.endArrow];
+	if (endArrowhead && nodes.count) {
+		NSMutableArray *reversed = [NSMutableArray array];
+		for (WDBezierNode *node in [nodes reverseObjectEnumerator]) {
+			[reversed addObject:[node flippedNode]];
+		}
+		
+		NSArray *result = [self insetForArrowhead:endArrowhead nodes:reversed attachment:&arrowEndAttachment_ angle:&arrowEndAngle_];
+		// if we ate up the path, we can't fit
+		canFitEndArrow_ = result.count;
+		
+		if (canFitEndArrow_) {
+			nodes = result;
+		}
+	}
+	
+	if (!canFitStartArrow_ || !canFitEndArrow_) {
+		// we either fit both arrows or no arrows
+		canFitStartArrow_ = canFitEndArrow_ = NO;
+		strokePathRef_ = (CGMutablePathRef) CGPathRetain(pathRef_);
+		return;
+	}
 
-    // construct the path ref from the remaining node list
-    WDBezierNode    *prevNode = nil;
-    BOOL            firstTime = YES;
+	// construct the path ref from the remaining node list
+	WDBezierNode    *prevNode = nil;
+	BOOL            firstTime = YES;
 
-    strokePathRef_ = CGPathCreateMutable();
-    for (WDBezierNode *node in nodes) {
-        if (firstTime) {
-            CGPathMoveToPoint(strokePathRef_, NULL, node.anchorPoint.x, node.anchorPoint.y);
-            firstTime = NO;
-        } else if ([prevNode hasOutPoint] || [node hasInPoint]) {
-            CGPathAddCurveToPoint(strokePathRef_, NULL, prevNode.outPoint.x, prevNode.outPoint.y,
-                                  node.inPoint.x, node.inPoint.y, node.anchorPoint.x, node.anchorPoint.y);
-        } else {
-            CGPathAddLineToPoint(strokePathRef_, NULL, node.anchorPoint.x, node.anchorPoint.y);
-        }
-        prevNode = node;
-    }
+	strokePathRef_ = CGPathCreateMutable();
+	for (WDBezierNode *node in nodes) {
+		if (firstTime) {
+			CGPathMoveToPoint(strokePathRef_, NULL, node.anchorPoint.x, node.anchorPoint.y);
+			firstTime = NO;
+		} else if ([prevNode hasOutPoint] || [node hasInPoint]) {
+			CGPathAddCurveToPoint(strokePathRef_, NULL, prevNode.outPoint.x, prevNode.outPoint.y,
+								  node.inPoint.x, node.inPoint.y, node.anchorPoint.x, node.anchorPoint.y);
+		} else {
+			CGPathAddLineToPoint(strokePathRef_, NULL, node.anchorPoint.x, node.anchorPoint.y);
+		}
+		prevNode = node;
+	}
 }
 
 - (CGPathRef) strokePathRef
 {
-    if (nodes_.count == 0) {
-        return NULL;
-    }
-    
-    if (!strokePathRef_) {
-        [self computeStrokePathRef];
-    }
-    
-    return strokePathRef_;
+	if (nodes_.count == 0) {
+		return NULL;
+	}
+	
+	if (!strokePathRef_) {
+		[self computeStrokePathRef];
+	}
+	
+	return strokePathRef_;
 }
 
 - (CGPathRef) pathRef
 {
-    if (nodes_.count == 0) {
-        return NULL;
-    }
-    
-    if (!pathRef_) {
-        [self computePathRef];
-    }
-    
-    return pathRef_;
+	if (nodes_.count == 0) {
+		return NULL;
+	}
+	
+	if (!pathRef_) {
+		[self computePathRef];
+	}
+	
+	return pathRef_;
 }
 
 + (WDPath *) pathWithRect:(CGRect)R
@@ -581,7 +591,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (void) strokeStyleChanged
 {
-    [self invalidatePath];
+	[self invalidatePath];
 }
 
 
@@ -597,8 +607,8 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 + (WDPath *) pathWithStart:(CGPoint)start end:(CGPoint)end
 {
-    WDPath *path = [[WDPath alloc] initWithStart:start end:end];
-    return path;
+	WDPath *path = [[WDPath alloc] initWithStart:start end:end];
+	return path;
 }
 
 - (id) initWithRect:(CGRect)R
@@ -771,105 +781,105 @@ NSString *WDClosedKey = @"WDClosedKey";
 
 - (id) initWithStart:(CGPoint)start end:(CGPoint)end
 {
-    self = [self init];
-    
-    if (!self) {
-        return nil;
-    }
-    
-    [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:start]];
-    [nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:end]];
-    
+	self = [self init];
+	
+	if (!self) {
+		return nil;
+	}
+	
+	[nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:start]];
+	[nodes_ addObject:[WDBezierNode bezierNodeWithAnchorPoint:end]];
+	
  //   boundsDirty_ = YES;
-    
-    return self;
+	
+	return self;
 }
 
 - (void) setClosedQuiet:(BOOL)closed
 {
-    if (closed && nodes_.count < 2) {
-        // need at least 2 nodes to close a path
-        return;
-    }
-    
-    if (closed) {
-        // if the first and last node have the same anchor, one is redundant
-        WDBezierNode *first = [self firstNode];
-        WDBezierNode *last = [self lastNode];
-        if (CGPointEqualToPoint(first.anchorPoint, last.anchorPoint)) {
-            WDBezierNode *closedNode =
+	if (closed && nodes_.count < 2) {
+		// need at least 2 nodes to close a path
+		return;
+	}
+	
+	if (closed) {
+		// if the first and last node have the same anchor, one is redundant
+		WDBezierNode *first = [self firstNode];
+		WDBezierNode *last = [self lastNode];
+		if (CGPointEqualToPoint(first.anchorPoint, last.anchorPoint)) {
+			WDBezierNode *closedNode =
 			[first copyWithNewInPoint:last.inPoint];
 
-            NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
-            newNodes[0] = closedNode;
-            [newNodes removeLastObject];
-            
-            nodes_ = newNodes;
-        }
-    }
-    
-    closed_ = closed;
+			NSMutableArray *newNodes = [NSMutableArray arrayWithArray:nodes_];
+			newNodes[0] = closedNode;
+			[newNodes removeLastObject];
+			
+			nodes_ = newNodes;
+		}
+	}
+	
+	closed_ = closed;
 }
 
 - (void) setClosed:(BOOL)closed
 {
-    if (closed && nodes_.count < 2) {
-        // need at least 2 nodes to close a path
-        return;
-    }
-    
-    [self cacheDirtyBounds];
-    [[self.undoManager prepareWithInvocationTarget:self] setClosed:closed_];
-    
-    [self setClosedQuiet:closed];
-    
-    [self invalidatePath];
-    [self postDirtyBoundsChange];
+	if (closed && nodes_.count < 2) {
+		// need at least 2 nodes to close a path
+		return;
+	}
+	
+	[self cacheDirtyBounds];
+	[[self.undoManager prepareWithInvocationTarget:self] setClosed:closed_];
+	
+	[self setClosedQuiet:closed];
+	
+	[self invalidatePath];
+	[self postDirtyBoundsChange];
 }
 
 
 - (void) reversePathDirection
 {
-    [self cacheDirtyBounds];
-    
-    [[self.undoManager prepareWithInvocationTarget:self] reversePathDirection];
-    
-    if (self.strokeStyle && [self.strokeStyle hasArrow]) {
-        WDStrokeStyle *flippedArrows = [self.strokeStyle strokeStyleWithSwappedArrows];
-        NSSet *changedProperties = [self changedStrokePropertiesFrom:self.strokeStyle to:flippedArrows];
-        
-        if (changedProperties.count) {
-            [self setStrokeStyleQuiet:flippedArrows];
-            [self strokeStyleChanged];
-            [self propertiesChanged:changedProperties];
-        }
-    }
-    
-    reversed_ = !reversed_;
-    [self invalidatePath];
+	[self cacheDirtyBounds];
+	
+	[[self.undoManager prepareWithInvocationTarget:self] reversePathDirection];
+	
+	if (self.strokeStyle && [self.strokeStyle hasArrow]) {
+		WDStrokeStyle *flippedArrows = [self.strokeStyle strokeStyleWithSwappedArrows];
+		NSSet *changedProperties = [self changedStrokePropertiesFrom:self.strokeStyle to:flippedArrows];
+		
+		if (changedProperties.count) {
+			[self setStrokeStyleQuiet:flippedArrows];
+			[self strokeStyleChanged];
+			[self propertiesChanged:changedProperties];
+		}
+	}
+	
+	reversed_ = !reversed_;
+	[self invalidatePath];
 
-    [self postDirtyBoundsChange];
+	[self postDirtyBoundsChange];
 }
 
 - (void) invalidatePath
 {
-    if (pathRef_) {
-        CGPathRelease(pathRef_);
-        pathRef_ = NULL;
-    }
-    
-    if (strokePathRef_) {
-        CGPathRelease(strokePathRef_);
-        strokePathRef_ = NULL;
-    }
-    
-    if (self.superpath) {
-        [self.superpath invalidatePath];
-    }
+	if (pathRef_) {
+		CGPathRelease(pathRef_);
+		pathRef_ = NULL;
+	}
+	
+	if (strokePathRef_) {
+		CGPathRelease(strokePathRef_);
+		strokePathRef_ = NULL;
+	}
+	
+	if (self.superpath) {
+		[self.superpath invalidatePath];
+	}
 
 	self.displayNodes = nil;
 	
-    bounds_ = CGRectNull;
+	bounds_ = CGRectNull;
 	[self flushBounds];
 }
 
@@ -929,7 +939,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 ////////////////////////////////////////////////////////////////////////////////
 - (WDShadow *) shadowForStyleBounds
 {
-    return self.superpath ? self.superpath.shadow : self.shadow;;
+	return self.superpath ? self.superpath.shadow : self.shadow;;
 }
 
 /* 
@@ -969,7 +979,7 @@ NSString *WDClosedKey = @"WDClosedKey";
 			angle = acos(inVec.x * outVec.x + inVec.y * outVec.y);
 			miterLength = strokeStyle.width / sin(angle / 2.0f);
 			
-			if ((miterLength / strokeStyle.width) < kMiterLimit) {
+			if ((miterLength / strokeStyle.width) < 10) {
 				CGPoint avg = WDAveragePoints(inVec, outVec);
 				CGPoint directed = WDMultiplyPointScalar(WDNormalizePoint(avg), -miterLength / 2.0f);
 				
@@ -1051,25 +1061,25 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (CGRect) subselectionBounds
 {
-    if (![self anyNodesSelected]) {
-        return [self bounds];
-    }
-    
-    NSArray *selected = [self selectedNodes];
-    WDBezierNode *initial = [selected lastObject];
-    float   minX, maxX, minY, maxY;
-    
-    minX = maxX = initial.anchorPoint.x;
-    minY = maxY = initial.anchorPoint.y;
-    
-    for (WDBezierNode *node in selected) {
-        minX = MIN(minX, node.anchorPoint.x);
-        maxX = MAX(maxX, node.anchorPoint.x);
-        minY = MIN(minY, node.anchorPoint.y);
-        maxY = MAX(maxY, node.anchorPoint.y);
-    }
-    
-    return CGRectMake(minX, minY, maxX - minX, maxY - minY);
+	if (![self anyNodesSelected]) {
+		return [self bounds];
+	}
+	
+	NSArray *selected = [self selectedNodes];
+	WDBezierNode *initial = [selected lastObject];
+	float   minX, maxX, minY, maxY;
+	
+	minX = maxX = initial.anchorPoint.x;
+	minY = maxY = initial.anchorPoint.y;
+	
+	for (WDBezierNode *node in selected) {
+		minX = MIN(minX, node.anchorPoint.x);
+		maxX = MAX(maxX, node.anchorPoint.x);
+		minY = MIN(minY, node.anchorPoint.y);
+		maxY = MAX(maxY, node.anchorPoint.y);
+	}
+	
+	return CGRectMake(minX, minY, maxX - minX, maxY - minY);
 }
 
 /*
@@ -1121,7 +1131,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 	BOOL closed = closed_;
 	NSArray *nodes = nodes_;
 
-    if (!nodes || nodes.count == 0) return nil;
+	if (!nodes || nodes.count == 0) return nil;
 
 	NSMutableArray *result = [NSMutableArray arrayWithCapacity:nodes.count+1];
 
@@ -1216,98 +1226,98 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (void) drawOpenGLAnchorsWithViewTransform:(CGAffineTransform)transform
 {
-    UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
-    NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
-    
-    for (WDBezierNode *node in nodes) {
-        [node drawGLWithViewTransform:transform color:color mode:kWDBezierNodeRenderClosed];
-    }
+	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
+	
+	for (WDBezierNode *node in nodes) {
+		[node drawGLWithViewTransform:transform color:color mode:kWDBezierNodeRenderClosed];
+	}
 }
 
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
-    CGAffineTransform   combined = CGAffineTransformConcat(transform, viewTransform);
-    UIColor             *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
-    NSArray             *nodes = displayNodes_ ? displayNodes_ : nodes_;
-    
-    for (WDBezierNode *node in nodes) {
-        if (node.selected) {
-            [node drawGLWithViewTransform:combined color:color mode:kWDBezierNodeRenderSelected];
-        } else {
-            [node drawGLWithViewTransform:viewTransform color:color mode:kWDBezierNodeRenderOpen];
-        }
-    }
+	CGAffineTransform   combined = CGAffineTransformConcat(transform, viewTransform);
+	UIColor             *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+	NSArray             *nodes = displayNodes_ ? displayNodes_ : nodes_;
+	
+	for (WDBezierNode *node in nodes) {
+		if (node.selected) {
+			[node drawGLWithViewTransform:combined color:color mode:kWDBezierNodeRenderSelected];
+		} else {
+			[node drawGLWithViewTransform:viewTransform color:color mode:kWDBezierNodeRenderOpen];
+		}
+	}
 }
 
 - (BOOL) anyNodesSelected
 {
-    for (WDBezierNode *node in nodes_) {
-        if (node.selected) {
-            return YES;
-        }
-    }
-    
-    return NO;
+	for (WDBezierNode *node in nodes_) {
+		if (node.selected) {
+			return YES;
+		}
+	}
+	
+	return NO;
 }
 
 - (BOOL) allNodesSelected
 {
-    for (WDBezierNode *node in nodes_) {
-        if (!node.selected) {
-            return NO;
-        }
-    }
-    
-    return YES;
+	for (WDBezierNode *node in nodes_) {
+		if (!node.selected) {
+			return NO;
+		}
+	}
+	
+	return YES;
 }
 
 - (NSSet *) alignToRect:(CGRect)rect alignment:(WDAlignment)align
 {
-    if (![self anyNodesSelected]) {
-        return [super alignToRect:rect alignment:align];
-    }
-    
-    CGPoint             topLeft = rect.origin;
-    CGPoint             rectCenter = WDCenterOfRect(rect);
-    CGPoint             bottomRight = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
-    CGAffineTransform   translate = CGAffineTransformIdentity;
-    NSMutableArray      *newNodes = [NSMutableArray array];
-    NSMutableSet        *exchangedNodes = [NSMutableSet set];
-    
-    for (WDBezierNode *node in nodes_) {
-        if (node.selected) {
-            switch(align) {
-                case WDAlignLeft:
-                    translate = CGAffineTransformMakeTranslation(topLeft.x - node.anchorPoint.x, 0.0f);
-                    break;
-                case WDAlignCenter:
-                    translate = CGAffineTransformMakeTranslation(rectCenter.x - node.anchorPoint.x, 0.0f);
-                    break;
-                case WDAlignRight:
-                    translate = CGAffineTransformMakeTranslation(bottomRight.x - node.anchorPoint.x, 0.0f);
-                    break;
-                case WDAlignTop:
-                    translate = CGAffineTransformMakeTranslation(0.0f, topLeft.y - node.anchorPoint.y);  
-                    break;
-                case WDAlignMiddle:
-                    translate = CGAffineTransformMakeTranslation(0.0f, rectCenter.y - node.anchorPoint.y);
-                    break;
-                case WDAlignBottom:          
-                    translate = CGAffineTransformMakeTranslation(0.0f, bottomRight.y - node.anchorPoint.y);
-                    break;
-            }
-            
-            WDBezierNode *alignedNode = [node copyWithTransform:translate];
-            [newNodes addObject:alignedNode];
-            [exchangedNodes addObject:alignedNode];
-        } else {
-            [newNodes addObject:node];
-        }
-    }
+	if (![self anyNodesSelected]) {
+		return [super alignToRect:rect alignment:align];
+	}
+	
+	CGPoint             topLeft = rect.origin;
+	CGPoint             rectCenter = WDCenterOfRect(rect);
+	CGPoint             bottomRight = CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect));
+	CGAffineTransform   translate = CGAffineTransformIdentity;
+	NSMutableArray      *newNodes = [NSMutableArray array];
+	NSMutableSet        *exchangedNodes = [NSMutableSet set];
+	
+	for (WDBezierNode *node in nodes_) {
+		if (node.selected) {
+			switch(align) {
+				case WDAlignLeft:
+					translate = CGAffineTransformMakeTranslation(topLeft.x - node.anchorPoint.x, 0.0f);
+					break;
+				case WDAlignCenter:
+					translate = CGAffineTransformMakeTranslation(rectCenter.x - node.anchorPoint.x, 0.0f);
+					break;
+				case WDAlignRight:
+					translate = CGAffineTransformMakeTranslation(bottomRight.x - node.anchorPoint.x, 0.0f);
+					break;
+				case WDAlignTop:
+					translate = CGAffineTransformMakeTranslation(0.0f, topLeft.y - node.anchorPoint.y);  
+					break;
+				case WDAlignMiddle:
+					translate = CGAffineTransformMakeTranslation(0.0f, rectCenter.y - node.anchorPoint.y);
+					break;
+				case WDAlignBottom:          
+					translate = CGAffineTransformMakeTranslation(0.0f, bottomRight.y - node.anchorPoint.y);
+					break;
+			}
+			
+			WDBezierNode *alignedNode = [node copyWithTransform:translate];
+			[newNodes addObject:alignedNode];
+			[exchangedNodes addObject:alignedNode];
+		} else {
+			[newNodes addObject:node];
+		}
+	}
 
-    self.nodes = newNodes;
-    
-    return exchangedNodes;
+	self.nodes = newNodes;
+	
+	return exchangedNodes;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1336,74 +1346,74 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 // and splitting an open path (breaking it into two)
 - (NSDictionary *) splitAtNode:(WDBezierNode *)node
 {
-    NSMutableDictionary *whatToSelect = [NSMutableDictionary dictionary];
-    NSUInteger          i, startIx = [nodes_ indexOfObject:node];
-    
-    if (self.closed) {
-        NSMutableArray  *newNodes = [NSMutableArray array];
-        
-        for (i = startIx; i < nodes_.count; i++) {
-            [newNodes addObject:nodes_[i]];
-        }
-        
-        for (i = 0; i < startIx; i++) {
-            [newNodes addObject:nodes_[i]];
-        }
-        
-        [newNodes addObject:[node copy]]; // copy this node since it would otherwise be shared
-        
-        self.nodes = newNodes;
-        self.closed = NO; // can't be closed now
-        
-        whatToSelect[@"path"] = self;
-        whatToSelect[@"node"] = [newNodes lastObject];
-    } else {
-        // the original path gets the first half of the original nodes
-        NSMutableArray  *newNodes = [NSMutableArray array];
-        for (i = 0; i < startIx; i++) {
-            [newNodes addObject:nodes_[i]];
-        }
-        [newNodes addObject:[node copy]]; // copy this node since it would otherwise be shared
-        
-        // create a new path to take the rest of the nodes
-        WDPath *sibling = [[WDPath alloc] init];
-        NSMutableArray  *siblingNodes = [NSMutableArray array];
-        for (i = startIx; i < nodes_.count; i++) {
-            [siblingNodes addObject:nodes_[i]];
-        }
-        
-        // set this after building siblingNodes so that nodes_ doesn't go away
-        self.nodes = newNodes;
-        
-        sibling.nodes = siblingNodes;
-        sibling.fill = self.fill;
-        sibling.fillTransform = self.fillTransform;
-        sibling.strokeStyle = self.strokeStyle;
-       // sibling.opacity = self.opacity;
-        sibling.shadow = self.shadow;
-        
-        if (self.reversed) {
-            [sibling reversePathDirection];
-        }
-        
-        if (self.superpath) {
-            [self.superpath addSubpath:sibling];
-        } else {
-            [self.layer insertObject:sibling above:self];
-        }
-        
-        whatToSelect[@"path"] = sibling;
-        whatToSelect[@"node"] = siblingNodes[0];
-    }
-    
-    return whatToSelect;
+	NSMutableDictionary *whatToSelect = [NSMutableDictionary dictionary];
+	NSUInteger          i, startIx = [nodes_ indexOfObject:node];
+	
+	if (self.closed) {
+		NSMutableArray  *newNodes = [NSMutableArray array];
+		
+		for (i = startIx; i < nodes_.count; i++) {
+			[newNodes addObject:nodes_[i]];
+		}
+		
+		for (i = 0; i < startIx; i++) {
+			[newNodes addObject:nodes_[i]];
+		}
+		
+		[newNodes addObject:[node copy]]; // copy this node since it would otherwise be shared
+		
+		self.nodes = newNodes;
+		self.closed = NO; // can't be closed now
+		
+		whatToSelect[@"path"] = self;
+		whatToSelect[@"node"] = [newNodes lastObject];
+	} else {
+		// the original path gets the first half of the original nodes
+		NSMutableArray  *newNodes = [NSMutableArray array];
+		for (i = 0; i < startIx; i++) {
+			[newNodes addObject:nodes_[i]];
+		}
+		[newNodes addObject:[node copy]]; // copy this node since it would otherwise be shared
+		
+		// create a new path to take the rest of the nodes
+		WDPath *sibling = [[WDPath alloc] init];
+		NSMutableArray  *siblingNodes = [NSMutableArray array];
+		for (i = startIx; i < nodes_.count; i++) {
+			[siblingNodes addObject:nodes_[i]];
+		}
+		
+		// set this after building siblingNodes so that nodes_ doesn't go away
+		self.nodes = newNodes;
+		
+		sibling.nodes = siblingNodes;
+		sibling.fill = self.fill;
+		sibling.fillTransform = self.fillTransform;
+		sibling.strokeStyle = self.strokeStyle;
+	   // sibling.opacity = self.opacity;
+		sibling.shadow = self.shadow;
+		
+		if (self.reversed) {
+			[sibling reversePathDirection];
+		}
+		
+		if (self.superpath) {
+			[self.superpath addSubpath:sibling];
+		} else {
+			[self.layer insertObject:sibling above:self];
+		}
+		
+		whatToSelect[@"path"] = sibling;
+		whatToSelect[@"node"] = siblingNodes[0];
+	}
+	
+	return whatToSelect;
 }
 
 - (NSDictionary *) splitAtPoint:(CGPoint)pt viewScale:(float)viewScale
 {
-    WDBezierNode *node = [self addAnchorAtPoint:pt viewScale:viewScale];
-    
-    return [self splitAtNode:node];
+	WDBezierNode *node = [self addAnchorAtPoint:pt viewScale:viewScale];
+	
+	return [self splitAtNode:node];
 }
 
 
@@ -1549,621 +1559,621 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (void) addAnchors
 {
-    NSMutableArray      *newNodes = [NSMutableArray array];
-    NSInteger           numNodes = closed_ ? (nodes_.count + 1) : nodes_.count;
-    NSInteger           numSegments = (numNodes - 1) * 2;
-    WDBezierSegment     segments[numSegments];
-    WDBezierSegment     segment;
-    WDBezierNode        *prev, *curr, *node;
-    NSUInteger          segmentIndex = 0;
-    
-    prev = nodes_[0];
-    for (int i = 1; i < numNodes; i++, segmentIndex += 2) {
-        curr = nodes_[(i % nodes_.count)];
-        
-        segment = WDBezierSegmentMakeWithNodes(prev, curr);
-        WDBezierSegmentSplitAtT(segment, &segments[segmentIndex], &segments[segmentIndex+1], 0.5);
-        
-        prev = curr;
-    }
-    
-    // convert the segments back to nodes
-    for (int i = 0; i < numSegments; i++) {
-        if (i == 0) {
-            CGPoint inPoint = closed_ ? segments[numSegments - 1].in_ : [self firstNode].inPoint;
-            node = [WDBezierNode bezierNodeWithInPoint:inPoint anchorPoint:segments[i].a_ outPoint:segments[i].out_];
-        } else {
-            node = [WDBezierNode bezierNodeWithInPoint:segments[i-1].in_ anchorPoint:segments[i].a_ outPoint:segments[i].out_];
-        }
-        
-        [newNodes addObject:node];
-        
-        if (i == (numSegments - 1) && !closed_) {
-            node = [WDBezierNode bezierNodeWithInPoint:segments[i].in_ anchorPoint:segments[i].b_ outPoint:[self lastNode].outPoint];
-            [newNodes addObject:node];
-        }
-    }
-    
-    self.nodes = newNodes;
+	NSMutableArray      *newNodes = [NSMutableArray array];
+	NSInteger           numNodes = closed_ ? (nodes_.count + 1) : nodes_.count;
+	NSInteger           numSegments = (numNodes - 1) * 2;
+	WDBezierSegment     segments[numSegments];
+	WDBezierSegment     segment;
+	WDBezierNode        *prev, *curr, *node;
+	NSUInteger          segmentIndex = 0;
+	
+	prev = nodes_[0];
+	for (int i = 1; i < numNodes; i++, segmentIndex += 2) {
+		curr = nodes_[(i % nodes_.count)];
+		
+		segment = WDBezierSegmentMakeWithNodes(prev, curr);
+		WDBezierSegmentSplitAtT(segment, &segments[segmentIndex], &segments[segmentIndex+1], 0.5);
+		
+		prev = curr;
+	}
+	
+	// convert the segments back to nodes
+	for (int i = 0; i < numSegments; i++) {
+		if (i == 0) {
+			CGPoint inPoint = closed_ ? segments[numSegments - 1].in_ : [self firstNode].inPoint;
+			node = [WDBezierNode bezierNodeWithInPoint:inPoint anchorPoint:segments[i].a_ outPoint:segments[i].out_];
+		} else {
+			node = [WDBezierNode bezierNodeWithInPoint:segments[i-1].in_ anchorPoint:segments[i].a_ outPoint:segments[i].out_];
+		}
+		
+		[newNodes addObject:node];
+		
+		if (i == (numSegments - 1) && !closed_) {
+			node = [WDBezierNode bezierNodeWithInPoint:segments[i].in_ anchorPoint:segments[i].b_ outPoint:[self lastNode].outPoint];
+			[newNodes addObject:node];
+		}
+	}
+	
+	self.nodes = newNodes;
 }
 
 - (BOOL) canDeleteAnchors
 {
-    NSUInteger unselectedCount = 0;
-    NSUInteger selectedCount = 0;
-    
-    for (WDBezierNode *node in nodes_) {
-        if (!node.selected) {
-            unselectedCount++;
-        } else {
-            selectedCount++;
-        }
-        
-        if (unselectedCount >= 2 && selectedCount > 0) {
-            return YES;
-        }
-    }
-    
-    return NO;
+	NSUInteger unselectedCount = 0;
+	NSUInteger selectedCount = 0;
+	
+	for (WDBezierNode *node in nodes_) {
+		if (!node.selected) {
+			unselectedCount++;
+		} else {
+			selectedCount++;
+		}
+		
+		if (unselectedCount >= 2 && selectedCount > 0) {
+			return YES;
+		}
+	}
+	
+	return NO;
 }
 
 - (void) deleteAnchor:(WDBezierNode *)node
 {
-    if (nodes_.count > 2) {
-        NSMutableArray *newNodes = [nodes_ mutableCopy];
-        [newNodes removeObject:node];
-        self.nodes = newNodes;
-    }
+	if (nodes_.count > 2) {
+		NSMutableArray *newNodes = [nodes_ mutableCopy];
+		[newNodes removeObject:node];
+		self.nodes = newNodes;
+	}
 }
 
 - (void) deleteAnchors
 {   
-    NSMutableArray *newNodes = [nodes_ mutableCopy];
-    [newNodes removeObjectsInArray:[self selectedNodes]];
-    self.nodes = newNodes;
+	NSMutableArray *newNodes = [nodes_ mutableCopy];
+	[newNodes removeObjectsInArray:[self selectedNodes]];
+	self.nodes = newNodes;
 }
 
 - (void) appendPath:(WDPath *)path
 {
-    NSArray     *baseNodes, *nodesToAdd;
-    CGPoint     delta;
-    BOOL        reverseMyNodes = YES;
-    BOOL        reverseIncomingNodes = NO;
-    float       distance, minDistance = WDDistance([self firstNode].anchorPoint, [path firstNode].anchorPoint);
-    
-    // find the closest pair of end points
-    distance = WDDistance([self firstNode].anchorPoint, [path lastNode].anchorPoint);
-    if (distance < minDistance) {
-        minDistance = distance;
-        reverseIncomingNodes = YES;
-    }
-    
-    distance = WDDistance([path firstNode].anchorPoint, [self lastNode].anchorPoint);
-    if (distance < minDistance) {
-        minDistance = distance;
-        reverseMyNodes = NO;
-        reverseIncomingNodes = NO;
-    }
-    
-    distance = WDDistance([path lastNode].anchorPoint, [self lastNode].anchorPoint);
-    if (distance < minDistance) {
-        reverseMyNodes = NO;
-        reverseIncomingNodes = YES;
-    }
-    
-    baseNodes = reverseMyNodes ? self.reversedNodes : self.nodes;
-    nodesToAdd = reverseIncomingNodes ? path.reversedNodes : path.nodes;
-    
-    // add the base nodes (up to the shared node) to the new nodes
-    NSMutableArray *newNodes = [NSMutableArray array];
-    for (int i = 0; i < baseNodes.count - 1; i++) {
-        [newNodes addObject:baseNodes[i]];
-    }
-    
-    // compute the translation necessary to align the incoming path
-    WDBezierNode *lastNode = [baseNodes lastObject];
-    WDBezierNode *firstNode = nodesToAdd[0];
-    delta = WDSubtractPoints(lastNode.anchorPoint, firstNode.anchorPoint);
-    CGAffineTransform transform = CGAffineTransformMakeTranslation(delta.x, delta.y);
-    
-    // add the shared node (combine the handles appropriately)
-    firstNode = [firstNode copyWithTransform:transform];
-    [newNodes addObject:[WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:firstNode.anchorPoint outPoint:firstNode.outPoint]];
-    
-    // add the incoming path's nodes
-    for (int i = 1; i < nodesToAdd.count; i++) {
-        [newNodes addObject:[nodesToAdd[i] transform:transform]];
-    }
-    
-    // see if the last node is the same as the first node
-    firstNode = newNodes[0];
-    lastNode = [newNodes lastObject];
-    
-    if (WDDistance(firstNode.anchorPoint, lastNode.anchorPoint) < 0.5f) {
-        WDBezierNode *closedNode = [WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:firstNode.anchorPoint outPoint:firstNode.outPoint];
-        newNodes[0] = closedNode;
-        [newNodes removeLastObject];
-        self.closed = YES;
-    }
-    
-    self.nodes = newNodes;
+	NSArray     *baseNodes, *nodesToAdd;
+	CGPoint     delta;
+	BOOL        reverseMyNodes = YES;
+	BOOL        reverseIncomingNodes = NO;
+	float       distance, minDistance = WDDistance([self firstNode].anchorPoint, [path firstNode].anchorPoint);
+	
+	// find the closest pair of end points
+	distance = WDDistance([self firstNode].anchorPoint, [path lastNode].anchorPoint);
+	if (distance < minDistance) {
+		minDistance = distance;
+		reverseIncomingNodes = YES;
+	}
+	
+	distance = WDDistance([path firstNode].anchorPoint, [self lastNode].anchorPoint);
+	if (distance < minDistance) {
+		minDistance = distance;
+		reverseMyNodes = NO;
+		reverseIncomingNodes = NO;
+	}
+	
+	distance = WDDistance([path lastNode].anchorPoint, [self lastNode].anchorPoint);
+	if (distance < minDistance) {
+		reverseMyNodes = NO;
+		reverseIncomingNodes = YES;
+	}
+	
+	baseNodes = reverseMyNodes ? self.reversedNodes : self.nodes;
+	nodesToAdd = reverseIncomingNodes ? path.reversedNodes : path.nodes;
+	
+	// add the base nodes (up to the shared node) to the new nodes
+	NSMutableArray *newNodes = [NSMutableArray array];
+	for (int i = 0; i < baseNodes.count - 1; i++) {
+		[newNodes addObject:baseNodes[i]];
+	}
+	
+	// compute the translation necessary to align the incoming path
+	WDBezierNode *lastNode = [baseNodes lastObject];
+	WDBezierNode *firstNode = nodesToAdd[0];
+	delta = WDSubtractPoints(lastNode.anchorPoint, firstNode.anchorPoint);
+	CGAffineTransform transform = CGAffineTransformMakeTranslation(delta.x, delta.y);
+	
+	// add the shared node (combine the handles appropriately)
+	firstNode = [firstNode copyWithTransform:transform];
+	[newNodes addObject:[WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:firstNode.anchorPoint outPoint:firstNode.outPoint]];
+	
+	// add the incoming path's nodes
+	for (int i = 1; i < nodesToAdd.count; i++) {
+		[newNodes addObject:[nodesToAdd[i] transform:transform]];
+	}
+	
+	// see if the last node is the same as the first node
+	firstNode = newNodes[0];
+	lastNode = [newNodes lastObject];
+	
+	if (WDDistance(firstNode.anchorPoint, lastNode.anchorPoint) < 0.5f) {
+		WDBezierNode *closedNode = [WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:firstNode.anchorPoint outPoint:firstNode.outPoint];
+		newNodes[0] = closedNode;
+		[newNodes removeLastObject];
+		self.closed = YES;
+	}
+	
+	self.nodes = newNodes;
 }
 
 - (WDBezierNode *) convertNode:(WDBezierNode *)node whichPoint:(WDPickResultType)whichPoint
 {
-    WDBezierNode     *newNode = nil;
-    
-    if (whichPoint == kWDInPoint) {
-        newNode = [node chopInHandle];
-    } else if (whichPoint == kWDOutPoint) {
-        newNode = [node chopOutHandle];
-    } else {
-        if (node.hasInPoint || node.hasOutPoint) {
-            newNode = [node chopHandles];
-        } else {
-            NSInteger ix = [nodes_ indexOfObject:node];
-            NSInteger pix, nix;
-            WDBezierNode *prev = nil, *next = nil;
-            
-            pix = ix - 1;
-            if (pix >= 0) {
-                prev = nodes_[pix];
-            } else if (closed_ && nodes_.count > 2) {
-                prev = [nodes_ lastObject];
-            }
-            
-            nix = ix + 1;
-            if (nix < nodes_.count) {
-                next = nodes_[nix];
-            } else if (closed_ && nodes_.count > 2) {
-                next = nodes_[0];
-            }
-            
-            if (!prev) {
-                prev = node;
-            }
-            
-            if (!next) {
-                next = node;
-            }
-            
-            if (prev && next) {
-                CGPoint    vector = WDSubtractPoints(next.anchorPoint, prev.anchorPoint);
-                float      magnitude = WDDistance(vector, CGPointZero);
-                
-                vector = WDNormalizePoint(vector);
-                vector = WDMultiplyPointScalar(vector, magnitude / 4.0f);
-                
-                newNode = [WDBezierNode bezierNodeWithInPoint:WDSubtractPoints(node.anchorPoint, vector) anchorPoint:node.anchorPoint outPoint:WDAddPoints(node.anchorPoint, vector)];
-            }
-        }
-    }
-    
-    NSMutableArray *newNodes = [NSMutableArray array];
-    for (WDBezierNode *oldNode in nodes_) {
-        if (node == oldNode) {
-            [newNodes addObject:newNode];
-        } else {
-            [newNodes addObject:oldNode];
-        }
-    }
-    
-    self.nodes = newNodes;
-    
-    return newNode;
+	WDBezierNode     *newNode = nil;
+	
+	if (whichPoint == kWDInPoint) {
+		newNode = [node chopInHandle];
+	} else if (whichPoint == kWDOutPoint) {
+		newNode = [node chopOutHandle];
+	} else {
+		if (node.hasInPoint || node.hasOutPoint) {
+			newNode = [node chopHandles];
+		} else {
+			NSInteger ix = [nodes_ indexOfObject:node];
+			NSInteger pix, nix;
+			WDBezierNode *prev = nil, *next = nil;
+			
+			pix = ix - 1;
+			if (pix >= 0) {
+				prev = nodes_[pix];
+			} else if (closed_ && nodes_.count > 2) {
+				prev = [nodes_ lastObject];
+			}
+			
+			nix = ix + 1;
+			if (nix < nodes_.count) {
+				next = nodes_[nix];
+			} else if (closed_ && nodes_.count > 2) {
+				next = nodes_[0];
+			}
+			
+			if (!prev) {
+				prev = node;
+			}
+			
+			if (!next) {
+				next = node;
+			}
+			
+			if (prev && next) {
+				CGPoint    vector = WDSubtractPoints(next.anchorPoint, prev.anchorPoint);
+				float      magnitude = WDDistance(vector, CGPointZero);
+				
+				vector = WDNormalizePoint(vector);
+				vector = WDMultiplyPointScalar(vector, magnitude / 4.0f);
+				
+				newNode = [WDBezierNode bezierNodeWithInPoint:WDSubtractPoints(node.anchorPoint, vector) anchorPoint:node.anchorPoint outPoint:WDAddPoints(node.anchorPoint, vector)];
+			}
+		}
+	}
+	
+	NSMutableArray *newNodes = [NSMutableArray array];
+	for (WDBezierNode *oldNode in nodes_) {
+		if (node == oldNode) {
+			[newNodes addObject:newNode];
+		} else {
+			[newNodes addObject:oldNode];
+		}
+	}
+	
+	self.nodes = newNodes;
+	
+	return newNode;
 }
 
 - (BOOL) hasFill
 {
-    return [super hasFill] || self.maskedElements;
+	return [super hasFill] || self.maskedElements;
 }
 
 - (WDPickResult *) hitResultForPoint:(CGPoint)point viewScale:(float)viewScale snapFlags:(int)flags
 {
-    WDPickResult        *result = [WDPickResult pickResult];
-    CGRect              pointRect = WDRectFromPoint(point, kNodeSelectionTolerance / viewScale, kNodeSelectionTolerance / viewScale);
-    float               distance, minDistance = MAXFLOAT;
-    float               tolerance = kNodeSelectionTolerance / viewScale;
-    
-    if (!CGRectIntersectsRect(pointRect, [self controlBounds])) {
-        return result;
-    }
+	WDPickResult        *result = [WDPickResult pickResult];
+	CGRect              pointRect = WDRectFromPoint(point, kNodeSelectionTolerance / viewScale, kNodeSelectionTolerance / viewScale);
+	float               distance, minDistance = MAXFLOAT;
+	float               tolerance = kNodeSelectionTolerance / viewScale;
+	
+	if (!CGRectIntersectsRect(pointRect, [self controlBounds])) {
+		return result;
+	}
 
 	// TODO: test for editingMode first
 
 
-    if (flags & kWDSnapNodes) {
-        // look for fill control points
-        if (self.fillTransform) {
-            distance = WDDistance([self.fillTransform transformedStart], point);
-            if (distance < MIN(tolerance, minDistance)) {
-                result.type = kWDFillStartPoint;
-                minDistance = distance;
-            }
-            
-            distance = WDDistance([self.fillTransform transformedEnd], point);
-            if (distance < MIN(tolerance, minDistance)) {
-                result.type = kWDFillEndPoint;
-                minDistance = distance;
-            }
-        }
-        
-        // pre-existing selected node gets first crack
-        for (WDBezierNode *selectedNode in [self selectedNodes]) {
-            distance = WDDistance(selectedNode.anchorPoint, point);
-            if (distance < MIN(tolerance, minDistance)) {
-                result.node = selectedNode;
-                result.type = kWDAnchorPoint;
-                minDistance = distance;
-            }
-            
-            distance = WDDistance(selectedNode.outPoint, point);
-            if (distance < MIN(tolerance, minDistance)) {
-                result.node = selectedNode;
-                result.type = kWDOutPoint;
-                minDistance = distance;
-            }
-            
-            distance = WDDistance(selectedNode.inPoint, point);
-            if (distance < MIN(tolerance, minDistance)) {
-                result.node = selectedNode;
-                result.type = kWDInPoint;
-                minDistance = distance;
-            } 
-        }
-        
-        for (WDBezierNode *node in nodes_) {
-            distance = WDDistance(node.anchorPoint, point);
-            if (distance < MIN(tolerance, minDistance)) {
-                result.node = node;
-                result.type = kWDAnchorPoint;
-                minDistance = distance;
-            }
-        }
-        
-        if (result.type != kWDEther) {
-            result.element = self;
-            return result;
-        }
-    }
-    
-    if (flags & kWDSnapEdges) {
-        // check path edges
-        NSInteger           numNodes = closed_ ? nodes_.count : nodes_.count - 1;
-        WDBezierSegment     segment;
-        
-        for (int i = 0; i < numNodes; i++) {
-            WDBezierNode    *a = nodes_[i];
-            WDBezierNode    *b = nodes_[(i+1) % nodes_.count];
-            CGPoint         nearest;
-            
-            segment.a_ = a.anchorPoint;
-            segment.out_ = a.outPoint;
-            segment.in_ = b.inPoint;
-            segment.b_ = b.anchorPoint;
-            
-            if (WDBezierSegmentFindPointOnSegment(segment, point, kNodeSelectionTolerance / viewScale, &nearest, NULL)) {
-                result.element = self;
-                result.type = kWDEdge;
-                result.snappedPoint = nearest;
-                
-                return result;
-            }
-        }
-    }
-    
-    if ((flags & kWDSnapFills) && ([self hasFill])) {
-        if (CGPathContainsPoint(self.pathRef, NULL, point, self.fillRule)) {
-            result.element = self;
-            result.type = kWDObjectFill;
-            return result;
-        }
-    }
-    
-    return result;
+	if (flags & kWDSnapNodes) {
+		// look for fill control points
+		if (self.fillTransform) {
+			distance = WDDistance([self.fillTransform transformedStart], point);
+			if (distance < MIN(tolerance, minDistance)) {
+				result.type = kWDFillStartPoint;
+				minDistance = distance;
+			}
+			
+			distance = WDDistance([self.fillTransform transformedEnd], point);
+			if (distance < MIN(tolerance, minDistance)) {
+				result.type = kWDFillEndPoint;
+				minDistance = distance;
+			}
+		}
+		
+		// pre-existing selected node gets first crack
+		for (WDBezierNode *selectedNode in [self selectedNodes]) {
+			distance = WDDistance(selectedNode.anchorPoint, point);
+			if (distance < MIN(tolerance, minDistance)) {
+				result.node = selectedNode;
+				result.type = kWDAnchorPoint;
+				minDistance = distance;
+			}
+			
+			distance = WDDistance(selectedNode.outPoint, point);
+			if (distance < MIN(tolerance, minDistance)) {
+				result.node = selectedNode;
+				result.type = kWDOutPoint;
+				minDistance = distance;
+			}
+			
+			distance = WDDistance(selectedNode.inPoint, point);
+			if (distance < MIN(tolerance, minDistance)) {
+				result.node = selectedNode;
+				result.type = kWDInPoint;
+				minDistance = distance;
+			} 
+		}
+		
+		for (WDBezierNode *node in nodes_) {
+			distance = WDDistance(node.anchorPoint, point);
+			if (distance < MIN(tolerance, minDistance)) {
+				result.node = node;
+				result.type = kWDAnchorPoint;
+				minDistance = distance;
+			}
+		}
+		
+		if (result.type != kWDEther) {
+			result.element = self;
+			return result;
+		}
+	}
+	
+	if (flags & kWDSnapEdges) {
+		// check path edges
+		NSInteger           numNodes = closed_ ? nodes_.count : nodes_.count - 1;
+		WDBezierSegment     segment;
+		
+		for (int i = 0; i < numNodes; i++) {
+			WDBezierNode    *a = nodes_[i];
+			WDBezierNode    *b = nodes_[(i+1) % nodes_.count];
+			CGPoint         nearest;
+			
+			segment.a_ = a.anchorPoint;
+			segment.out_ = a.outPoint;
+			segment.in_ = b.inPoint;
+			segment.b_ = b.anchorPoint;
+			
+			if (WDBezierSegmentFindPointOnSegment(segment, point, kNodeSelectionTolerance / viewScale, &nearest, NULL)) {
+				result.element = self;
+				result.type = kWDEdge;
+				result.snappedPoint = nearest;
+				
+				return result;
+			}
+		}
+	}
+	
+	if ((flags & kWDSnapFills) && ([self hasFill])) {
+		if (CGPathContainsPoint(self.pathRef, NULL, point, self.fillRule)) {
+			result.element = self;
+			result.type = kWDObjectFill;
+			return result;
+		}
+	}
+	
+	return result;
 }
 
 - (WDPickResult *) snappedPoint:(CGPoint)point viewScale:(float)viewScale snapFlags:(int)flags
 {
-    WDPickResult        *result = [WDPickResult pickResult];
-    CGRect              pointRect = WDRectFromPoint(point, kNodeSelectionTolerance / viewScale, kNodeSelectionTolerance / viewScale);
-    
-    if (!CGRectIntersectsRect(pointRect, [self controlBounds])) {
-        return result;
-    }
-    
-    if (flags & kWDSnapNodes) {
-        for (WDBezierNode *node in nodes_) {
-            if (WDDistance(node.anchorPoint, point) < (kNodeSelectionTolerance / viewScale)) {
-                result.element = self;
-                result.node = node;
-                result.type = kWDAnchorPoint;
-                result.nodePosition = kWDMiddleNode;
-                result.snappedPoint = node.anchorPoint;
-                
-                if (!closed_) {
-                    if (node == nodes_[0]) {
-                        result.nodePosition = kWDFirstNode;
-                    } else if (node == [nodes_ lastObject]) {
-                        result.nodePosition = kWDLastNode;
-                    }
-                }
-                
-                return result;
-            }
-        }
-    }
-    
-    if (flags & kWDSnapEdges) {
-        // check path edges
-        NSInteger           numNodes = closed_ ? nodes_.count : nodes_.count - 1;
-        WDBezierSegment     segment;
-        
-        
-        for (int i = 0; i < numNodes; i++) {
-            WDBezierNode    *a = nodes_[i];
-            WDBezierNode    *b = nodes_[(i+1) % nodes_.count];
-            CGPoint         nearest;
-            
-            segment.a_ = a.anchorPoint;
-            segment.out_ = a.outPoint;
-            segment.in_ = b.inPoint;
-            segment.b_ = b.anchorPoint;
-            
-            if (WDBezierSegmentFindPointOnSegment(segment, point, kNodeSelectionTolerance / viewScale, &nearest, NULL)) {
-                result.element = self;
-                result.type = kWDEdge;
-                result.snappedPoint = nearest;
-                
-                return result;
-            }
-        }
-    }
-    
-    return result;
+	WDPickResult        *result = [WDPickResult pickResult];
+	CGRect              pointRect = WDRectFromPoint(point, kNodeSelectionTolerance / viewScale, kNodeSelectionTolerance / viewScale);
+	
+	if (!CGRectIntersectsRect(pointRect, [self controlBounds])) {
+		return result;
+	}
+	
+	if (flags & kWDSnapNodes) {
+		for (WDBezierNode *node in nodes_) {
+			if (WDDistance(node.anchorPoint, point) < (kNodeSelectionTolerance / viewScale)) {
+				result.element = self;
+				result.node = node;
+				result.type = kWDAnchorPoint;
+				result.nodePosition = kWDMiddleNode;
+				result.snappedPoint = node.anchorPoint;
+				
+				if (!closed_) {
+					if (node == nodes_[0]) {
+						result.nodePosition = kWDFirstNode;
+					} else if (node == [nodes_ lastObject]) {
+						result.nodePosition = kWDLastNode;
+					}
+				}
+				
+				return result;
+			}
+		}
+	}
+	
+	if (flags & kWDSnapEdges) {
+		// check path edges
+		NSInteger           numNodes = closed_ ? nodes_.count : nodes_.count - 1;
+		WDBezierSegment     segment;
+		
+		
+		for (int i = 0; i < numNodes; i++) {
+			WDBezierNode    *a = nodes_[i];
+			WDBezierNode    *b = nodes_[(i+1) % nodes_.count];
+			CGPoint         nearest;
+			
+			segment.a_ = a.anchorPoint;
+			segment.out_ = a.outPoint;
+			segment.in_ = b.inPoint;
+			segment.b_ = b.anchorPoint;
+			
+			if (WDBezierSegmentFindPointOnSegment(segment, point, kNodeSelectionTolerance / viewScale, &nearest, NULL)) {
+				result.element = self;
+				result.type = kWDEdge;
+				result.snappedPoint = nearest;
+				
+				return result;
+			}
+		}
+	}
+	
+	return result;
 }
 
 - (void) setSuperpath:(WDCompoundPath *)superpath
 {
-    [[self.undoManager prepareWithInvocationTarget:self] setSuperpath:superpath_];
-    
-    superpath_ = superpath;
-    
-    if (superpath) {
-        self.fill = nil;
-        self.strokeStyle = nil;
-        self.fillTransform = nil;
-        self.shadow = nil;
-    }
+	[[self.undoManager prepareWithInvocationTarget:self] setSuperpath:superpath_];
+	
+	superpath_ = superpath;
+	
+	if (superpath) {
+		self.fill = nil;
+		self.strokeStyle = nil;
+		self.fillTransform = nil;
+		self.shadow = nil;
+	}
 }
 
 - (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager
 {
-    if (self.superpath) {
-        [self.superpath setValue:value forProperty:property propertyManager:propertyManager];
-        return;
-    }
-    
-    return [super setValue:value forProperty:property propertyManager:propertyManager];
+	if (self.superpath) {
+		[self.superpath setValue:value forProperty:property propertyManager:propertyManager];
+		return;
+	}
+	
+	return [super setValue:value forProperty:property propertyManager:propertyManager];
 }
 
 - (id) valueForProperty:(NSString *)property
 {
-    if (self.superpath) {
-        return [self.superpath valueForProperty:property];
-    }
-    
-    return [super valueForProperty:property];
+	if (self.superpath) {
+		return [self.superpath valueForProperty:property];
+	}
+	
+	return [super valueForProperty:property];
 }
 
 - (BOOL) canPlaceText
 {
-    return (!self.superpath && !self.maskedElements);
+	return (!self.superpath && !self.maskedElements);
 }
 
 - (NSArray *) erase:(WDAbstractPath *)erasePath
 {
-    if (self.closed) {
-        WDAbstractPath *result = [WDPathfinder combinePaths:@[self, erasePath] operation:WDPathFinderSubtract];
-        
-        if (!result) {
-            return @[];
-        }
-        
-        [result takeStylePropertiesFrom:self];
-        
-        if (self.superpath && [result isKindOfClass:[WDCompoundPath class]]) {
-            WDCompoundPath *cp = (WDCompoundPath *)result;
-            [[cp subpaths] makeObjectsPerformSelector:@selector(setSuperpath:) withObject:nil];
-            return cp.subpaths;
-        }
-        
-        return @[result];
-    } else {
-        if (!CGRectIntersectsRect(self.bounds, erasePath.bounds)) {
-            WDPath *clone = [[WDPath alloc] init];
-            [clone takeStylePropertiesFrom:self];
-            NSMutableArray *nodes = [self.nodes mutableCopy];
-            clone.nodes = nodes;
-            
-            NSArray *result = @[clone];
-            return result;
-        }
-        
-        // break down path
-        NSArray             *nodes = reversed_ ? [self reversedNodes] : nodes_;
-        NSInteger           segmentCount = nodes.count - 1;
-        WDBezierSegment     segments[segmentCount]; 
-        
-        WDBezierSegment     *splitSegments;
-        NSUInteger          splitSegmentSize = 256;
-        int                 splitSegmentIx = 0;
-        
-        WDBezierNode        *prev, *curr;
-        
-        // this might need to grow, so dynamically allocate it
-        splitSegments = calloc(sizeof(WDBezierSegment), splitSegmentSize);
-        
-        prev = nodes[0];
-        for (int i = 1; i < nodes.count; i++, prev = curr) {
-            curr = nodes[i];
-            segments[i-1] = WDBezierSegmentMakeWithNodes(prev, curr);
-        }
-        
-        erasePath = [erasePath pathByFlatteningPath];
-        
-        WDBezierSegment     L, R;
-        NSArray             *subpaths = [erasePath isKindOfClass:[WDPath class]] ? @[erasePath] : [(WDCompoundPath *)erasePath subpaths];
-        float               smallestT, t;
-        BOOL                intersected;
-        
-        for (int i = 0; i < segmentCount; i++) {
-            smallestT = MAXFLOAT;
-            intersected = NO;
-            
-            // split the segments into more segments at every intersection with the erasing path
-            for (WDPath *subpath in subpaths) {
-                prev = (subpath.nodes)[0];
-                
-                for (int n = 1; n < subpath.nodes.count; n++, prev = curr) {
-                    curr = (subpath.nodes)[n];
-                    
-                    if (WDBezierSegmentGetIntersection(segments[i], prev.anchorPoint, curr.anchorPoint, &t)) {
-                        if (t < smallestT && (fabs(t) > 0.001)) {
-                            smallestT = t;
-                            intersected = YES;
-                        }
-                    }
-                }
-            }
-                
-            if (!intersected || fabs(1 - smallestT) < 0.001) {
-                splitSegments[splitSegmentIx++] = segments[i];
-            } else {
-                WDBezierSegmentSplitAtT(segments[i], &L, &R, smallestT);
-                                    
-                splitSegments[splitSegmentIx++] = L;
-                segments[i] = R;
-                i--;
-            }
-            
-            if (splitSegmentIx >= splitSegmentSize) {
-                splitSegmentSize *= 2;
-                splitSegments = realloc(splitSegments, sizeof(WDBezierSegment) * splitSegmentSize);
-            }
-        }
-        
-        // toss out any segment that's inside the erase path
-        WDBezierSegment newSegments[splitSegmentIx];
-        int             newSegmentIx = 0;
-        
-        for (int i = 0; i < splitSegmentIx; i++) {
-            CGPoint midPoint = WDBezierSegmentSplitAtT(splitSegments[i], NULL, NULL, 0.5);
-            
-            if (![erasePath containsPoint:midPoint]) {
-                newSegments[newSegmentIx++] = splitSegments[i];
-            }
-        }
+	if (self.closed) {
+		WDAbstractPath *result = [WDPathfinder combinePaths:@[self, erasePath] operation:WDPathFinderSubtract];
+		
+		if (!result) {
+			return @[];
+		}
+		
+		[result takeStylePropertiesFrom:self];
+		
+		if (self.superpath && [result isKindOfClass:[WDCompoundPath class]]) {
+			WDCompoundPath *cp = (WDCompoundPath *)result;
+			[[cp subpaths] makeObjectsPerformSelector:@selector(setSuperpath:) withObject:nil];
+			return cp.subpaths;
+		}
+		
+		return @[result];
+	} else {
+		if (!CGRectIntersectsRect(self.bounds, erasePath.bounds)) {
+			WDPath *clone = [[WDPath alloc] init];
+			[clone takeStylePropertiesFrom:self];
+			NSMutableArray *nodes = [self.nodes mutableCopy];
+			clone.nodes = nodes;
+			
+			NSArray *result = @[clone];
+			return result;
+		}
+		
+		// break down path
+		NSArray             *nodes = reversed_ ? [self reversedNodes] : nodes_;
+		NSInteger           segmentCount = nodes.count - 1;
+		WDBezierSegment     segments[segmentCount]; 
+		
+		WDBezierSegment     *splitSegments;
+		NSUInteger          splitSegmentSize = 256;
+		int                 splitSegmentIx = 0;
+		
+		WDBezierNode        *prev, *curr;
+		
+		// this might need to grow, so dynamically allocate it
+		splitSegments = calloc(sizeof(WDBezierSegment), splitSegmentSize);
+		
+		prev = nodes[0];
+		for (int i = 1; i < nodes.count; i++, prev = curr) {
+			curr = nodes[i];
+			segments[i-1] = WDBezierSegmentMakeWithNodes(prev, curr);
+		}
+		
+		erasePath = [erasePath pathByFlatteningPath];
+		
+		WDBezierSegment     L, R;
+		NSArray             *subpaths = [erasePath isKindOfClass:[WDPath class]] ? @[erasePath] : [(WDCompoundPath *)erasePath subpaths];
+		float               smallestT, t;
+		BOOL                intersected;
+		
+		for (int i = 0; i < segmentCount; i++) {
+			smallestT = MAXFLOAT;
+			intersected = NO;
+			
+			// split the segments into more segments at every intersection with the erasing path
+			for (WDPath *subpath in subpaths) {
+				prev = (subpath.nodes)[0];
+				
+				for (int n = 1; n < subpath.nodes.count; n++, prev = curr) {
+					curr = (subpath.nodes)[n];
+					
+					if (WDBezierSegmentGetIntersection(segments[i], prev.anchorPoint, curr.anchorPoint, &t)) {
+						if (t < smallestT && (fabs(t) > 0.001)) {
+							smallestT = t;
+							intersected = YES;
+						}
+					}
+				}
+			}
+				
+			if (!intersected || fabs(1 - smallestT) < 0.001) {
+				splitSegments[splitSegmentIx++] = segments[i];
+			} else {
+				WDBezierSegmentSplitAtT(segments[i], &L, &R, smallestT);
+									
+				splitSegments[splitSegmentIx++] = L;
+				segments[i] = R;
+				i--;
+			}
+			
+			if (splitSegmentIx >= splitSegmentSize) {
+				splitSegmentSize *= 2;
+				splitSegments = realloc(splitSegments, sizeof(WDBezierSegment) * splitSegmentSize);
+			}
+		}
+		
+		// toss out any segment that's inside the erase path
+		WDBezierSegment newSegments[splitSegmentIx];
+		int             newSegmentIx = 0;
+		
+		for (int i = 0; i < splitSegmentIx; i++) {
+			CGPoint midPoint = WDBezierSegmentSplitAtT(splitSegments[i], NULL, NULL, 0.5);
+			
+			if (![erasePath containsPoint:midPoint]) {
+				newSegments[newSegmentIx++] = splitSegments[i];
+			}
+		}
 
-        // clean up
-        free(splitSegments);
-                    
-        if (newSegmentIx == 0) {
-            return @[];
-        }
-        
-        // reassemble segments
-        NSMutableArray  *array = [NSMutableArray array];
-        WDPath          *currentPath = [[WDPath alloc] init];
-        
-        [currentPath takeStylePropertiesFrom:self];
-        [array addObject:currentPath];
-        
-        for (int i = 0; i < newSegmentIx; i++) {
-            WDBezierNode *lastNode = [currentPath lastNode];
-            
-            if (!lastNode) {            
-                [currentPath addNode:[WDBezierNode bezierNodeWithInPoint:newSegments[i].a_ anchorPoint:newSegments[i].a_ outPoint:newSegments[i].out_]];
-            } else if (CGPointEqualToPoint(lastNode.anchorPoint, newSegments[i].a_)) {
-                [currentPath replaceLastNodeWithNode:[WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:lastNode.anchorPoint outPoint:newSegments[i].out_]];
-            } else {
-                currentPath = [[WDPath alloc] init];
-                [currentPath takeStylePropertiesFrom:self];
-                [array addObject:currentPath];
-                
-                [currentPath addNode:[WDBezierNode bezierNodeWithInPoint:newSegments[i].a_ anchorPoint:newSegments[i].a_ outPoint:newSegments[i].out_]];
-            }
-            
-            [currentPath addNode:[WDBezierNode bezierNodeWithInPoint:newSegments[i].in_ anchorPoint:newSegments[i].b_ outPoint:newSegments[i].b_]];
-        }
-        
-        return array;
-    }
+		// clean up
+		free(splitSegments);
+					
+		if (newSegmentIx == 0) {
+			return @[];
+		}
+		
+		// reassemble segments
+		NSMutableArray  *array = [NSMutableArray array];
+		WDPath          *currentPath = [[WDPath alloc] init];
+		
+		[currentPath takeStylePropertiesFrom:self];
+		[array addObject:currentPath];
+		
+		for (int i = 0; i < newSegmentIx; i++) {
+			WDBezierNode *lastNode = [currentPath lastNode];
+			
+			if (!lastNode) {            
+				[currentPath addNode:[WDBezierNode bezierNodeWithInPoint:newSegments[i].a_ anchorPoint:newSegments[i].a_ outPoint:newSegments[i].out_]];
+			} else if (CGPointEqualToPoint(lastNode.anchorPoint, newSegments[i].a_)) {
+				[currentPath replaceLastNodeWithNode:[WDBezierNode bezierNodeWithInPoint:lastNode.inPoint anchorPoint:lastNode.anchorPoint outPoint:newSegments[i].out_]];
+			} else {
+				currentPath = [[WDPath alloc] init];
+				[currentPath takeStylePropertiesFrom:self];
+				[array addObject:currentPath];
+				
+				[currentPath addNode:[WDBezierNode bezierNodeWithInPoint:newSegments[i].a_ anchorPoint:newSegments[i].a_ outPoint:newSegments[i].out_]];
+			}
+			
+			[currentPath addNode:[WDBezierNode bezierNodeWithInPoint:newSegments[i].in_ anchorPoint:newSegments[i].b_ outPoint:newSegments[i].b_]];
+		}
+		
+		return array;
+	}
 }
 
 - (void) simplify
 {
-    // strip collinear anchors
-    
-    if (nodes_.count < 3) {
-        return;
-    }
-    
-    NSMutableArray  *newNodes = [NSMutableArray array];
-    WDBezierNode    *current, *next, *nextnext;
-    NSInteger       nodeCount = closed_ ? nodes_.count + 1 : nodes_.count;
-    NSInteger       ix = 0;
-    
-    current = nodes_[ix++];
-    next = nodes_[ix++];
-    nextnext = nodes_[ix++];
-    
-    [newNodes addObject:current];
-    
-    while (nextnext) {
-        if (!WDCollinear(current.anchorPoint, current.outPoint, next.inPoint) ||
-            !WDCollinear(current.anchorPoint, next.inPoint, next.anchorPoint) ||
-            !WDCollinear(current.anchorPoint, next.anchorPoint, next.outPoint) ||
-            !WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.inPoint) ||
-            !WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.anchorPoint))
-        {
-            // can't remove the node, add it and move on
-            [newNodes addObject:next];
-            current = next;
-        }
-        
-        next = nextnext;
-        
-        if (ix < nodeCount) {
-            nextnext = nodes_[(ix % nodes_.count)];
-        } else {
-            nextnext = nil;
-        }
-        
-        ix++;
-    }
-    
-    if (!closed_) {
-        [newNodes addObject:next];
-    }
-    
-    if (closed_) {
-        // see if we should remove the first node
-        current = [nodes_ lastObject];
-        next = nodes_[0];
-        nextnext = nodes_[1];
-        
-        if (WDCollinear(current.anchorPoint, current.outPoint, next.inPoint) &&
-            WDCollinear(current.anchorPoint, next.inPoint, next.anchorPoint) &&
-            WDCollinear(current.anchorPoint, next.anchorPoint, next.outPoint) &&
-            WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.inPoint) &&
-            WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.anchorPoint))
-        {
-            [newNodes removeObjectAtIndex:0];
-        }
-    }
-    
-    self.nodes = newNodes;
+	// strip collinear anchors
+	
+	if (nodes_.count < 3) {
+		return;
+	}
+	
+	NSMutableArray  *newNodes = [NSMutableArray array];
+	WDBezierNode    *current, *next, *nextnext;
+	NSInteger       nodeCount = closed_ ? nodes_.count + 1 : nodes_.count;
+	NSInteger       ix = 0;
+	
+	current = nodes_[ix++];
+	next = nodes_[ix++];
+	nextnext = nodes_[ix++];
+	
+	[newNodes addObject:current];
+	
+	while (nextnext) {
+		if (!WDCollinear(current.anchorPoint, current.outPoint, next.inPoint) ||
+			!WDCollinear(current.anchorPoint, next.inPoint, next.anchorPoint) ||
+			!WDCollinear(current.anchorPoint, next.anchorPoint, next.outPoint) ||
+			!WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.inPoint) ||
+			!WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.anchorPoint))
+		{
+			// can't remove the node, add it and move on
+			[newNodes addObject:next];
+			current = next;
+		}
+		
+		next = nextnext;
+		
+		if (ix < nodeCount) {
+			nextnext = nodes_[(ix % nodes_.count)];
+		} else {
+			nextnext = nil;
+		}
+		
+		ix++;
+	}
+	
+	if (!closed_) {
+		[newNodes addObject:next];
+	}
+	
+	if (closed_) {
+		// see if we should remove the first node
+		current = [nodes_ lastObject];
+		next = nodes_[0];
+		nextnext = nodes_[1];
+		
+		if (WDCollinear(current.anchorPoint, current.outPoint, next.inPoint) &&
+			WDCollinear(current.anchorPoint, next.inPoint, next.anchorPoint) &&
+			WDCollinear(current.anchorPoint, next.anchorPoint, next.outPoint) &&
+			WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.inPoint) &&
+			WDCollinear(current.anchorPoint, next.anchorPoint, nextnext.anchorPoint))
+		{
+			[newNodes removeObjectAtIndex:0];
+		}
+	}
+	
+	self.nodes = newNodes;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2203,165 +2213,165 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (void) flatten
 {
-    self.nodes = [self flattenedNodes];
+	self.nodes = [self flattenedNodes];
 }
 
 - (WDAbstractPath *) pathByFlatteningPath
 {
-    WDPath *flatPath = [[WDPath alloc] init];
-    
-    flatPath.nodes = [self flattenedNodes];
-    
-    return flatPath;
+	WDPath *flatPath = [[WDPath alloc] init];
+	
+	flatPath.nodes = [self flattenedNodes];
+	
+	return flatPath;
 }
 
 - (NSString *) nodeSVGRepresentation
 {
-    NSArray         *nodes = reversed_ ? [self reversedNodes] : nodes_;
-    WDBezierNode    *node;
-    NSInteger       numNodes = closed_ ? nodes.count + 1 : nodes.count;
-    CGPoint         pt, prev_pt, in_pt, prev_out;
-    NSMutableString *svg = [NSMutableString string];
-    
-    for(int i = 0; i < numNodes; i++) {
-        node = nodes[(i % nodes.count)];
-        
-        if (i == 0) {
-            pt = node.anchorPoint;
-            [svg appendString:[NSString stringWithFormat:@"M%g%+g", pt.x, pt.y]];
-        } else {
-            pt = node.anchorPoint;
-            in_pt = node.inPoint;
-            
-            if (prev_pt.x == prev_out.x && prev_pt.y == prev_out.y && in_pt.x == pt.x && in_pt.y == pt.y) {
-            	[svg appendString:[NSString stringWithFormat:@"L%g%+g", pt.x, pt.y]];
-            } else {
-            	[svg appendString:[NSString stringWithFormat:@"C%g%+g%+g%+g%+g%+g",
-                                   prev_out.x, prev_out.y, in_pt.x, in_pt.y, pt.x, pt.y]];
-            }       
-        }
-        
-        prev_out = node.outPoint;
-        prev_pt = pt; 
-    }
-    
-    if (closed_) {
-        [svg appendString:@"Z"];
-    }
-    
-    return svg;
+	NSArray         *nodes = reversed_ ? [self reversedNodes] : nodes_;
+	WDBezierNode    *node;
+	NSInteger       numNodes = closed_ ? nodes.count + 1 : nodes.count;
+	CGPoint         pt, prev_pt, in_pt, prev_out;
+	NSMutableString *svg = [NSMutableString string];
+	
+	for(int i = 0; i < numNodes; i++) {
+		node = nodes[(i % nodes.count)];
+		
+		if (i == 0) {
+			pt = node.anchorPoint;
+			[svg appendString:[NSString stringWithFormat:@"M%g%+g", pt.x, pt.y]];
+		} else {
+			pt = node.anchorPoint;
+			in_pt = node.inPoint;
+			
+			if (prev_pt.x == prev_out.x && prev_pt.y == prev_out.y && in_pt.x == pt.x && in_pt.y == pt.y) {
+				[svg appendString:[NSString stringWithFormat:@"L%g%+g", pt.x, pt.y]];
+			} else {
+				[svg appendString:[NSString stringWithFormat:@"C%g%+g%+g%+g%+g%+g",
+								   prev_out.x, prev_out.y, in_pt.x, in_pt.y, pt.x, pt.y]];
+			}       
+		}
+		
+		prev_out = node.outPoint;
+		prev_pt = pt; 
+	}
+	
+	if (closed_) {
+		[svg appendString:@"Z"];
+	}
+	
+	return svg;
 }
 
 - (id) copyWithZone:(NSZone *)zone
 {       
-    WDPath *path = [super copyWithZone:zone];
-    
-    path->nodes_ = [nodes_ mutableCopy];
-    path->closed_ = closed_;
-    path->reversed_ = reversed_;
+	WDPath *path = [super copyWithZone:zone];
+	
+	path->nodes_ = [nodes_ mutableCopy];
+	path->closed_ = closed_;
+	path->reversed_ = reversed_;
  //   path->boundsDirty_ = YES;
 
-    return path;
+	return path;
 }
 
 - (WDStrokeStyle *) effectiveStrokeStyle
 {
-    return self.superpath ? self.superpath.strokeStyle : self.strokeStyle;
+	return self.superpath ? self.superpath.strokeStyle : self.strokeStyle;
 }
 
 - (void) addSVGArrowheadPath:(CGPathRef)pathRef toGroup:(WDXMLElement *)group
 {
-    WDAbstractPath  *inkpadPath = [WDAbstractPath pathWithCGPathRef:pathRef];
-    WDStrokeStyle   *stroke = [self effectiveStrokeStyle];
-    
-    WDXMLElement *arrowPath = [WDXMLElement elementWithName:@"path"];
-    [arrowPath setAttribute:@"d" value:[inkpadPath nodeSVGRepresentation]];
-    [arrowPath setAttribute:@"fill" value:[stroke.color hexValue]];
-    [group addChild:arrowPath];
+	WDAbstractPath  *inkpadPath = [WDAbstractPath pathWithCGPathRef:pathRef];
+	WDStrokeStyle   *stroke = [self effectiveStrokeStyle];
+	
+	WDXMLElement *arrowPath = [WDXMLElement elementWithName:@"path"];
+	[arrowPath setAttribute:@"d" value:[inkpadPath nodeSVGRepresentation]];
+	[arrowPath setAttribute:@"fill" value:[stroke.color hexValue]];
+	[group addChild:arrowPath];
 }
 
 - (void) addSVGArrowheadsToGroup:(WDXMLElement *)group
 {
-    WDStrokeStyle *stroke = [self effectiveStrokeStyle];
-    
-    WDArrowhead *arrow = [WDArrowhead arrowheads][stroke.startArrow];
-    if (arrow) {
-        CGMutablePathRef pathRef = CGPathCreateMutable();
-        [arrow addToMutablePath:pathRef position:arrowStartAttachment_ scale:stroke.width angle:arrowStartAngle_
-              useAdjustment:(stroke.cap == kCGLineCapButt)];
-        [self addSVGArrowheadPath:pathRef toGroup:group];
-        CGPathRelease(pathRef);
-    }
-    
-    arrow = [WDArrowhead arrowheads][stroke.endArrow];
-    if (arrow) {
-        CGMutablePathRef pathRef = CGPathCreateMutable();
-        [arrow addToMutablePath:pathRef position:arrowEndAttachment_ scale:stroke.width angle:arrowEndAngle_
-              useAdjustment:(stroke.cap == kCGLineCapButt)];
-        [self addSVGArrowheadPath:pathRef toGroup:group];
-        CGPathRelease(pathRef);
-    }
+	WDStrokeStyle *stroke = [self effectiveStrokeStyle];
+	
+	WDArrowhead *arrow = [WDArrowhead arrowheads][stroke.startArrow];
+	if (arrow) {
+		CGMutablePathRef pathRef = CGPathCreateMutable();
+		[arrow addToMutablePath:pathRef position:arrowStartAttachment_ scale:stroke.width angle:arrowStartAngle_
+			  useAdjustment:(stroke.cap == kCGLineCapButt)];
+		[self addSVGArrowheadPath:pathRef toGroup:group];
+		CGPathRelease(pathRef);
+	}
+	
+	arrow = [WDArrowhead arrowheads][stroke.endArrow];
+	if (arrow) {
+		CGMutablePathRef pathRef = CGPathCreateMutable();
+		[arrow addToMutablePath:pathRef position:arrowEndAttachment_ scale:stroke.width angle:arrowEndAngle_
+			  useAdjustment:(stroke.cap == kCGLineCapButt)];
+		[self addSVGArrowheadPath:pathRef toGroup:group];
+		CGPathRelease(pathRef);
+	}
 }
 
 //#define DEBUG_ATTACHMENTS YES
 
 - (void) renderStrokeInContext:(CGContextRef)ctx
 {
-    WDStrokeStyle *stroke = [self effectiveStrokeStyle];
-    
-    if (!stroke.hasArrow) {
-        [super renderStrokeInContext:ctx];
-        return;
-    }
-    
+	WDStrokeStyle *stroke = [self effectiveStrokeStyle];
+	
+	if (!stroke.hasArrow) {
+		[super renderStrokeInContext:ctx];
+		return;
+	}
+	
 #ifdef DEBUG_ATTACHMENTS
-    // this will show the arrowhead overlapping the stroke if the stroke color is semi-transparent
-    [super renderStrokeInContext:ctx];
+	// this will show the arrowhead overlapping the stroke if the stroke color is semi-transparent
+	[super renderStrokeInContext:ctx];
 #else
-    // normally we want the stroke and arrowhead to appear unified, even with a semi-transparent stroke color
-    CGContextAddPath(ctx, self.strokePathRef);
-    [stroke applyInContext:ctx];
-    
-    CGContextReplacePathWithStrokedPath(ctx);
+	// normally we want the stroke and arrowhead to appear unified, even with a semi-transparent stroke color
+	CGContextAddPath(ctx, self.strokePathRef);
+	[stroke applyInContext:ctx];
+	
+	CGContextReplacePathWithStrokedPath(ctx);
 #endif
-    CGContextSetFillColorWithColor(ctx, stroke.color.CGColor);
-    
-    WDArrowhead *arrow = [WDArrowhead arrowheads][stroke.startArrow];
-    if (canFitStartArrow_ && arrow) {
-        [arrow addArrowInContext:ctx position:arrowStartAttachment_ scale:stroke.width angle:arrowStartAngle_
-               useAdjustment:(stroke.cap == kCGLineCapButt)];
-    }
-    
-    arrow = [WDArrowhead arrowheads][stroke.endArrow];
-    if (canFitEndArrow_ && arrow) {
-        [arrow addArrowInContext:ctx position:arrowEndAttachment_ scale:stroke.width angle:arrowEndAngle_
-               useAdjustment:(stroke.cap == kCGLineCapButt)];
-    }
+	CGContextSetFillColorWithColor(ctx, stroke.color.CGColor);
+	
+	WDArrowhead *arrow = [WDArrowhead arrowheads][stroke.startArrow];
+	if (canFitStartArrow_ && arrow) {
+		[arrow addArrowInContext:ctx position:arrowStartAttachment_ scale:stroke.width angle:arrowStartAngle_
+			   useAdjustment:(stroke.cap == kCGLineCapButt)];
+	}
+	
+	arrow = [WDArrowhead arrowheads][stroke.endArrow];
+	if (canFitEndArrow_ && arrow) {
+		[arrow addArrowInContext:ctx position:arrowEndAttachment_ scale:stroke.width angle:arrowEndAngle_
+			   useAdjustment:(stroke.cap == kCGLineCapButt)];
+	}
 
-    CGContextFillPath(ctx);
+	CGContextFillPath(ctx);
 }
 
 - (void) addElementsToOutlinedStroke:(CGMutablePathRef)outline
 {
-    WDStrokeStyle   *stroke = [self effectiveStrokeStyle];
-    WDArrowhead     *arrow;
-    
-    if (![stroke hasArrow]) {
-        // no arrows...
-        return;
-    }
-    
-    if ([stroke hasStartArrow]) {
-        arrow = [WDArrowhead arrowheads][stroke.startArrow];
-        [arrow addToMutablePath:outline position:arrowStartAttachment_ scale:stroke.width angle:arrowStartAngle_
-              useAdjustment:(stroke.cap == kCGLineCapButt)];
-    }
-    
-    if ([stroke hasEndArrow]) {
-        arrow = [WDArrowhead arrowheads][stroke.endArrow];
-        [arrow addToMutablePath:outline position:arrowEndAttachment_ scale:stroke.width angle:arrowEndAngle_
-              useAdjustment:(stroke.cap == kCGLineCapButt)];
-    }
+	WDStrokeStyle   *stroke = [self effectiveStrokeStyle];
+	WDArrowhead     *arrow;
+	
+	if (![stroke hasArrow]) {
+		// no arrows...
+		return;
+	}
+	
+	if ([stroke hasStartArrow]) {
+		arrow = [WDArrowhead arrowheads][stroke.startArrow];
+		[arrow addToMutablePath:outline position:arrowStartAttachment_ scale:stroke.width angle:arrowStartAngle_
+			  useAdjustment:(stroke.cap == kCGLineCapButt)];
+	}
+	
+	if ([stroke hasEndArrow]) {
+		arrow = [WDArrowhead arrowheads][stroke.endArrow];
+		[arrow addToMutablePath:outline position:arrowEndAttachment_ scale:stroke.width angle:arrowEndAngle_
+			  useAdjustment:(stroke.cap == kCGLineCapButt)];
+	}
 }
 
 @end

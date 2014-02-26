@@ -1,13 +1,15 @@
-//
-//  WDPath.h
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2009-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDPath.h
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2008-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import <UIKit/UIKit.h>
 #import "WDAbstractPath.h"
@@ -24,29 +26,29 @@
 
 @interface WDPath : WDAbstractPath <NSCoding, NSCopying>
 {
-    NSMutableArray      *nodes_;
-    BOOL                closed_;
-    BOOL                reversed_;
-    
-    CGPathRef    		pathRef_;
-    CGMutablePathRef    strokePathRef_;
-    CGRect              bounds_;
+	NSMutableArray      *nodes_;
+	BOOL                closed_;
+	BOOL                reversed_;
+	
+	CGPathRef    		pathRef_;
+	CGMutablePathRef    strokePathRef_;
+	CGRect              bounds_;
 //    BOOL                boundsDirty_;
 
 	// TODO: put in arrowhead object!
 
-    // arrowheads
-    CGPoint             arrowStartAttachment_;
-    float               arrowStartAngle_;
-    BOOL                canFitStartArrow_;
-    CGPoint             arrowEndAttachment_;
-    float               arrowEndAngle_;
-    BOOL                canFitEndArrow_;
-    
-    // to simplify rendering
-    NSMutableArray      *displayNodes_;
-    UIColor             *displayColor_;
-    BOOL                displayClosed_;
+	// arrowheads
+	CGPoint             arrowStartAttachment_;
+	float               arrowStartAngle_;
+	BOOL                canFitStartArrow_;
+	CGPoint             arrowEndAttachment_;
+	float               arrowEndAngle_;
+	BOOL                canFitEndArrow_;
+	
+	// to simplify rendering
+	NSMutableArray      *displayNodes_;
+	UIColor             *displayColor_;
+	BOOL                displayClosed_;
 }
 
 @property (nonatomic, assign) BOOL closed;

@@ -170,8 +170,10 @@ typedef enum {
 			strokeLineWidth
 			strokeLineCap
 			strokeLineJoin
+			strokeMiterLimit
 			strokeDashOptions
-				<dash properties>
+				dashActive
+				dashPattern
 		fillStyleProperties
 			fillActive
 			fillType

@@ -1,35 +1,43 @@
-//
-//  WDGroup.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2010-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDGroup.m
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2008-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import "WDGroup.h"
 #import "WDShadow.h"
 #import "WDPickResult.h"
 
-NSString *WDGroupElements = @"WDGroupElements";
+NSString *const WDGroupElementsKey = @"WDGroupElements";
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDGroup
+////////////////////////////////////////////////////////////////////////////////
 
 @synthesize elements = elements_;
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[super encodeWithCoder:coder];
-	[coder encodeObject:elements_ forKey:WDGroupElements];
+	[coder encodeObject:elements_ forKey:WDGroupElementsKey];
 }
 
-- (id)initWithCoder:(NSCoder *)coder
+////////////////////////////////////////////////////////////////////////////////
+
+- (void)decodeWithCoder:(NSCoder *)coder
 {
-	self = [super initWithCoder:coder];
+	[super decodeWithCoder:coder];
 	
-	elements_ = [coder decodeObjectForKey:WDGroupElements];
+	elements_ = [coder decodeObjectForKey:WDGroupElementsKey];
 
 	[elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
 
@@ -38,6 +46,8 @@ NSString *WDGroupElements = @"WDGroupElements";
 	
 	return self; 
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) tossCachedColorAdjustmentData
 {
@@ -77,13 +87,9 @@ NSString *WDGroupElements = @"WDGroupElements";
 
 - (NSSet *) transform:(CGAffineTransform)transform
 {
-	[self cacheDirtyBounds];
-	
-	for (WDElement *element in elements_) {
-		[element transform:transform];
-	}
-	
-	//[self postDirtyBoundsChange];
+	for (WDElement *element in elements_)
+	{ [element transform:transform]; }
+
 	return nil;
 }
 
@@ -96,13 +102,7 @@ NSString *WDGroupElements = @"WDGroupElements";
 	[elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
 	[elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self.layer];
 }
-/*
-- (void) awakeFromEncoding
-{
-	[super awakeFromEncoding];
-	[elements_ makeObjectsPerformSelector:@selector(awakeFromEncoding) withObject:nil];
-}
-*/
+
 - (void) setLayer:(WDLayer *)layer
 {
 	[super setLayer:layer];    

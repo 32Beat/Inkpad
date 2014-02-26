@@ -31,6 +31,7 @@ NSString *const WDFillRuleKey = @"WDFillRule";
 
 @synthesize active = mActive;
 @synthesize color = mColor;
+@synthesize fillRule = mFillRule;
 
 ////////////////////////////////////////////////////////////////////////////////
 

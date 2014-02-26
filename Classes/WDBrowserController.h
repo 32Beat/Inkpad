@@ -27,42 +27,45 @@
 @class WDBlockingView;
 @class WDExportController;
 
-@interface WDBrowserController : UICollectionViewController <UIActionSheetDelegate,
-                                                             UIPopoverControllerDelegate,
-                                                             DBRestClientDelegate,
-                                                             MFMailComposeViewControllerDelegate,
-                                                             WDImportControllerDelegate,
-                                                             WDSamplesControllerDelegate,
-                                                             UINavigationControllerDelegate,
-                                                             UIImagePickerControllerDelegate>
+@interface WDBrowserController : UICollectionViewController
+<
+	UIActionSheetDelegate,
+	UIPopoverControllerDelegate,
+	UINavigationControllerDelegate,
+	UIImagePickerControllerDelegate,
+	MFMailComposeViewControllerDelegate,
+	DBRestClientDelegate,
+	WDImportControllerDelegate,
+	WDSamplesControllerDelegate
+>
 {
-    NSMutableArray          *toolbarItems_;
-    UIBarButtonItem         *emailItem_;
-    UIBarButtonItem         *dropboxExportItem_;
-    UIActivityIndicatorView *activityIndicator_;
-    UIBarButtonItem         *activityItem_;
-    UIBarButtonItem         *deleteItem_;
-    UIActionSheet           *deleteSheet_;
-    
-    NSMutableSet            *selectedDrawings_;
-    
-    UIPopoverController     *popoverController_;
-    WDPageSizeController    *pageSizeController_;
-    WDExportController      *exportController_;
+	NSMutableArray          *toolbarItems_;
+	UIBarButtonItem         *emailItem_;
+	UIBarButtonItem         *dropboxExportItem_;
+	UIActivityIndicatorView *activityIndicator_;
+	UIBarButtonItem         *activityItem_;
+	UIBarButtonItem         *deleteItem_;
+	UIActionSheet           *deleteSheet_;
+	
+	NSMutableSet            *selectedDrawings_;
+	
+	UIPopoverController     *popoverController_;
+	WDPageSizeController    *pageSizeController_;
+	WDExportController      *exportController_;
 	WDImportController		*importController_;
-    UIImagePickerController *pickerController_;
-    WDFontLibraryController *fontLibraryController_;
-    WDSamplesController     *samplesController_;
-    WDActivityController    *activityController_;
-    
-    DBRestClient            *restClient_;
-    NSMutableSet            *filesBeingUploaded_;
-    WDActivityManager       *activities_;
+	UIImagePickerController *pickerController_;
+	WDFontLibraryController *fontLibraryController_;
+	WDSamplesController     *samplesController_;
+	WDActivityController    *activityController_;
+	
+	DBRestClient            *restClient_;
+	NSMutableSet            *filesBeingUploaded_;
+	WDActivityManager       *activities_;
 
-    WDBlockingView          *blockingView_;
-    WDThumbnailView         *editingThumbnail_;
-    
-    BOOL                    everLoaded_;
+	WDBlockingView          *blockingView_;
+	WDThumbnailView         *editingThumbnail_;
+	
+	BOOL                    everLoaded_;
 }
 
 - (void) startEditingDrawing:(WDDocument *)drawing;

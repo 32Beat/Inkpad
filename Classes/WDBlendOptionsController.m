@@ -213,6 +213,7 @@
 {
 	id nav = ((UIViewController *)(self.rootController)).navigationController;
 	[nav pushViewController:[self blendModeController] animated:YES];
+	[tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

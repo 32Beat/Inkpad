@@ -29,32 +29,39 @@
 	self.view.opaque = NO;
 	self.view.backgroundColor = nil;
 
-	[self prepareSliderTitles];
-
-	[mSwitch addTarget:self action:@selector(toggleOptions:)
-		forControlEvents:UIControlEventValueChanged];
-
-	// set up connections
-	[self setSliderAction:@selector(adjustOptions:)
-		forControlEvents:
-		//	UIControlEventTouchDown |
-			UIControlEventTouchDragInside |
-			UIControlEventTouchDragOutside];
-
-	[self setSliderAction:@selector(adjustOptionsFinal:)
-		forControlEvents:
-			UIControlEventTouchUpInside |
-			UIControlEventTouchUpOutside];
+	[self prepareControlTitles];
+	[self prepareControlActions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareSliderTitles
+- (void) prepareControlTitles
 {
 	mSlider0.titleLabel.text = NSLocalizedString(@"Dash", /**/);
 	mSlider1.titleLabel.text = NSLocalizedString(@"Gap", /**/);
 	mSlider2.titleLabel.text = NSLocalizedString(@"Dash", /**/);
 	mSlider3.titleLabel.text = NSLocalizedString(@"Gap", /**/);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	Technically, we are only interested in UIControlEventValueChanged, 
+	but we will need dragging someday to implement continuous sliders 
+	or update interface...
+*/
+
+- (void) prepareControlActions
+{
+	[mSwitch addTarget:self action:@selector(toggleOptions:)
+		forControlEvents:UIControlEventValueChanged];
+
+	[self setSliderAction:@selector(adjustOptions:)
+		forControlEvents:
+			UIControlEventTouchDragInside |
+			UIControlEventTouchDragOutside];
+
+	[self setSliderAction:@selector(adjustOptionsFinal:)
+		forControlEvents:UIControlEventValueChanged];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
