@@ -182,10 +182,10 @@
 	blendModeTableView_.backgroundView = nil;
 */	
 
-	radius_.title.text = NSLocalizedString(@"blur", @"blur");
+	radius_.titleLabel.text = NSLocalizedString(@"blur", @"blur");
 	radius_.maxValue = 50;
 	
-	offset_.title.text = NSLocalizedString(@"offset", @"offset");
+	offset_.titleLabel.text = NSLocalizedString(@"offset", @"offset");
 	offset_.maxValue = 50;
 	
 	angle_.backgroundColor = nil;

@@ -19,12 +19,16 @@
 #define kBarHeight          1
 #define kDragDampening      1.5
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDSparkSlider
+////////////////////////////////////////////////////////////////////////////////
+// Need to synthesize these because of namespace collision with system
 
-@synthesize title = title_;
-@synthesize value = value_;
-@synthesize minValue = minValue_;
-@synthesize maxValue = maxValue_;
+@synthesize value = mValue;
+@synthesize minValue = mMinValue;
+@synthesize maxValue = mMaxValue;
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) awakeFromNib
 {
@@ -34,33 +38,33 @@
 	// set up the label that indicates the current value
 	CGRect frame = self.bounds;
 	frame.size.height = kValueLabelHeight;
-	valueLabel_ = [[UILabel alloc] initWithFrame:frame];
+	_valueLabel = [[UILabel alloc] initWithFrame:frame];
 	
-	valueLabel_.opaque = NO;
-	valueLabel_.backgroundColor = nil;
-	valueLabel_.text = @"0 pt";
-	valueLabel_.font = [UIFont systemFontOfSize:17];
-	valueLabel_.textColor = [UIColor blackColor];
-	valueLabel_.textAlignment = NSTextAlignmentCenter;
+	self.valueLabel.opaque = NO;
+	self.valueLabel.backgroundColor = nil;
+	self.valueLabel.text = @"0 pt";
+	self.valueLabel.font = [UIFont systemFontOfSize:17];
+	self.valueLabel.textColor = [UIColor blackColor];
+	self.valueLabel.textAlignment = NSTextAlignmentCenter;
 	
-	[self addSubview:valueLabel_];
+	[self addSubview:self.valueLabel];
 	
 	// set up the title label
 	frame = self.bounds;
 	frame.origin.y = CGRectGetMaxY(frame) - kTitleLabelHeight;
 	frame.size.height = kTitleLabelHeight;
 	
-	title_ = [[UILabel alloc] initWithFrame:frame];
+	_titleLabel = [[UILabel alloc] initWithFrame:frame];
 	
-	title_.opaque = NO;
-	title_.backgroundColor = nil;
-	title_.font = [UIFont systemFontOfSize:13];
-	title_.textColor = [UIColor darkGrayColor];
-	title_.textAlignment = NSTextAlignmentCenter;
+	self.titleLabel.opaque = NO;
+	self.titleLabel.backgroundColor = nil;
+	self.titleLabel.font = [UIFont systemFontOfSize:13];
+	self.titleLabel.textColor = [UIColor darkGrayColor];
+	self.titleLabel.textAlignment = NSTextAlignmentCenter;
 	
-	[self addSubview:title_];
-	
-	maxValue_ = 100;
+	[self addSubview:self.titleLabel];
+
+	self.maxValue = 100;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,12 +74,17 @@
 	CGRect  trackRect = self.bounds;
 	
 	trackRect.origin.y += kValueLabelHeight;
-	trackRect.size.height -= kValueLabelHeight + kTitleLabelHeight;
+	trackRect.size.height -= kValueLabelHeight;
+	trackRect.size.height -= kTitleLabelHeight;
+
 	trackRect = CGRectInset(trackRect, kBarInset, 0);
 	
-	trackRect.origin.y = WDCenterOfRect(trackRect).y;
-	trackRect.size.height = kBarHeight;
-	
+	trackRect.origin.y = WDCenterOfRect(trackRect).y - 1.0;
+	trackRect.size.height = 2.0;
+
+	trackRect.origin.x = round(trackRect.origin.x);
+	trackRect.origin.y = round(trackRect.origin.y);
+
 	return trackRect;
 }
 
@@ -109,24 +118,24 @@
 - (CGFloat) valueForLocation:(CGFloat)x inRect:(CGRect)R
 {
 	if (x <= CGRectGetMinX(R))
-	{ return minValue_; }
+	{ return self.minValue; }
 	if (x >= CGRectGetMaxX(R))
-	{ return maxValue_; }
+	{ return self.maxValue; }
 
 	CGFloat r = (x-CGRectGetMinX(R)) / R.size.width;
-	return minValue_ + r * (maxValue_-minValue_);
+	return self.minValue + r * (self.maxValue-self.minValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGFloat) locationForValue:(CGFloat)value inRect:(CGRect)R
 {
-	if (value <= minValue_)
+	if (value <= self.minValue)
 	{ return CGRectGetMinX(R); }
-	if (value >= maxValue_)
+	if (value >= self.maxValue)
 	{ return CGRectGetMaxX(R); }
 
-	CGFloat r = (value - minValue_) / (maxValue_ - minValue_);
+	CGFloat r = (value - self.minValue) / (self.maxValue - self.minValue);
 	return CGRectGetMinX(R) + r * R.size.width;
 }
 
@@ -138,44 +147,43 @@
 	CGRect          trackRect = [self trackRect];
 	
 	// gray track backround
-	[[UIColor colorWithWhite:0.75f alpha:1.0f] set];
+	[[UIColor lightGrayColor] set];
 	CGContextFillRect(ctx, trackRect);
-	
-	// bottom highlight
-	[[UIColor colorWithWhite:1 alpha:0.6] set];
-	CGContextFillRect(ctx, CGRectOffset(trackRect, 0,1));
-	
+
+	if ([self isEnabled])
+	{ [[UIColor blackColor] set]; }
+
 	// "progress" bar
-	trackRect.size.width *= value_;
-	[[UIColor blackColor] set];
+	trackRect.size.width *= mValue;
 	CGContextFillRect(ctx, trackRect);
-}
 
-- (void) updateIndicator
-{
-	if (!indicator_) {
-		indicator_ = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"spark_knob.png"]];
-		[self addSubview:indicator_];
+	CGFloat knobX = round(CGRectGetMaxX(trackRect))-3;
+	CGFloat knobY = round(CGRectGetMinY(trackRect))+1-3;
+	CGRect knobR = { knobX, knobY, 6, 6 };
+	CGContextFillRect(ctx, knobR);
+
+	if ([self isTracking])
+	{
+		knobR = CGRectInset(knobR, 1, 1);
+		[[UIColor whiteColor] set];
+		CGContextFillRect(ctx, knobR);
 	}
-		
-	CGRect trackRect = CGRectInset([self trackRect], 2.5f, 0);
-	CGFloat x = [self locationForValue:[self value] inRect:trackRect];
-
-	indicator_.sharpCenter = CGPointMake(x, CGRectGetMidY(trackRect));
 }
 
-
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSNumber *) numberValue
-{
-	return @((int)self.value);
-}
+{ return @((int)self.value); }
 
-- (float)value \
-{ return minValue_ + value_ * (maxValue_ - minValue_); }
+////////////////////////////////////////////////////////////////////////////////
+/*
+	value is internally kept as a relative value,
+	this allows min and max to change without affecting 
+	progress indication
+*/
 
+- (float) value
+{ return self.minValue + mValue * (self.maxValue - self.minValue); }
 
 - (void) setValue:(float)value
 {
@@ -188,30 +196,36 @@
 	if (value < 0.0) value = 0.0;
 	if (value > 1.0) value = 1.0;
 
-	if (value == value_) {
-		if (!indicator_) {
-			// make sure we start in a good state
-			[self updateIndicator];
-		}
-		
-		return;
+	if (mValue != value)
+	{
+		mValue = value;
+		[self setNeedsDisplay];
+		[self updateLabel];
 	}
+}
 
-	value_ = value;
-	[self setNeedsDisplay];
-	
-	[self updateIndicator];
-	
-	[self updateLabel];
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setMinValue:(float)value
+{
+	if (mMinValue != value)
+	{
+		mMinValue = value;
+		[self setEnabled:mMinValue < mMaxValue];
+		[self setNeedsDisplay];
+		[self updateLabel];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setMaxValue:(float)value
 {
-	if (maxValue_ != value)
+	if (mMaxValue != value)
 	{
-		maxValue_ = value;
+		mMaxValue = value;
+		[self setEnabled:mMinValue < mMaxValue];
+		[self setNeedsDisplay];
 		[self updateLabel];
 	}
 }
@@ -220,9 +234,13 @@
 
 - (void) updateLabel
 {
-	valueLabel_.text = maxValue_ > 1.0 ?
+	self.valueLabel.text =
+	[NSString stringWithFormat:@"%d pt", (int)round(self.value)];
+/*
+	self.valueLabel.text = self.maxValue > 1.0 ?
 	[NSString stringWithFormat:@"%d pt", (int)round(self.value)]:
 	[NSString stringWithFormat:@"%d%%", (int)round(self.value*100)];
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,17 +249,17 @@
 
 - (BOOL) beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	mTouchOffset = [touch locationInView:self].x -
-	[self trackingLocationForValue:[self value]];
-	
-	dragging_ = YES;
-	moved_ = NO;
-	
-	indicator_.image = [UIImage imageNamed:@"spark_knob_highlighted.png"];
-	
-	[self setNeedsDisplay];
-	
-	return [super beginTrackingWithTouch:touch withEvent:event];
+	if (self.minValue != self.maxValue)
+	{
+		mTouchOffset = [touch locationInView:self].x -
+		[self trackingLocationForValue:self.value];
+
+		[self setNeedsDisplay];
+		// Display will be serviced after call below which sets tracking ivar
+		return [super beginTrackingWithTouch:touch withEvent:event];
+	}
+
+	return NO;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -250,7 +268,7 @@
 {
 	CGPoint pt = [touch locationInView:self];
 	self.value = [self valueForTrackingLocation:pt.x - mTouchOffset];
-	
+
 	return [super continueTrackingWithTouch:touch withEvent:event];
 }
 
@@ -261,18 +279,19 @@
 	CGPoint pt = [touch locationInView:self];
 	self.value = [self valueForTrackingLocation:pt.x - mTouchOffset];
 
-	dragging_ = NO;
-	indicator_.image = [UIImage imageNamed:@"spark_knob.png"];
-	
+	// Will call actions for TouchUp events and adjust tracking ivar
 	[super endTrackingWithTouch:touch withEvent:event];
+
+	// Need to call action for UIControlEventValueChanged in case someone listens
+	[self sendActionsForControlEvents:UIControlEventValueChanged];
+	[self setNeedsDisplay];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void)cancelTrackingWithEvent:(UIEvent *)event
 {
-	dragging_ = NO;
-	indicator_.image = [UIImage imageNamed:@"spark_knob.png"];
+	[super cancelTrackingWithEvent:event];
 	[self setNeedsDisplay];
 }
 

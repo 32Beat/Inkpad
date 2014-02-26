@@ -29,6 +29,8 @@
 	self.view.opaque = NO;
 	self.view.backgroundColor = nil;
 
+	[self prepareSliderTitles];
+
 	[mSwitch addTarget:self action:@selector(toggleOptions:)
 		forControlEvents:UIControlEventValueChanged];
 
@@ -43,6 +45,16 @@
 		forControlEvents:
 			UIControlEventTouchUpInside |
 			UIControlEventTouchUpOutside];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareSliderTitles
+{
+	mSlider0.titleLabel.text = NSLocalizedString(@"Dash", /**/);
+	mSlider1.titleLabel.text = NSLocalizedString(@"Gap", /**/);
+	mSlider2.titleLabel.text = NSLocalizedString(@"Dash", /**/);
+	mSlider3.titleLabel.text = NSLocalizedString(@"Gap", /**/);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -13,21 +13,15 @@
 
 @interface WDSparkSlider : UIControl
 {
-	UILabel         *valueLabel_;
-	UIImageView     *indicator_;
-		
-	BOOL            dragging_;
-	BOOL            moved_;
-
 	CGFloat mTouchOffset;
 }
 
-@property (nonatomic, readonly) UILabel *title;
+@property (nonatomic, readonly) UILabel *titleLabel;
+@property (nonatomic, readonly) UILabel *valueLabel;
+
 @property (weak, nonatomic, readonly) NSNumber *numberValue;
 @property (nonatomic, assign) float value;
 @property (nonatomic, assign) float minValue;
 @property (nonatomic, assign) float maxValue;
-
-- (void) updateIndicator;
 
 @end
