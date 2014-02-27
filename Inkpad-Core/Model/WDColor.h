@@ -42,7 +42,7 @@ WDColorType;
 	WDColorType mType;
 	CGFloat mComponent[4];
 
-	// Cached
+	// Cache
 	UIColor *mUIColor;
 }
 
@@ -63,17 +63,18 @@ WDColorType;
 - (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
 
 + (WDColor *) colorWithWhite:(CGFloat)white
-		alpha:(CGFloat)alpha;
+				alpha:(CGFloat)alpha;
 + (WDColor *) colorWithRed:(CGFloat)red
-		green:(CGFloat)green
-		blue:(CGFloat)blue
-		alpha:(CGFloat)alpha;
+				green:(CGFloat)green
+				blue:(CGFloat)blue
+				alpha:(CGFloat)alpha;
 + (WDColor *) colorWithHue:(CGFloat)hue
-		saturation:(CGFloat)saturation
-		brightness:(CGFloat)brightness
-		alpha:(CGFloat)alpha;
+				saturation:(CGFloat)saturation
+				brightness:(CGFloat)brightness
+				alpha:(CGFloat)alpha;
 
 + (WDColor *) randomColor;
++ (WDColor *) colorWithRandomHue;
 + (WDColor *) colorWithUIColor:(UIColor *)color;
 
 
@@ -90,6 +91,7 @@ WDColorType;
 - (CGColorRef) opaqueCGColor;
 
 - (void) set;
+- (void) glSet;
 
 - (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment;
 - (WDColor *) colorBalanceRed:(float)rShift green:(float)gShift blue:(float)bShift;
@@ -110,4 +112,6 @@ WDColorType;
 
 - (WDColor *) blendedColorWithFraction:(float)fraction ofColor:(WDColor *)color;
 @end
+
+
 

@@ -114,7 +114,7 @@ WDRenderContext;
 - (void) purgeUnreferencedImageDatas;
 - (WDImageData *) trackedImageData:(WDImageData *)imageData;
 
-- (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData;
+//- (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData;
 
 - (void) activateLayerAtIndex:(NSUInteger)ix;
 - (void) addLayer:(WDLayer *)layer;

@@ -18,6 +18,8 @@
 #import "WDStrokeOptions.h"
 #import "WDFillOptions.h"
 
+#import "WDDrawing.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	WDStyleContainer
@@ -74,10 +76,13 @@
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
 
-// 
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
-- (BOOL) needsTransparencyLayer;
+//
+- (void) prepareContext:(const WDRenderContext *)renderContext;
+- (void) prepareCGContext:(CGContextRef)context
+			scale:(CGFloat)scale
+			flipped:(BOOL)flipped;
 
+- (BOOL) needsTransparencyLayer;
 - (void) applyScale:(CGFloat)scale;
 
 @end

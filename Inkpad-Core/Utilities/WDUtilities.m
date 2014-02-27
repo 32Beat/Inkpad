@@ -185,11 +185,10 @@ float WDSineCurve(float input)
 	return result;
 }
 
+// Default definition for range of random() = [0 ... ((2^31)-1)]
 float WDRandomFloat()
-{
-	float r = random() % 10000;
-	return r / 10000.0f;
-}
+{ return (double)random() / 2147483647.0; }
+
 
 NSData * WDSHA1DigestForData(NSData *data)
 {

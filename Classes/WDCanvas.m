@@ -574,9 +574,7 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 					CGContextSetLineWidth(ctx, self.thinWidth);
 				}
 				
-				[activeLayer renderInContext:ctx
-									clipRect:rect
-									metaData:WDRenderingMetaDataMake(viewScale_, outlineMode ? WDRenderOutlineOnly : WDRenderDefault)];
+				[activeLayer _renderInContext:&renderContext]; 
 			}
 		}
 		
@@ -1113,7 +1111,7 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 {
 	shapeUnderConstruction_ = path;
 	
-	path.layer = drawing_.activeLayer;
+	//path.layer = drawing_.activeLayer;
 	[self invalidateSelectionView];
 }
 

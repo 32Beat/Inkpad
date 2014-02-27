@@ -37,10 +37,10 @@
 
 - (void) prepareControlTitles
 {
-	mSlider0.titleLabel.text = NSLocalizedString(@"Dash", /**/);
-	mSlider1.titleLabel.text = NSLocalizedString(@"Gap", /**/);
-	mSlider2.titleLabel.text = NSLocalizedString(@"Dash", /**/);
-	mSlider3.titleLabel.text = NSLocalizedString(@"Gap", /**/);
+	mSlider0.titleLabel.text = NSLocalizedString(@"Dash", @"Dash");
+	mSlider1.titleLabel.text = NSLocalizedString(@"Gap", @"Gap");
+	mSlider2.titleLabel.text = NSLocalizedString(@"Dash", @"Dash");
+	mSlider3.titleLabel.text = NSLocalizedString(@"Gap", @"Gap");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

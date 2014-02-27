@@ -43,8 +43,6 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 	// have to do this since elements were not properly setting their groups prior to v1.3
 	[elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
-	
-	return self; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +91,8 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 	return nil;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) setElements:(NSMutableArray *)elements
 {
 	elements_ = elements;
@@ -102,6 +102,8 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 	[elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
 	[elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self.layer];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) setLayer:(WDLayer *)layer
 {

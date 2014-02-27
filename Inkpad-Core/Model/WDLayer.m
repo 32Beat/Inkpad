@@ -67,7 +67,7 @@ NSString *WDOpacityKey = @"WDOpacityKey";
         return nil;
     }
     
-    self->highlightColor_ = [UIColor saturatedRandomColor];
+    self->highlightColor_ = [WDColor colorWithRandomHue];
     self->visible_ = YES;
     self->opacity_ = 1.0f;
     self->elements_ = elements;
@@ -120,17 +120,13 @@ NSString *WDOpacityKey = @"WDOpacityKey";
         self->opacity_ = 1.0f;
     }
     
-    if (!self.highlightColor) {
-        self.highlightColor = [UIColor saturatedRandomColor];
-    }
+    if ((self.highlightColor == nil)||
+		([self.highlightColor isKindOfClass:[UIColor class]]))
+		{ self.highlightColor = [WDColor colorWithRandomHue]; }
     
     return self; 
 }
 
-- (void) awakeFromEncoding
-{
-    [elements_ makeObjectsPerformSelector:@selector(awakeFromEncoding) withObject:nil];
-}
 
 - (BOOL) isSuppressingNotifications
 {
@@ -351,6 +347,11 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 	return nil;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark

@@ -501,9 +501,8 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	[unarchiver finishDecoding];
 	
 	layer.drawing = self;
-	layer.highlightColor = [UIColor saturatedRandomColor];
+	layer.highlightColor = [WDColor colorWithRandomHue];
 	
-	[layer awakeFromEncoding];
 	
 	[self insertLayer:layer atIndex:self.indexOfActiveLayer+1];
 	self.activeLayer = layer;
@@ -568,7 +567,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 - (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData
 {
 	// make sure blending modes behave correctly
@@ -582,7 +581,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	
 	CGContextEndTransparencyLayer(ctx);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 - (UIImage *) pixelImage
@@ -708,25 +707,34 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 - (NSData *) PDFRepresentation
 {
+	NSMutableData *data = [NSMutableData data];
+
 	CGRect              mediaBox = CGRectMake(0, 0, dimensions_.width, dimensions_.height);
-	CFMutableDataRef	data = CFDataCreateMutable(NULL, 0);
-	CGDataConsumerRef	consumer = CGDataConsumerCreateWithCFData(data);
-	CGContextRef        pdfContext = CGPDFContextCreate(consumer, &mediaBox, NULL);	
-	
+	CGDataConsumerRef	consumer = CGDataConsumerCreateWithCFData((CFMutableDataRef)data);
+	CGContextRef        pdfContext = CGPDFContextCreate(consumer, &mediaBox, NULL);
 	CGDataConsumerRelease(consumer);
+
 	CGPDFContextBeginPage(pdfContext, NULL);
 	
 	// flip!
 	CGContextTranslateCTM(pdfContext, 0, dimensions_.height);
 	CGContextScaleCTM(pdfContext, 1, -1);
-	
-	[self renderInContext:pdfContext clipRect:self.bounds metaData:WDRenderingMetaDataMake(1, WDRenderFlipped)];
+
+	WDRenderContext renderContext = {
+		WDRenderFlipped,
+		pdfContext,
+		1.0,
+		self.bounds,
+		self.bounds,
+		self.bounds,
+		CGAffineTransformIdentity };
+	[self _renderInContext:&renderContext];
+
 	CGPDFContextEndPage(pdfContext);
 	
 	CGContextRelease(pdfContext);
 
-	NSData *nsdata = (NSData *)CFBridgingRelease(data);
-	return nsdata;
+	return data;
 }
 
 - (NSData *) SVGRepresentation

@@ -67,16 +67,19 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 #define kAnchorRadius 4
 
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDElement
+////////////////////////////////////////////////////////////////////////////////
+
+@synthesize owner = mOwner;
 
 @synthesize size = mSize;
 @synthesize position = mPosition;
 @synthesize rotation = mRotation;
 
 @synthesize styleOptions = mStyleOptions;
-@synthesize owner = mOwner;
 
-
+////////////////////////////////////////////////////////////////////////////////
 // TODO: keep on going until these are no longer needed
 @synthesize layer = layer_;
 @synthesize group = group_;
@@ -353,11 +356,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 	group_ = group;
 }
 
-- (WDShadow *) __shadowForStyleBounds
-{
-	return self.shadow;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	Send these so drawing can properly update view
@@ -371,7 +369,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	If element = WDGroup or WDCompoundPath we might receive these, 
+	If this element is an owner of elements we might receive these,
 	pass up the chain
 */
 
@@ -567,18 +565,22 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 	CGContextRef contextRef = renderContext->contextRef;
 	CGFloat contextScale = renderContext->contextScale;
-	[self prepareCGContext:contextRef scale:contextScale];
+	[self prepareCGContext:contextRef
+			scale:contextScale
+			flipped:renderContext->flags & WDRenderFlipped];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
+- (void) prepareCGContext:(CGContextRef)context
+			scale:(CGFloat)scale
+			flipped:(BOOL)flipped
 {
 	CGContextSaveGState(context);
 
 	// Prepare composite options
 	[[self blendOptions] prepareCGContext:context];
-	[[self shadowOptions] prepareCGContext:context scale:scale];
+	[[self shadowOptions] prepareCGContext:context scale:scale flipped:flipped];
 //		scale:scale*[self resizeScale]];
 
 	// If necessary create transparencyLayer for composite
@@ -1458,6 +1460,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark OpenGL Rendering
 ////////////////////////////////////////////////////////////////////////////////
 
+- (WDColor *) highlightColor
+{ return mOwner != nil ? [mOwner highlightColor] : self.strokeOptions.color; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) glDrawWithTransform:(CGAffineTransform)T
 { [self glDrawWithTransform:T options:[self editMode]]; }
 
@@ -1528,10 +1535,10 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if (!selected) {
 		glColor4f(1, 1, 1, 1);
 		WDGLFillSquareMarker(P);
-		[self.layer.highlightColor openGLSet];
+		[self.layer.highlightColor glSet];
 		WDGLStrokeSquareMarker(P);
 	} else {
-		[self.layer.highlightColor openGLSet];
+		[self.layer.highlightColor glSet];
 		WDGLFillSquareMarker(P);
 	}
 }
@@ -1561,7 +1568,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	CGRect B = [self bounds];
 	B = CGRectApplyAffineTransform(B, transform);
 
-	[self.layer.highlightColor openGLSet];
+	[self.layer.highlightColor glSet];
 	WDGLStrokeRect(B);
 }
 

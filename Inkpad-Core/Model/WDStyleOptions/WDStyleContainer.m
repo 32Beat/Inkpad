@@ -221,6 +221,16 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareContext:(const WDRenderContext *)renderContext
+{
+	[mBlendOptions prepareCGContext:renderContext->contextRef];
+	[mShadowOptions prepareCGContext:renderContext->contextRef
+		scale:renderContext->contextScale
+		flipped:renderContext->transformToContext.d < 0];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /*
 	prepareCGContext
 	----------------
@@ -228,10 +238,12 @@
 	
 	Other options are applied on requirement basis
 */
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
+- (void) prepareCGContext:(CGContextRef)context
+			scale:(CGFloat)scale
+			flipped:(BOOL)flipped
 {
 	[mBlendOptions prepareCGContext:context];
-	[mShadowOptions prepareCGContext:context scale:scale];
+	[mShadowOptions prepareCGContext:context scale:scale flipped:flipped];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

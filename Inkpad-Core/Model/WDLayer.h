@@ -29,7 +29,7 @@
 }
 
 @property (nonatomic, readonly) NSMutableArray *elements;
-@property (nonatomic, strong) UIColor *highlightColor;
+@property (nonatomic, strong) WDColor *highlightColor;
 @property (nonatomic, weak) WDDrawing *drawing;
 @property (nonatomic, strong) NSString *name;
 @property (nonatomic, assign) BOOL visible;
@@ -45,13 +45,12 @@
 + (WDLayer *) layer;
 
 - (id) initWithElements:(NSMutableArray *)elements;
-- (void) awakeFromEncoding;
 
 - (CGRect) resultArea;
 - (CGRect) resultAreaForElement:(WDElement *)element;
 
 - (void) _renderInContext:(const WDRenderContext *)renderContext;
-- (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData;
+//- (void) renderInContext:(CGContextRef)ctx clipRect:(CGRect)clip metaData:(WDRenderingMetaData)metaData;
 
 - (void) addObject:(id)obj;
 - (void) addObjects:(NSArray *)objects;

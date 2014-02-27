@@ -754,7 +754,7 @@ done:
     
     CGPoint     overflowPoint;
     BOOL        selected = NO;
-    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor.UIColor;
     
     if (!closed_)
 	{
@@ -796,7 +796,7 @@ done:
     
     CGPoint     overflowPoint;
     BOOL        selected = NO;
-    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor.UIColor;
     
     if (!closed_) {
         NSArray *nodes = reversed_ ? [self reversedNodes] : nodes_;
@@ -836,7 +836,7 @@ done:
 {
     // draw start bar
     CGPoint     base, top;
-    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+    UIColor     *color = displayColor_ ? displayColor_ : self.layer.highlightColor.UIColor;
     
     [self getStartKnobBase:&base andTop:&top viewScale:viewScale];
     
@@ -878,7 +878,7 @@ done:
 
 - (void) drawOpenGLTextOutlinesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
-    [self.layer.highlightColor openGLSet];
+    [self.layer.highlightColor glSet];
     
     CGAffineTransform glTransform = CGAffineTransformConcat(transform, viewTransform);
     

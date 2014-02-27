@@ -236,14 +236,14 @@ NSString *WDMaskedElementsKey = @"WDMaskedElementsKey";
 	end = CGPointApplyAffineTransform(end, fT.transform);
 	end = CGPointApplyAffineTransform(end, transform);
 
-	[self.layer.highlightColor openGLSet];
+	[self.layer.highlightColor glSet];
 	WDGLStrokeLine(start, end);
 
 	[[UIColor whiteColor] openGLSet];
 	WDGLFillDiamondMarker(start);
 	WDGLFillDiamondMarker(end);
 
-	[self.layer.highlightColor openGLSet];
+	[self.layer.highlightColor glSet];
 	WDGLStrokeDiamondMarker(start);
 	WDGLStrokeDiamondMarker(end);
 }

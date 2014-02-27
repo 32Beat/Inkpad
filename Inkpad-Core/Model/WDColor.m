@@ -11,23 +11,25 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-#if !TARGET_OS_IPHONE
-#import <UIKit/UIKit.h>
-#endif
-
 #import "WDColor.h"
-#import "WDPath.h"
 #import "WDUtilities.h"
 
-NSString *WDHueKey = @"WDHueKey";
-NSString *WDSaturationKey = @"WDSaturationKey";
-NSString *WDBrightnessKey = @"WDBrightnessKey";
-NSString *WDAlphaKey = @"WDAlphaKey";
+#import "WDPath.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 NSInteger const WDColorVersion = 1;
 NSString *const WDColorVersionKey = @"WDColorVersion";
 NSString *const WDColorTypeKey = @"WDColorType";
 NSString *const WDColorComponentsKey = @"WDColorComponents";
+
+////////////////////////////////////////////////////////////////////////////////
+// Version < 2.0
+
+NSString *const WDHueKey = @"WDHueKey";
+NSString *const WDSaturationKey = @"WDSaturationKey";
+NSString *const WDBrightnessKey = @"WDBrightnessKey";
+NSString *const WDAlphaKey = @"WDAlphaKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDColor
@@ -104,6 +106,14 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 
 ////////////////////////////////////////////////////////////////////////////////
 
++ (id) colorWithUIColor:(UIColor *)color
+{
+	return [self colorWithRed:[color red]
+	green:[color green] blue:[color blue] alpha:[color alpha]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 + (id) randomColor
 {
 	CGFloat cmp[4] = {
@@ -116,11 +126,40 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDRandomHue
+	-----------
+	Generate random number between 0.0 inclusive and 1.0 exclusive
+	range of random() = [0 ... ((2^31)-1)]
+*/
+double WDRandomHue(void)
+{ return (double)random() / 2147483648.0; } // divide by 2^31
 
-+ (id) colorWithUIColor:(UIColor *)color
+////////////////////////////////////////////////////////////////////////////////
+/*
+	colorWithRandomHue
+	------------------
+	Create an easily distinguishable highlight color
+	
+	In order to create easily distinguishable highlight colors
+	this routine rotates sequentially through the following set of colors:
+
+		red, orange, yellow, green, cyan, blue, purple, magenta
+*/
+
++ (id) colorWithRandomHue
 {
-	return [self colorWithRed:[color red]
-	green:[color green] blue:[color blue] alpha:[color alpha]];
+	static int i = 0;
+	static const CGFloat HUE[] =
+	{ 0.0, 30.0, 60.0, 120.0, 180.0, 220.0, 290.0, 320.0 };
+
+	CGFloat cmp[4] = {
+		HUE[(i+=5)%8] / 360.0,
+		0.5 + 0.1*floor(6*WDRandomHue()),
+		0.5 + 0.1*floor(6*WDRandomHue()),
+		1.0 };
+
+	return [self colorWithType:kWDColorTypeHSB components:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,13 +293,11 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 
 - (BOOL) isEqual:(WDColor *)color
 {
-	if (color == self) {
-		return YES;
-	}
+	if (color == self)
+	{ return YES; }
 	
-	if (![color isKindOfClass:[WDColor class]]) {
-		return NO;
-	}
+	if (![color isKindOfClass:[WDColor class]])
+	{ return NO; }
 	
 	return
 	self->mType == color->mType &&
@@ -268,16 +305,6 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 	self->mComponent[1] == color->mComponent[1] &&
 	self->mComponent[2] == color->mComponent[2] &&
 	self->mComponent[3] == color->mComponent[3];
-}
-
-+ (WDColor *) colorWithDictionary:(NSDictionary *)dict
-{
-	float hue = [dict[@"hue"] floatValue];
-	float saturation = [dict[@"saturation"] floatValue];
-	float brightness = [dict[@"brightness"] floatValue];
-	float alpha = [dict[@"alpha"] floatValue];
-	
-	return [WDColor colorWithHue:hue saturation:saturation brightness:brightness alpha:alpha];
 }
 
 - (NSDictionary *) dictionary
@@ -290,6 +317,17 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 			@(mComponent[2]),
 			@(mComponent[3])]};
 }
+
++ (WDColor *) colorWithDictionary:(NSDictionary *)dict
+{
+	float hue = [dict[@"hue"] floatValue];
+	float saturation = [dict[@"saturation"] floatValue];
+	float brightness = [dict[@"brightness"] floatValue];
+	float alpha = [dict[@"alpha"] floatValue];
+	
+	return [WDColor colorWithHue:hue saturation:saturation brightness:brightness alpha:alpha];
+}
+
 
 + (WDColor *) colorWithData:(NSData *)data
 {
@@ -357,6 +395,15 @@ NSString *const WDColorComponentsKey = @"WDColorComponents";
 
 - (void) set
 { [[self UIColor] set]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) glSet
+{
+	CGFloat cmp[4];
+	[self getRGBA:cmp];
+	glColor4f(cmp[0], cmp[1], cmp[2], cmp[3]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

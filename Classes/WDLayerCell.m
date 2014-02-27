@@ -41,7 +41,7 @@
     
     thumbnail.image = layer.thumbnail;
     
-    colorView.color = [layer highlightColor];
+    colorView.color = [layer highlightColor].UIColor;
     
     [self updateLayerName];
     [self updateVisibilityButton];

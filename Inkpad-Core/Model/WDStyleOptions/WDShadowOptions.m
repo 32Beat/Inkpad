@@ -135,7 +135,17 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) prepareCGContext:(CGContextRef)context
+{ [self prepareCGContext:context scale:1.0 flipped:NO]; }
+
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
+{ [self prepareCGContext:context scale:scale flipped:NO]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareCGContext:(CGContextRef)context
+			scale:(CGFloat)scale
+			flipped:(BOOL)flipped
 {
 	CGSize offset = CGSizeZero;
 	CGFloat blurRadius = 0.0;
@@ -148,7 +158,7 @@ NSString *const WDShadowBlurKey = @"WDShadowBlur";
 		blurRadius = [self blur];
 
 		offset.width *= scale;
-		offset.height *= scale;
+		offset.height *= flipped ? -scale : +scale;
 		blurRadius *= scale;
 	}
 

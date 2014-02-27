@@ -1183,7 +1183,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (void) glDrawContentControlsWithTransform:(CGAffineTransform)T
 {
-	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor.UIColor;
 	NSArray *nodes = [self displayNodes];
 
 	NSUInteger n, total = nodes.count;
@@ -1215,7 +1215,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 {
 	[super drawOpenGLHighlightWithTransform:transform viewTransform:viewTransform];
 	
-	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor openGLSet];
+	displayColor_ ? [displayColor_ openGLSet]: [self.layer.highlightColor glSet];
 
 	[self renderGLOutlineWithNodes:
 	[self nodesWithTransform:viewTransform adjustmentTransform:transform]];
@@ -1226,7 +1226,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 
 - (void) drawOpenGLAnchorsWithViewTransform:(CGAffineTransform)transform
 {
-	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+	UIColor *color = displayColor_ ? displayColor_ : self.layer.highlightColor.UIColor;
 	NSArray *nodes = displayNodes_ ? displayNodes_ : nodes_;
 	
 	for (WDBezierNode *node in nodes) {
@@ -1237,7 +1237,7 @@ static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
 - (void) drawOpenGLHandlesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
 	CGAffineTransform   combined = CGAffineTransformConcat(transform, viewTransform);
-	UIColor             *color = displayColor_ ? displayColor_ : self.layer.highlightColor;
+	UIColor             *color = displayColor_ ? displayColor_ : self.layer.highlightColor.UIColor;
 	NSArray             *nodes = displayNodes_ ? displayNodes_ : nodes_;
 	
 	for (WDBezierNode *node in nodes) {

@@ -83,6 +83,7 @@ WDEditMode;
 - (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey;
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
+- (WDColor *) highlightColor;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,7 +417,9 @@ typedef enum {
 	- (void) restoreContext:(const WDRenderContext *)renderContext;
 
 ////////////////////////////////////////////////////////////////////////////////
-- (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale;
+- (void) prepareCGContext:(CGContextRef)context
+			scale:(CGFloat)scale
+			flipped:(BOOL)flipped;
 - (void) restoreCGContext:(CGContextRef)context;
 - (BOOL) needsTransparencyLayer;
 - (void) beginTransparencyLayer:(CGContextRef)context;
@@ -431,6 +434,8 @@ typedef enum {
 
 
 // OpenGL-based selection rendering
+- (WDColor *) highlightColor;
+
 - (void) glDrawWithTransform:(CGAffineTransform)T;
 - (void) glDrawWithTransform:(CGAffineTransform)T options:(long)options;
 

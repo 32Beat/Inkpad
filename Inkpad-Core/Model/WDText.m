@@ -704,7 +704,7 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
     ll = CGPointApplyAffineTransform(ll, tX);
     
     // draw outline
-    [self.layer.highlightColor openGLSet];
+    [self.layer.highlightColor glSet];
     
     WDGLStrokeLine(ul, ur);
     WDGLStrokeLine(ur, lr);
@@ -1093,7 +1093,7 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) drawOpenGLTextOutlinesWithTransform:(CGAffineTransform)transform viewTransform:(CGAffineTransform)viewTransform
 {
-    [self.layer.highlightColor openGLSet];
+    [self.layer.highlightColor glSet];
     
     CGAffineTransform glTransform = CGAffineTransformConcat(transform, viewTransform);
     

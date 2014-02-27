@@ -330,16 +330,18 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 - (id) defaultValueForProperty:(NSString *)property
 {
-	id      value = [defaults_ valueForKey:property];
-	NSData  *data = nil;
-	
-	if (!value) {
+	id value = [defaults_ valueForKey:property];
+
+	if (value == nil)
+	{
 		value = [[NSUserDefaults standardUserDefaults] valueForKey:property];
-		defaults_[property] = value;
+		if (value != nil)
+		{ defaults_[property] = value; }
 	}
 	
-	if ([value isKindOfClass:[NSData class]]) {
-		data = (NSData *) value;
+	if ([value isKindOfClass:[NSData class]])
+	{
+		NSData *data = (NSData *) value;
 		return [NSKeyedUnarchiver unarchiveObjectWithData:data];
 	}
 	

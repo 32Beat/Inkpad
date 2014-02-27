@@ -383,7 +383,7 @@
 				continue;
 			}
 			
-			[l.highlightColor openGLSet];
+			[l.highlightColor glSet];
 			
 			for (WDElement *e in [l elements]) {
 				[e drawOpenGLZoomOutlineWithViewTransform:T visibleRect:visibleRect];
@@ -409,7 +409,7 @@
 	// Draw outline for selected objects
 	for (WDElement *object in drawController.selectedObjects)
 	{
-		[object.layer.highlightColor glSet];
+		[object.highlightColor glSet];
 		[(id)object glDrawWithTransform:combined];
 	}
 

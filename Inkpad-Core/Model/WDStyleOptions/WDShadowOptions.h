@@ -56,6 +56,9 @@ extern NSString *const WDShadowBlurKey;
 
 - (BOOL) visible;
 - (id) optionsWithScale:(float)scale;
+- (void) prepareCGContext:(CGContextRef)context
+			scale:(CGFloat)scale
+			flipped:(BOOL)flipped;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

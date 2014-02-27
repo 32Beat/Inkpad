@@ -1106,8 +1106,57 @@
 	zoomToFitItem_.enabled = enabled;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Notifications
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) registerNotifications
+{
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+	
+	// stop listening to everything
+	[nc removeObserver:self];
+	
+	// listen for generic stuff
+	[nc addObserver:self selector:@selector(activeToolChanged:)
+		name:WDActiveToolDidChange object:nil];
+	[nc addObserver:self selector:@selector(didEnterBackground:)
+		name:UIApplicationDidEnterBackgroundNotification object:nil];
+	
+	// listen to the new drawing
+	[nc addObserver:self selector:@selector(layerLockedStatusChanged:)
+		name:WDLayerLockedStatusChanged object:self.drawing];
+	[nc addObserver:self selector:@selector(layerVisibilityChanged:)
+		name:WDLayerVisibilityChanged object:self.drawing];
+	[nc addObserver:self selector:@selector(activeLayerChanged:)
+		name:WDActiveLayerChanged object:self.drawing];
+	[nc addObserver:self selector:@selector(rulerVisibleSettingChanged:)
+		name:WDRulersVisibleSettingChangedNotification object:self.drawing];
+	
+	// listen to the new undo manager
+	NSUndoManager *undoManager = drawingController_.drawing.undoManager;
+	[nc addObserver:self selector:@selector(undoStatusDidChange:)
+		name:NSUndoManagerDidUndoChangeNotification object:undoManager];
+	[nc addObserver:self selector:@selector(undoStatusDidChange:)
+		name:NSUndoManagerDidRedoChangeNotification object:undoManager];
+	[nc addObserver:self selector:@selector(undoStatusDidChange:)
+		name:NSUndoManagerDidCloseUndoGroupNotification object:undoManager];
+	
+	// listen for property changes
+	WDPropertyManager *pm = drawingController_.propertyManager;
+
+	[nc addObserver:self selector:@selector(blendOptionsChanged:)
+		name:WDActiveBlendChangedNotification object:pm];
+	[nc addObserver:self selector:@selector(shadowOptionsChanged:)
+		name:WDActiveShadowChangedNotification object:pm];
+	[nc addObserver:self selector:@selector(strokeOptionsChanged:)
+		name:WDActiveStrokeChangedNotification object:pm];
+	[nc addObserver:self selector:@selector(fillOptionsChanged:)
+		name:WDActiveFillChangedNotification object:pm];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) activeToolChanged:(NSNotification *)aNotification
 {
@@ -1142,6 +1191,20 @@
 	WDPropertyManager *pm = self.drawingController.propertyManager;
 	shadowWell_.shadowOptions = [pm activeShadowOptions];
 }
+
+- (void) strokeOptionsChanged:(NSNotification *)aNotification
+{
+	WDPropertyManager *pm = self.drawingController.propertyManager;
+	strokeWell_.painter = [[pm activeStrokeOptions] color];
+}
+
+- (void) fillOptionsChanged:(NSNotification *)aNotification
+{
+	WDPropertyManager *pm = self.drawingController.propertyManager;
+	fillWell_.painter = [[pm activeFillOptions] color];
+}
+
+
 
 - (void) rulerVisibleSettingChanged:(NSNotification *)aNotification
 {
@@ -1294,39 +1357,6 @@
 	self.navigationItem.title = [NSString stringWithFormat:NSLocalizedString(@"%@ @ %d%%", @"Drawing Title @ Z%"), filename, zoom];
 }
 
-- (void) registerNotifications
-{
-	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-	
-	// stop listening to everything
-	[nc removeObserver:self];
-	
-	// listen for generic stuff
-	[nc addObserver:self selector:@selector(activeToolChanged:) name:WDActiveToolDidChange object:nil];
-	[nc addObserver:self selector:@selector(didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-	
-	// listen to the new drawing
-	[nc addObserver:self selector:@selector(layerLockedStatusChanged:) name:WDLayerLockedStatusChanged object:self.drawing];
-	[nc addObserver:self selector:@selector(layerVisibilityChanged:) name:WDLayerVisibilityChanged object:self.drawing];
-	[nc addObserver:self selector:@selector(activeLayerChanged:) name:WDActiveLayerChanged object:self.drawing];
-	[nc addObserver:self selector:@selector(rulerVisibleSettingChanged:) name:WDRulersVisibleSettingChangedNotification object:self.drawing];
-	
-	// listen to the new undo manager
-	NSUndoManager *undoManager = drawingController_.drawing.undoManager;
-	[nc addObserver:self selector:@selector(undoStatusDidChange:) name:NSUndoManagerDidUndoChangeNotification object:undoManager];
-	[nc addObserver:self selector:@selector(undoStatusDidChange:) name:NSUndoManagerDidRedoChangeNotification object:undoManager];
-	[nc addObserver:self selector:@selector(undoStatusDidChange:) name:NSUndoManagerDidCloseUndoGroupNotification object:undoManager];
-	
-	// listen for property changes
-	WDPropertyManager *pm = drawingController_.propertyManager;
-	[nc addObserver:self selector:@selector(fillChanged:) name:WDActiveFillChangedNotification object:pm];
-	[nc addObserver:self selector:@selector(strokeStyleChanged:) name:WDActiveStrokeChangedNotification object:pm];
-
-	[nc addObserver:self selector:@selector(blendOptionsChanged:)
-		name:WDActiveBlendChangedNotification object:pm];
-	[nc addObserver:self selector:@selector(shadowOptionsChanged:)
-		name:WDActiveShadowChangedNotification object:pm];
-}
 
 - (void) documentStateChanged:(NSNotification *)aNotification
 {
