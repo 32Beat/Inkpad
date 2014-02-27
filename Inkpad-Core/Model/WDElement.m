@@ -1526,6 +1526,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark 
+////////////////////////////////////////////////////////////////////////////////
 
 
 - (void) drawOpenGLAnchorAtPoint:(CGPoint)pt transform:(CGAffineTransform)transform selected:(BOOL)selected
@@ -1700,50 +1702,34 @@ NSString *WDShadowKey = @"WDShadowKey";
 	return changedProperties;
 }
 
-- (void) setShadow:(WDShadow *)shadow
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSSet *) inspectableProperties
 {
-	if ([shadow_ isEqual:shadow]) {
-		return;
+	static NSSet *gSet = nil;
+	if (gSet == nil)
+	{
+		gSet = [[NSSet alloc]
+			initWithObjects:
+		//		WDFrameOptionsKey,
+				WDBlendOptionsKey,
+				WDShadowOptionsKey,
+				WDStrokeOptionsKey,
+				WDFillOptionsKey,
+				nil];
 	}
-	
-	[self cacheDirtyBounds];
-	
-	[(WDElement *)[self.undoManager prepareWithInvocationTarget:self] setShadow:shadow_];
-	
-	NSSet *changedProperties = [self changedShadowPropertiesFrom:shadow_ to:shadow];
-	
-	shadow_ = shadow;
-	
-	[self postDirtyBoundsChange];
-	[self propertiesChanged:changedProperties];
+
+	return gSet;
 }
 
-- (CGFloat) opacity
-{ return [[self blendOptions] opacity]; }
+////////////////////////////////////////////////////////////////////////////////
 
-- (void) setOpacity:(float)opacity
-{
-	WDBlendOptions *options = [[self blendOptions] copy];
-	[options setOpacity:opacity];
-	[self setBlendOptions:options];
-}
-/*
-- (void) setBlendMode:(CGBlendMode)blendMode
-{
-	if (blendMode == blendMode_) {
-		return;
-	}
-	
-	[self cacheDirtyBounds];
-	
-	[[self.undoManager prepareWithInvocationTarget:self] setBlendMode:blendMode_];
-	
-	blendMode_ = blendMode;
-	
-	[self postDirtyBoundsChange];
-	[self propertyChanged:WDBlendModeProperty];
-}
-*/
+- (BOOL) canInspectProperty:(NSString *)property
+{ return [[self inspectableProperties] containsObject:property]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) setValue:(id)value forProperty:(NSString *)property propertyManager:(WDPropertyManager *)propertyManager
 {
 	if (property == WDFillOptionsKey)
@@ -1759,8 +1745,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 		[self setBlendOptions:value];
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 - (id) valueForProperty:(NSString *)property
 {
@@ -1779,35 +1764,29 @@ NSString *WDShadowKey = @"WDShadowKey";
 	return nil;
 }
 
-- (NSSet *) inspectableProperties
-{
-	return [NSSet setWithObjects:
-//		WDFrameOptionsKey,
-		WDBlendOptionsKey,
-		WDShadowOptionsKey,
-		WDStrokeOptionsKey,
-		WDFillOptionsKey,
-		nil];
-}
-
-- (BOOL) canInspectProperty:(NSString *)property
-{
-	return [[self inspectableProperties] containsObject:property];
-}
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) propertiesChanged:(NSSet *)properties
 {   
-	if (self.drawing) {
+	if (self.drawing)
+	{
 		NSDictionary *userInfo = @{WDPropertiesKey: properties};
-		[[NSNotificationCenter defaultCenter] postNotificationName:WDPropertiesChangedNotification object:self.drawing userInfo:userInfo];
+
+		[[NSNotificationCenter defaultCenter]
+		postNotificationName:WDPropertiesChangedNotification
+		object:self.drawing userInfo:userInfo];
 	}
 }
 
 - (void) propertyChanged:(NSString *)property
 {
-	if (self.drawing) {
+	if (self.drawing)
+	{
 		NSDictionary *userInfo = @{WDPropertyKey: property};
-		[[NSNotificationCenter defaultCenter] postNotificationName:WDPropertyChangedNotification object:self.drawing userInfo:userInfo];
+
+		[[NSNotificationCenter defaultCenter]
+		postNotificationName:WDPropertyChangedNotification
+		object:self.drawing userInfo:userInfo];
 	}
 }
 

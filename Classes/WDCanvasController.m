@@ -1039,14 +1039,14 @@
 	UIBarButtonItem *fillItem = [[UIBarButtonItem alloc] initWithCustomView:fillWell_];
 	fillWell_.barButtonItem = fillItem;
 	[fillWell_ addTarget:self action:@selector(showFillStylePanel:) forControlEvents:UIControlEventTouchUpInside];
-	[fillWell_ setPainter:[self.drawingController.propertyManager activeFillStyle]];
+	[fillWell_ setPainter:[self.drawingController.propertyManager activeFillOptions].color];
 	
 	strokeWell_ = [[WDColorWell alloc] initWithFrame:CGRectMake(0, 0, 28, 44)];
 	strokeWell_.strokeMode = YES;
 	UIBarButtonItem *strokeItem = [[UIBarButtonItem alloc] initWithCustomView:strokeWell_];
 	strokeWell_.barButtonItem = strokeItem;
 	[strokeWell_ addTarget:self action:@selector(showStrokeStylePanel:) forControlEvents:UIControlEventTouchUpInside];
-	[strokeWell_ setPainter:[self.drawingController.propertyManager activeStrokeStyle].color];
+	[strokeWell_ setPainter:[self.drawingController.propertyManager activeStrokeOptions].color];
 	
 	
 	editingItems_ = @[objectItem, smallFixedItem,
@@ -1171,12 +1171,14 @@
  
 - (void) fillChanged:(NSNotification *)aNotification
 {
-	[fillWell_ setPainter:[self.drawingController.propertyManager activeFillStyle]];
+	[fillWell_ setPainter:
+	[self.drawingController.propertyManager activeFillOptions].color];
 }
 
 - (void) strokeStyleChanged:(NSNotification *)aNotification
 {
-	[strokeWell_ setPainter:[self.drawingController.propertyManager activeStrokeStyle].color];
+	[strokeWell_ setPainter:
+	[self.drawingController.propertyManager activeStrokeOptions].color];
 }
 
 
@@ -1279,7 +1281,7 @@
 	}
 	
 	// save the user defaults
-	[self.drawingController.propertyManager updateUserDefaults];
+	[self.drawingController.propertyManager saveCachedDefaults];
 }
 
 - (void) viewWillDisappear:(BOOL)animated

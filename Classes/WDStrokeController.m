@@ -355,7 +355,9 @@
 
 - (UIImage *) arrowPreview
 {
-	WDStrokeStyle   *strokeStyle = [drawingController_.propertyManager defaultStrokeStyle];
+	WDStrokeStyle   *strokeStyle = nil;
+//	[drawingController_.propertyManager defaultStrokeStyle];
+
 	UIColor         *color = [UIColor colorWithRed:0.0f green:(118.0f / 255) blue:1.0f alpha:1.0f];
 	WDArrowhead     *arrow;
 	CGContextRef    ctx;

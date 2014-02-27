@@ -1,13 +1,15 @@
-//
-//  WDPropertyManager.m
-//  Inkpad
-//
-//  This Source Code Form is subject to the terms of the Mozilla Public
-//  License, v. 2.0. If a copy of the MPL was not distributed with this
-//  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//
-//  Copyright (c) 2011-2013 Steve Sprang
-//
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDPropertyManager.m
+	Inkpad
+
+	This Source Code Form is subject to the terms of the Mozilla Public
+	License, v. 2.0. If a copy of the MPL was not distributed with this
+	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+	Project Copyright (c) 2008-2014 Steve Sprang
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 #import "WDAbstractPath.h"
 #import "WDColor.h"
@@ -17,6 +19,8 @@
 #import "WDInspectableProperties.h"
 #import "WDPropertyManager.h"
 #import "WDShadow.h"
+
+NSString *const WDInkpadUserDefaultsKey = @"WDInkpadUserDefaults";
 
 NSString *WDInvalidPropertiesNotification = @"WDInvalidPropertiesNotification";
 
@@ -37,35 +41,81 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 @synthesize drawingController = drawingController_;
 @synthesize ignoreSelectionChanges = ignoreSelectionChanges_;
 
+
+- (WDStrokeStyle *) activeStrokeStyle
+{ return nil; }
+- (WDStrokeStyle *) defaultStrokeStyle
+{ return nil; }
+
+- (id<WDPathPainter>) activeFillStyle
+{ return nil; }
+- (id<WDPathPainter>) defaultFillStyle
+{ return nil; }
+
+- (WDShadow *) activeShadow
+{ return nil; }
+- (WDShadow *) defaultShadow
+{ return nil; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (id) init
 {
 	self = [super init];
 
-	if (!self) {
-		return nil;
+	if (self != nil)
+	{
+		mCachedDefaults = [[self loadCachedDefaults] mutableCopy];
+		if (mCachedDefaults == nil)
+		{ mCachedDefaults = [NSMutableDictionary new]; }
+
+		invalidProperties_ = [NSMutableSet new];
+
+		// see if the default font has been uninstalled
+		if (![[WDFontManager sharedInstance]
+				validFont:[self defaultValueForProperty:WDFontNameProperty]])
+		{ [self setDefaultValue:@"Helvetica" forProperty:WDFontNameProperty]; }
 	}
-	
-	invalidProperties_ = [[NSMutableSet alloc] init];
-	
-	// constantly updating the user defaults kills responsiveness after the keyboard has been made visible
-	// so use this temporary dictionary to avoid hitting the defaults all the time
-	defaults_ = [[NSMutableDictionary alloc] init];
-	
-	// see if the default font has been uninstalled
-	if (![[WDFontManager sharedInstance] validFont:[self defaultValueForProperty:WDFontNameProperty]]) {
-		[self setDefaultValue:@"Helvetica" forProperty:WDFontNameProperty];
-	}
-	
+
 	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) dealloc
 {
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	// transfer our cached defaults to the real defaults
-	[self updateUserDefaults];
+	[self saveCachedDefaults];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) saveCachedDefaults
+{
+	if (mCachedDefaults.count != 0)
+	{
+		NSData *data =
+		[NSKeyedArchiver archivedDataWithRootObject:mCachedDefaults];
+		if (data != nil)
+		{
+			[[NSUserDefaults standardUserDefaults]
+			setObject:data forKey:WDInkpadUserDefaultsKey];
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSDictionary *) loadCachedDefaults
+{
+	NSData *data = [[NSUserDefaults standardUserDefaults]
+	objectForKey:WDInkpadUserDefaultsKey];
+	return data ? [NSKeyedUnarchiver unarchiveObjectWithData:data] : nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) setDrawingController:(WDDrawingController *)drawingController
 {
@@ -89,12 +139,7 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 											   object:drawingController_];
 }
 
-- (void) updateUserDefaults
-{
-	for (NSString *key in [defaults_ allKeys]) {
-		[[NSUserDefaults standardUserDefaults] setObject:defaults_[key] forKey:key];
-	}
-}
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) addToInvalidProperties:(NSString *)property
 {
@@ -127,11 +172,14 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 			}
 		}
 	}
-	
-	NSDictionary *userInfo = @{WDInvalidPropertiesKey: [invalidProperties_ copy]};
-	[[NSNotificationCenter defaultCenter] postNotificationName:WDInvalidPropertiesNotification object:self userInfo:userInfo];
-	
-	[invalidProperties_ removeAllObjects];
+
+	// Send out invalidProperties_
+	[[NSNotificationCenter defaultCenter]
+	postNotificationName:WDInvalidPropertiesNotification
+	object:self userInfo:@{WDInvalidPropertiesKey : invalidProperties_}];
+
+	// Reset invalid properties
+	invalidProperties_ = [NSMutableSet new];
 }
 
 - (void) propertiesChanged:(NSNotification *)aNotification
@@ -142,7 +190,8 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	if (![properties isSubsetOfSet:invalidProperties_]) {
 		[invalidProperties_ unionSet:properties];
 		
-		[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(invalidateProperties:) object:nil];
+		[NSObject cancelPreviousPerformRequestsWithTarget:self
+		selector:@selector(invalidateProperties:) object:nil];
 		[self performSelector:@selector(invalidateProperties:) withObject:nil afterDelay:0];
 	}
 }
@@ -155,7 +204,8 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	if (![invalidProperties_ containsObject:property]) {
 		[invalidProperties_ addObject:property];
 		
-		[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(invalidateProperties:) object:nil];
+		[NSObject cancelPreviousPerformRequestsWithTarget:self
+		selector:@selector(invalidateProperties:) object:nil];
 		[self performSelector:@selector(invalidateProperties:) withObject:nil afterDelay:0];
 	}
 }
@@ -177,7 +227,8 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	
 		[invalidProperties_ addObjectsFromArray:[[topSelected inspectableProperties] allObjects]];
 		
-		[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(invalidateProperties:) object:nil];
+		[NSObject cancelPreviousPerformRequestsWithTarget:self
+		selector:@selector(invalidateProperties:) object:nil];
 		[self performSelector:@selector(invalidateProperties:) withObject:nil afterDelay:0];
 	}
 }
@@ -224,159 +275,31 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 - (void) setDefaultValue:(id)value forProperty:(NSString *)property
 {
-//	if (!value) return;
+	if ((property != nil)&&(value != nil))
+	{ mCachedDefaults[property] = value; }
 
-	// key is const
-	if (property == WDBlendOptionsKey)
+	static NSDictionary *prop2note = nil;
+	if (prop2note == nil)
 	{
-		defaults_[WDBlendOptionsKey] =
-		[NSKeyedArchiver archivedDataWithRootObject:value];
-
-		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveBlendChangedNotification
-		object:self userInfo:nil];
-		return;
-	}
-	else
-	if (property == WDShadowOptionsKey)
-	{
-		defaults_[WDShadowOptionsKey] =
-		[NSKeyedArchiver archivedDataWithRootObject:value];
-
-		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveShadowChangedNotification
-		object:self userInfo:nil];
-		return;
-	}
-	else
-	if (property == WDStrokeOptionsKey)
-	{
-		defaults_[WDStrokeOptionsKey] =
-		[NSKeyedArchiver archivedDataWithRootObject:value];
-
-		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveStrokeChangedNotification
-		object:self userInfo:nil];
-		return;
-	}
-	else
-	if (property == WDFillOptionsKey)
-	{
-		defaults_[WDFillOptionsKey] =
-		[NSKeyedArchiver archivedDataWithRootObject:value];
-
-		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveFillChangedNotification
-		object:self userInfo:nil];
-		return;
+		prop2note = @{
+		WDBlendOptionsKey : WDActiveBlendChangedNotification,
+		WDShadowOptionsKey : WDActiveShadowChangedNotification,
+		WDStrokeOptionsKey : WDActiveStrokeChangedNotification,
+		WDFillOptionsKey : WDActiveFillChangedNotification };
 	}
 
+	[[NSNotificationCenter defaultCenter]
+		postNotificationName:prop2note[property]
+		object:self userInfo:nil];
 	return;
-
-	if ([property isEqualToString:WDFillProperty]) {
-		// want to track the default color and gradient
-		if ([value isKindOfClass:[WDColor class]]) {
-			defaults_[WDFillColorProperty] = [NSKeyedArchiver archivedDataWithRootObject:value];
-		} else if ([value isKindOfClass:[WDGradient class]]) {
-			defaults_[WDFillGradientProperty] = [NSKeyedArchiver archivedDataWithRootObject:value];
-		}
-	}
-	
-	if ([property isEqualToString:WDFillProperty] ||
-		[property isEqualToString:WDStrokeColorProperty] ||
-		[property isEqualToString:WDShadowColorProperty])
-		{ value = [NSKeyedArchiver archivedDataWithRootObject:value]; }
-	
-	if ([[defaults_ valueForKey:property] isEqual:value]) {
-		return;
-	}
-	
-	defaults_[property] = value;
-	
-	if ([property isEqualToString:WDFillProperty]) {
-		[[NSNotificationCenter defaultCenter] postNotificationName:WDActiveFillChangedNotification object:self userInfo:nil];
-	}
-	else
-	if ([self propertyAffectsActiveStroke:property])
-	{
-		if (![property isEqual:WDStrokeVisibleProperty])
-		{
-			defaults_[WDStrokeVisibleProperty] = @YES;
-		}
-		else
-		if (![value boolValue])
-		{
-			// turning off the stroke, so reset the arrows
-			defaults_[WDStartArrowProperty] = WDStrokeArrowNone;
-			defaults_[WDEndArrowProperty] = WDStrokeArrowNone;
-		}
-		
-		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveStrokeChangedNotification object:self userInfo:nil];
-	}
-	else
-	if ([self propertyAffectsActiveShadow:property])
-	{
-		if (![property isEqual:WDShadowVisibleProperty] &&
-			![property isEqual:WDOpacityProperty])
-			{ defaults_[WDShadowVisibleProperty] = @YES; }
-		
-		[[NSNotificationCenter defaultCenter]
-		postNotificationName:WDActiveShadowChangedNotification object:self userInfo:nil];
-	} 
-}
-
-- (id) defaultValueForProperty:(NSString *)property
-{
-	id value = [defaults_ valueForKey:property];
-
-	if (value == nil)
-	{
-		value = [[NSUserDefaults standardUserDefaults] valueForKey:property];
-		if (value != nil)
-		{ defaults_[property] = value; }
-	}
-	
-	if ([value isKindOfClass:[NSData class]])
-	{
-		NSData *data = (NSData *) value;
-		return [NSKeyedUnarchiver unarchiveObjectWithData:data];
-	}
-	
-	return value;
-}
-
-- (WDStrokeStyle *) activeStrokeStyle
-{
-	return [self defaultStrokeStyle];
-}
-
-- (WDStrokeStyle *) defaultStrokeStyle
-{
-	return [WDStrokeStyle strokeStyleWithWidth:[[self defaultValueForProperty:WDStrokeWidthProperty] floatValue]
-										   cap:(int)[[self defaultValueForProperty:WDStrokeCapProperty] integerValue]
-										  join:(int)[[self defaultValueForProperty:WDStrokeJoinProperty] integerValue]
-										 color:[self defaultValueForProperty:WDStrokeColorProperty]
-								   dashPattern:[self defaultValueForProperty:WDStrokeDashPatternProperty]
-									startArrow:[self defaultValueForProperty:WDStartArrowProperty]
-									  endArrow:[self defaultValueForProperty:WDEndArrowProperty]];
-
-}
-
-- (WDShadow *) activeShadow
-{   
-	return [self defaultShadow];
-}
-
-- (WDShadow *) defaultShadow
-{
-	return [WDShadow shadowWithColor:[self defaultValueForProperty:WDShadowColorProperty]
-							  radius:[[self defaultValueForProperty:WDShadowRadiusProperty] floatValue]
-							  offset:[[self defaultValueForProperty:WDShadowOffsetProperty] floatValue]
-							   angle:[[self defaultValueForProperty:WDShadowAngleProperty] floatValue]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (id) defaultValueForProperty:(id)key
+{
+	return [mCachedDefaults valueForKey:key];
+}
 
 - (id) activeValueForKey:(id)key
 {
@@ -412,7 +335,7 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 
 
-
+/*
 - (id<WDPathPainter>) activeFillStyle
 {
 	id value = [self defaultValueForProperty:WDFillProperty];
@@ -434,5 +357,5 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	
 	return value;
 }
-
+*/
 @end
