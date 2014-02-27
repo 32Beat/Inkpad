@@ -42,10 +42,10 @@ void WDContextDrawImageToFill(CGContextRef ctx, CGRect bounds, CGImageRef imageR
 
 
 // random value in the range [0.0, 1.0]
-float WDRandomFloat();
+CGFloat WDRandomFloat(void);
 
 // remap [0.0, 1.0] to a sine curve
-float WDSineCurve(float input);
+CGFloat WDSineCurve(CGFloat phase);
 
 NSData * WDSHA1DigestForData(NSData *data);
 

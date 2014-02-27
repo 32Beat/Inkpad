@@ -172,22 +172,23 @@ void WDContextDrawImageToFill(CGContextRef ctx, CGRect bounds, CGImageRef imageR
 #pragma mark -
 #pragma mark Mathy Stuff
 
-float WDSineCurve(float input)
+CGFloat WDSineCurve(CGFloat phase)
 {
-	float result;
+	CGFloat result;
 	
-	input *= M_PI; // move from [0.0, 1.0] tp [0.0, Pi]
-	input -= M_PI_2; // shift back onto a trough
+	phase *= M_PI; 		// move from [0.0, 1.0] to [0.0, Pi]
+	phase -= M_PI_2; 	// shift back onto a trough
 	
-	result = sin(input) + 1; // add 1 to put in range [0.0,2.0]
+	result = sin(phase);
+	result += 1; // add 1 to put in range [0.0,2.0]
 	result /= 2; // back to [0.0, 1.0];
 	
 	return result;
 }
 
 // Default definition for range of random() = [0 ... ((2^31)-1)]
-float WDRandomFloat()
-{ return (double)random() / 2147483647.0; }
+CGFloat WDRandomFloat(void)
+{ return (CGFloat)random() / 2147483647.0; }
 
 
 NSData * WDSHA1DigestForData(NSData *data)

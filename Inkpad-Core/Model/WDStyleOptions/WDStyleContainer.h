@@ -74,16 +74,27 @@
 - (id) fillOptions;
 - (void) setFillOptions:(id)options;
 
+/* 
+	When resizing an object, its properties may be scaled as well. 
+	Properties only allow symmetric scaling. If asymmetric scaling
+	is required, then caller is responsible for conversion.
+	
+	Note: shadow properties do not render according to CTM
+*/
+- (void) applyScale:(CGFloat)scale;
+
+
+
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;
 
-//
+// Prepare global options for context (blend + shadow)
 - (void) prepareContext:(const WDRenderContext *)renderContext;
 - (void) prepareCGContext:(CGContextRef)context
 			scale:(CGFloat)scale
 			flipped:(BOOL)flipped;
+// NOTE: scale&flipped currently needed for shadows
 
 - (BOOL) needsTransparencyLayer;
-- (void) applyScale:(CGFloat)scale;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

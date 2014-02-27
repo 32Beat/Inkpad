@@ -224,9 +224,7 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 - (void) setDefaultValue:(id)value forProperty:(NSString *)property
 {
-	if (!value) {
-		return;
-	}
+//	if (!value) return;
 
 	// key is const
 	if (property == WDBlendOptionsKey)
