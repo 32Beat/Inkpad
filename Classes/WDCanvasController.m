@@ -1195,13 +1195,15 @@
 - (void) strokeOptionsChanged:(NSNotification *)aNotification
 {
 	WDPropertyManager *pm = self.drawingController.propertyManager;
-	strokeWell_.painter = [[pm activeStrokeOptions] color];
+	strokeWell_.painter = pm.activeStrokeOptions.active ?
+	pm.activeStrokeOptions.color : nil;
 }
 
 - (void) fillOptionsChanged:(NSNotification *)aNotification
 {
 	WDPropertyManager *pm = self.drawingController.propertyManager;
-	fillWell_.painter = [[pm activeFillOptions] color];
+	fillWell_.painter = pm.activeFillOptions.active ?
+	pm.activeFillOptions.color : nil;
 }
 
 
