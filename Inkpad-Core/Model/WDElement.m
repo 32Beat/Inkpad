@@ -138,9 +138,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 */
 - (void) copyPropertiesFrom:(WDElement *)srcElement
 {
-	[self setSize:[srcElement size]];
-	[self setPosition:[srcElement position]];
-	[self setRotation:[srcElement rotation]];
+	self->mSize = srcElement->mSize;
+	self->mPosition = srcElement->mPosition;
+	self->mRotation = srcElement->mRotation;
 
 	[[self styleOptions] copyPropertiesFrom:[srcElement styleOptions]];
 
@@ -480,6 +480,61 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyMove:(CGVector)move
+{
+	CGPoint P = self.position;
+	P.x += move.dx;
+	P.y += move.dy;
+	self.position = P;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyScale:(CGFloat)scale
+{
+	if (scale != 0.0)
+	{
+		self.size = WDScaleSize(self.size, scale, scale);
+		[[self styleOptions] applyScale:scale];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyScale:(CGFloat)scale pivot:(CGPoint)C
+{
+	CGPoint P = self.position;
+	P.x = C.x + scale * (P.x - C.x);
+	P.y = C.y + scale * (P.y - C.y);
+	self.position = P;
+
+	[self _applyScale:scale];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyRotation:(CGFloat)degrees
+{ [self setRotation:self.rotation+degrees]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyRotation:(CGFloat)degrees pivot:(CGPoint)C
+{
+	CGPoint P = self.position;
+	CGFloat d = WDDistance(P, C);
+	CGFloat a = atan2(P.y-C.y, P.x-C.x) + WDRadiansFromDegrees(degrees);
+	self.position = (CGPoint){ C.x+d*cos(a), C.y+d*sin(a) };
+
+	[self _applyRotation:degrees];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 #pragma mark Style Options
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -651,6 +706,17 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) pathRef
+{ return nil; }
+
+- (CGPathRef) strokePathRef
+{ return self.pathRef; }
+
+- (CGPathRef) fillPathRef
+{ return self.pathRef; }
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Frame Editing
 ////////////////////////////////////////////////////////////////////////////////
@@ -698,18 +764,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 	}
 
 	return T;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) _applyScale:(CGVector)scale
-{
-	if ((scale.dx!=0.0)&&(scale.dy!=0.0))
-	{
-		[self setSize:WDScaleSize(mSize, scale.dx, scale.dy)];
-		if (scale.dx == scale.dy)
-		{ [[self styleOptions] applyScale:scale.dx]; }
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -764,6 +818,16 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGRect) frameRect
+{
+	CGRect frame = { self.position, self.size };
+	frame.origin.x -= 0.5*frame.size.width;
+	frame.origin.y -= 0.5*frame.size.height;
+	return frame;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) setFrameRect:(CGRect)frame
 {
 	[self setSize:frame.size];
@@ -773,23 +837,25 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (WDQuad) frameQuad
-{
-	return WDQuadIsNull(mFrame)==NO ? mFrame :
-	(mFrame = WDQuadWithRect([self sourceRect], [self sourceTransform]));
-}
+{ return WDQuadIsNull(mFrame)==NO ? mFrame : (mFrame = [self computeFrameQuad]); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDQuad) computeFrameQuad
+{ return WDQuadWithRect(self.sourceRect, self.sourceTransform); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) framePath
 {
 	return mFramePath != nil ? mFramePath :
-	(mFramePath = WDQuadCreateCGPath([self frameQuad]));
+	(mFramePath = WDQuadCreateCGPath(self.frameQuad));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGPoint) frameCenter
-{ return WDQuadGetCenter([self frameQuad]); }
+{ return WDQuadGetCenter(self.frameQuad); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -862,9 +928,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[self willChangePropertyForKey:WDFrameOptionsKey];
 
-	[[self styleOptions] applyScale:d];
-	[self setSize:WDScaleSize(mSize, d, d)];
-	[self setRotation:mRotation + 180.0*da/M_PI];
+	[self _applyScale:d];
+	[self _applyRotation:180.0*da/M_PI];
 
 	[self didChangePropertyForKey:WDFrameOptionsKey];
 }
@@ -893,33 +958,36 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[self willChangePropertyForKey:WDFrameOptionsKey];
 
-/*
-	If we ever want to support numeric transformations,
-	we need to limit our transforms to normal rotation, scale, and move.
-	
-	They currently are, attempt breaking it down.
-*/
-	// Test for rotation
-	if ((T.b != 0.0)||(T.c != 0.0))
+	[self _applyTransform:T];
+
+	[self didChangePropertyForKey:WDFrameOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyTransform:(CGAffineTransform)T
+{
+	if ((T.b!=0.0)||(T.c!=0.0))
 	{
 		double a = WDGetRotationFromTransform(T);
 		double degrees = WDDegreesFromRadians(a);
-		[self setRotation:mRotation + degrees];
+		[self _applyRotation:degrees];
 	}
 	else
-	// Test for scale
-	if ((T.a != 1.0)||(T.d != 1.0))
+	if ((T.a!=1.0)||(T.d!=1.0))
 	{
-		[self _applyScale:WDGetScaleFromTransform(T)];
+		CGVector v = WDGetScaleFromTransform(T);
+		CGFloat s = 0.5*(v.dx+v.dy);
+		[self _applyScale:s];
 	}
 
 	// Always move
 	CGPoint P = mPosition;
 	P = CGPointApplyAffineTransform(P, T);
 	[self setPosition:P];
-
-	[self didChangePropertyForKey:WDFrameOptionsKey];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (NSSet *) transform:(CGAffineTransform)transform
 { [self applyTransform:transform]; return nil; }
@@ -979,7 +1047,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) computeFrameBounds
-{ return CGRectApplyAffineTransform([self sourceRect], [self sourceTransform]); }
+{ return WDQuadGetBounds(self.frameQuad); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1038,6 +1106,51 @@ NSString *WDShadowKey = @"WDShadowKey";
 	mStyleBounds = CGRectNull;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/*
+- (CGRect) sourceStrokeBounds
+{
+	if (CGRectIsEmpty(mSourceStrokeBounds))
+	{ mSourceStrokeBounds = [self computeSourceStrokeBounds]; }
+	return mSourceStrokeBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeSourceStrokeBounds
+{
+	CGRect R = self.sourceRect;
+
+	if (self.strokeOptions != nil)
+	{ R = [self.strokeOptions resultAreaForRect:R]; }
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) resultStrokeBounds
+{
+	if (CGRectIsEmpty(mResultStrokeBounds))
+	{ mResultStrokeBounds = [self computeResultStrokeBounds]; }
+	return mResultStrokeBounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeResultStrokeBounds
+{
+	CGRect R = self.sourceStrokeBounds;
+	return CGRectApplyAffineTransform(R, self.sourceTransform);
+}
+*/
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark
+#pragma mark 
+#pragma mark 
+#pragma mark OLD
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) cacheDirtyBounds

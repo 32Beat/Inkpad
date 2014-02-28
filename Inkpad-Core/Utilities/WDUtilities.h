@@ -150,6 +150,7 @@ WDQuad WDQuadApplyTransform(WDQuad quad, CGAffineTransform T);
 
 //CGFloat WDQuadGetRotation(WDQuad quad);
 //CGSize WDQuadGetSize(WDQuad quad);
+CGRect WDQuadGetBounds(WDQuad quad);
 
 BOOL WDQuadIsNull(WDQuad Q);
 BOOL WDQuadEqualToQuad(WDQuad a, WDQuad b);

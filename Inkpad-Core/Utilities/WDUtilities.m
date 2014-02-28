@@ -119,14 +119,15 @@ void WDDrawCheckersInRect(CGContextRef ctx, CGRect dest, int size)
 
 void WDDrawTransparencyDiamondInRect(CGContextRef ctx, CGRect dest)
 {
-	float   minX = CGRectGetMinX(dest);
-	float   maxX = CGRectGetMaxX(dest);
-	float   minY = CGRectGetMinY(dest);
-	float   maxY = CGRectGetMaxY(dest);
+	float minX = CGRectGetMinX(dest);
+	float maxX = CGRectGetMaxX(dest);
+	float minY = CGRectGetMinY(dest);
+	float maxY = CGRectGetMaxY(dest);
 	
 	// preserve the existing color
 	CGContextSaveGState(ctx);
-	[[UIColor whiteColor] set];
+
+	CGContextSetFillColorWithColor(ctx, [UIColor whiteColor].CGColor);
 	CGContextFillRect(ctx, dest);
 	
 	CGMutablePathRef path = CGPathCreateMutable();
@@ -134,13 +135,13 @@ void WDDrawTransparencyDiamondInRect(CGContextRef ctx, CGRect dest)
 	CGPathAddLineToPoint(path, NULL, maxX, minY);
 	CGPathAddLineToPoint(path, NULL, minX, maxY);
 	CGPathCloseSubpath(path);
-	
-	[[UIColor blackColor] set];
 	CGContextAddPath(ctx, path);
-	CGContextFillPath(ctx);
-	CGContextRestoreGState(ctx);
-	
 	CGPathRelease(path);
+
+	CGContextSetFillColorWithColor(ctx, [UIColor blackColor].CGColor);
+	CGContextFillPath(ctx);
+
+	CGContextRestoreGState(ctx);
 }
 
 void WDContextDrawImageToFill(CGContextRef ctx, CGRect bounds, CGImageRef imageRef)
@@ -208,9 +209,14 @@ NSData * WDSHA1DigestForData(NSData *data)
 */
 CGFloat WDGetRotationFromTransform(CGAffineTransform T)
 {
-	double a1 = atan2(+T.b, +T.a);
-	double a2 = atan2(-T.c, +T.d);
-	return (CGFloat)(0.5*(a1+a2));
+	if ((T.b!=0.0)||(T.c!=0.0))
+	{
+		double a1 = atan2(+T.b, +T.a);
+		double a2 = atan2(-T.c, +T.d);
+		return (CGFloat)(0.5*(a1+a2));
+	}
+
+	return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -819,6 +825,40 @@ CGSize WDQuadGetSize(WDQuad quad)
 	CGPoint Y2 = WDAddPoints(quad.P[3], quad.P[2]);
 
 	return (CGSize){ 0.5*WDDistance(X1,X2), 0.5*WDDistance(Y1,Y2) };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline CGPoint CGPointMin(CGPoint a, CGPoint b)
+{ return (CGPoint){ MIN(a.x, b.x), MIN(a.y, b.y) }; }
+
+static inline CGPoint CGPointMax(CGPoint a, CGPoint b)
+{ return (CGPoint){ MAX(a.x, b.x), MAX(a.y, b.y) }; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGRect WDGetBoundsForPoints(const CGPoint *P, long n)
+{
+	CGPoint min = P[0];
+	CGPoint max = P[0];
+	while (--n != 0)
+	{
+		P += 1;
+		min = CGPointMin(min, *P);
+		max = CGPointMax(max, *P);
+	}
+
+	return (CGRect){ min.x, min.y, max.x-min.x, max.y-min.y };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+CGRect WDQuadGetBounds(WDQuad quad)
+{
+	const CGPoint *P = quad.P;
+	CGPoint min = CGPointMin(CGPointMin(P[0], P[1]), CGPointMin(P[2], P[3]));
+	CGPoint max = CGPointMax(CGPointMax(P[0], P[1]), CGPointMax(P[2], P[3]));
+	return (CGRect){ min.x, min.y, max.x-min.x, max.y-min.y };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

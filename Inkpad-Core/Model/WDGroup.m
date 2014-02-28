@@ -37,12 +37,106 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 {
 	[super decodeWithCoder:coder];
 	
-	elements_ = [coder decodeObjectForKey:WDGroupElementsKey];
+	[self setElements:[coder decodeObjectForKey:WDGroupElementsKey]];
+}
 
-	[elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
+////////////////////////////////////////////////////////////////////////////////
 
-	// have to do this since elements were not properly setting their groups prior to v1.3
-	[elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
+- (void) setElements:(NSMutableArray *)elements
+{
+	if (elements_ != elements)
+	{
+		elements_ = elements;
+		[elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
+		[self size];
+
+		[elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
+		[elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self.layer];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) copyPropertiesFrom:(WDGroup *)srcGroup
+{
+	[super copyPropertiesFrom:srcGroup];
+	[self setElements:
+	[[NSMutableArray alloc] initWithArray:[srcGroup elements] copyItems:YES]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) boundsForTransform:(CGAffineTransform)T
+{
+	CGRect R = CGRectNull;
+	for (WDElement *element in self.elements)
+	{
+		WDQuad Q = WDQuadApplyTransform(element.frameQuad, T);
+		R = CGRectUnion(R, WDQuadGetBounds(Q));
+	}
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) size
+{
+	if ((mSize.width == 0.0) &&
+		(mSize.height == 0.0))
+	{
+		CGRect R = [self frameBounds];
+		super.size = R.size;
+		super.position = WDCenterOfRect(R);
+	}
+
+	return mSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setSize:(CGSize)dstSize
+{
+	CGSize srcSize = self.size;
+	CGFloat sx = srcSize.width != 0.0 ? dstSize.width / srcSize.width : 1.0;
+	CGFloat sy = srcSize.height != 0.0 ? dstSize.height / srcSize.height : 1.0;
+	CGFloat scale = MIN(fabs(sx), fabs(sy));
+
+	CGPoint C = self.position;
+
+	for (WDElement *element in self.elements)
+	{ [element _applyScale:scale pivot:C]; }
+
+	// Flush cache
+	[super setSize:dstSize];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setPosition:(CGPoint)P
+{
+	CGVector delta =
+	{ P.x - self.position.x, P.y - self.position.y };
+
+	for (WDElement *element in self.elements)
+	{ [element _applyMove:delta]; }
+
+	[super setPosition:P];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setRotation:(CGFloat)degrees
+{
+	CGFloat delta = degrees - self.rotation;
+	CGPoint C = self.position;
+
+	for (WDElement *element in self.elements)
+	{ [element _applyRotation:delta pivot:C]; }
+
+	[super setRotation:degrees];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,40 +176,28 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 		[element adjustColor:adjustment scope:scope];
 	}
 }
-
+/*
 - (NSSet *) transform:(CGAffineTransform)transform
 {
 	for (WDElement *element in elements_)
 	{ [element transform:transform]; }
 
-	return nil;
+	return [super transform:transform];
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setElements:(NSMutableArray *)elements
-{
-	elements_ = elements;
-	
-	[elements_ makeObjectsPerformSelector:@selector(setOwner:) withObject:self];
-
-	[elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:self];
-	[elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:self.layer];
-}
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setLayer:(WDLayer *)layer
 {
 	[super setLayer:layer];    
-	[elements_ makeObjectsPerformSelector:@selector(setLayer:) withObject:layer];
+	[self.elements makeObjectsPerformSelector:@selector(setLayer:) withObject:layer];
 }    
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) renderOutline:(const WDRenderContext *)renderContext
 {
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ [element renderOutline:renderContext]; }
 }
 
@@ -125,7 +207,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 {
 	[self beginTransparencyLayer:renderContext->contextRef];
 
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ [element renderContent:renderContext]; }
 
 	[self endTransparencyLayer:renderContext->contextRef];
@@ -137,7 +219,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 {
 	[self beginTransparencyLayer:ctx];
 
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ [element renderInContext:ctx metaData:metaData]; }
 
 	[self endTransparencyLayer:ctx];
@@ -147,7 +229,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 - (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ [element outlineInContext:ctx metaData:metaData]; }
 }
 
@@ -159,8 +241,20 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 {
 	CGRect bounds = CGRectNull;
 
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ bounds = CGRectUnion([element bounds], bounds); }
+
+	return bounds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) computeFrameBounds
+{
+	CGRect bounds = CGRectNull;
+
+	for (WDElement *element in self.elements)
+	{ bounds = CGRectUnion([element frameBounds], bounds); }
 
 	return bounds;
 }
@@ -171,7 +265,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 {
 	CGRect bounds = CGRectNull;
 
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ bounds = CGRectUnion([element styleBounds], bounds); }
 
 	return bounds;
@@ -184,7 +278,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 	CGRect R = CGRectNull;
 
 	// Combine result bounds of elements
-	for (WDElement *element in elements_)
+	for (WDElement *element in self.elements)
 	{ R = CGRectUnion([element styleBounds], R); }
 
 	// Add expansion for shadow
@@ -213,9 +307,9 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 
 
-- (BOOL) intersectsRect:(CGRect)rect
+- (BOOL) contentIntersectsRect:(CGRect)rect
 {
-	for (WDElement *element in [elements_ reverseObjectEnumerator]) {
+	for (WDElement *element in [self.elements reverseObjectEnumerator]) {
 		if ([element intersectsRect:rect]) {
 			return YES;
 		}
@@ -228,7 +322,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 - (void) glDrawContentWithTransform:(CGAffineTransform)T
 {
-	for (WDElement *object in elements_)
+	for (WDElement *object in self.elements)
 	{ [object glDrawContentWithTransform:T]; }
 }
 
@@ -362,14 +456,5 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 	return group;
 }
 
-- (id) copyWithZone:(NSZone *)zone
-{
-	WDGroup *group = [super copyWithZone:zone];
-	
-	group->elements_ = [[NSMutableArray alloc] initWithArray:elements_ copyItems:YES];
-	[group->elements_ makeObjectsPerformSelector:@selector(setGroup:) withObject:group];
-	
-	return group;
-}
 
 @end

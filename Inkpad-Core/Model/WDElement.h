@@ -324,6 +324,14 @@ typedef enum {
 - (void) flushCache;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) _applyMove:(CGVector)move;
+- (void) _applyScale:(CGFloat)scale;
+- (void) _applyScale:(CGFloat)scale pivot:(CGPoint)C;
+- (void) _applyRotation:(CGFloat)degrees;
+- (void) _applyRotation:(CGFloat)degrees pivot:(CGPoint)C;
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Styling
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,7 +353,11 @@ typedef enum {
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	frameRect = size+position, not rotation
+	frameQuad = size+position+rotation
+	frameBounds = bounds of frameQuad
+*/
 //- (WDQuad) frame;
 //- (void) setFrame:(WDQuad)frame;
 
@@ -373,7 +385,7 @@ typedef enum {
 - (void) setTransform:(CGAffineTransform)T;
 - (void) setTransform:(CGAffineTransform)T sourceRect:(CGRect)sourceRect;
 
-
+- (void) _applyTransform:(CGAffineTransform)T;
 
 
 

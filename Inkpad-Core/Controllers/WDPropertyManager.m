@@ -175,8 +175,8 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 
 	// Send out invalidProperties_
 	[[NSNotificationCenter defaultCenter]
-	postNotificationName:WDInvalidPropertiesNotification
-	object:self userInfo:@{WDInvalidPropertiesKey : invalidProperties_}];
+		postNotificationName:WDInvalidPropertiesNotification
+		object:self userInfo:@{WDInvalidPropertiesKey : invalidProperties_}];
 
 	// Reset invalid properties
 	invalidProperties_ = [NSMutableSet new];
@@ -229,7 +229,8 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 		
 		[NSObject cancelPreviousPerformRequestsWithTarget:self
 		selector:@selector(invalidateProperties:) object:nil];
-		[self performSelector:@selector(invalidateProperties:) withObject:nil afterDelay:0];
+		[self performSelector:@selector(invalidateProperties:)
+		withObject:nil afterDelay:0];
 	}
 }
 
@@ -247,15 +248,14 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 {
 	static NSSet *shadowProperties = nil;
 	
-	if (!shadowProperties) {
-		shadowProperties = [NSSet setWithObjects:
+	if (!shadowProperties)
+	{ shadowProperties = [NSSet setWithObjects:
 			WDOpacityProperty,
 			WDShadowColorProperty,
 			WDShadowAngleProperty,
 			WDShadowOffsetProperty,
 			WDShadowRadiusProperty,
-			WDShadowVisibleProperty, nil];
-	}
+			WDShadowVisibleProperty, nil]; }
 	
 	return [shadowProperties containsObject:property];
 }
@@ -264,17 +264,28 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 {
 	static NSSet *strokeProperties = nil;
 	
-	if (!strokeProperties) {
-		strokeProperties = [NSSet setWithObjects:WDStrokeColorProperty, WDStrokeCapProperty, WDStrokeJoinProperty,
-							WDStrokeWidthProperty, WDStrokeVisibleProperty, WDStrokeDashPatternProperty,
-							WDStartArrowProperty, WDEndArrowProperty, nil];
-	}
+	if (!strokeProperties)
+	{ strokeProperties = [NSSet setWithObjects:
+			WDStrokeColorProperty,
+			WDStrokeCapProperty,
+			WDStrokeJoinProperty,
+			WDStrokeWidthProperty,
+			WDStrokeVisibleProperty,
+			WDStrokeDashPatternProperty,
+			WDStartArrowProperty,
+			WDEndArrowProperty, nil]; }
 	
 	return [strokeProperties containsObject:property];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) defaultValueForProperty:(id)key
+{ return [mCachedDefaults valueForKey:key]; }
+
 - (void) setDefaultValue:(id)value forProperty:(NSString *)property
 {
+	// Only save valid entries
 	if ((property != nil)&&(value != nil))
 	{ mCachedDefaults[property] = value; }
 
@@ -291,15 +302,9 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	[[NSNotificationCenter defaultCenter]
 		postNotificationName:prop2note[property]
 		object:self userInfo:nil];
-	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (id) defaultValueForProperty:(id)key
-{
-	return [mCachedDefaults valueForKey:key];
-}
 
 - (id) activeValueForKey:(id)key
 {
@@ -307,7 +312,6 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 	{ return [self.drawingController.singleSelection valueForProperty:key]; }
 	return [self defaultValueForProperty:key];
 }
-
 
 - (WDFillOptions *) activeFillOptions
 { return [self activeValueForKey:WDFillOptionsKey]; }
@@ -333,29 +337,9 @@ NSString *WDInvalidPropertiesKey = @"WDInvalidPropertiesKey";
 - (WDBlendOptions *)defaultBlendOptions
 { return [self defaultValueForProperty:WDBlendOptionsKey]; }
 
-
-
-/*
-- (id<WDPathPainter>) activeFillStyle
-{
-	id value = [self defaultValueForProperty:WDFillProperty];
-	
-	if ([value isEqual:[NSNull null]]) {
-		return nil;
-	}
-	
-	return value;
-}
-
-- (id<WDPathPainter>) defaultFillStyle
-{
-	id value = [self defaultValueForProperty:WDFillProperty];
-	
-	if ([value isEqual:[NSNull null]]) {
-		return nil;
-	}
-	
-	return value;
-}
-*/
+////////////////////////////////////////////////////////////////////////////////
 @end
+////////////////////////////////////////////////////////////////////////////////
+
+
+
