@@ -140,42 +140,9 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
-- (void) tossCachedColorAdjustmentData
-{
-	[super tossCachedColorAdjustmentData];
-	[self.elements makeObjectsPerformSelector:@selector(tossCachedColorAdjustmentData)];
-}
-
-- (void) restoreCachedColorAdjustmentData
-{
-	[super restoreCachedColorAdjustmentData];
-	[self.elements makeObjectsPerformSelector:@selector(restoreCachedColorAdjustmentData)];
-}
-
-- (void) registerUndoWithCachedColorAdjustmentData
-{
-	[super registerUndoWithCachedColorAdjustmentData];
-	[self.elements makeObjectsPerformSelector:@selector(registerUndoWithCachedColorAdjustmentData)];
-}
-
-- (BOOL) canAdjustColor
-{
-	for (WDElement *element in elements_) {
-		if ([element canAdjustColor]) {
-			return YES;
-		}
-	}
-	
-	return [super canAdjustColor];
-}
-
-- (void) adjustColor:(WDColor * (^)(WDColor *color))adjustment scope:(WDColorAdjustmentScope)scope
-{
-	for (WDElement *element in self.elements) {
-		[element adjustColor:adjustment scope:scope];
-	}
-}
 /*
 - (NSSet *) transform:(CGAffineTransform)transform
 {
@@ -211,26 +178,6 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 	{ [element renderContent:renderContext]; }
 
 	[self endTransparencyLayer:renderContext->contextRef];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
-{
-	[self beginTransparencyLayer:ctx];
-
-	for (WDElement *element in self.elements)
-	{ [element renderInContext:ctx metaData:metaData]; }
-
-	[self endTransparencyLayer:ctx];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
-{
-	for (WDElement *element in self.elements)
-	{ [element outlineInContext:ctx metaData:metaData]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,6 +401,43 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 	}
 	
 	return group;
+}
+
+
+- (void) tossCachedColorAdjustmentData
+{
+	[super tossCachedColorAdjustmentData];
+	[self.elements makeObjectsPerformSelector:@selector(tossCachedColorAdjustmentData)];
+}
+
+- (void) restoreCachedColorAdjustmentData
+{
+	[super restoreCachedColorAdjustmentData];
+	[self.elements makeObjectsPerformSelector:@selector(restoreCachedColorAdjustmentData)];
+}
+
+- (void) registerUndoWithCachedColorAdjustmentData
+{
+	[super registerUndoWithCachedColorAdjustmentData];
+	[self.elements makeObjectsPerformSelector:@selector(registerUndoWithCachedColorAdjustmentData)];
+}
+
+- (BOOL) canAdjustColor
+{
+	for (WDElement *element in elements_) {
+		if ([element canAdjustColor]) {
+			return YES;
+		}
+	}
+	
+	return [super canAdjustColor];
+}
+
+- (void) adjustColor:(WDColor * (^)(WDColor *color))adjustment scope:(WDColorAdjustmentScope)scope
+{
+	for (WDElement *element in self.elements) {
+		[element adjustColor:adjustment scope:scope];
+	}
 }
 
 

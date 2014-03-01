@@ -269,7 +269,33 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	return (suppressNotifications_ > 0) ? YES : NO;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Undo Management
+////////////////////////////////////////////////////////////////////////////////
+
+- (NSUndoManager *)undoManager
+{ return undoManager_ ? undoManager_ : (undoManager_ = [NSUndoManager new]); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) saveStateForElement:(WDElement *)element
+{
+	[[self.undoManager prepareWithInvocationTarget:self]
+		restoreState:[element copy] forElement:element];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) restoreState:(WDElement *)srcElement forElement:(WDElement *)dstElement
+{
+	[self saveStateForElement:dstElement];
+	[dstElement copyPropertiesFrom:srcElement];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Drawing Attributes
+////////////////////////////////////////////////////////////////////////////////
 
 // return all the elements in the drawing
 - (NSArray *) allElements

@@ -443,8 +443,8 @@ NSArray *tokenizeStyle(NSString *source)
     // apply text attributes
     if ([stylable isKindOfClass:[WDText class]]) {
         WDText *text = (WDText *) stylable;
-        [text setFontNameQuiet:[self fontName]];
-        [text setFontSizeQuiet:[self fontSize]];
+        [text setFontName:[self fontName]];
+        [text setFontSize:[self fontSize]];
         styleLog(@"Font: %@ %f", text.fontName, text.fontSize);
     } else if ([stylable isKindOfClass:[WDTextPath class]]) {
         WDTextPath *textPath = (WDTextPath *) stylable;

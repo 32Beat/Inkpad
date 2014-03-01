@@ -179,7 +179,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 - (void) __selectWithEvent:(WDEvent *)event inCanvas:(WDCanvas *)canvas
 {
 	WDDrawingController *controller = canvas.drawingController;
@@ -322,7 +322,7 @@
 		objectWasSelected_ = [controller isSelected:result.element];
 	}
 }
-
+*/
 
 /*
 	If touching air, start marque mode,

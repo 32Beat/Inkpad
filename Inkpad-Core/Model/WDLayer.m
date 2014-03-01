@@ -362,14 +362,16 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 - (void)element:(WDElement*)element willChangePropertyForKey:(id)propertyKey
 {
-	[[self refreshRects] addObject:
-	[NSValue valueWithCGRect:[element renderBounds]]];
+	[[self refreshRects] addObject:self.drawing.outlineMode?
+	[NSValue valueWithCGRect:element.frameBounds]:
+	[NSValue valueWithCGRect:element.renderBounds]];
 }
 
 - (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey
 {
-	[[self refreshRects] addObject:
-	[NSValue valueWithCGRect:[element renderBounds]]];
+	[[self refreshRects] addObject:self.drawing.outlineMode?
+	[NSValue valueWithCGRect:element.frameBounds]:
+	[NSValue valueWithCGRect:element.renderBounds]];
 
 	NSDictionary *userInfo = @{@"rects" : mRefreshRects };
 	[[NSNotificationCenter defaultCenter]

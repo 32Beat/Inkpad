@@ -313,7 +313,14 @@ typedef enum {
 #pragma mark -
 #pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
+	Fundamental properties for any drawable object. 
+	These are assumed to be desired result properties in userspace.
+	Note that some affine transformations can not be represented. 
+	
+	Scale is determined by the ratio between size and sourceSize, 
+	sourceSize defaults to equal size.
+*/
 - (CGSize) size;
 - (void) setSize:(CGSize)size;
 - (CGPoint) position;

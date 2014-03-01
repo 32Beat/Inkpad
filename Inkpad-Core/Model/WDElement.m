@@ -144,6 +144,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[[self styleOptions] copyPropertiesFrom:[srcElement styleOptions]];
 
+	[self flushCache];
 	// mOwner/editmode ?
 }
 
@@ -636,7 +637,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 	// Prepare composite options
 	[[self blendOptions] prepareCGContext:context];
 	[[self shadowOptions] prepareCGContext:context scale:scale flipped:flipped];
-//		scale:scale*[self resizeScale]];
 
 	// If necessary create transparencyLayer for composite
 	if ([self needsTransparencyLayer])
@@ -914,7 +914,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	CGPoint P0 = [self frameControlPointAtIndex:n];
 	CGPoint P1 = WDAddPoints(P0, delta);
 
-	CGPoint C = mPosition;
+	CGPoint C = self.position;
 	CGPoint D0 = WDSubtractPoints(P0,C);
 	CGPoint D1 = WDSubtractPoints(P1,C);
 
@@ -976,8 +976,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	else
 	if ((T.a!=1.0)||(T.d!=1.0))
 	{
-		CGVector v = WDGetScaleFromTransform(T);
-		CGFloat s = 0.5*(v.dx+v.dy);
+		CGFloat s = WDGetScaleFromTransform(T);
 		[self _applyScale:s];
 	}
 
@@ -1081,6 +1080,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) outlineBounds
+{ return self.frameBounds; }
 
 - (CGRect) renderBounds
 {

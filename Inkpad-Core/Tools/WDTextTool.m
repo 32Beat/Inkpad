@@ -53,7 +53,7 @@
 	if (self.moved)
 	{
 		CGRect placedRect = WDRectWithPoints(self.initialEvent.snappedLocation, event.snappedLocation);
-		placedRect.size.width = MAX([WDText minimumWidth], placedRect.size.width);
+		placedRect.size.width = MAX(20.0, placedRect.size.width);
 		
 		textObj = [canvas.drawingController createTextObjectInRect:placedRect];
 		[canvas.controller editTextObject:textObj selectAll:YES];

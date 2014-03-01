@@ -322,8 +322,8 @@
     WDText *text = [[WDText alloc] init];
     text.alignment = alignment;
     // Temporarily give it some text and adequate width for correct height calculation.
-    [text setTextQuiet:@"X"];
-    [text setWidthQuiet:state_.viewport.size.width];
+    [text setText:@"X"];
+    [text setWidth:state_.viewport.size.width];
     [styleParser_ style:text];
 
     CGMutablePathRef path = CGPathCreateMutable();
@@ -342,8 +342,8 @@
 
     CGAffineTransform translate = CGAffineTransformMakeTranslation(x, y - (bounds.size.height - origins[0].y));
     CGAffineTransform position = CGAffineTransformRotate(translate, r / 180 * M_PI);
-    [text setTransformQuiet:CGAffineTransformConcat(position, state_.transform)];
-    [text setTextQuiet:@""]; // clear before collecting actual text
+    [text setTransform:CGAffineTransformConcat(position, state_.transform)];
+    [text setText:@""]; // clear before collecting actual text
     WDElement *clippedText = [self clipAndGroup:text];
     
     CFRelease(frame);
@@ -779,9 +779,9 @@
     NSString *inkpadText = [state_ attribute:@"inkpad:text"];
     if (inkpadText && [state_.wdElement isKindOfClass:[WDText class]]) {
         WDText *text = (WDText *) state_.wdElement;
-        [text setTextQuiet:inkpadText];
+        [text setText:inkpadText];
         CGPoint coords = [state_ x:@"x" y:@"y"];
-        [text setTransformQuiet:CGAffineTransformConcat(CGAffineTransformMakeTranslation(coords.x, coords.y), state_.transform)];
+        [text setTransform:CGAffineTransformConcat(CGAffineTransformMakeTranslation(coords.x, coords.y), state_.transform)];
         float textLength = [state_ length:@"inkpad:width" withBound:[state_ viewWidth] andDefault:drawing_.width];
         [text setWidth:textLength];
         [state_.group removeAllObjects]; // no need for elements created by <tspan> children
@@ -791,13 +791,13 @@
         state_.wdElement = nil;
     } else if ([state_.wdElement isKindOfClass:[WDText class]]) {
         WDText *text = (WDText *) state_.wdElement;
-        [text setTextQuiet:svgtext];
+        [text setText:svgtext];
         float textLength = [state_ length:@"textLength" withBound:[state_ viewWidth] andDefault:NAN];
         if (isnan(textLength)) {
             CGSize naturalSize = [text.text sizeWithCTFont:text.fontRef constrainedToSize:CGSizeMake(MAXFLOAT, MAXFLOAT)];
             textLength = naturalSize.width;
         }
-        [text setWidthQuiet:textLength];
+        [text setWidth:textLength];
         switch (text.alignment) {
             case NSTextAlignmentLeft:
                 // leave it where it is
@@ -816,11 +816,11 @@
         int count = (int) [group.elements count];
         for (int i = 0; (i < count - 1) && (i < [svgtext length]); ++i) {
             WDText *text = (group.elements)[i];
-            [text setTextQuiet:[svgtext substringWithRange:NSMakeRange(i, 1)]];
+            [text setText:[svgtext substringWithRange:NSMakeRange(i, 1)]];
         }
         if (count - 1 < [svgtext length]) {
             WDText *text = [group.elements lastObject];
-            [text setTextQuiet:[svgtext substringFromIndex:(count - 1)]];
+            [text setText:[svgtext substringFromIndex:(count - 1)]];
         }
     }
 }

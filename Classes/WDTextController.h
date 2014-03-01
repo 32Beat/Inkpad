@@ -14,10 +14,15 @@
 @class WDText;
 @class WDCanvasController;
 
-@interface WDTextController : UIViewController <UITextViewDelegate> {
-    IBOutlet UITextView             *text_;
+@interface WDTextController : UIViewController <UITextViewDelegate>
+{
+    IBOutlet UITextView *text_;
+
+	NSString *mSavedString;
 }
+
 @property (nonatomic, weak) WDText *editingObject;
+
 @property (nonatomic, weak) WDCanvasController *canvasController;
 
 - (void) configureWithTextObject:(WDText *)text;
