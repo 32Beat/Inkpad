@@ -500,6 +500,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) _applyRotation:(CGFloat)degrees
+{ [self setRotation:self.rotation+degrees]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) _applyScale:(CGFloat)scale pivot:(CGPoint)C
 {
 	CGPoint P = self.position;
@@ -509,11 +514,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 	[self _applyScale:scale];
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) _applyRotation:(CGFloat)degrees
-{ [self setRotation:self.rotation+degrees]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -528,7 +528,47 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
+- (void) applyScale:(CGFloat)scale pivot:(CGPoint)C
+{
+	[self willChangePropertyForKey:WDFrameOptionsKey];
+	[self _applyScale:scale pivot:C];
+	[self didChangePropertyForKey:WDFrameOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) applyRotation:(CGFloat)degrees pivot:(CGPoint)C
+{
+	[self willChangePropertyForKey:WDFrameOptionsKey];
+	[self _applyRotation:degrees pivot:C];
+	[self didChangePropertyForKey:WDFrameOptionsKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) scaleSize:(CGVector)scale pivot:(CGPoint)C
+{
+	if ((scale.dx != 0.0)&&(scale.dy != 0.0))
+	{
+		scale.dx = fabs(scale.dx);
+		scale.dy = fabs(scale.dy);
+
+		[self willChangePropertyForKey:WDFrameOptionsKey];
+
+		CGSize size = self.size;
+		size.width *= scale.dx;
+		size.height = scale.dy;
+		self.size = size;
+
+		CGFloat s = sqrt(0.5*(scale.dx*scale.dx+scale.dy*scale.dy));
+		[self.styleOptions applyScale:s];
+
+		[self didChangePropertyForKey:WDFrameOptionsKey];
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

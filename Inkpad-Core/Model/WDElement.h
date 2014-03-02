@@ -315,7 +315,7 @@ typedef enum {
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	Fundamental properties for any drawable object. 
-	These are assumed to be desired result properties in userspace.
+	These are assumed to be the intended result properties in userspace.
 	Note that some affine transformations can not be represented. 
 	
 	Scale is determined by the ratio between size and sourceSize, 
@@ -326,17 +326,43 @@ typedef enum {
 - (CGPoint) position;
 - (void) setPosition:(CGPoint)point;
 - (CGFloat) rotation;
-- (void) setRotation:(CGFloat)rotation;
+- (void) setRotation:(CGFloat)degrees;
 
+/*
+	If any of the fundamental properties change, then dependent 
+	cached parameters will be reset by a call to flushCache
+*/
 - (void) flushCache;
 
 ////////////////////////////////////////////////////////////////////////////////
+/* 
+	Following calls map to fundamental property changes
+	The "_apply" functions with undercast are silent and 
+	will not report ...ChangePropertyForKey messages.
+*/
 
 - (void) _applyMove:(CGVector)move;
 - (void) _applyScale:(CGFloat)scale;
 - (void) _applyScale:(CGFloat)scale pivot:(CGPoint)C;
 - (void) _applyRotation:(CGFloat)degrees;
 - (void) _applyRotation:(CGFloat)degrees pivot:(CGPoint)C;
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	The "apply" functions will report WDFrameOptionsKey change 
+	messages to owner. These are the functions that should be used 
+	by the scale and rotate transform tool.
+*/
+- (void) applyScale:(CGFloat)scale pivot:(CGPoint)C;
+- (void) applyRotation:(CGFloat)degrees pivot:(CGPoint)C;
+
+/*
+	To facilitate asymmetrical resizing, the following call 
+	can be used. Note however that by default the style properties 
+	(like strokeLineWidth and shadowOffset) will be resized as well, 
+	but they only resize by a single scaleFactor.
+*/
+- (void) scaleSize:(CGVector)scale pivot:(CGPoint)C;
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
