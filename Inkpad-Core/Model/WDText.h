@@ -27,6 +27,9 @@
 /*
 	Since Apple seems confused about its alignment, 
 	might as well define a proper set, so we only have to translate once.
+	
+	Note that we will eventually introduce WDTextOptions & WDFontOptions 
+	where this should also find its place...
 */
 
 typedef enum WDTextAlignment
@@ -54,7 +57,6 @@ WDTextAlignment;
 	NSString            *fontName_;
 	float               fontSize_;
 	
-	CTFontRef           fontRef_;
 	CGMutablePathRef    pathRef_;
 	
 	BOOL                needsLayout_;
@@ -74,10 +76,11 @@ WDTextAlignment;
 @property (nonatomic, assign) CGAffineTransform transform;
 @property (nonatomic, assign) WDTextAlignment alignment;
 @property (nonatomic, readonly) CGRect naturalBounds;
-@property (nonatomic, readonly) CTFontRef fontRef;
+//@property (nonatomic, readonly) CTFontRef fontRef;
 @property (nonatomic, readonly, strong) NSAttributedString *attributedString;
 
 
+- (CGFloat) width;
 - (void) setWidth:(CGFloat)width;
 
 - (void) registerUndoWithCachedTransformAndWidth;

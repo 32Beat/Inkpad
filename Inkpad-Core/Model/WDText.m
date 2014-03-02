@@ -46,6 +46,16 @@ NSString *WDWidthKey = @"WDWidthKey";
 NSString *const WDTextStringKey = @"WDTextString";
 NSString *const WDTextAlignmentKey = @"WDTextAlignment";
 
+@interface WDText()
+{
+	CTFontRef 			_fontRef;
+	CTFramesetterRef 	_frameSetter;
+}
+
+- (CTFramesetterRef) frameSetter;
+@end
+
+
 @interface WDText (Private)
 - (void) invalidate;
 - (void) invalidatePreservingAttributedString:(BOOL)flag;
@@ -191,6 +201,33 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) setFontName:(NSString *)fontName
+{
+	if (fontName_ != fontName)
+	{
+		[self willChangePropertyForKey:WDFontNameKey];
+		fontName_ = fontName;
+		[self flushFontRef];
+		[self flushCache];
+		[self didChangePropertyForKey:WDFontNameKey];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setFontSize:(float)size
+{
+	if (fontSize_ != size)
+	{
+		[self willChangePropertyForKey:WDFontSizeKey];
+		fontSize_ = size;
+		[self flushFontRef];
+		[self flushCache];
+		[self willChangePropertyForKey:WDFontSizeKey];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 + (float) minimumWidth
 {
@@ -199,13 +236,21 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 
 - (CTFontRef) fontRef
 {
-	if (fontRef_ == nil)
+	if (_fontRef == nil)
 	{
-		fontRef_ = [[WDFontManager sharedInstance]
+		_fontRef = [[WDFontManager sharedInstance]
 		newFontRefForFont:fontName_ withSize:fontSize_ provideDefault:YES];
 	}
 	
-	return fontRef_;
+	return _fontRef;
+}
+
+
+- (void) flushFontRef
+{
+	if (_fontRef != nil)
+	{ CFRelease(_fontRef); }
+	_fontRef = nil;
 }
 
 /*
@@ -229,19 +274,30 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 
 - (CGSize) suggestedSizeForWidth:(CGFloat)width
 {
-	CTFramesetterRef framesetter =
-	CTFramesetterCreateWithAttributedString((CFAttributedStringRef) self.attributedString);
+	CTFramesetterRef frameSetter = self.frameSetter;
+	if (frameSetter != nil)
+	{
+		// compute size
+		CFRange fitRange;
+		return CTFramesetterSuggestFrameSizeWithConstraints
+		(frameSetter, CFRangeMake(0, 0), NULL,
+		CGSizeMake(width, CGFLOAT_MAX), &fitRange);
+	}
 
-	// compute size
-	CFRange fitRange;
-	CGSize suggestedSize =
-	CTFramesetterSuggestFrameSizeWithConstraints
-	(framesetter, CFRangeMake(0, 0), NULL, CGSizeMake(width, CGFLOAT_MAX), &fitRange);
+	return (CGSize){ width, width };
+}
 
-	// clean up
-	CFRelease(framesetter);
+////////////////////////////////////////////////////////////////////////////////
 
-	return suggestedSize;
+- (CTFramesetterRef) frameSetter
+{
+	if (_frameSetter == nil)
+	{
+		_frameSetter = CTFramesetterCreateWithAttributedString
+		((CFAttributedStringRef)self.attributedString);
+	}
+
+	return _frameSetter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,15 +323,11 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 {
 	CTFrameRef frameRef = nil;
 
-	CTFramesetterRef frameSetter =
-	CTFramesetterCreateWithAttributedString
-	((CFAttributedStringRef)self.attributedString);
-
+	CTFramesetterRef frameSetter = self.frameSetter;
 	if (frameSetter != nil)
 	{
 		frameRef = CTFramesetterCreateFrame
 		(frameSetter, CFRangeMake(0, 0), path, NULL);
-		CFRelease(frameSetter);
 	}
 
 	return frameRef;
@@ -286,12 +338,27 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 - (void) flushCache
 {
 	[super flushCache];
+	attributedString = nil;
+	[self flushTextPath];
+	[self flushFrameSetter];
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushTextPath
+{
 	if (mTextPath != nil)
 	{ CGPathRelease(mTextPath); }
 	mTextPath = nil;
+}
 
-	attributedString = nil;
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushFrameSetter
+{
+	if (_frameSetter != nil)
+	{ CFRelease(_frameSetter); }
+	_frameSetter = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,15 +494,7 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) dealloc
 {
-	if (pathRef_) {
-		CGPathRelease(pathRef_);
-		pathRef_ = NULL;
-	}
-	
-	if (fontRef_) {
-		CFRelease(fontRef_);
-		fontRef_ = NULL;
-	}
+	[self flushFontRef];
 }
 
 - (BOOL) containsPoint:(CGPoint)pt
@@ -598,52 +657,6 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 }
 
 
-
-- (void) setFontNameQuiet:(NSString *)fontName
-{
-	fontName_ = fontName;
-	
-	if (fontRef_) {
-		CFRelease(fontRef_);
-		fontRef_ = NULL;
-	}
-}
-
-- (void) setFontName:(NSString *)fontName
-{
-	[self cacheDirtyBounds];
-	
-	[[self.undoManager prepareWithInvocationTarget:self] setFontName:fontName_];
-
-	[self setFontNameQuiet:fontName];
-	
-	[self invalidate];
-	
-	[self propertiesChanged:[NSSet setWithObjects:WDFontNameProperty, nil]];
-}
-
-- (void) setFontSizeQuiet:(float)size
-{
-	fontSize_ = size;
-	
-	if (fontRef_) {
-		CFRelease(fontRef_);
-		fontRef_ = NULL;
-	}
-}
-
-- (void) setFontSize:(float)size
-{
-	[self cacheDirtyBounds];
-	
-	[(WDText *)[self.undoManager prepareWithInvocationTarget:self] setFontSize:fontSize_];
-
-	[self setFontSizeQuiet:size];
-	
-	[self invalidate];
-	
-	[self propertiesChanged:[NSSet setWithObjects:WDFontSizeProperty, nil]];
-}
 
 
 - (NSSet *) inspectableProperties
@@ -1034,7 +1047,7 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 		CFAttributedStringReplaceString
 		(attrString, CFRangeMake(0, 0), (CFStringRef)text_);
 		CFAttributedStringSetAttribute
-		(attrString, CFRangeMake(0, self.text.length), kCTFontAttributeName, [self fontRef]);
+		(attrString, CFRangeMake(0, self.text.length), kCTFontAttributeName, self.fontRef);
 		
 		// paint with the foreground color
 		CFAttributedStringSetAttribute(attrString, CFRangeMake(0, CFStringGetLength((CFStringRef)text_)), kCTForegroundColorFromContextAttributeName, kCFBooleanTrue);

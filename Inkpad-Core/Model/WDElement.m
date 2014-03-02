@@ -469,11 +469,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	mTransform.d = 0.0;
 
 	// Reset dependencies
-	mFrame = WDQuadNull;
-	if (mFramePath != nil)
-	{ CGPathRelease(mFramePath); }
-	mFramePath = nil;
-
+	[self flushFrame];
 	[self flushBounds];
 
 	mTransparency = -1;
@@ -598,6 +594,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (void) setFillOptions:(WDFillOptions *)fillOptions
 { [[self styleOptions] setFillOptions:fillOptions]; }
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	Element may be owner of elements, such as WDGroup/WDCompoundPath
@@ -807,6 +805,16 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushFrame
+{
+	[self flushFrameQuad];
+	[self flushFramePath];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) frameRect
 {
@@ -836,11 +844,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) framePath
-{
-	return mFramePath != nil ? mFramePath :
-	(mFramePath = WDQuadCreateCGPath(self.frameQuad));
-}
+- (void) flushFrameQuad
+{ mFrame = WDQuadNull; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1040,6 +1045,13 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) flushFrameBounds
+{ mFrameBounds = CGRectNull; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) styleBounds
 {
 	if (CGRectIsEmpty(mStyleBounds))
@@ -1071,6 +1083,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) flushStyleBounds
+{ mStyleBounds = CGRectNull; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) outlineBounds
 { return self.frameBounds; }
 
@@ -1094,8 +1111,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) flushBounds
 {
-	mFrameBounds = CGRectNull;
-	mStyleBounds = CGRectNull;
+	[self flushFrameBounds];
+	[self flushStyleBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1247,7 +1264,32 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark Path Management
 ////////////////////////////////////////////////////////////////////////////////
 
-//- (CGPathRef) framePath
+- (CGPathRef) framePath
+{
+	return mFramePath != nil ? mFramePath :
+	(mFramePath = [self createFramePath]);
+//	(mFramePath = WDQuadCreateCGPath(self.frameQuad));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) createFramePath
+{
+	CGRect R = self.sourceRect;
+	CGAffineTransform T = self.sourceTransform;
+	return CGPathCreateWithRect(R, &T);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) flushFramePath
+{
+	if (mFramePath != nil)
+	{ CGPathRelease(mFramePath); }
+	mFramePath = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) contentPath
 { return self.framePath; }

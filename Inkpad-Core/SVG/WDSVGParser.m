@@ -794,8 +794,8 @@
         [text setText:svgtext];
         float textLength = [state_ length:@"textLength" withBound:[state_ viewWidth] andDefault:NAN];
         if (isnan(textLength)) {
-            CGSize naturalSize = [text.text sizeWithCTFont:text.fontRef constrainedToSize:CGSizeMake(MAXFLOAT, MAXFLOAT)];
-            textLength = naturalSize.width;
+           // CGSize naturalSize = [text.text sizeWithCTFont:text.fontRef constrainedToSize:CGSizeMake(MAXFLOAT, MAXFLOAT)];
+            textLength = text.width;
         }
         [text setWidth:textLength];
         switch (text.alignment) {

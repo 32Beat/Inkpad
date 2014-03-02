@@ -68,6 +68,11 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGPathRef) contentPath
 { return self.resultPath; }
 
@@ -113,7 +118,7 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 - (CGRect) computeResultStrokeBounds
 {
 	CGRect R = self.strokeOptions != nil ?
-	[self.strokeOptions resultAreaForPath:[self resultPath] scale:1.0]:
+	[self.strokeOptions resultAreaForPath:[self resultPath]]:
 	[self frameBounds];
 
 	return R;
@@ -129,7 +134,7 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 	CGRect R = [self frameBounds];
 
 	if (self.strokeOptions != nil)
-	{ R = [self.strokeOptions resultAreaForPath:[self resultPath] scale:1.0]; }
+	{ R = [self.strokeOptions resultAreaForPath:[self resultPath]]; }
 
 	if (self.shadowOptions != nil)
 	{ R = [self.shadowOptions resultAreaForRect:R]; }
@@ -141,29 +146,15 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 - (void) flushCache
 {
-	[super flushCache];
-
-	mSourceStrokeBounds = CGRectZero;
-	mResultStrokeBounds = CGRectZero;
-	[self flushSource];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) flushSource
-{
-	// [self flushBezierNodes];
 	mSourceNodes = nil;
+	
 	[self flushSourcePath];
-	[self flushResult];
-}
+	mSourceStrokeBounds = CGRectZero;
 
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) flushResult
-{
 	[self flushResultPath];
-	[self flushFrameRect];
+	mResultStrokeBounds = CGRectZero;
+
+	[super flushCache];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,6 +193,7 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 	and may potentially be called several times from more 
 	time critical procedures. Hence caching.
 */
+/*
 - (CGRect) frameRect
 {
 	return
@@ -222,7 +214,7 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 	mFrameRect.size.width = 0;
 	mFrameRect.size.height = 0;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark Result Path
 ////////////////////////////////////////////////////////////////////////////////

@@ -270,8 +270,8 @@
 
 - (void) applyScale:(CGFloat)scale
 {
-	[self setStrokeOptions:[[self strokeOptions] optionsWithScale:scale]];
-	[self setShadowOptions:[[self shadowOptions] optionsWithScale:scale]];
+	self->mStrokeOptions = [[self strokeOptions] optionsWithScale:scale];
+	self->mShadowOptions = [[self shadowOptions] optionsWithScale:scale];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

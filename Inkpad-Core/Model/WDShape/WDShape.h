@@ -102,15 +102,7 @@ WDShapeOptions;
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDShape : WDAbstractPath <WDShapeOptionsProtocol>
 {
-	// Model
-/*
-	CGSize mSize;
-	CGFloat mRotation;
-	CGPoint mPosition;
-*/	
 	// Cache
-	CGRect mFrameRect; 		// boundingbox of transformed sourcerect
-
 	CGRect mResultStrokeBounds;
 	CGRect mSourceStrokeBounds;
 
@@ -125,7 +117,6 @@ WDShapeOptions;
 - (NSInteger) shapeVersion; // defaults to 0
 
 - (void) flushCache;
-- (CGRect) frameRect; // framerect - framepath - framebounds ?
 - (CGPathRef) resultPath;
 - (CGPathRef) sourcePath;
 

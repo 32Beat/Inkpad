@@ -124,7 +124,8 @@
     
     sizeSlider_.minimumValue = kMinFontSize;
     sizeSlider_.maximumValue = kMaxFontSize;
-    
+
+	// Eventually activeTextOptions.alignment
     alignment_.selectedSegmentIndex = [[drawingController_.propertyManager defaultValueForProperty:WDTextAlignmentProperty] intValue];
     
     int size = [[drawingController_.propertyManager defaultValueForProperty:WDFontSizeProperty] intValue];
@@ -204,7 +205,9 @@
             sizeLabel_.text = [NSString stringWithFormat:@"%d pt", size];
         } else if ([property isEqualToString:WDTextAlignmentProperty]) {
             [alignment_ removeTarget:self action:@selector(takeAlignmentFrom:) forControlEvents:UIControlEventValueChanged];
-            alignment_.selectedSegmentIndex = [value intValue];
+
+			alignment_.selectedSegmentIndex = [value intValue] - ([value intValue]!=0);
+
             [alignment_ addTarget:self action:@selector(takeAlignmentFrom:) forControlEvents:UIControlEventValueChanged];
         }
     }
