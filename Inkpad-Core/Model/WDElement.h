@@ -421,7 +421,7 @@ typedef enum {
 - (NSSet *) transform:(CGAffineTransform)transform;
 
 - (CGPathRef) framePath;
-- (CGPathRef) resultPath;
+- (CGPathRef) contentPath;
 - (CGPathRef) fillPath;
 - (CGPathRef) strokePath;
 

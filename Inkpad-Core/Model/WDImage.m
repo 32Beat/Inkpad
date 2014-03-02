@@ -122,6 +122,25 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	isVisible
+	---------
+	Overwrite since image visibility depends solely on blendOptions
+*/
+
+- (BOOL) isVisible
+{ return self.blendOptions.visible; }
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	sourceTransform
+	---------------
+	Overwrite to include scaling. 
+	Default transform computation does not currently include scaling. 
+	
+	Additionally includes flip since CGContextDrawImage requires
+	core graphics coordinates, not svg/document coordinates
+*/
 
 - (CGAffineTransform) sourceTransform
 {
@@ -131,15 +150,18 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	CGFloat sx = dstSize.width / srcSize.width;
 	CGFloat sy = dstSize.height / srcSize.height;
 
-	return CGAffineTransformScale(T, sx, sy);
+	return CGAffineTransformScale(T, sx, -sy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (BOOL) isVisible
-{ return self.blendOptions.visible; }
-
-////////////////////////////////////////////////////////////////////////////////
+/*
+	renderFill
+	----------
+	Overwrite to render image over background fill.
+	All properties remain in effect. This means the image will be
+	blended into the background fill and the strokeoptions will be 
+	rendered as frame.
+*/
 
 - (void) renderFill:(const WDRenderContext *)renderContext
 {
@@ -163,15 +185,12 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	CGContextSaveGState(context);
 	CGContextConcatCTM(renderContext->contextRef, self.sourceTransform);
 
-	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
-
 	// Fetch appropriate image
 	UIImage *image = (renderContext->flags & WDRenderThumbnail) ?
 	imageData_.thumbnailImage : imageData_.image;
 
 	CGContextDrawImage(renderContext->contextRef, dstR, [image CGImage]);
 
-//	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
 	CGContextRestoreGState(context);
 }
 

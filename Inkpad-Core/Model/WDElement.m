@@ -1251,14 +1251,16 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark Path Management
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) resultPath
+//- (CGPathRef) framePath
+
+- (CGPathRef) contentPath
 { return self.framePath; }
 
 - (CGPathRef) fillPath
-{ return self.resultPath; }
+{ return self.contentPath; }
 
 - (CGPathRef) strokePath
-{ return self.resultPath; }
+{ return self.contentPath; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

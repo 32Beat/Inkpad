@@ -355,15 +355,19 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 {
 }
 
-
-
-
-
-
 - (CGRect) computeStyleBounds
 {
-	return CGPathGetPathBoundingBox(self.textPath);
+	CGRect R = [self frameBounds];
+
+	if (self.strokeOptions != nil)
+	{ R = [self.strokeOptions resultAreaForPath:[self contentPath]]; }
+
+	if (self.shadowOptions != nil)
+	{ R = [self.shadowOptions resultAreaForRect:R]; }
+
+	return R;
 }
+
 
 - (CGRect) controlBounds
 {
@@ -457,16 +461,16 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 {
 	CGContextRef ctx = renderContext->contextRef;
 
-	CGContextAddPath(ctx, self.pathRef);
+	CGContextAddPath(ctx, self.framePath);
 	CGContextStrokePath(ctx);
 
-	CGContextAddPath(ctx, self.textPath);
+	CGContextAddPath(ctx, self.contentPath);
 	CGContextStrokePath(ctx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) resultPath
+- (CGPathRef) contentPath
 { return self.textPath; }
 
 

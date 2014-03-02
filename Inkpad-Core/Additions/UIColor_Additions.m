@@ -119,6 +119,9 @@
 	return cmp[3];
 }
 
+- (BOOL) visible
+{ return self.alpha > 0.0; }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 - (id) colorByReplacingHue:(CGFloat)hue

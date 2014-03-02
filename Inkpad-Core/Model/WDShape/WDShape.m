@@ -68,6 +68,11 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGPathRef) contentPath
+{ return self.resultPath; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (WDQuad) frameQuad
 {
 	return WDQuadWithRect([self sourceStrokeBounds], [self sourceTransform]);

@@ -54,6 +54,7 @@ extern NSString *const WDStrokeMiterLimitKey;
 
 - (BOOL) visible;
 - (CGRect) resultAreaForRect:(CGRect)R  scale:(CGFloat)scale;
+- (CGRect) resultAreaForPath:(CGPathRef)path;
 - (CGRect) resultAreaForPath:(CGPathRef)path scale:(CGFloat)scale;
 
 @end

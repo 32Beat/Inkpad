@@ -141,6 +141,9 @@ NSString *const WDStrokeMiterLimitKey = @"WDStrokeMiterLimit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGRect) resultAreaForPath:(CGPathRef)path
+{ return WDStrokeOptionsStyleBoundsForPath(self, path); }
+
 - (CGRect) resultAreaForPath:(CGPathRef)path scale:(CGFloat)scale
 { return WDStrokeOptionsStyleBoundsForPath([self optionsWithScale:scale], path); }
 
