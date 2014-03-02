@@ -59,22 +59,30 @@
 
 - (void) copyPropertiesFrom:(WDStyleContainer *)srcOptions;
 
-- (id) frameOptions;
+- (WDFrameOptions *) frameOptions;
 - (void) setFrameOptions:(id)options;
 
-- (id) blendOptions;
+- (WDBlendOptions *) blendOptions;
 - (void) setBlendOptions:(id)options;
 
-- (id) shadowOptions;
+- (WDShadowOptions *) shadowOptions;
 - (void) setShadowOptions:(id)options;
 
-- (id) strokeOptions;
+- (WDStrokeOptions *) strokeOptions;
 - (void) setStrokeOptions:(id)options;
 
-- (id) fillOptions;
+- (WDFillOptions *) fillOptions;
 - (void) setFillOptions:(id)options;
 
-/* 
+/*
+	For an object to be visible, it needs at least visible blendOptions, 
+	and then at least one of fill, stroke, or shadow.
+	If an object is not visible, the preview will draw the object
+	using a faint outline.
+*/
+- (BOOL) visible;
+
+/*
 	When resizing an object, its properties may be scaled as well. 
 	Properties only allow symmetric scaling. If asymmetric scaling
 	is required, then caller is responsible for conversion.
@@ -82,7 +90,6 @@
 	Note: shadow properties do not render according to CTM
 */
 - (void) applyScale:(CGFloat)scale;
-
 
 
 - (CGRect) resultAreaForRect:(CGRect)sourceRect;

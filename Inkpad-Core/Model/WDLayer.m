@@ -356,27 +356,46 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Update cycle:
+	Elements will push change messages up the owner chain.
+	They will end up at the owning layer. The owning layer 
+	will respond by caching the old and new render bounds
+	of the element, and then sending out both for redraw.
+	
+	Note that the behavior of invisibility is defined in layer drawingcode,
+	not in element drawing code, therefore we also need to adapt for 
+	specific bounds here and not in element code.
+	
+	TODO: add outlineBounds to element
+*/
 
 - (id) refreshRects
 { return mRefreshRects ? mRefreshRects : (mRefreshRects=[NSMutableArray new]); }
 
 - (void)element:(WDElement*)element willChangePropertyForKey:(id)propertyKey
 {
-	[[self refreshRects] addObject:self.drawing.outlineMode?
+	// Cache old render bounds (depends on drawing mode)
+	[[self refreshRects] addObject:
+	self.drawing.outlineMode || !element.isVisible?
 	[NSValue valueWithCGRect:element.frameBounds]:
 	[NSValue valueWithCGRect:element.renderBounds]];
 }
 
 - (void)element:(WDElement*)element didChangePropertyForKey:(id)propertyKey
 {
-	[[self refreshRects] addObject:self.drawing.outlineMode?
+	// Cache new render bounds
+	[[self refreshRects] addObject:
+	self.drawing.outlineMode || !element.isVisible?
 	[NSValue valueWithCGRect:element.frameBounds]:
 	[NSValue valueWithCGRect:element.renderBounds]];
 
+	// Send rectangles for refresh
 	NSDictionary *userInfo = @{@"rects" : mRefreshRects };
 	[[NSNotificationCenter defaultCenter]
 	postNotificationName:WDElementChanged object:self.drawing userInfo:userInfo];
 
+	// Reset rectangle cache
 	mRefreshRects = nil;
 }
 
@@ -421,11 +440,21 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) _renderInContext:(const WDRenderContext *)renderContext
+{
+	if (WDRenderOutlineOnly(renderContext))
+	{ [self renderOutline:renderContext]; }
+	else
+	{ [self renderContent:renderContext]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderOutline:(const WDRenderContext *)renderContext
 {
 	for (WDElement *element in elements_)
 	{
-		if (WDRenderContextClipBoundsIntersectRect
+		if (WDRenderClipBoundsIntersectRect
 			(renderContext, [element renderBounds]))
 		{ [element renderOutline:renderContext]; }
 	}
@@ -445,9 +474,29 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 	for (WDElement *element in elements_)
 	{
-		if (WDRenderContextClipBoundsIntersectRect
+		if (WDRenderClipBoundsIntersectRect
 			(renderContext, [element renderBounds]))
-		{ [element renderContent:renderContext]; }
+		{
+			if (element.isVisible)
+			{
+				[element renderContent:renderContext];
+			}
+			else
+			if (WDRenderInvisibles(renderContext))
+			{
+				// TODO: make user pref?
+				static UIColor *grayColor = nil;
+				if (grayColor == nil)
+				{ grayColor = [[UIColor alloc] initWithWhite:0.5 alpha:0.5]; }
+
+				CGContextSetStrokeColorWithColor
+				(renderContext->contextRef, grayColor.CGColor);
+				CGContextSetLineWidth
+				(renderContext->contextRef, 1.0/renderContext->contextScale);
+
+				[element renderOutline:renderContext];
+			}
+		}
 	}
 
 	if (opacity_ != 1.0)
@@ -456,16 +505,6 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 		CGContextEndTransparencyLayer(ctx);
 		CGContextRestoreGState(ctx);
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) _renderInContext:(const WDRenderContext *)renderContext
-{
-	if (WDRenderContextOutlineOnly(renderContext))
-	{ [self renderOutline:renderContext]; }
-	else
-	{ [self renderContent:renderContext]; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -617,6 +617,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (BOOL) isVisible
+{ return self.styleOptions.visible; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) prepareContext:(const WDRenderContext *)renderContext
 {
 	CGContextRef contextRef = renderContext->contextRef;
@@ -642,7 +647,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 	if ([self needsTransparencyLayer])
 	{ [self beginTransparencyLayer:context]; }
 
-	CGContextConcatCTM(context, [self sourceTransform]);
+	//CGContextConcatCTM(context, [self sourceTransform]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -704,17 +709,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 	CGContextEndTransparencyLayer(context);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPathRef) pathRef
-{ return nil; }
-
-- (CGPathRef) strokePathRef
-{ return self.pathRef; }
-
-- (CGPathRef) fillPathRef
-{ return self.pathRef; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -1251,6 +1245,21 @@ NSString *WDShadowKey = @"WDShadowKey";
 	return nil;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Path Management
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) resultPath
+{ return self.framePath; }
+
+- (CGPathRef) fillPath
+{ return self.resultPath; }
+
+- (CGPathRef) strokePath
+{ return self.resultPath; }
+
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark RenderInContext
@@ -1312,7 +1321,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) drawFill:(const WDRenderContext *)renderContext
 {
-	CGContextFillRect(renderContext->contextRef, [self sourceRect]);
+//	CGContextFillRect(renderContext->contextRef, self.sourceRect);
+	CGContextAddPath(renderContext->contextRef, self.fillPath);
+	CGContextFillPath(renderContext->contextRef);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1337,7 +1348,9 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) drawStroke:(const WDRenderContext *)renderContext
 {
-	CGContextStrokeRect(renderContext->contextRef, [self sourceRect]);
+//	CGContextStrokeRect(renderContext->contextRef, [self sourceRect]);
+	CGContextAddPath(renderContext->contextRef, self.strokePath);
+	CGContextStrokePath(renderContext->contextRef);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

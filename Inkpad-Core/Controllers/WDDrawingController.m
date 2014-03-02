@@ -1571,16 +1571,18 @@ and rename to applyTransform
 	CGAffineTransformMakeTranslation(CGRectGetMidX(rect), CGRectGetMidY(rect));
 
 	text.alignment = [[propertyManager_ defaultValueForProperty:WDTextAlignmentProperty] intValue];
-	// set this after width, so that the gradient will be set up properly
-	text.fill = [propertyManager_ activeFillStyle];
-	text.blendOptions.opacity = [[propertyManager_ defaultValueForProperty:WDOpacityProperty] floatValue];
-	text.shadow = [propertyManager_ activeShadow];
-	
-	if (!text.fill) {
-		// make sure the text isn't invisible
-		text.fill = [WDColor blackColor];
+
+	text.blendOptions = [self.propertyManager activeBlendOptions];
+	text.shadowOptions = [self.propertyManager activeShadowOptions];
+	text.fillOptions = [self.propertyManager activeFillOptions];
+	text.strokeOptions = [self.propertyManager activeStrokeOptions];
+
+	if (!text.fillOptions.visible &&
+		!text.strokeOptions.visible)
+	{
+		// TODO: set default
 	}
-	
+
 	[drawing_ addObject:text];
 	[self selectObject:text];
 	
@@ -1602,15 +1604,18 @@ and rename to applyTransform
 	text.width = naturalSize.width;
 	text.alignment = [[propertyManager_ defaultValueForProperty:WDTextAlignmentProperty] intValue];
 	
-	text.transform = CGAffineTransformMakeTranslation((drawing_.dimensions.width - text.width) / 2,
+	text.transform = CGAffineTransformMakeTranslation((drawing_.dimensions.width - text.size.width) / 2,
 													  (drawing_.dimensions.width - naturalSize.height) / 2);
 	
-	// set this after width, so that the gradient will be set up properly
-	text.fill = [propertyManager_ activeFillStyle];
-	
-	if (!text.fill) {
-		// make sure the text isn't invisible
-		text.fill = [WDColor blackColor];
+	text.blendOptions = [self.propertyManager activeBlendOptions];
+	text.shadowOptions = [self.propertyManager activeShadowOptions];
+	text.fillOptions = [self.propertyManager activeFillOptions];
+	text.strokeOptions = [self.propertyManager activeStrokeOptions];
+
+	if (!text.fillOptions.visible &&
+		!text.strokeOptions.visible)
+	{
+		// TODO: set default
 	}
 	
 	[self selectNone:nil];
@@ -1666,10 +1671,17 @@ and rename to applyTransform
 		typePath.text = text.text;
 		typePath.fontName = text.fontName;
 		typePath.fontSize = text.fontSize;
-		typePath.fill = text.fill;
-		typePath.strokeStyle = text.strokeStyle;
-		typePath.shadow = text.shadow;
-		typePath.blendOptions.opacity = text.blendOptions.opacity;
+
+		typePath.blendOptions = [self.propertyManager activeBlendOptions];
+		typePath.shadowOptions = [self.propertyManager activeShadowOptions];
+		typePath.fillOptions = [self.propertyManager activeFillOptions];
+		typePath.strokeOptions = [self.propertyManager activeStrokeOptions];
+
+		if (!typePath.fillOptions.visible &&
+			!typePath.strokeOptions.visible)
+		{
+			// TODO: set default
+		}
 	}
 	
 	[path.layer insertObject:typePath above:path];

@@ -122,7 +122,7 @@
 
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
-	if (metaData.flags & WDRenderOutlineOnly)
+	if (metaData.flags & WDRenderOutline)
 	{
 		[self renderOutlineInContext:ctx metaData:metaData];
 	}

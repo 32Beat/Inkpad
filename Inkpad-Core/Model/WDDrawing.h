@@ -29,10 +29,11 @@ extern const float kMaximumDrawingDimension;
 
 typedef enum
 {
-	WDRenderDefault      = 0x0,
-	WDRenderOutlineOnly  = 0x1,
-	WDRenderThumbnail    = 0x1 << 1,
-	WDRenderFlipped      = 0x1 << 2
+	WDRenderDefault 		= 0x0,
+	WDRenderPreview 		= 0x1,
+	WDRenderOutline 		= 0x1<<1,
+	WDRenderFlipped 		= 0x1<<2,
+	WDRenderThumbnail 		= 0x1<<3
 }
 WDRenderMode;
 
@@ -65,10 +66,13 @@ WDRenderContext;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define WDRenderContextOutlineOnly(rc) \
-(((rc)->flags&WDRenderOutlineOnly)!=0)
+#define WDRenderOutlineOnly(rc) \
+((rc)->flags == WDRenderOutline)
 
-#define WDRenderContextClipBoundsIntersectRect(rc, R) \
+#define WDRenderInvisibles(rc) \
+(((rc)->flags & WDRenderPreview) != 0)
+
+#define WDRenderClipBoundsIntersectRect(rc, R) \
 (CGRectIntersectsRect((rc)->clipBounds, (R)))
 
 ////////////////////////////////////////////////////////////////////////////////

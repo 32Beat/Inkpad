@@ -123,6 +123,24 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGAffineTransform) sourceTransform
+{
+	CGAffineTransform T = [super sourceTransform];
+	CGSize srcSize = self.sourceSize;
+	CGSize dstSize = self.size;
+	CGFloat sx = dstSize.width / srcSize.width;
+	CGFloat sy = dstSize.height / srcSize.height;
+
+	return CGAffineTransformScale(T, sx, sy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) isVisible
+{ return self.blendOptions.visible; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderFill:(const WDRenderContext *)renderContext
 {
 	// Allow super to draw background
@@ -140,6 +158,11 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 	CGSize size = [self size];
 	CGRect dstR = {{-0.5*size.width, -0.5*size.height}, size};
 
+	CGContextRef context = renderContext->contextRef;
+	
+	CGContextSaveGState(context);
+	CGContextConcatCTM(renderContext->contextRef, self.sourceTransform);
+
 	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
 
 	// Fetch appropriate image
@@ -148,7 +171,8 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 	CGContextDrawImage(renderContext->contextRef, dstR, [image CGImage]);
 
-	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
+//	CGContextScaleCTM(renderContext->contextRef, 1.0, -1.0);
+	CGContextRestoreGState(context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -671,7 +671,7 @@ done:
 {
     UIGraphicsPushContext(ctx);
     
-    if (metaData.flags & WDRenderOutlineOnly) {
+    if (metaData.flags & WDRenderOutline) {
         CGContextAddPath(ctx, self.pathRef);
         CGContextStrokePath(ctx);
         

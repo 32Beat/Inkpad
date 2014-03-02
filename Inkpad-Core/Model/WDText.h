@@ -31,7 +31,7 @@
 //	float               width_;
 	CGAffineTransform   transform_;
 
-	NSTextAlignment     alignment_;
+	CTTextAlignment     alignment_;
 	NSString            *fontName_;
 	float               fontSize_;
 	
@@ -45,24 +45,21 @@
 	NSString            *cachedText_;
 	CGAffineTransform   cachedTransform_;
 	float               cachedWidth_;
-	BOOL                cachingWidth_;
-	
-	CGRect              naturalBounds_;
-	BOOL                naturalBoundsDirty_;
+	BOOL                cachingWidth_;	
 }
 
 @property (nonatomic, strong) NSString *text;
 
-
-@property (nonatomic, assign) CGFloat width;
 @property (nonatomic, strong) NSString *fontName;
 @property (nonatomic, assign) float fontSize;
 @property (nonatomic, assign) CGAffineTransform transform;
-@property (nonatomic, assign) NSTextAlignment alignment;
+@property (nonatomic, assign) CTTextAlignment alignment;
 @property (nonatomic, readonly) CGRect naturalBounds;
 @property (nonatomic, readonly) CTFontRef fontRef;
 @property (nonatomic, readonly, strong) NSAttributedString *attributedString;
 
+
+- (void) setWidth:(CGFloat)width;
 
 - (void) registerUndoWithCachedTransformAndWidth;
 /*

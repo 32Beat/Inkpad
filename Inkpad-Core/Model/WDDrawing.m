@@ -79,7 +79,7 @@ WDRenderingMetaData WDRenderingMetaDataMake(float scale, UInt32 flags)
 
 BOOL WDRenderingMetaDataOutlineOnly(WDRenderingMetaData metaData)
 {
-	return (metaData.flags & WDRenderOutlineOnly) ? YES : NO;
+	return (metaData.flags & WDRenderOutline) ? YES : NO;
 }
 
 @implementation WDDrawing

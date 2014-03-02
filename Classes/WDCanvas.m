@@ -519,7 +519,9 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 	CGContextConcatCTM(ctx, transform_);
 
 
-	WDRenderMode mode = outlineMode ? WDRenderOutlineOnly : WDRenderDefault;
+	WDRenderMode mode = WDRenderOutline;
+	if (!self.drawing.outlineMode)
+	{ mode |= WDRenderPreview; }
 
 	WDRenderContext renderContext = {
 		mode,
@@ -622,9 +624,12 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 - (void) rebuildViewTransform_
 {    
-	transform_ = CGAffineTransformMakeTranslation(deviceSpacePivot_.x, deviceSpacePivot_.y);
-	transform_ = CGAffineTransformScale(transform_, viewScale_, viewScale_);
-	transform_ = CGAffineTransformTranslate(transform_, -userSpacePivot_.x, -userSpacePivot_.y);
+	transform_ = CGAffineTransformMakeTranslation
+					(deviceSpacePivot_.x, deviceSpacePivot_.y);
+	transform_ = CGAffineTransformScale
+					(transform_, viewScale_, viewScale_);
+	transform_ = CGAffineTransformTranslate
+					(transform_, -userSpacePivot_.x, -userSpacePivot_.y);
 	
 	[horizontalRuler_ setNeedsDisplay];
 	[verticalRuler_ setNeedsDisplay];

@@ -142,7 +142,7 @@
 /*
 	We always need blendOptions where opacity = 1.0
 */
-- (id) blendOptions
+- (WDBlendOptions *) blendOptions
 { return mBlendOptions ? mBlendOptions : (mBlendOptions = [WDBlendOptions new]); }
 
 - (void) setBlendOptions:(id)options
@@ -154,7 +154,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) shadowOptions
+- (WDShadowOptions *) shadowOptions
 { return mShadowOptions; }
 
 - (void) setShadowOptions:(id)options
@@ -166,7 +166,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) strokeOptions
+- (WDStrokeOptions *) strokeOptions
 { return mStrokeOptions; }
 
 - (void) setStrokeOptions:(id)options
@@ -178,7 +178,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) fillOptions
+- (WDFillOptions *) fillOptions
 { return mFillOptions; }
 
 - (void) setFillOptions:(id)options
@@ -198,6 +198,26 @@
 	{ R = [mShadowOptions resultAreaForRect:R]; }
 
 	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	For an object to be visible, it needs at least visible blendOptions, 
+	and then at least one of fill, stroke, or shadow.
+	If an object is not visible, it will still be drawn in the preview 
+	using a faint outline
+*/
+- (BOOL) visible
+{
+	return
+	// At least visible blend
+	self.blendOptions.visible &&
+	(
+		// At least one of these
+		self.fillOptions.visible ||
+		self.strokeOptions.visible ||
+		self.shadowOptions.visible
+	);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

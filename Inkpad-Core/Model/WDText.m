@@ -50,7 +50,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 @synthesize text = text_;
-//@synthesize width = width_;
 
 @synthesize fontName = fontName_;
 @synthesize fontSize = fontSize_;
@@ -74,29 +73,58 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// NSTextAlignmentToCTTextAlignment
+
 - (void) decodeWithCoder:(NSCoder *)coder
 {
+	if ([coder containsValueForKey:WDTextKey])
+	{ text_ = [coder decodeObjectForKey:WDTextKey]; }
+
+	if ([coder containsValueForKey:WDAlignmentKey])
+	{ alignment_ = [coder decodeInt32ForKey:WDAlignmentKey]; }
+
+	if ([coder containsValueForKey:WDFontNameKey])
+	{ fontName_ = [coder decodeObjectForKey:WDFontNameKey]; }
+
+	if ([coder containsValueForKey:WDFontSizeKey])
+	{ fontSize_ = [coder decodeFloatForKey:WDFontSizeKey]; }
+
+	if (![[WDFontManager sharedInstance] validFont:fontName_])
+	{ fontName_ = @"Helvetica"; }
+
 	[super decodeWithCoder:coder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) decodeWithCoder0:(NSCoder *)coder
+{
+	[super decodeWithCoder0:coder];
 
 	if ([coder containsValueForKey:WDTextKey])
 	{ text_ = [coder decodeObjectForKey:WDTextKey]; }
-	
 
-	alignment_ = [coder decodeInt32ForKey:WDAlignmentKey];
-	transform_ = [coder decodeCGAffineTransformForKey:WDTransformKey];
+	if ([coder containsValueForKey:WDAlignmentKey])
+	{ alignment_ = NSTextAlignmentToCTTextAlignment
+		([coder decodeInt32ForKey:WDAlignmentKey]); }
 
-	fontName_ = [coder decodeObjectForKey:WDFontNameKey];
-	fontSize_ = [coder decodeFloatForKey:WDFontSizeKey];
-	
-	if (![[WDFontManager sharedInstance] validFont:fontName_]) {
-		fontName_ = @"Helvetica";
+	if ([coder containsValueForKey:WDFontNameKey])
+	{ fontName_ = [coder decodeObjectForKey:WDFontNameKey]; }
+
+	if ([coder containsValueForKey:WDFontSizeKey])
+	{ fontSize_ = [coder decodeFloatForKey:WDFontSizeKey]; }
+
+	if (![[WDFontManager sharedInstance] validFont:fontName_])
+	{ fontName_ = @"Helvetica"; }
+
+	if ([coder containsValueForKey:WDWidthKey])
+	{ self.width = [coder decodeFloatForKey:WDWidthKey]; }
+
+	if ([coder containsValueForKey:WDTransformKey])
+	{
+		transform_ = [coder decodeCGAffineTransformForKey:WDTransformKey];
+//		[self setTransform:transform sourceRect:?];
 	}
-
-	
-	self.width = [coder decodeFloatForKey:WDWidthKey];
-
-	needsLayout_ = YES;
-	naturalBoundsDirty_ = YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +170,18 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) setAlignment:(CTTextAlignment)alignment
+{
+	if (alignment_ != alignment)
+	{
+		alignment_ = alignment;
+		[self flushCache];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 + (float) minimumWidth
 {
@@ -224,7 +264,8 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 	if (frameSetter != nil)
 	{
-		frameRef = CTFramesetterCreateFrame(frameSetter, CFRangeMake(0, 0), path, NULL);
+		frameRef = CTFramesetterCreateFrame
+		(frameSetter, CFRangeMake(0, 0), path, NULL);
 		CFRelease(frameSetter);
 	}
 
@@ -288,7 +329,9 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 				
 				CGAffineTransform tX =
 				{ 1, 0, 0, -1, position.x, position.y };
+
 				tX = CGAffineTransformConcat(tX, self.sourceTransform);
+
 				CGPathRef glyphPath = CTFontCreatePathForGlyph(runFont, glyphIndex[t], &tX);
 				if (glyphPath != nil)
 				{
@@ -310,68 +353,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) layout
 {
-//	if (!needsLayout_ || !fontName_ || !text_)\
-	{ return; }
-	
-	// compute glyph positions and angles and determine style bounds
-	if (!glyphs_) {
-		glyphs_ = [[NSMutableArray alloc] init];
-	}
-	[glyphs_ removeAllObjects];
-	
-	styleBounds_ = CGRectNull;
-
-	CTFrameRef frame = [self createFrameSetterFrame];
-
-	NSArray *lines = (NSArray *) CTFrameGetLines(frame);
-	CGPoint origins[lines.count];
-	CTFrameGetLineOrigins(frame, CFRangeMake(0, lines.count), origins);
-	
-	for (int i = 0; i < lines.count; i++)
-	{
-		CGPoint lineOrigin = {
-			CGRectGetMinX(self.sourceRect) + origins[i].x,
-			CGRectGetMaxY(self.sourceRect) - origins[i].y};
-
-		CTLineRef lineRef = (__bridge CTLineRef) lines[i]; 
-		NSArray *glyphRuns = (NSArray *) CTLineGetGlyphRuns(lineRef);
-		
-		for (int n = 0; n < glyphRuns.count; n++) {
-			CTRunRef glyphRun = (__bridge CTRunRef) glyphRuns[n];
-			CFIndex glyphCount = CTRunGetGlyphCount(glyphRun);
-			
-			CTFontRef runFont = CFDictionaryGetValue(CTRunGetAttributes(glyphRun), kCTFontAttributeName);
-			
-			CGGlyph glyphIndex[glyphCount];
-			CGPoint glyphPosition[glyphCount];
-			CTRunGetGlyphs(glyphRun, CFRangeMake(0, 0), glyphIndex);
-			CTRunGetPositions(glyphRun, CFRangeMake(0,0), glyphPosition);
-			
-			for (int t = 0; t < glyphCount; t++)
-			{
-				CGPoint position = WDAddPoints(lineOrigin, glyphPosition[t]);
-				
-				CGAffineTransform tX =
-				{ 1, 0, 0, -1, position.x, position.y };
-				tX = CGAffineTransformConcat(tX, self.sourceTransform);
-				CGPathRef glyphPath = CTFontCreatePathForGlyph(runFont, glyphIndex[t], &tX);
-				if (glyphPath != nil)
-				{
-					if (!CGPathIsEmpty(glyphPath))
-					{
-						[glyphs_ addObject:(__bridge id)glyphPath];
-						styleBounds_ =
-						CGRectUnion(styleBounds_, WDStrokeBoundsForPath(glyphPath, self.strokeStyle));
-					}
-
-					CGPathRelease(glyphPath);
-				}
-			}
-		}
-	}
-	
-	needsLayout_ = NO;
-	CFRelease(frame);
 }
 
 
@@ -380,7 +361,9 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 
 - (CGRect) computeStyleBounds
-{ return CGPathGetPathBoundingBox(self.textPath); }
+{
+	return CGPathGetPathBoundingBox(self.textPath);
+}
 
 - (CGRect) controlBounds
 {
@@ -468,6 +451,8 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 */
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderOutline:(const WDRenderContext *)renderContext
 {
 	CGContextRef ctx = renderContext->contextRef;
@@ -479,11 +464,18 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	CGContextStrokePath(ctx);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) resultPath
+{ return self.textPath; }
+
+
+
 - (void) renderInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData
 {
 	UIGraphicsPushContext(ctx);
 	
-	if (metaData.flags & WDRenderOutlineOnly) {
+	if (metaData.flags & WDRenderOutline) {
 		CGContextAddPath(ctx, self.pathRef);
 		CGContextStrokePath(ctx);
 		
@@ -572,26 +564,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	cachingWidth_ = NO;
 }
 
-- (void) invalidate
-{
-	[self invalidatePreservingAttributedString:NO];
-}
-
-- (void) invalidatePreservingAttributedString:(BOOL)flag
-{
-	if (!flag) {
-		attributedString = nil;
-	}
-	
-	CGPathRelease(pathRef_);
-	pathRef_ = NULL;
-	
-	needsLayout_ = YES;
-	naturalBoundsDirty_ = YES;
-	
-	[self postDirtyBoundsChange];
-}
-
 
 
 - (void) setFontNameQuiet:(NSString *)fontName
@@ -640,17 +612,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	[self propertiesChanged:[NSSet setWithObjects:WDFontSizeProperty, nil]];
 }
 
-- (void) setAlignment:(NSTextAlignment)alignment
-{
-	[self cacheDirtyBounds];
-	
-	[(WDText *)[self.undoManager prepareWithInvocationTarget:self] setAlignment:alignment_];
-	alignment_ = alignment;
-	
-	[self invalidate];
-	
-	[self propertyChanged:WDTextAlignmentProperty];
-}
 
 - (NSSet *) inspectableProperties
 {
@@ -702,21 +663,11 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	return nil;
 }
 
-- (void) setTransformQuiet:(CGAffineTransform)transform
+- (void) setTransform:(CGAffineTransform)transform
 {
 	transform_ = transform;
 }
 
-- (void) setTransform:(CGAffineTransform)transform
-{
-	[self cacheDirtyBounds];
-	
-	[(WDText *)[self.undoManager prepareWithInvocationTarget:self] setTransform:transform_];
-	
-	[self setTransformQuiet:transform];
-	
-	[self invalidatePreservingAttributedString:YES];
-}
 
 - (NSSet *) transform:(CGAffineTransform)transform
 {
@@ -1033,9 +984,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 		
 		CGPathRelease(pathRef_);
 		pathRef_ = NULL;
-		
-		needsLayout_ = YES;
-		naturalBoundsDirty_ = YES;
 	}
 }
 
@@ -1166,7 +1114,7 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	}
 	[text setAttribute:@"x" floatValue:self.naturalBounds.origin.x];
 	[text setAttribute:@"y" floatValue:self.naturalBounds.origin.y];
-	[text setAttribute:@"inkpad:width" floatValue:naturalBounds_.size.width];
+
 	[text setAttribute:@"inkpad:text" value:[self.text stringByEscapingEntitiesAndWhitespace]];
 	
 	if (self.maskedElements && [self.maskedElements count] > 0) {

@@ -90,6 +90,7 @@ WDColorType;
 - (CGColorRef) CGColor;
 - (CGColorRef) opaqueCGColor;
 
+- (BOOL) visible;
 - (void) set;
 - (void) glSet;
 

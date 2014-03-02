@@ -68,41 +68,6 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) pathRef
-{ return [self resultPath]; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) drawFill:(const WDRenderContext *)renderContext
-{
-	CGContextRef ctx = renderContext->contextRef;
-	CGContextAddPath(ctx, [self sourcePath]);
-	// TODO: Fill rule from fill options, or path?
-	CGContextFillPath(ctx);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) drawStroke:(const WDRenderContext *)renderContext
-{
-	CGContextRef ctx = renderContext->contextRef;
-	CGContextAddPath(ctx, [self sourcePath]);
-	CGContextStrokePath(ctx);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) renderOutline:(const WDRenderContext *)renderContext
-{
-	CGContextRef ctx = renderContext->contextRef;
-	CGContextAddPath(ctx, [self resultPath]);
-	CGContextStrokePath(ctx);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark
-////////////////////////////////////////////////////////////////////////////////
-
 - (WDQuad) frameQuad
 {
 	return WDQuadWithRect([self sourceStrokeBounds], [self sourceTransform]);

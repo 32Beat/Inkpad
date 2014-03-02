@@ -355,6 +355,7 @@ typedef enum {
 - (WDFillOptions *)fillOptions;
 - (void) setFillOptions:(WDFillOptions *)options;
 
+- (BOOL) isVisible;
 - (CGRect) resultAreaForRect:(CGRect)R;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -403,7 +404,7 @@ typedef enum {
 
 - (void) setFrameRect:(CGRect)frame;
 
-- (CGPathRef) framePath;
+
 - (WDQuad) frameQuad;
 - (CGPoint) frameCenter;
 
@@ -418,6 +419,11 @@ typedef enum {
 - (void) applyRotation:(CGFloat)r;
 
 - (NSSet *) transform:(CGAffineTransform)transform;
+
+- (CGPathRef) framePath;
+- (CGPathRef) resultPath;
+- (CGPathRef) fillPath;
+- (CGPathRef) strokePath;
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
