@@ -624,48 +624,44 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) prepareContext:(const WDRenderContext *)renderContext
 {
-	CGContextRef contextRef = renderContext->contextRef;
-	CGFloat contextScale = renderContext->contextScale;
-	[self prepareCGContext:contextRef
-			scale:contextScale
-			flipped:renderContext->flags & WDRenderFlipped];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) prepareCGContext:(CGContextRef)context
-			scale:(CGFloat)scale
-			flipped:(BOOL)flipped
-{
-	CGContextSaveGState(context);
-
-	// Prepare composite options
-	[[self blendOptions] prepareCGContext:context];
-	[[self shadowOptions] prepareCGContext:context scale:scale flipped:flipped];
-
-	// If necessary create transparencyLayer for composite
-	if ([self needsTransparencyLayer])
-	{ [self beginTransparencyLayer:context]; }
-
-	//CGContextConcatCTM(context, [self sourceTransform]);
+	[self prepareCGContext:renderContext->contextRef
+		scale:renderContext->contextScale
+		flip:WDRenderUpsideDown(renderContext)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) restoreContext:(const WDRenderContext *)renderContext
 {
-	CGContextRef contextRef = renderContext->contextRef;
-	[self restoreCGContext:contextRef];
+	[self restoreCGContext:renderContext->contextRef];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) restoreCGContext:(CGContextRef)context
+- (void) prepareCGContext:(CGContextRef)contextRef
+			scale:(CGFloat)scale
+			flip:(BOOL)flip
+{
+	CGContextSaveGState(contextRef);
+
+	// Prepare composite options
+	[[self blendOptions] prepareCGContext:contextRef];
+	[[self shadowOptions] prepareCGContext:contextRef
+			scale:scale flipped:flip];
+
+	// If necessary create transparencyLayer for composite
+	if ([self needsTransparencyLayer])
+	{ [self beginTransparencyLayer:contextRef]; }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) restoreCGContext:(CGContextRef)contextRef
 {
 	if ([self needsTransparencyLayer])
-	{ [self endTransparencyLayer:context]; }
+	{ [self endTransparencyLayer:contextRef]; }
 
-	CGContextRestoreGState(context);
+	CGContextRestoreGState(contextRef);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

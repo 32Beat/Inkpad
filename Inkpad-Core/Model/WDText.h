@@ -23,6 +23,25 @@
 
 @protocol WDPathPainter;
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+	Since Apple seems confused about its alignment, 
+	might as well define a proper set, so we only have to translate once.
+*/
+
+typedef enum WDTextAlignment
+{
+	kWDTextAlignDefault = 0, // script default
+	kWDTextAlignLeft,
+	kWDTextAlignCenter,
+	kWDTextAlignRight,
+	kWDTextAlignJustified
+}
+WDTextAlignment;
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 @interface WDText : WDStylable <NSCoding, NSCopying, WDTextRenderer>
 {
 	// Cache
@@ -31,7 +50,7 @@
 //	float               width_;
 	CGAffineTransform   transform_;
 
-	CTTextAlignment     alignment_;
+	WDTextAlignment     alignment_;
 	NSString            *fontName_;
 	float               fontSize_;
 	
@@ -53,7 +72,7 @@
 @property (nonatomic, strong) NSString *fontName;
 @property (nonatomic, assign) float fontSize;
 @property (nonatomic, assign) CGAffineTransform transform;
-@property (nonatomic, assign) CTTextAlignment alignment;
+@property (nonatomic, assign) WDTextAlignment alignment;
 @property (nonatomic, readonly) CGRect naturalBounds;
 @property (nonatomic, readonly) CTFontRef fontRef;
 @property (nonatomic, readonly, strong) NSAttributedString *attributedString;

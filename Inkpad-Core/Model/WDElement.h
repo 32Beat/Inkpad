@@ -420,10 +420,12 @@ typedef enum {
 
 - (NSSet *) transform:(CGAffineTransform)transform;
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGPathRef) framePath;
 - (CGPathRef) contentPath;
-- (CGPathRef) fillPath;
-- (CGPathRef) strokePath;
+	- (CGPathRef) fillPath;
+	- (CGPathRef) strokePath;
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -442,9 +444,13 @@ typedef enum {
 	- (void) restoreContext:(const WDRenderContext *)renderContext;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareContext:(const WDRenderContext *)renderContext;
+- (void) restoreContext:(const WDRenderContext *)renderContext;
+
 - (void) prepareCGContext:(CGContextRef)context
 			scale:(CGFloat)scale
-			flipped:(BOOL)flipped;
+			flip:(BOOL)flip;
 - (void) restoreCGContext:(CGContextRef)context;
 - (BOOL) needsTransparencyLayer;
 - (void) beginTransparencyLayer:(CGContextRef)context;
@@ -455,8 +461,6 @@ typedef enum {
 - (void) outlineInContext:(CGContextRef)ctx metaData:(WDRenderingMetaData)metaData;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
 
 // OpenGL-based selection rendering
 - (WDColor *) highlightColor;

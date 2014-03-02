@@ -38,7 +38,13 @@
 #define kDiamondSize 7
 
 NSString *WDWidthKey = @"WDWidthKey";
-NSString *WDAlignmentKey = @"WDAlignmentKey";
+/* 	
+	WDTextOptions
+	WDFontOptions
+	WDParagraphOptions?
+*/
+NSString *const WDTextStringKey = @"WDTextString";
+NSString *const WDTextAlignmentKey = @"WDTextAlignment";
 
 @interface WDText (Private)
 - (void) invalidate;
@@ -65,10 +71,10 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	
 //	[coder encodeFloat:width_ forKey:WDWidthKey];
 	[coder encodeCGAffineTransform:transform_ forKey:WDTransformKey];
-	[coder encodeObject:text_ forKey:WDTextKey];
+	[coder encodeObject:text_ forKey:WDTextStringKey];
+	[coder encodeInt:alignment_ forKey:WDTextAlignmentKey];
 	[coder encodeObject:fontName_ forKey:WDFontNameKey];
 	[coder encodeFloat:fontSize_ forKey:WDFontSizeKey];
-	[coder encodeInt32:alignment_ forKey:WDAlignmentKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,11 +83,11 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) decodeWithCoder:(NSCoder *)coder
 {
-	if ([coder containsValueForKey:WDTextKey])
-	{ text_ = [coder decodeObjectForKey:WDTextKey]; }
+	if ([coder containsValueForKey:WDTextStringKey])
+	{ text_ = [coder decodeObjectForKey:WDTextStringKey]; }
 
-	if ([coder containsValueForKey:WDAlignmentKey])
-	{ alignment_ = [coder decodeInt32ForKey:WDAlignmentKey]; }
+	if ([coder containsValueForKey:WDTextAlignmentKey])
+	{ alignment_ = [coder decodeIntForKey:WDTextAlignmentKey]; }
 
 	if ([coder containsValueForKey:WDFontNameKey])
 	{ fontName_ = [coder decodeObjectForKey:WDFontNameKey]; }
@@ -96,6 +102,8 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Version 0 keys
+NSString *const WDAlignmentKey = @"WDAlignmentKey";
 
 - (void) decodeWithCoder0:(NSCoder *)coder
 {
@@ -134,26 +142,12 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 	[super copyPropertiesFrom:srcText];
 
 	self->text_ = srcText->text_;
-//	self->width_ = srcText->width_;
 
 	self->fontName_ = srcText->fontName_;
 	self->fontSize_ = srcText->fontSize_;
 
 	self->alignment_ = srcText->alignment_;
 	self->transform_ = srcText->transform_;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setText:(NSString *)text
-{
-	if (![text_ isEqualToString:text])
-	{
-		[self willChangePropertyForKey:WDTextKey];
-		text_ = text;
-		[self flushCache];
-		[self didChangePropertyForKey:WDTextKey];
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,12 +165,27 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setAlignment:(CTTextAlignment)alignment
+- (void) setText:(NSString *)text
+{
+	if (![text_ isEqualToString:text])
+	{
+		[self willChangePropertyForKey:WDTextStringKey];
+		text_ = text;
+		[self flushCache];
+		[self didChangePropertyForKey:WDTextStringKey];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setAlignment:(WDTextAlignment)alignment
 {
 	if (alignment_ != alignment)
 	{
+		[self willChangePropertyForKey:WDTextAlignmentKey];
 		alignment_ = alignment;
 		[self flushCache];
+		[self didChangePropertyForKey:WDTextAlignmentKey];
 	}
 }
 
@@ -286,6 +295,16 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	contentPath
+	-----------
+	Overwrite so WDElement will use textpath for content
+*/
+
+- (CGPathRef) contentPath
+{ return self.textPath; }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGPathRef) textPath
 { return mTextPath ? mTextPath : (mTextPath = [self createTextPath]); }
@@ -294,9 +313,23 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 - (CGPathRef) createTextPath
 {
-	CGMutablePathRef textPath = CGPathCreateMutable();
+	CGPathRef textPath = nil;
 
 	CTFrameRef frame = [self createFrameSetterFrame];
+	if (frame != nil)
+	{
+		textPath = [self createTextPathWithFrame:frame];
+		CFRelease(frame);
+	}
+
+	return textPath;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPathRef) createTextPathWithFrame:(CTFrameRef)frame
+{
+	CGMutablePathRef textPath = CGPathCreateMutable();
 
 	NSArray *lines = (NSArray *) CTFrameGetLines(frame);
 	CGPoint origins[lines.count];
@@ -342,8 +375,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 			}
 		}
 	}
-	
-	CFRelease(frame);
 
 	return textPath;
 }
@@ -470,8 +501,6 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGPathRef) contentPath
-{ return self.textPath; }
 
 
 
@@ -997,31 +1026,40 @@ NSString *WDAlignmentKey = @"WDAlignmentKey";
 		return nil;
 	}
 	
-	if (!attributedString) {
-		CFMutableAttributedStringRef attrString = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+	if (!attributedString)
+	{
+		CFMutableAttributedStringRef attrString =
+		CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
 		
-		CFAttributedStringReplaceString(attrString, CFRangeMake(0, 0), (CFStringRef)text_);    
-		CFAttributedStringSetAttribute(attrString, CFRangeMake(0, CFStringGetLength((CFStringRef)text_)), kCTFontAttributeName, [self fontRef]);
+		CFAttributedStringReplaceString
+		(attrString, CFRangeMake(0, 0), (CFStringRef)text_);
+		CFAttributedStringSetAttribute
+		(attrString, CFRangeMake(0, self.text.length), kCTFontAttributeName, [self fontRef]);
 		
 		// paint with the foreground color
 		CFAttributedStringSetAttribute(attrString, CFRangeMake(0, CFStringGetLength((CFStringRef)text_)), kCTForegroundColorFromContextAttributeName, kCFBooleanTrue);
-		
-		CTTextAlignment alignment;
-		
-		switch (alignment_) {
-			case NSTextAlignmentLeft: alignment = kCTLeftTextAlignment; break;
-			case NSTextAlignmentRight: alignment = kCTRightTextAlignment; break;
-			case NSTextAlignmentCenter: alignment = kCTCenterTextAlignment; break;
-			default: alignment = kCTLeftTextAlignment; break;
-		}
-		
+
+		CTTextAlignment textAlign =
+		self.alignment == kWDTextAlignLeft ? kCTTextAlignmentLeft :
+		self.alignment == kWDTextAlignCenter ? kCTTextAlignmentCenter :
+		self.alignment == kWDTextAlignRight ? kCTTextAlignmentRight :
+		self.alignment == kWDTextAlignJustified ? kCTTextAlignmentJustified :
+		kCTTextAlignmentNatural;
+
 		CTParagraphStyleSetting settings[] = {
-			{kCTParagraphStyleSpecifierAlignment, sizeof(alignment), &alignment}
-		};
-		CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(settings, sizeof(settings) / sizeof(settings[0]));
-		CFAttributedStringSetAttribute(attrString, CFRangeMake(0, CFStringGetLength((CFStringRef)attrString)), kCTParagraphStyleAttributeName, paragraphStyle);    
-		CFRelease(paragraphStyle);
-		
+		{ kCTParagraphStyleSpecifierAlignment, sizeof(textAlign), &textAlign}};
+
+		CTParagraphStyleRef paragraphStyle =
+		CTParagraphStyleCreate(settings, sizeof(settings) / sizeof(settings[0]));
+		if (paragraphStyle != nil)
+		{
+			CFAttributedStringSetAttribute
+			(attrString, CFRangeMake(0, self.text.length),
+			kCTParagraphStyleAttributeName, paragraphStyle);
+
+			CFRelease(paragraphStyle);
+		}
+
 		attributedString = (NSAttributedString *) CFBridgingRelease(attrString);
 	}
 	

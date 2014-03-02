@@ -72,6 +72,9 @@ WDRenderContext;
 #define WDRenderInvisibles(rc) \
 (((rc)->flags & WDRenderPreview) != 0)
 
+#define WDRenderUpsideDown(rc) \
+(((rc)->flags & WDRenderFlipped) != 0)
+
 #define WDRenderClipBoundsIntersectRect(rc, R) \
 (CGRectIntersectsRect((rc)->clipBounds, (R)))
 

@@ -18,6 +18,10 @@
 #import "WDInspectableProperties.h"
 #import "WDPropertyManager.h"
 
+#import "WDText.h" // needed for WDTextAlignment
+// Will eventually introduce WDTextOptions & WDFontOptions
+
+
 #define kMinFontSize            1
 #define kMaxFontSize            200
 #define kCoreTextLabelTag       1
@@ -109,7 +113,9 @@
 
 - (IBAction) takeAlignmentFrom:(id)sender
 {
-    [drawingController_ setValue:@(alignment_.selectedSegmentIndex) forProperty:WDTextAlignmentProperty];
+	WDTextAlignment align = alignment_.selectedSegmentIndex + 1;
+
+    [drawingController_ setValue:@(align) forProperty:WDTextAlignmentProperty];
 }
 
 - (void)viewDidLoad
