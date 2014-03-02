@@ -497,11 +497,6 @@ NSString *const WDAlignmentKey = @"WDAlignmentKey";
 	[self flushFontRef];
 }
 
-- (BOOL) containsPoint:(CGPoint)pt
-{
-	return CGPathContainsPoint(self.pathRef, NULL, pt, 0);
-}
-
 
 - (void) drawTextInContext:(CGContextRef)ctx drawingMode:(CGTextDrawingMode)mode
 {

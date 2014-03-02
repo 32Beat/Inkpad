@@ -255,6 +255,8 @@ typedef enum {
 - (BOOL) intersectsRect:(CGRect)R;
 - (BOOL) frameIntersectsRect:(CGRect)R;
 - (BOOL) contentIntersectsRect:(CGRect)R;
+- (BOOL) strokeIntersectsRect:(CGRect)R;
+- (BOOL) fillIntersectsRect:(CGRect)R;
 
 ////////////////////////////////////////////////////////////////////////////////
 

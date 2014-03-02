@@ -28,7 +28,7 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	[super encodeWithCoder:coder];
-	[coder encodeObject:elements_ forKey:WDGroupElementsKey];
+	[coder encodeObject:self.elements forKey:WDGroupElementsKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +162,11 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (BOOL) isVisible
+{ return YES; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) renderOutline:(const WDRenderContext *)renderContext
 {
 	for (WDElement *element in self.elements)
@@ -172,12 +177,12 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 - (void) renderContent:(const WDRenderContext *)renderContext
 {
-	[self beginTransparencyLayer:renderContext->contextRef];
+	[self prepareContext:renderContext];
 
 	for (WDElement *element in self.elements)
 	{ [element renderContent:renderContext]; }
 
-	[self endTransparencyLayer:renderContext->contextRef];
+	[self restoreContext:renderContext];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,62 +215,30 @@ NSString *const WDGroupElementsKey = @"WDGroupElements";
 
 - (CGRect) computeStyleBounds
 {
-	CGRect bounds = CGRectNull;
-
-	for (WDElement *element in self.elements)
-	{ bounds = CGRectUnion([element styleBounds], bounds); }
-
-	return bounds;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) shadowBounds
-{
 	CGRect R = CGRectNull;
 
-	// Combine result bounds of elements
 	for (WDElement *element in self.elements)
-	{ R = CGRectUnion([element styleBounds], R); }
+	{ R = CGRectUnion(R, [element styleBounds]); }
 
-	// Add expansion for shadow
-	if (self.shadow != nil)
-	{ R = [self.shadow expandRenderArea:R]; }
+	if (self.shadowOptions != nil)
+	{ R = [self.shadowOptions resultAreaForRect:R]; }
 
 	return R;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-- (CGRect) renderBounds
-{
-	CGRect R = CGRectNull;
-
-	// Combine result bounds of elements
-	for (WDElement *element in elements_)
-	{ R = CGRectUnion([element renderBounds], R); }
-
-	return [self expandRenderArea:R];
-}
-*/
-////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
-
-
 - (BOOL) contentIntersectsRect:(CGRect)rect
 {
-	for (WDElement *element in [self.elements reverseObjectEnumerator]) {
-		if ([element intersectsRect:rect]) {
-			return YES;
-		}
-	}
+	for (WDElement *element in [self.elements reverseObjectEnumerator])
+	{ if ([element intersectsRect:rect]) { return YES; } }
 	
 	return NO;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) glDrawContentWithTransform:(CGAffineTransform)T
 {

@@ -44,7 +44,7 @@
     
     return self; 
 }
-
+/*
 - (CGPathRef) pathRef
 {
     // implemented by subclasses
@@ -103,9 +103,9 @@
 
 - (BOOL) containsPoint:(CGPoint)pt
 {
-    return CGPathContainsPoint(self.pathRef, NULL, pt, false);
+    return CGPathContainsPoint(self.contentPath, NULL, pt, false);
 }
-
+*/
 - (void) renderStrokeInContext:(CGContextRef)ctx
 {
 	[self.strokeStyle applyInContext:ctx];

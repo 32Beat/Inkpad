@@ -1258,11 +1258,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 {
 }
 
-- (BOOL) containsPoint:(CGPoint)pt
-{
-	return CGRectContainsPoint([self bounds], pt);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark 
 #pragma mark 
@@ -1287,11 +1282,34 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (BOOL) contentIntersectsRect:(CGRect)R
 {
-	return WDQuadContainsPoint([self frameQuad], WDCenterOfRect(R));
+	return
+	[self fillIntersectsRect:R]||
+	[self strokeIntersectsRect:R];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (BOOL) fillIntersectsRect:(CGRect)R
+{
+	if (self.fillOptions.visible)
+	{ return [self containsPoint:WDCenterOfRect(R)]; }
+
+	return NO;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) strokeIntersectsRect:(CGRect)R
+{
+	return [self containsPoint:WDCenterOfRect(R)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) containsPoint:(CGPoint)P
+{ return CGPathContainsPoint(self.contentPath, nil, P, false); }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (id) findContentControlsInRect:(CGRect)touchR
 {
