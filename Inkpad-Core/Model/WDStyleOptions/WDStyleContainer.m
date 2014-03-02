@@ -203,7 +203,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
 	For an object to be visible, it needs at least visible blendOptions, 
-	and then at least one of fill, stroke, or shadow.
+	and then at least one of fill or stroke.
 	If an object is not visible, it will still be drawn in the preview 
 	using a faint outline
 */
@@ -215,8 +215,7 @@
 	(
 		// At least one of these
 		self.fillOptions.visible ||
-		self.strokeOptions.visible ||
-		self.shadowOptions.visible
+		self.strokeOptions.visible
 	);
 }
 
