@@ -53,14 +53,15 @@ BOOL WDRenderingMetaDataOutlineOnly(WDRenderingMetaData metaData);
 typedef struct
 {
 	NSUInteger flags;
+	CGFloat renderScale;
+	CGFloat contextScale;
 	CGContextRef contextRef;
-	CGFloat contextScale; // = like layer.contentsScale required for proper shadow scaling
-	CGRect contextBounds; // = pixelBounds or PDF bounds, context may be a tile within actual page
+	CGRect contextBounds;
+	// = deviceBounds or PDF bounds, context may be a tile within actual page
 
 	// Document coordinates
 	CGRect pageBounds; // are we really interested?
-	CGRect clipBounds; // clipBounds in document coordinates, guaranteed not to exceed contextBounds
-	CGAffineTransform transformToContext;
+	CGRect clipBounds; // clipBounds in document coordinates
 }
 WDRenderContext;
 

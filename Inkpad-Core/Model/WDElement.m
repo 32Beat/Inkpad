@@ -663,7 +663,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (void) prepareContext:(const WDRenderContext *)renderContext
 {
 	[self prepareCGContext:renderContext->contextRef
-		scale:renderContext->contextScale
+		scale:renderContext->renderScale
 		flip:WDRenderUpsideDown(renderContext)];
 }
 

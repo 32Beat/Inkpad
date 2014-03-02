@@ -246,8 +246,8 @@
 {
 	[mBlendOptions prepareCGContext:renderContext->contextRef];
 	[mShadowOptions prepareCGContext:renderContext->contextRef
-		scale:renderContext->contextScale
-		flipped:renderContext->transformToContext.d < 0];
+		scale:renderContext->renderScale
+		flipped:WDRenderUpsideDown(renderContext)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

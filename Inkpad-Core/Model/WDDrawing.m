@@ -616,12 +616,12 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 	WDRenderContext renderContext = {
 		WDRenderDefault,
-		UIGraphicsGetCurrentContext(),
 		1.0,
+		1.0,
+		UIGraphicsGetCurrentContext(),
 		(CGRect){CGPointZero, dimensions_},
 		(CGRect){CGPointZero, dimensions_},
-		(CGRect){CGPointZero, dimensions_},
-		CGAffineTransformIdentity };
+		(CGRect){CGPointZero, dimensions_}};
 
 	[self _renderInContext:&renderContext];
 
@@ -663,19 +663,16 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	
 	float scale = size.width / styleBounds.size.width;
 
-	CGAffineTransform userToContext =
-	{ scale, 0, 0, scale, -styleBounds.origin.x, -styleBounds.origin.y };
-
 	UIGraphicsBeginImageContext(size);
 
 	WDRenderContext renderContext = {
 		WDRenderDefault,
-		UIGraphicsGetCurrentContext(),
 		scale,
+		1.0,
+		UIGraphicsGetCurrentContext(),
 		(CGRect){CGPointZero, size},
 		styleBounds,
-		styleBounds,
-		userToContext };
+		styleBounds};
 
 
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
@@ -712,12 +709,12 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 	WDRenderContext renderContext = {
 		WDRenderDefault,
-		UIGraphicsGetCurrentContext(),
 		scaleFactor,
+		1.0,
+		UIGraphicsGetCurrentContext(),
 		contentBounds,
 		contentBounds,
-		contentBounds,
-		CGAffineTransformIdentity };
+		contentBounds};
 
 
 	for (WDElement *element in elements)
@@ -748,12 +745,12 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 	WDRenderContext renderContext = {
 		WDRenderFlipped,
-		pdfContext,
 		1.0,
+		1.0,
+		pdfContext,
 		self.bounds,
 		self.bounds,
-		self.bounds,
-		CGAffineTransformIdentity };
+		self.bounds };
 	[self _renderInContext:&renderContext];
 
 	CGPDFContextEndPage(pdfContext);
@@ -861,12 +858,12 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 	WDRenderContext renderContext = {
 		WDRenderThumbnail,
-		UIGraphicsGetCurrentContext(),
 		scale,
+		2.0,
+		UIGraphicsGetCurrentContext(),
 		dstR,
 		srcR,
-		srcR,
-		CGAffineTransformMakeScale(scale, scale) };
+		srcR };
 
 	[self _renderInContext:&renderContext];
 	

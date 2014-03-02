@@ -525,13 +525,12 @@ NSString *WDCanvasBeganTrackingTouches = @"WDCanvasBeganTrackingTouches";
 
 	WDRenderContext renderContext = {
 		mode,
+		viewScale_,
+		self.layer.contentsScale,
 		ctx,
-		self.layer.contentsScale * viewScale_,
 		self.bounds,
-
 		CGRectNull,
-		rect,
-		transform_ };
+		rect };
 
 
 	if (drawing_.showGrid && !drawingIsolatedLayer) {

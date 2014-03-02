@@ -113,7 +113,8 @@
 
 - (IBAction) takeAlignmentFrom:(id)sender
 {
-	WDTextAlignment align = alignment_.selectedSegmentIndex + 1;
+	WDTextAlignment align = (WDTextAlignment)
+	alignment_.selectedSegmentIndex + 1;
 
     [drawingController_ setValue:@(align) forProperty:WDTextAlignmentProperty];
 }

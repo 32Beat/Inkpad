@@ -491,8 +491,8 @@ NSString *WDOpacityKey = @"WDOpacityKey";
 
 				CGContextSetStrokeColorWithColor
 				(renderContext->contextRef, grayColor.CGColor);
-				CGContextSetLineWidth
-				(renderContext->contextRef, 1.0/renderContext->contextScale);
+				CGContextSetLineWidth(renderContext->contextRef,
+				1.0/(renderContext->renderScale*renderContext->contextScale));
 
 				[element renderOutline:renderContext];
 			}
