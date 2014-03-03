@@ -1031,6 +1031,8 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark Bounds
 ////////////////////////////////////////////////////////////////////////////////
 /*
+	DEBUG code
+
 	Levels of bounds:
 	1. sourceRect = size of source centered around origin
 	2. frameBounds = bounding box of transformed source
@@ -1041,6 +1043,7 @@ NSString *WDShadowKey = @"WDShadowKey";
 - (void) glDrawBoundsWithViewTransform:(CGAffineTransform)viewTransform
 {
 #ifdef WD_DEBUG
+
 	GLfloat clr[4];
 	glGetFloatv(GL_CURRENT_COLOR, clr);
 
@@ -1065,11 +1068,19 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// OLD
 
 - (CGRect) bounds
 { return self.frameBounds; }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+/*
+	frameBounds
+	-----------
+	Cached frameBounds, see computeFrameBounds
+*/
 
 - (CGRect) frameBounds
 {
@@ -1079,11 +1090,25 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	computeFrameBounds
+	------------------
+	Compute boundingbox for element constructs
+	
+	Defaults to boundingbox of unstyled element.
+	Default behavior for frameControls is to draw 
+	circular cornerpoints for this rectangle.
+*/
 
 - (CGRect) computeFrameBounds
 { return WDQuadGetBounds(self.frameQuad); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	flushFrameBounds
+	----------------
+	Reset frameBounds so they will be recomputed on next request
+*/
 
 - (void) flushFrameBounds
 { mFrameBounds = CGRectNull; }
@@ -1091,6 +1116,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	styleBounds
+	-----------
+	Cached styleBounds, see computeStyleBounds
+*/
 
 - (CGRect) styleBounds
 {
@@ -1101,43 +1131,69 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	Shadow options are not affected by CTM, 
-	so they need to be transformed separately if desired
-	
+	computeStyleBounds
+	------------------
+	Compute result bounds for element after applying local styleOptions
+	Note: does NOT include styleOptions of owner(s) (see renderBounds)
+
+	The default behavior expands the sourceRect by half the strokeLineWidth
+	prior to transform, thus with inverted scale. 
+	ShadowOptions are not affected by CTM, so they are applied post-transform.
 */
+
 - (CGRect) computeStyleBounds
 {
 	CGRect R = [self sourceRect];
 
-	if (self.strokeOptions != nil)
-	{ R = [self.strokeOptions resultAreaForRect:R
-			scale:1.0/[self resizeScale]]; }
+	if (self.strokeOptions.visible)
+	{
+		// Pre-transform strokeOptions
+		R = [[self.strokeOptions optionsWithScale:1.0/[self resizeScale]]
+			resultAreaForRect:R];
+	}
 
 	R = CGRectApplyAffineTransform(R, [self sourceTransform]);
 
-	if (self.shadowOptions != nil)
+	if (self.shadowOptions.visible)
 	{ R = [self.shadowOptions resultAreaForRect:R]; }
 
 	return R;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	flushStyleBounds
+	----------------
+	Reset styleBounds so they will be recomputed on next request
+*/
 
 - (void) flushStyleBounds
 { mStyleBounds = CGRectNull; }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) outlineBounds
-{ return self.frameBounds; }
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) renderBounds
 {
-	// Can not cache this, since we don't know changes in owners
+	// Can not cache this, since we are unaware of changes in owners
 	return [self computeRenderBounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	computeRenderBounds
+	-------------------
+	Compute total area affected by element
+
+	This is the update or refresh area required for redraw. 
+	Element uses the owner to request affected resultArea.
+	Owner should adjust area for its own local styleOptions
+	and then move the request up the owner chain.
+	
+	This allows toplevel objects to probe an element for
+	affected document areas if required.
+*/
 
 - (CGRect) computeRenderBounds
 {

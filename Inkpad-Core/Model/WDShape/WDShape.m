@@ -113,9 +113,9 @@ static NSString *WDShapePositionKey = @"WDShapePosition";
 
 - (CGRect) computeSourceStrokeBounds
 {
-	CGRect R = self.strokeOptions != nil ?
-	[self.strokeOptions resultAreaForPath:[self sourcePath]
-	scale:1.0/[self resizeScale]]:
+	CGRect R = self.strokeOptions.visible ?
+	[[self.strokeOptions optionsWithScale:1.0/[self resizeScale]]
+	resultAreaForPath:[self sourcePath]]:
 	[self sourceRect];
 
 	return R;

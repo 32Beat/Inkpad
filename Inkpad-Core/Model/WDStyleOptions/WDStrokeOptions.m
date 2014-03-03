@@ -112,25 +112,6 @@ NSString *const WDStrokeMiterLimitKey = @"WDStrokeMiterLimit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGRect) resultAreaForRect:(CGRect)R
-{
-//	CGFloat min = MIN(R.size.width, R.size.height);
-	return [self resultAreaForRect:R scale:1.0];
-}
-
-- (CGRect) resultAreaForRect:(CGRect)R  scale:(CGFloat)scale
-{
-	if ([self visible])
-	{
-		CGFloat r = 0.5 * mLineWidth * scale;
-		R = CGRectInset(R, -r, -r);
-	}
-
-	return R;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (id) optionsWithScale:(float)scale
 {
 	WDStrokeOptions *options = [self copy];
@@ -141,27 +122,37 @@ NSString *const WDStrokeMiterLimitKey = @"WDStrokeMiterLimit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGRect) resultAreaForRect:(CGRect)R
+{
+	if (self.visible)
+	{
+		CGFloat r = 0.5 * self.lineWidth;
+		R = CGRectInset(R, -r, -r);
+	}
+
+	return R;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (CGRect) resultAreaForPath:(CGPathRef)path
 { return WDStrokeOptionsStyleBoundsForPath(self, path); }
-
-- (CGRect) resultAreaForPath:(CGPathRef)path scale:(CGFloat)scale
-{ return WDStrokeOptionsStyleBoundsForPath([self optionsWithScale:scale], path); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) prepareCGContext:(CGContextRef)context scale:(CGFloat)scale
 {
-	if ([self visible])
+	if (self.visible)
 	{
-		CGContextSetStrokeColorWithColor(context, mColor.CGColor);
-		CGContextSetLineWidth(context, mLineWidth*scale);
-		CGContextSetLineCap(context, mLineCap);
-		CGContextSetLineJoin(context, mLineJoin);
+		CGContextSetStrokeColorWithColor(context, self.color.CGColor);
+		CGContextSetLineWidth(context, self.lineWidth*scale);
+		CGContextSetLineCap(context, self.lineCap);
+		CGContextSetLineJoin(context, self.lineJoin);
 
-		if (mMiterLimit > 0.0)
-		CGContextSetMiterLimit(context, mMiterLimit);
+		if (self.miterLimit > 0.0)
+		CGContextSetMiterLimit(context, self.miterLimit);
 
-		[mDashOptions prepareCGContext:context];
+		[self.dashOptions prepareCGContext:context];
 	}
 }
 

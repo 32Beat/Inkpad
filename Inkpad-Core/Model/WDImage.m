@@ -133,28 +133,6 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	sourceTransform
-	---------------
-	Overwrite to include scaling. 
-	Default transform computation does not currently include scaling. 
-	
-	Additionally includes flip since CGContextDrawImage requires
-	core graphics coordinates, not svg/document coordinates
-*/
-
-- (CGAffineTransform) sourceTransform
-{
-	CGAffineTransform T = [super sourceTransform];
-	CGSize srcSize = self.sourceSize;
-	CGSize dstSize = self.size;
-	CGFloat sx = dstSize.width / srcSize.width;
-	CGFloat sy = dstSize.height / srcSize.height;
-
-	return CGAffineTransformScale(T, sx, -sy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
 	renderFill
 	----------
 	Overwrite to render image over background fill.
@@ -176,22 +154,25 @@ NSString *WDImageDataKey = @"WDImageDataKey";
 
 - (void) drawImage:(const WDRenderContext *)renderContext
 {
-	// CTM only sets origin and rotation
-	CGSize size = [self size];
-	CGRect dstR = {{-0.5*size.width, -0.5*size.height}, size};
-
-	CGContextRef context = renderContext->contextRef;
-	
-	CGContextSaveGState(context);
-	CGContextConcatCTM(renderContext->contextRef, self.sourceTransform);
-
 	// Fetch appropriate image
 	UIImage *image = (renderContext->flags & WDRenderThumbnail) ?
 	imageData_.thumbnailImage : imageData_.image;
 
-	CGContextDrawImage(renderContext->contextRef, dstR, [image CGImage]);
+	CGContextRef contextRef = renderContext->contextRef;
+	
+	CGContextSaveGState(contextRef);
 
-	CGContextRestoreGState(context);
+	// Let CTM solve position, rotation
+	CGContextConcatCTM(contextRef, self.sourceTransform);
+	// DrawImage requires CoreGraphics coordinates
+	CGContextScaleCTM(contextRef, 1, -1);
+
+	// Let DrawImage solve scale
+	CGSize dstSize = self.size;
+	CGRect dstRect = { { -0.5*dstSize.width, -0.5*dstSize.height}, dstSize };
+	CGContextDrawImage(contextRef, dstRect, image.CGImage);
+
+	CGContextRestoreGState(contextRef);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
