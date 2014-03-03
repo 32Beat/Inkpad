@@ -574,6 +574,41 @@ NSString *WDShadowKey = @"WDShadowKey";
 #pragma mark -
 #pragma mark Style Options
 ////////////////////////////////////////////////////////////////////////////////
+// TODO: decide on WDStylable
+/*
+	Note that a bare WDElement has no meaning currently, but:
+	adding WDStylable better separates code, and
+	bare WDElements may be useful as fillOptions. 
+	
+	However, bare WDElements should be truly comprehensive and thus
+	NOT include opacity, blend, or shadow. i.e.: 
+	WDElement should store geometry and manage frame editing, 
+	and nothing else.
+
+	It can then be used to encompass an image or a gradient 
+	that can subsequently be applied as a transformable fillOption 
+	in some stylable element.
+	
+	Currently, WDImage is a special WDElement that draws fill and stroke 
+	as background and frame. However, we could choose to implement 
+	WDPath with a WDImage as fill, to do the same. This would simplify
+	masking and allow easier orientation of image or gradient within a frame.
+
+	At the same time it clearly distinguishes editing mode:
+	We either edit the strokeContent = BezierNodes,
+	or we edit the fillContent = transformable element
+
+	This would also be more clear internally, as we currently go through 
+	all kinds of hoops to generate default stylebounds that are not 
+	particularly comprehensible.
+	
+	If a stylable object always is a WDPath, then it is also clear what
+	stylebounds should do.
+	
+	TODO: Branch for bare element + stylable
+
+*/
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDStyleContainer *) styleOptions
 {
@@ -750,13 +785,13 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGSize) sourceSize
-{ return [self size]; }
+{ return self.size; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGRect) sourceRect
 {
-	CGSize srcSize = [self sourceSize];
+	CGSize srcSize = self.sourceSize;
 	return (CGRect){{-0.5*srcSize.width, -0.5*srcSize.height}, srcSize };
 }
 
@@ -847,15 +882,11 @@ NSString *WDShadowKey = @"WDShadowKey";
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
-
-- (void) flushFrame
-{
-	[self flushFrameQuad];
-	[self flushFramePath];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+/*
+	frameRect is not generally useful, since it does not include rotation. 
+	However, sometimes elements are created using initWithFrame which calls
+	setFrameRect to set position and size.
+*/
 - (CGRect) frameRect
 {
 	CGRect frame = { self.position, self.size };
@@ -874,6 +905,26 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGPoint) frameCenter
+{ return WDQuadGetCenter(self.frameQuad); }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDQuad is used to describe the default frame.
+	A quad stores 4 arbitrary cornerpoints, but for our purposes
+	it currently always represents a transformed rectangle.
+*/
+
+- (void) flushFrame
+{
+	[self flushFrameQuad];
+	[self flushFramePath];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (WDQuad) frameQuad
 { return WDQuadIsNull(mFrame)==NO ? mFrame : (mFrame = [self computeFrameQuad]); }
 
@@ -886,11 +937,6 @@ NSString *WDShadowKey = @"WDShadowKey";
 
 - (void) flushFrameQuad
 { mFrame = WDQuadNull; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPoint) frameCenter
-{ return WDQuadGetCenter(self.frameQuad); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -943,6 +989,23 @@ NSString *WDShadowKey = @"WDShadowKey";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+/*
+	adjustFrameControlWithIndex
+	---------------------------
+	Core method for adjusting the scale and rotation of element
+	
+	By default index refers to the 4 cornerpoints of frame in CCW order:
+	0 = bottom-left
+	1 = bottom-right
+	2 = top-right
+	3 = top-left
+	(original orientation)
+	
+	However, elements do not necessarily have 4 framecontrols, 
+	see WDText for an example with only 2 controls.
+*/
 
 - (void) adjustFrameControlWithIndex:(NSInteger)n delta:(CGPoint)delta
 {
