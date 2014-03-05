@@ -360,6 +360,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 
 - (void) purgeUnreferencedImageDatas
 {
+/*	
 	WDImageData     *imageData;
 	NSData          *digest;
 	NSMutableArray  *images = [NSMutableArray array];
@@ -378,6 +379,7 @@ NSLog(@"Elements in drawing: %lu", (unsigned long)[self allElements].count);
 	
 	// we now only have unique image datas... ensure no image is pointing to one that's not tracked
 	[images makeObjectsPerformSelector:@selector(useTrackedImageData) withObject:nil];
+*/
 }
 
 - (WDImageData *) imageDataForUIImage:(UIImage *)image

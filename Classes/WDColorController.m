@@ -23,8 +23,6 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 ////////////////////////////////////////////////////////////////////////////////
 
 @synthesize tracking = mTracking;
-@synthesize target = target_;
-@synthesize action = action_;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +36,9 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 { mColorWell.strokeMode = state; }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Allows mInstance = [WDColorController new];
+/*
+	Following allows mInstance = [WDColorController new];
+*/
 
 - (id) init
 { return [self initWithNibName:@"Color" bundle:nil]; }
@@ -95,7 +95,7 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 	[mColorWell setPainter:color];
 
 	// Update value labels
-	if (colorSpace_ == WDColorSpaceHSB) {
+	if (mColorSpace == WDColorSpaceHSB) {
 		component0Value_.text =
 		[NSString stringWithFormat:@"%d°", (int) round(color.hue * 360)];
 		component1Value_.text =
@@ -154,13 +154,13 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 - (void) setColorSpace:(WDColorSpace)space
 {
-	if (colorSpace_ != space)
+	if (mColorSpace != space)
 	{
-		colorSpace_ = space;
+		mColorSpace = space;
 		[self updateViewWithColorSpace:space];
 
 		[[NSUserDefaults standardUserDefaults]
-		setInteger:colorSpace_ forKey:WDColorSpaceDefault];
+		setInteger:mColorSpace forKey:WDColorSpaceDefault];
 	}
 }
 
@@ -191,7 +191,7 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 		[mSlider3 floatValue] };
 
 	return
-	colorSpace_ == WDColorSpaceHSB ?
+	mColorSpace == WDColorSpaceHSB ?
 	[WDColor colorWithHSBA:cmp]:
 	[WDColor colorWithRGBA:cmp];
 }
@@ -201,7 +201,7 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 - (IBAction) switchColorSpace:(id)sender
 {
 	[self setColorSpace:
-	colorSpace_ == WDColorSpaceHSB ?
+	mColorSpace == WDColorSpaceHSB ?
 	WDColorSpaceRGB : WDColorSpaceHSB];
 }
 
@@ -224,7 +224,7 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 	mTracking = NO;
 
 	[[UIApplication sharedApplication]
-	sendAction:action_ to:target_ from:self forEvent:nil];
+	sendAction:self.action to:self.target from:self forEvent:nil];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

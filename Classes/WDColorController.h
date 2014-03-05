@@ -13,9 +13,18 @@
 
 #import <UIKit/UIKit.h>
 
-@class WDColor;
-@class WDColorWell;
-@class WDColorSlider;
+#import "WDColor.h"
+#import "WDColorWell.h"
+#import "WDColorSlider.h"
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColorController
+	-----------------
+	ViewController for creating/adjusting a WDColor object
+	
+	
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,6 +34,8 @@ typedef enum
 	WDColorSpaceHSB,
 }
 WDColorSpace;
+
+extern NSString *const WDColorSpaceDefault;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDColorController : UIViewController
@@ -46,10 +57,13 @@ WDColorSpace;
 	IBOutlet UILabel            *alphaValue_;
 	
 	IBOutlet UIButton           *colorSpaceButton_;
-	WDColorSpace 				colorSpace_;
-	
-	BOOL mTracking;
-	WDColor *mColor;
+
+	// Represented object
+	WDColor 		*mColor;
+
+	// State parameters
+	BOOL 			mTracking;
+	WDColorSpace 	mColorSpace;
 }
 
 @property (nonatomic, assign, getter=isTracking) BOOL tracking;
@@ -67,7 +81,6 @@ WDColorSpace;
 
 @end
 
-extern NSString *const WDColorSpaceDefault;
 
 
 
