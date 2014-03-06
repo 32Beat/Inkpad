@@ -40,6 +40,10 @@ NSString *const WDBrightnessKey = @"WDBrightnessKey";
 NSString *const WDAlphaKey = @"WDAlphaKey";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 @implementation WDColor
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -186,41 +190,22 @@ double WDRandomHue(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) getRGBA:(CGFloat *)cmp
-{
-	cmp[0] = mComponent[0];
-	cmp[1] = mComponent[1];
-	cmp[2] = mComponent[2];
-	cmp[3] = mComponent[3];
-
-	if (mType == WDColorTypeHSB)
-	{ HSVtoRGB(cmp[0], cmp[1], cmp[2], cmp); }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) getHSBA:(CGFloat *)cmp
-{
-	cmp[0] = mComponent[0];
-	cmp[1] = mComponent[1];
-	cmp[2] = mComponent[2];
-	cmp[3] = mComponent[3];
-
-	if (mType != WDColorTypeHSB)
-	{ RGBtoHSV(cmp[0], cmp[1], cmp[2], &cmp[0], &cmp[1], &cmp[2]); }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (id) colorWithColorType:(WDColorType)colorType
 {
 	if (mType == colorType)
 	{ return self; }
 
 	CGFloat cmp[4];
+	if (colorType == WDColorTypeLCH)
+	{ [self getLCH:cmp]; }
+	else
+	if (colorType == WDColorTypeLab)
+	{ [self getLAB:cmp]; }
+	else
 	if (colorType == WDColorTypeHSB)
 	{ [self getHSBA:cmp]; }
 	else
+	if (colorType == WDColorTypeRGB)
 	{ [self getRGBA:cmp]; }
 
 	return [[self class] colorWithType:colorType components:cmp];
@@ -303,6 +288,56 @@ double WDRandomHue(void)
 
 - (NSArray *) gradientForComponentAtIndex:(int)index
 {
+	if (mType == WDColorTypeLCH)
+	{
+		return @[
+		[self colorWithComponentValue:0.0/360 atIndex:index],
+		
+		[self colorWithComponentValue:15.0/360 atIndex:index],
+		[self colorWithComponentValue:30.0/360 atIndex:index],
+		[self colorWithComponentValue:45.0/360 atIndex:index],
+		[self colorWithComponentValue:60.0/360 atIndex:index],
+		[self colorWithComponentValue:75.0/360 atIndex:index],
+		[self colorWithComponentValue:90.0/360 atIndex:index],
+
+		[self colorWithComponentValue:105.0/360 atIndex:index],
+		[self colorWithComponentValue:120.0/360 atIndex:index],
+		[self colorWithComponentValue:135.0/360 atIndex:index],
+		[self colorWithComponentValue:150.0/360 atIndex:index],
+		[self colorWithComponentValue:165.0/360 atIndex:index],
+		[self colorWithComponentValue:180.0/360 atIndex:index],
+
+		[self colorWithComponentValue:195.0/360 atIndex:index],
+		[self colorWithComponentValue:210.0/360 atIndex:index],
+		[self colorWithComponentValue:225.0/360 atIndex:index],
+		[self colorWithComponentValue:240.0/360 atIndex:index],
+		[self colorWithComponentValue:255.0/360 atIndex:index],
+		[self colorWithComponentValue:270.0/360 atIndex:index],
+
+		[self colorWithComponentValue:285.0/360 atIndex:index],
+		[self colorWithComponentValue:300.0/360 atIndex:index],
+		[self colorWithComponentValue:315.0/360 atIndex:index],
+		[self colorWithComponentValue:330.0/360 atIndex:index],
+		[self colorWithComponentValue:345.0/360 atIndex:index],
+		[self colorWithComponentValue:360.0/360 atIndex:index]];
+	}
+
+	if (mType == WDColorTypeLab)
+	{
+		return @[
+		[self colorWithComponentValue:0.0 atIndex:index],
+		[self colorWithComponentValue:0.1 atIndex:index],
+		[self colorWithComponentValue:0.2 atIndex:index],
+		[self colorWithComponentValue:0.3 atIndex:index],
+		[self colorWithComponentValue:0.4 atIndex:index],
+		[self colorWithComponentValue:0.5 atIndex:index],
+		[self colorWithComponentValue:0.6 atIndex:index],
+		[self colorWithComponentValue:0.7 atIndex:index],
+		[self colorWithComponentValue:0.8 atIndex:index],
+		[self colorWithComponentValue:0.9 atIndex:index],
+		[self colorWithComponentValue:1.0 atIndex:index]];
+	}
+
 	if ((mType == WDColorTypeHSB)&&(index == 0))
 	{
 		return @[
@@ -315,19 +350,6 @@ double WDRandomHue(void)
 		[self colorWithComponentValue:360.0/360 atIndex:index]];
 	}
 	else
-	if ((mType == WDColorTypeLCH)&&(index == 3))
-	{
-		return @[
-		[self colorWithComponentValue:0.0/360 atIndex:index],
-		[self colorWithComponentValue:45.0/360 atIndex:index],
-		[self colorWithComponentValue:90.0/360 atIndex:index],
-		[self colorWithComponentValue:135.0/360 atIndex:index],
-		[self colorWithComponentValue:180.0/360 atIndex:index],
-		[self colorWithComponentValue:225.0/360 atIndex:index],
-		[self colorWithComponentValue:270.0/360 atIndex:index],
-		[self colorWithComponentValue:315.0/360 atIndex:index],
-		[self colorWithComponentValue:360.0/360 atIndex:index]];
-	}
 
 	return @[
 	[self colorWithComponentValue:0.0 atIndex:index],
@@ -469,6 +491,9 @@ double WDRandomHue(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Raw properties
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDColorType) type
 { return mType; }
@@ -488,6 +513,137 @@ double WDRandomHue(void)
 	cmp[3] = mComponent[3];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) getRGBA:(CGFloat *)cmp
+{
+	cmp[0] = mComponent[0];
+	cmp[1] = mComponent[1];
+	cmp[2] = mComponent[2];
+	cmp[3] = mComponent[3];
+
+	if (mType == WDColorTypeHSB)
+	{ HSVtoRGB(cmp[0], cmp[1], cmp[2], cmp); }
+	else
+	if (mType == WDColorTypeLab)
+	{
+		cmp[0] *= 100.0;
+		cmp[1] *= 240;
+		cmp[2] *= 240;
+		cmp[1] -= 120;
+		cmp[2] -= 120;
+		LABtoXYZ(cmp[0], cmp[1], cmp[2], cmp);
+		XYZtoSRGB(cmp[0], cmp[1], cmp[2], cmp);
+	}
+	else
+	if (mType == WDColorTypeLCH)
+	{
+		cmp[0] *= 100.0;
+		cmp[1] *= 120;
+		cmp[2] *= 360;
+		LCHtoLAB(cmp[0], cmp[1], cmp[2], cmp);
+		LABtoXYZ(cmp[0], cmp[1], cmp[2], cmp);
+		XYZtoSRGB(cmp[0], cmp[1], cmp[2], cmp);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) getHSBA:(CGFloat *)cmp
+{
+	cmp[0] = mComponent[0];
+	cmp[1] = mComponent[1];
+	cmp[2] = mComponent[2];
+	cmp[3] = mComponent[3];
+
+	if (mType == WDColorTypeLab)
+	{
+		cmp[0] *= 100.0;
+		cmp[1] *= 240;
+		cmp[2] *= 240;
+		cmp[1] -= 120;
+		cmp[2] -= 120;
+		LABtoXYZ(cmp[0], cmp[1], cmp[2], cmp);
+		XYZtoSRGB(cmp[0], cmp[1], cmp[2], cmp);
+	}
+	else
+	if (mType == WDColorTypeLCH)
+	{
+		cmp[0] *= 100.0;
+		cmp[1] *= 120;
+		cmp[2] *= 360;
+		LCHtoLAB(cmp[0], cmp[1], cmp[2], cmp);
+		LABtoXYZ(cmp[0], cmp[1], cmp[2], cmp);
+		XYZtoSRGB(cmp[0], cmp[1], cmp[2], cmp);
+	}
+
+	if (mType != WDColorTypeHSB)
+	{ RGBtoHSV(cmp[0], cmp[1], cmp[2], cmp); }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) getLAB:(CGFloat *)cmp
+{
+	cmp[0] = mComponent[0];
+	cmp[1] = mComponent[1];
+	cmp[2] = mComponent[2];
+	cmp[3] = mComponent[3];
+
+	switch(mType)
+	{
+		case WDColorTypeHSB:
+			HSVtoRGB(cmp[0], cmp[1], cmp[2], cmp);
+		case WDColorTypeWht:
+		case WDColorTypeRGB:
+			SRGBtoXYZ(cmp[0], cmp[1], cmp[2], cmp);
+		case WDColorTypeXYZ:
+		{
+			XYZtoLAB(cmp[0], cmp[1], cmp[2], cmp);
+			cmp[0] /= 100.0;
+			cmp[1] += 120.0;
+			cmp[2] += 120.0;
+			cmp[1] /= 240.0;
+			cmp[2] /= 240.0;
+		}
+		default:
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) getLCH:(CGFloat *)cmp
+{
+	cmp[0] = mComponent[0];
+	cmp[1] = mComponent[1];
+	cmp[2] = mComponent[2];
+	cmp[3] = mComponent[3];
+
+	switch(mType)
+	{
+		case WDColorTypeHSB:
+			HSVtoRGB(cmp[0], cmp[1], cmp[2], cmp);
+		case WDColorTypeWht:
+		case WDColorTypeRGB:
+			SRGBtoXYZ(cmp[0], cmp[1], cmp[2], cmp);
+		case WDColorTypeXYZ:
+			XYZtoLAB(cmp[0], cmp[1], cmp[2], cmp);
+		case WDColorTypeLab:
+		{
+			LABtoLCH(cmp[0], cmp[1], cmp[2], cmp);
+			cmp[0] /= 100.0;
+			cmp[1] /= 120.0;
+			cmp[2] /= 360.0;
+		}
+		default:
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark UIKit synchronisation
 ////////////////////////////////////////////////////////////////////////////////
 
 - (CGFloat) red
@@ -534,6 +690,12 @@ double WDRandomHue(void)
 	[self getHSBA:cmp];
 	return cmp[2];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Converted properties
+////////////////////////////////////////////////////////////////////////////////
+
 /*
 - (CGFloat) rgb_R
 - (CGFloat) rgb_G
@@ -546,12 +708,52 @@ double WDRandomHue(void)
 - (CGFloat) xyz_X
 - (CGFloat) xyz_Y
 - (CGFloat) xyz_Z
-
-- (CGFloat) lab_L
-- (CGFloat) lab_a
-- (CGFloat) lab_b
 */
+- (CGFloat) lab_L
+{
+	CGFloat cmp[4];
+	[self getLAB:cmp];
+	return 100*cmp[0];
+}
 
+- (CGFloat) lab_a
+{
+	CGFloat cmp[4];
+	[self getLAB:cmp];
+	return 400*cmp[1]-200;
+}
+
+- (CGFloat) lab_b
+{
+	CGFloat cmp[4];
+	[self getLAB:cmp];
+	return 400*cmp[2]-200;
+}
+
+- (CGFloat) lch_L
+{
+	CGFloat cmp[4];
+	[self getLCH:cmp];
+	return cmp[0] * 100;
+}
+
+- (CGFloat) lch_C
+{
+	CGFloat cmp[4];
+	[self getLCH:cmp];
+	return cmp[1] * 120;
+}
+
+- (CGFloat) lch_H
+{
+	CGFloat cmp[4];
+	[self getLCH:cmp];
+	return cmp[2] * 360;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
 - (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment
 {

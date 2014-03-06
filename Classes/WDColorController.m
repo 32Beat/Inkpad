@@ -98,13 +98,26 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	[mColorWell setPainter:color];
 
 	// Update value labels
-	if (mColorModel == WDColorModelHSB) {
+/*	if (mColorModel == WDColorModelHSB)
+	{
 		component0Value_.text =
 		[NSString stringWithFormat:@"%d°", (int) round(color.hue * 360)];
 		component1Value_.text =
 		[NSString stringWithFormat:@"%d%%", (int) round(color.saturation * 100)];
 		component2Value_.text =
 		[NSString stringWithFormat:@"%d%%", (int) round(color.brightness * 100)];
+		alphaValue_.text =
+		[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
+	}
+	else*/
+	if (mColorModel == WDColorModelHSB)
+	{
+		component0Value_.text =
+		[NSString stringWithFormat:@"%d", (int) round(color.lch_L)];
+		component1Value_.text =
+		[NSString stringWithFormat:@"%d", (int) round(color.lch_C)];
+		component2Value_.text =
+		[NSString stringWithFormat:@"%d", (int) round(color.lch_H)];
 		alphaValue_.text =
 		[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
 	}
@@ -125,13 +138,22 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 
 - (void) updateViewWithColorModel:(WDColorModel)model
 {
-	if (model == WDColorModelHSB)
+/*	if (model == WDColorModelHSB)
 	{
 		component0Name_.text = @"H";
 		component1Name_.text = @"S";
 		component2Name_.text = @"B";
 
 		[mColorModelButton setTitle:@"HSB" forState:UIControlStateNormal];
+	}
+	else*/
+	if (model == WDColorModelHSB)
+	{
+		component0Name_.text = @"L";
+		component1Name_.text = @"C";
+		component2Name_.text = @"H";
+
+		[mColorModelButton setTitle:@"Lab" forState:UIControlStateNormal];
 	}
 	else
 	{
@@ -187,9 +209,12 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 		[mSlider3 floatValue] };
 
 	return
+	[WDColor colorWithType:mColorModel components:cmp];
+/*
 	mColorModel == WDColorModelHSB ?
 	[WDColor colorWithHSBA:cmp]:
 	[WDColor colorWithRGBA:cmp];
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////

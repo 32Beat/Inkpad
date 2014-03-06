@@ -14,15 +14,9 @@
 #endif
 
 #import "WDPickResult.h"
+#import "WDColorConversions.h"
 
 @class WDStrokeStyle;
-
-//
-// Color Conversion
-//
-
-void HSVtoRGB(CGFloat h, CGFloat s, CGFloat v, CGFloat *rgb);
-void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *h, CGFloat *s, CGFloat *v);
 
 //
 // Drawing Functions

@@ -336,6 +336,7 @@
 		BE8AC40E18B2C36D008F9C41 /* WDFrameOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE8AC40D18B2C36D008F9C41 /* WDFrameOptions.m */; };
 		BEB2A76918BB99B200C4037C /* WDFillOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEB2A76818BB99B200C4037C /* WDFillOptions.m */; };
 		BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */; };
+		BEC5BD5418C9014E003E51B2 /* WDColorConversions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC5BD5318C9014E003E51B2 /* WDColorConversions.m */; };
 		BED5700D18BBE32300BCDCD8 /* WDDashOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BED5700C18BBE32300BCDCD8 /* WDDashOptions.m */; };
 		BED8A82D18BC95DF00774649 /* DashOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BED8A82B18BC95DF00774649 /* DashOptions.xib */; };
 		BED8A83018BCA48100774649 /* WDDashController.m in Sources */ = {isa = PBXBuildFile; fileRef = BED8A82F18BCA48100774649 /* WDDashController.m */; };
@@ -865,6 +866,8 @@
 		BEB2A76718BB99B200C4037C /* WDFillOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDFillOptions.h; sourceTree = "<group>"; };
 		BEB2A76818BB99B200C4037C /* WDFillOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDFillOptions.m; sourceTree = "<group>"; };
 		BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeOptions.xib; sourceTree = "<group>"; };
+		BEC5BD5218C9014E003E51B2 /* WDColorConversions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDColorConversions.h; sourceTree = "<group>"; };
+		BEC5BD5318C9014E003E51B2 /* WDColorConversions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDColorConversions.m; sourceTree = "<group>"; };
 		BED5700B18BBE32300BCDCD8 /* WDDashOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDDashOptions.h; sourceTree = "<group>"; };
 		BED5700C18BBE32300BCDCD8 /* WDDashOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDDashOptions.m; sourceTree = "<group>"; };
 		BED8A82C18BC95DF00774649 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/DashOptions.xib; sourceTree = "<group>"; };
@@ -1301,6 +1304,8 @@
 				6BABD8EC141ED30100F7E0A9 /* WDBezierSegment.m */,
 				6BABD8ED141ED30100F7E0A9 /* WDColor.h */,
 				6BABD8EE141ED30100F7E0A9 /* WDColor.m */,
+				BEC5BD5218C9014E003E51B2 /* WDColorConversions.h */,
+				BEC5BD5318C9014E003E51B2 /* WDColorConversions.m */,
 				6BABD8EF141ED30100F7E0A9 /* WDCompoundPath.h */,
 				6BABD8F0141ED30100F7E0A9 /* WDCompoundPath.m */,
 				6BABD8F1141ED30100F7E0A9 /* WDCurveFit.h */,
@@ -2094,6 +2099,7 @@
 				6BABD9A6141ED30100F7E0A9 /* DblLinked.cpp in Sources */,
 				6BABD9A7141ED30100F7E0A9 /* Path.cpp in Sources */,
 				6BABD9A8141ED30100F7E0A9 /* PathConversion.cpp in Sources */,
+				BEC5BD5418C9014E003E51B2 /* WDColorConversions.m in Sources */,
 				6BABD9A9141ED30100F7E0A9 /* Shape.cpp in Sources */,
 				6B7A881A180CF73000FA241B /* WDArrowhead.m in Sources */,
 				BE652D7D18C77F6900F12F7B /* WDSpiralShape.m in Sources */,

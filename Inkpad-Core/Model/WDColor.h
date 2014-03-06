@@ -82,7 +82,8 @@ WDColorType;
 
 typedef enum
 {
-	WDColorSpaceDevice,
+	WDColorSpaceCustom = (-1),
+	WDColorSpaceDevice = 0,
 	WDColorSpaceSRGB,
 	WDColorSpaceXYZ
 }
@@ -136,11 +137,15 @@ WDColorSpace;
 - (CGFloat) xyz_X;
 - (CGFloat) xyz_Y;
 - (CGFloat) xyz_Z;
-
+*/
 - (CGFloat) lab_L;
 - (CGFloat) lab_a;
 - (CGFloat) lab_b;
-*/
+
+- (CGFloat) lch_L;
+- (CGFloat) lch_C;
+- (CGFloat) lch_H;
+
 
 
 + (WDColor *) colorWithRGBA:(const CGFloat *)cmp;
