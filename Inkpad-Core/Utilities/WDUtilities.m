@@ -25,38 +25,74 @@
 
 #pragma mark Color Conversion
 
-void HSVtoRGB(CGFloat h, CGFloat s, CGFloat v, CGFloat *r, CGFloat *g, CGFloat *b)
+typedef struct _RGB
 {
-	if (s == 0) {
-		*r = *g = *b = v;
-	} else {
-		float   f,p,q,t;
-		int     i;
+	CGFloat R;
+	CGFloat G;
+	CGFloat B;
+}
+_RGB;
+
+typedef struct _HSB
+{
+	CGFloat H;
+	CGFloat S;
+	CGFloat B;
+}
+_HSB;
+
+static inline void _HSB_RGB_1 (double H, double S, double B, _RGB *rgb);
+
+void HSVtoRGB(CGFloat h, CGFloat s, CGFloat b, CGFloat *rgb)
+{
+	_HSB_RGB_1(h, s, b, (_RGB *)rgb);
+}
+
+
+void _HSB_RGB_1 (double H, double S, double B, _RGB *rgb)
+{
+	// Test if pixel has color
+	if ((B > 0.0) && (S > 0.0))
+	{ 
+		double max = B;
+		double max_min = max*S;
+		double min = max - max_min;
+		double r, g, b;
+
+		H *= 360.0;
+		if ((H -= 60.0) <= 0)
+		{ r = max; b = min; g = max + H*max_min/60.0; }
+		else
+		if ((H -= 60.0) <= 0)
+		{ g = max; b = min; r = min - H*max_min/60.0; }
+		else
+		if ((H -= 60.0) <= 0)
+		{ g = max; r = min; b = max + H*max_min/60.0; }
+		else
+		if ((H -= 60.0) <= 0)
+		{ b = max; r = min; g = min - H*max_min/60.0; }
+		else
+		if ((H -= 60.0) <= 0)
+		{ b = max; g = min; r = max + H*max_min/60.0; }
+		else
+		// Note: H -= 60.0 skipped, hence "max - ..."
+		{ r = max; g = min; b = max - H*max_min/60.0; }
 		
-		h *= 360;
-		
-		if (h == 360.0f) {
-			h = 0.0f;
-		}
-		
-		h /= 60;
-		i = floor(h);
-		
-		f = h - i;
-		p = v * (1.0 - s);
-		q = v * (1.0 - (s*f));
-		t = v * (1.0 - (s * (1.0 - f)));
-		
-		switch (i) {
-			case 0: *r = v; *g = t; *b = p; break;
-			case 1: *r = q; *g = v; *b = p; break;
-			case 2: *r = p; *g = v; *b = t; break;
-			case 3: *r = p; *g = q; *b = v; break;
-			case 4: *r = t; *g = p; *b = v; break;
-			case 5: *r = v; *g = p; *b = q; break;
-		}
+		// Store r,g,b pixel
+		rgb->R = (r);
+		rgb->G = (g);
+		rgb->B = (b);
 	}
-}   
+	else
+	// Pixel is achromatic
+	{ 
+		rgb->R = \
+		rgb->G = \
+		rgb->B = B; 
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *h, CGFloat *s, CGFloat *v)
 {

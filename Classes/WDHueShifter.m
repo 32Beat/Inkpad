@@ -247,7 +247,6 @@
 - (void) p_buildHueImage
 {
     int             x, y;
-    CGFloat           r,g,b;
     int             width = CGRectGetWidth(self.bounds);
     int             height = kHueImageHeight;
     int             bpr = width * 4;
@@ -257,13 +256,15 @@
     
     for (x = 0; x < width; x++) {
         float angle = ((float) x) / width;
-        HSVtoRGB(angle, 1.0f, 1.0f, &r, &g, &b);
+
+		CGFloat rgb[3];
+        HSVtoRGB(angle, 1.0f, 1.0f, rgb);
         
         for (y = 0; y < height; y++) {
-            ptr[y * bpr + x*4] = 255;
-            ptr[y * bpr + x*4+1] = r * 255;
-            ptr[y * bpr + x*4+2] = g * 255;
-            ptr[y * bpr + x*4+3] = b * 255;
+            ptr[y * bpr + x*4+0] = 255;
+            ptr[y * bpr + x*4+1] = 255*rgb[0];
+            ptr[y * bpr + x*4+2] = 255*rgb[1];
+            ptr[y * bpr + x*4+3] = 255*rgb[2];
         }
     }
     

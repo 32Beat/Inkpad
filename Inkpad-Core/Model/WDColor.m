@@ -14,6 +14,14 @@
 #import "WDColor.h"
 #import "WDUtilities.h"
 
+// glSet uses glColor4f
+#if TARGET_OS_IPHONE
+#import <OpenGLES/ES1/gl.h>
+#else
+#import <OpenGL/gl.h>
+#endif
+
+// paintPath:inContext:
 #import "WDPath.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,10 +44,10 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 ////////////////////////////////////////////////////////////////////////////////
 
 + (id) colorWithRGBA:(const CGFloat *)cmp
-{ return [self colorWithType:kWDColorTypeRGB components:cmp]; }
+{ return [self colorWithType:WDColorTypeRGB components:cmp]; }
 
 + (id) colorWithHSBA:(const CGFloat *)cmp
-{ return [self colorWithType:kWDColorTypeHSB components:cmp]; }
+{ return [self colorWithType:WDColorTypeHSB components:cmp]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +74,7 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 + (id) colorWithWhite:(CGFloat)white alpha:(CGFloat)alpha
 {
 	CGFloat cmp[] = { white, white, white, alpha };
-	return [self colorWithType:kWDColorTypeRGB components:cmp];
+	return [self colorWithType:WDColorTypeRGB components:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +85,7 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 	alpha:(CGFloat)alpha
 {
 	CGFloat cmp[] = { red, green, blue, alpha };
-	return [self colorWithType:kWDColorTypeRGB components:cmp];
+	return [self colorWithType:WDColorTypeRGB components:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,12 +96,12 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 	alpha:(CGFloat)alpha
 {
 	CGFloat cmp[] = { hue, saturation, brightness, alpha };
-	return [self colorWithType:kWDColorTypeHSB components:cmp];
+	return [self colorWithType:WDColorTypeHSB components:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (id) colorWithAlphaComponent:(CGFloat)alpha
+- (WDColor *) colorWithAlphaComponent:(CGFloat)alpha
 {
 	CGFloat cmp[4] = {
 		mComponent[0],
@@ -101,6 +109,20 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 		mComponent[2],
 		alpha };
 
+	return [[self class] colorWithType:mType components:cmp];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (WDColor *) colorWithComponentValue:(CGFloat)value atIndex:(int)index
+{
+	CGFloat cmp[4] = {
+		mComponent[0],
+		mComponent[1],
+		mComponent[2],
+		mComponent[3] };
+
+	cmp[index] = value;
 	return [[self class] colorWithType:mType components:cmp];
 }
 
@@ -122,7 +144,7 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 		WDRandomFloat(),
 		0.5 + 0.5*WDRandomFloat() };
 
-	return [self colorWithType:kWDColorTypeHSB components:cmp];
+	return [self colorWithType:WDColorTypeHSB components:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +181,7 @@ double WDRandomHue(void)
 		0.5 + 0.1*floor(6*WDRandomHue()),
 		1.0 };
 
-	return [self colorWithType:kWDColorTypeHSB components:cmp];
+	return [self colorWithType:WDColorTypeHSB components:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,8 +193,8 @@ double WDRandomHue(void)
 	cmp[2] = mComponent[2];
 	cmp[3] = mComponent[3];
 
-	if (mType == kWDColorTypeHSB)
-	{ HSVtoRGB(cmp[0], cmp[1], cmp[2], &cmp[0], &cmp[1], &cmp[2]); }
+	if (mType == WDColorTypeHSB)
+	{ HSVtoRGB(cmp[0], cmp[1], cmp[2], cmp); }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +206,7 @@ double WDRandomHue(void)
 	cmp[2] = mComponent[2];
 	cmp[3] = mComponent[3];
 
-	if (mType == kWDColorTypeRGB)
+	if (mType != WDColorTypeHSB)
 	{ RGBtoHSV(cmp[0], cmp[1], cmp[2], &cmp[0], &cmp[1], &cmp[2]); }
 }
 
@@ -196,7 +218,7 @@ double WDRandomHue(void)
 	{ return self; }
 
 	CGFloat cmp[4];
-	if (colorType == kWDColorTypeHSB)
+	if (colorType == WDColorTypeHSB)
 	{ [self getHSBA:cmp]; }
 	else
 	{ [self getRGBA:cmp]; }
@@ -270,7 +292,7 @@ double WDRandomHue(void)
 
 - (void) decodeWithCoder0:(NSCoder *)coder
 {
-	mType = kWDColorTypeHSB;
+	mType = WDColorTypeHSB;
 	mComponent[0] = [coder decodeFloatForKey:WDHueKey];
 	mComponent[1] = [coder decodeFloatForKey:WDSaturationKey];
 	mComponent[2] = [coder decodeFloatForKey:WDBrightnessKey];
@@ -278,6 +300,42 @@ double WDRandomHue(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray *) gradientForComponentAtIndex:(int)index
+{
+	if ((mType == WDColorTypeHSB)&&(index == 0))
+	{
+		return @[
+		[self colorWithComponentValue:0.0/360 atIndex:index],
+		[self colorWithComponentValue:60.0/360 atIndex:index],
+		[self colorWithComponentValue:120.0/360 atIndex:index],
+		[self colorWithComponentValue:180.0/360 atIndex:index],
+		[self colorWithComponentValue:240.0/360 atIndex:index],
+		[self colorWithComponentValue:300.0/360 atIndex:index],
+		[self colorWithComponentValue:360.0/360 atIndex:index]];
+	}
+	else
+	if ((mType == WDColorTypeLCH)&&(index == 3))
+	{
+		return @[
+		[self colorWithComponentValue:0.0/360 atIndex:index],
+		[self colorWithComponentValue:45.0/360 atIndex:index],
+		[self colorWithComponentValue:90.0/360 atIndex:index],
+		[self colorWithComponentValue:135.0/360 atIndex:index],
+		[self colorWithComponentValue:180.0/360 atIndex:index],
+		[self colorWithComponentValue:225.0/360 atIndex:index],
+		[self colorWithComponentValue:270.0/360 atIndex:index],
+		[self colorWithComponentValue:315.0/360 atIndex:index],
+		[self colorWithComponentValue:360.0/360 atIndex:index]];
+	}
+
+	return @[
+	[self colorWithComponentValue:0.0 atIndex:index],
+	[self colorWithComponentValue:1.0 atIndex:index]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 - (NSString *) description
 {
@@ -412,10 +470,25 @@ double WDRandomHue(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment
+- (WDColorType) type
+{ return mType; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) componentAtIndex:(int)index
+{ return mComponent[index]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) getComponents:(CGFloat *)cmp
 {
-	return adjustment(self);
+	cmp[0] = mComponent[0];
+	cmp[1] = mComponent[1];
+	cmp[2] = mComponent[2];
+	cmp[3] = mComponent[3];
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 - (CGFloat) red
 {
@@ -461,8 +534,29 @@ double WDRandomHue(void)
 	[self getHSBA:cmp];
 	return cmp[2];
 }
+/*
+- (CGFloat) rgb_R
+- (CGFloat) rgb_G
+- (CGFloat) rgb_B
+
+- (CGFloat) hsb_H
+- (CGFloat) hsb_S
+- (CGFloat) hsb_B
+
+- (CGFloat) xyz_X
+- (CGFloat) xyz_Y
+- (CGFloat) xyz_Z
+
+- (CGFloat) lab_L
+- (CGFloat) lab_a
+- (CGFloat) lab_b
+*/
 
 
+- (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment
+{
+	return adjustment(self);
+}
 
 - (WDColor *) colorBalanceRed:(float)rShift green:(float)gShift blue:(float)bShift
 {
@@ -473,7 +567,7 @@ double WDRandomHue(void)
 	cmp[1] = WDClamp(0, 1, cmp[1] + gShift);
 	cmp[2] = WDClamp(0, 1, cmp[2] + bShift);
 
-	return [[self class] colorWithType:kWDColorTypeRGB components:cmp];
+	return [[self class] colorWithType:WDColorTypeRGB components:cmp];
 }
 
 - (WDColor *) adjustHue:(float)hShift
@@ -507,7 +601,7 @@ double WDRandomHue(void)
 	cmp[1] = 1.0 - cmp[1];
 	cmp[2] = 1.0 - cmp[2];
 
-	return [[self class] colorWithType:kWDColorTypeRGB components:cmp];
+	return [[self class] colorWithType:WDColorTypeRGB components:cmp];
 }
 
 + (WDColor *) blackColor
@@ -568,7 +662,7 @@ double WDRandomHue(void)
 	src[2] += blend * (dst[2] - src[2]);
 	src[3] += blend * (dst[3] - src[3]);
 
-	return [WDColor colorWithType:kWDColorTypeRGB components:src];
+	return [WDColor colorWithType:WDColorTypeRGB components:src];
 }
 
 - (NSString *) hexValue

@@ -326,6 +326,7 @@
 		BE41B302189FA7570021477A /* WDLeafShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE41B301189FA7570021477A /* WDLeafShape.m */; };
 		BE46104A18B4C20D00C08262 /* WDStyleContainer.m in Sources */ = {isa = PBXBuildFile; fileRef = BE46104918B4C20D00C08262 /* WDStyleContainer.m */; };
 		BE56D4D718A3F10A00B4374C /* WDSpadesShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE56D4D618A3F10A00B4374C /* WDSpadesShape.m */; };
+		BE652D7D18C77F6900F12F7B /* WDSpiralShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE652D7C18C77F6900F12F7B /* WDSpiralShape.m */; };
 		BE698F11189EE3B300C6A774 /* WDStarShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE698F10189EE3B300C6A774 /* WDStarShapeOptions.xib */; };
 		BE698F14189EE4AB00C6A774 /* WDStarShapeOptionsView.m in Sources */ = {isa = PBXBuildFile; fileRef = BE698F13189EE4AB00C6A774 /* WDStarShapeOptionsView.m */; };
 		BE7533FC18A0DFEC00060839 /* WDDiamondShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE7533FB18A0DFEC00060839 /* WDDiamondShape.m */; };
@@ -846,6 +847,8 @@
 		BE46104918B4C20D00C08262 /* WDStyleContainer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDStyleContainer.m; sourceTree = "<group>"; };
 		BE56D4D518A3F10A00B4374C /* WDSpadesShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDSpadesShape.h; sourceTree = "<group>"; };
 		BE56D4D618A3F10A00B4374C /* WDSpadesShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDSpadesShape.m; sourceTree = "<group>"; };
+		BE652D7B18C77F6900F12F7B /* WDSpiralShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDSpiralShape.h; sourceTree = "<group>"; };
+		BE652D7C18C77F6900F12F7B /* WDSpiralShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDSpiralShape.m; sourceTree = "<group>"; };
 		BE698F10189EE3B300C6A774 /* WDStarShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDStarShapeOptions.xib; sourceTree = "<group>"; };
 		BE698F12189EE4AB00C6A774 /* WDStarShapeOptionsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDStarShapeOptionsView.h; sourceTree = "<group>"; };
 		BE698F13189EE4AB00C6A774 /* WDStarShapeOptionsView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDStarShapeOptionsView.m; sourceTree = "<group>"; };
@@ -1683,6 +1686,8 @@
 				BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */,
 				BE7533FD18A136B700060839 /* WDPieShape.h */,
 				BE7533FE18A136B700060839 /* WDPieShape.m */,
+				BE652D7B18C77F6900F12F7B /* WDSpiralShape.h */,
+				BE652D7C18C77F6900F12F7B /* WDSpiralShape.m */,
 				BE28E3EE189ECBDF00FD4542 /* WDStarShape.h */,
 				BE28E3EB189EC9CD00FD4542 /* WDStarShape.m */,
 				BE2ACC91189AFF6600EC91EC /* WDOvalShape.h */,
@@ -2091,6 +2096,7 @@
 				6BABD9A8141ED30100F7E0A9 /* PathConversion.cpp in Sources */,
 				6BABD9A9141ED30100F7E0A9 /* Shape.cpp in Sources */,
 				6B7A881A180CF73000FA241B /* WDArrowhead.m in Sources */,
+				BE652D7D18C77F6900F12F7B /* WDSpiralShape.m in Sources */,
 				6BABD9AA141ED30100F7E0A9 /* ShapeMisc.cpp in Sources */,
 				6BABD9AB141ED30100F7E0A9 /* ShapeSweep.cpp in Sources */,
 				6BABD9AC141ED30100F7E0A9 /* ShapeSweepUtils.cpp in Sources */,

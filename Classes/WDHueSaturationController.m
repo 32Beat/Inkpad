@@ -77,9 +77,12 @@
 {
 	[super viewDidLoad];
 	
-	[saturationSlider_ setMode:WDColorSliderModeSaturation];
-	[brightnessSlider_ setMode:WDColorSliderModeBrightness];
-	
+//	[saturationSlider_ setMode:WDColorSliderModeSaturation];
+//	[brightnessSlider_ setMode:WDColorSliderModeBrightness];
+
+	[saturationSlider_ setComponentIndex:1];
+	[brightnessSlider_ setComponentIndex:2];
+
 	UIControlEvents dragEvents = (UIControlEventTouchDown | UIControlEventTouchDragInside | UIControlEventTouchDragOutside);
 	
 	[hueShifter_ addTarget:self action:@selector(takeShiftFrom:) forControlEvents:dragEvents];

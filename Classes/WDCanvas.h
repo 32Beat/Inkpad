@@ -74,6 +74,8 @@ WDSelectionMode;
     NSTimer                 *messageTimer_;
 }
 
+@property (nonatomic, weak) WDCanvasController *controller;
+@property (weak, nonatomic, readonly) WDDrawingController *drawingController;
 @property (nonatomic, weak) WDDrawing *drawing;
 @property (nonatomic) WDSelectionView *selectionView;
 @property (nonatomic) WDEraserPreviewView *eraserPreview;
@@ -90,8 +92,6 @@ WDSelectionMode;
 @property (nonatomic, strong) NSValue *marquee;
 @property (nonatomic, strong) WDPath *shapeUnderConstruction;
 @property (nonatomic, strong) WDPath *eraserPath;
-@property (nonatomic, weak) WDCanvasController *controller;
-@property (weak, nonatomic, readonly) WDDrawingController *drawingController;
 @property (nonatomic, strong, readonly) WDPalette *toolPalette;
 @property (nonatomic, readonly) WDEyedropper *eyedropper;
 @property (nonatomic, readonly) WDRulerView *horizontalRuler;

@@ -22,30 +22,97 @@
 	Color object with original parameter entries
 
 	The user generally wants to see the original entries for parameters, 
-	and using a separate object allows additional colorspaces.
-	In order to prevent confusion with CGColorSpaceRef and WDColorSpaceKey
-	we'll use WDColorType
+	and using a separate object allows additional colortypes internally.
 */
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColorType
+	-----------
+	Enumeration for types of components
+	This only refers to what type of components are stored, it does not 
+	refer to the interpretation. In order to prevent confusion with 
+	CGColorSpaceRef and WDColorSpaceKey which are typically used for 
+	interpretation, we'll use WDColorType.
+	
+	Note: for all kinds of reasons we will not support CMYK 
+*/
 
 typedef enum
 {
-	kWDColorTypeRGB,
-	kWDColorTypeHSB
+	WDColorTypeDevice = 0,
+	WDColorTypeWht,
+	WDColorTypeRGB,
+	WDColorTypeHSB,
+	WDColorTypeXYZ,
+	WDColorTypeLab,
+	WDColorTypeLCH
 }
 WDColorType;
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColorSpace
+	------------
+	Enumeration for some default colorspaces
+	We'll define Colorspace as: interpretation reference for colorcoordinates.
+	
+	i.e.: 
+	we can have HSB components, 
+	which convert to RGB coordinates,
+	that need to be interpreted as sRGB
+
+	While this enumeration is not currently used, 
+	it will enforce usage patterns internally.
+	
+	Within our definitions there is technically no such thing
+	as an Lab space. Lab has XYZ interpretation reference.
+	Note that historically XYZ has been understood as an RGB space 
+	with virtual primaries and gamma of 1.0. Applying some 
+	reasonable gamma to XYZ will result in nicely controllable,
+	but hard to reproduce RGB colors, very useable as workingspace.
+	
+	Strictly XYZ is only valid if it includes an illuminant reference. 
+	Once that becomes relevant, methods will be created to ensure 
+	it will always be clear what is used.
+	
+	For now we always use illuminant E = { 1.0, 1.0, 1.0 } since 
+	we are primarily interested in relative colorimetric Lab to RGB
+	conversions for which illuminant is irrelevant.
+*/
+
+typedef enum
+{
+	WDColorSpaceDevice,
+	WDColorSpaceSRGB,
+	WDColorSpaceXYZ
+}
+WDColorSpace;
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+
+*/
 
 @interface WDColor : NSObject <NSCoding, NSCopying, WDPathPainter>
 {
-	WDColorType mType;
+	// Component values
 	CGFloat mComponent[4];
+
+	// Type of components
+	WDColorType mType;
+	// Interpretation of color
+	WDColorSpace mSpace;
 
 	// Cache
 	UIColor *mUIColor;
 }
 
+// Raw properties
+- (WDColorType) type;
+- (CGFloat) componentAtIndex:(int)index;
+- (void) getComponents:(CGFloat *)cmp;
+
+// Synchronisation with UIColor
 - (CGFloat) red;
 - (CGFloat) green;
 - (CGFloat) blue;
@@ -56,10 +123,33 @@ WDColorType;
 - (CGFloat) brightness;
 
 
+// Typed query
+/*
+- (CGFloat) rgb_R;
+- (CGFloat) rgb_G;
+- (CGFloat) rgb_B;
+
+- (CGFloat) hsb_H;
+- (CGFloat) hsb_S;
+- (CGFloat) hsb_B;
+
+- (CGFloat) xyz_X;
+- (CGFloat) xyz_Y;
+- (CGFloat) xyz_Z;
+
+- (CGFloat) lab_L;
+- (CGFloat) lab_a;
+- (CGFloat) lab_b;
+*/
+
+
 + (WDColor *) colorWithRGBA:(const CGFloat *)cmp;
 + (WDColor *) colorWithHSBA:(const CGFloat *)cmp;
 + (WDColor *) colorWithType:(WDColorType)type components:(const CGFloat *)cmp;
 - (WDColor *) initWithType:(WDColorType)type components:(const CGFloat *)cmp;
+
+- (WDColor *) colorWithColorType:(WDColorType)colorType;
+- (WDColor *) colorWithComponentValue:(CGFloat)value atIndex:(int)index;
 - (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
 
 + (WDColor *) colorWithWhite:(CGFloat)white
@@ -83,6 +173,10 @@ WDColorType;
 
 + (WDColor *) colorWithData:(NSData *)data;
 - (NSData *) colorData;
+
+
+- (NSArray *) gradientForComponentAtIndex:(int)index;
+
 
 - (UIColor *) UIColor;
 - (UIColor *) opaqueUIColor;

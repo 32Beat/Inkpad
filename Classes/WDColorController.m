@@ -16,7 +16,7 @@
 #import "WDColorWell.h"
 #import "WDColor.h"
 
-NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
+NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDColorController
@@ -52,11 +52,9 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 	self.view.opaque = NO;
 	self.view.backgroundColor = nil;
 
-	mSlider3.mode = WDColorSliderModeAlpha;
-
-	[self setColorSpace:(WDColorSpace)
+	[self setColorModel:(WDColorModel)
 		[[NSUserDefaults standardUserDefaults]
-			integerForKey:WDColorSpaceDefault]];
+			integerForKey:WDColorModelDefault]];
 
 	// set up connections
 	[self setSliderAction:@selector(adjustColor:)
@@ -69,6 +67,11 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 		forControlEvents:
 			UIControlEventTouchUpInside |
 			UIControlEventTouchUpOutside];
+
+	[mSlider0 setComponentIndex:0];
+	[mSlider1 setComponentIndex:1];
+	[mSlider2 setComponentIndex:2];
+	[mSlider3 setComponentIndex:3];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +98,7 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 	[mColorWell setPainter:color];
 
 	// Update value labels
-	if (mColorSpace == WDColorSpaceHSB) {
+	if (mColorModel == WDColorModelHSB) {
 		component0Value_.text =
 		[NSString stringWithFormat:@"%d°", (int) round(color.hue * 360)];
 		component1Value_.text =
@@ -120,47 +123,40 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) updateViewWithColorSpace:(WDColorSpace)space
+- (void) updateViewWithColorModel:(WDColorModel)model
 {
-	if (space == WDColorSpaceRGB)
+	if (model == WDColorModelHSB)
 	{
-		mSlider0.mode = WDColorSliderModeRed;
-		mSlider1.mode = WDColorSliderModeGreen;
-		mSlider2.mode = WDColorSliderModeBlue;
-		
-		component0Name_.text = @"R";
-		component1Name_.text = @"G";
-		component2Name_.text = @"B";
-
-		[colorSpaceButton_ setTitle:@"RGB" forState:UIControlStateNormal];
-	}
-	else
-	{
-		mSlider0.mode = WDColorSliderModeHue;
-		mSlider1.mode = WDColorSliderModeSaturation;
-		mSlider2.mode = WDColorSliderModeBrightness;
-		
 		component0Name_.text = @"H";
 		component1Name_.text = @"S";
 		component2Name_.text = @"B";
 
-		[colorSpaceButton_ setTitle:@"HSB" forState:UIControlStateNormal];
+		[mColorModelButton setTitle:@"HSB" forState:UIControlStateNormal];
+	}
+	else
+	{
+		component0Name_.text = @"R";
+		component1Name_.text = @"G";
+		component2Name_.text = @"B";
+
+		[mColorModelButton setTitle:@"RGB" forState:UIControlStateNormal];
 	}
 
-	[self updateViewWithColor:[self color]];
+	[self updateViewWithColor:
+	[[self color] colorWithColorType:model]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setColorSpace:(WDColorSpace)space
+- (void) setColorModel:(WDColorModel)model
 {
-	if (mColorSpace != space)
+	if (mColorModel != model)
 	{
-		mColorSpace = space;
-		[self updateViewWithColorSpace:space];
+		mColorModel = model;
+		[self updateViewWithColorModel:model];
 
 		[[NSUserDefaults standardUserDefaults]
-		setInteger:mColorSpace forKey:WDColorSpaceDefault];
+		setInteger:mColorModel forKey:WDColorModelDefault];
 	}
 }
 
@@ -191,18 +187,18 @@ NSString *const WDColorSpaceDefault = @"WDColorSpaceDefault";
 		[mSlider3 floatValue] };
 
 	return
-	mColorSpace == WDColorSpaceHSB ?
+	mColorModel == WDColorModelHSB ?
 	[WDColor colorWithHSBA:cmp]:
 	[WDColor colorWithRGBA:cmp];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (IBAction) switchColorSpace:(id)sender
+- (IBAction) switchColorModel:(id)sender
 {
-	[self setColorSpace:
-	mColorSpace == WDColorSpaceHSB ?
-	WDColorSpaceRGB : WDColorSpaceHSB];
+	[self setColorModel:
+	mColorModel == WDColorModelHSB ?
+	WDColorModelRGB : WDColorModelHSB];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -30,12 +30,12 @@
 
 typedef enum
 {
-	WDColorSpaceRGB,
-	WDColorSpaceHSB,
+	WDColorModelRGB = WDColorTypeRGB,
+	WDColorModelHSB = WDColorTypeHSB
 }
-WDColorSpace;
+WDColorModel;
 
-extern NSString *const WDColorSpaceDefault;
+extern NSString *const WDColorModelDefault;
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDColorController : UIViewController
@@ -56,14 +56,14 @@ extern NSString *const WDColorSpaceDefault;
 	IBOutlet UILabel            *component2Value_;
 	IBOutlet UILabel            *alphaValue_;
 	
-	IBOutlet UIButton           *colorSpaceButton_;
+	IBOutlet UIButton           *mColorModelButton;
 
 	// Represented object
 	WDColor 		*mColor;
 
 	// State parameters
 	BOOL 			mTracking;
-	WDColorSpace 	mColorSpace;
+	WDColorModel 	mColorModel;
 }
 
 @property (nonatomic, assign, getter=isTracking) BOOL tracking;
@@ -77,7 +77,7 @@ extern NSString *const WDColorSpaceDefault;
 - (WDColor *)color;
 - (void) setColor:(WDColor *)color;
 
-- (IBAction) switchColorSpace:(id)sender;
+- (IBAction) switchColorModel:(id)sender;
 
 @end
 

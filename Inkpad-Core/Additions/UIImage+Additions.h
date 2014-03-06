@@ -13,6 +13,8 @@
 
 @interface UIImage (WDAdditions)
 
++ (UIImage *) checkerBoardPattern;
+
 - (void) drawToFillRect:(CGRect)bounds;
 - (UIImage *) rotatedImage:(int)rotation;
 - (UIImage *) downsampleWithMaxDimension:(float)constraint;

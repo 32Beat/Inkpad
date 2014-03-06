@@ -83,9 +83,9 @@
 {
     [super viewDidLoad];
     
-    [redSlider_ setMode:WDColorSliderModeRedBalance];
-    [greenSlider_ setMode:WDColorSliderModeGreenBalance];
-    [blueSlider_ setMode:WDColorSliderModeBlueBalance];
+    [redSlider_ setComponentIndex:0];
+    [greenSlider_ setComponentIndex:1];
+    [blueSlider_ setComponentIndex:2];
     
     UIControlEvents dragEvents = (UIControlEventTouchDown | UIControlEventTouchDragInside | UIControlEventTouchDragOutside);
     

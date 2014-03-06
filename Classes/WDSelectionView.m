@@ -187,7 +187,7 @@
 
 - (UIView *) hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
-    return self.superview;
+	return self.superview;
 }
 
 - (void) renderMarqueWithTransform:(CGAffineTransform)T
@@ -463,10 +463,10 @@
 */
 
 #ifdef WD_DEBUG
-    NSLog(@"SelectionView preptime: %f", -[date timeIntervalSinceNow]);
+	NSLog(@"SelectionView preptime: %f", -[date timeIntervalSinceNow]);
 #endif
 
-    [mContext presentRenderbuffer:GL_RENDERBUFFER_OES];
+	[mContext presentRenderbuffer:GL_RENDERBUFFER_OES];
 }
 
 
@@ -478,14 +478,14 @@
 
 - (void)dealloc
 {        
-    if ([EAGLContext currentContext] == mContext) {
-        [EAGLContext setCurrentContext:nil];
-    }
+	if ([EAGLContext currentContext] == mContext) {
+		[EAGLContext setCurrentContext:nil];
+	}
 }
 
 - (WDDrawing *) drawing
 {
-    return self.canvas.drawing;
+	return self.canvas.drawing;
 }
 
 @end
