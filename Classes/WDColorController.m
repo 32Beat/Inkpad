@@ -98,28 +98,34 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	[mColorWell setPainter:color];
 
 	// Update value labels
-/*	if (mColorModel == WDColorModelHSB)
-	{
-		component0Value_.text =
-		[NSString stringWithFormat:@"%d°", (int) round(color.hue * 360)];
-		component1Value_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.saturation * 100)];
-		component2Value_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.brightness * 100)];
-		alphaValue_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
-	}
-	else*/
-	if (mColorModel == WDColorModelHSB)
+	if (mColorModel == WDColorModelLCH)
 	{
 		component0Value_.text =
 		[NSString stringWithFormat:@"%d", (int) round(color.lch_L)];
 		component1Value_.text =
 		[NSString stringWithFormat:@"%d", (int) round(color.lch_C)];
 		component2Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.lch_H)];
-		alphaValue_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
+		[NSString stringWithFormat:@"%d°", (int) round(color.lch_H)];
+	}
+	else
+	if (mColorModel == WDColorModelLab)
+	{
+		component0Value_.text =
+		[NSString stringWithFormat:@"%d", (int) round(color.lab_L)];
+		component1Value_.text =
+		[NSString stringWithFormat:@"%d", (int) round(color.lab_a)];
+		component2Value_.text =
+		[NSString stringWithFormat:@"%d", (int) round(color.lab_b)];
+	}
+	else
+	if (mColorModel == WDColorModelHSB)
+	{
+		component0Value_.text =
+		[NSString stringWithFormat:@"%d°", (int) round(color.hsb_H)];
+		component1Value_.text =
+		[NSString stringWithFormat:@"%d%%", (int) round(color.hsb_S)];
+		component2Value_.text =
+		[NSString stringWithFormat:@"%d%%", (int) round(color.hsb_B)];
 	}
 	else
 	{
@@ -129,31 +135,41 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 		[NSString stringWithFormat:@"%d", (int) round(color.green * 255)];
 		component2Value_.text =
 		[NSString stringWithFormat:@"%d", (int) round(color.blue * 255)];
-		alphaValue_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
 	}
+	
+	alphaValue_.text =
+	[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateViewWithColorModel:(WDColorModel)model
 {
-/*	if (model == WDColorModelHSB)
+	if (model == WDColorModelLCH)
+	{
+		component0Name_.text = @"L";
+		component1Name_.text = @"C";
+		component2Name_.text = @"H";
+
+		[mColorModelButton setTitle:@"LCH" forState:UIControlStateNormal];
+	}
+	else
+	if (model == WDColorModelLab)
+	{
+		component0Name_.text = @"L";
+		component1Name_.text = @"a";
+		component2Name_.text = @"b";
+
+		[mColorModelButton setTitle:@"Lab" forState:UIControlStateNormal];
+	}
+	else
+	if (model == WDColorModelHSB)
 	{
 		component0Name_.text = @"H";
 		component1Name_.text = @"S";
 		component2Name_.text = @"B";
 
 		[mColorModelButton setTitle:@"HSB" forState:UIControlStateNormal];
-	}
-	else*/
-	if (model == WDColorModelHSB)
-	{
-		component0Name_.text = @"L";
-		component1Name_.text = @"C";
-		component2Name_.text = @"H";
-
-		[mColorModelButton setTitle:@"Lab" forState:UIControlStateNormal];
 	}
 	else
 	{
@@ -194,7 +210,8 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	if (mColor != color)
 	{
 		mColor = color;
-		[self updateViewWithColor:color];
+		[self updateViewWithColor:
+		[[self color] colorWithColorType:mColorModel]];
 	}
 }
 
@@ -210,20 +227,27 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 
 	return
 	[WDColor colorWithType:mColorModel components:cmp];
-/*
-	mColorModel == WDColorModelHSB ?
-	[WDColor colorWithHSBA:cmp]:
-	[WDColor colorWithRGBA:cmp];
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction) switchColorModel:(id)sender
 {
-	[self setColorModel:
-	mColorModel == WDColorModelHSB ?
-	WDColorModelRGB : WDColorModelHSB];
+	WDColorModel model = mColorModel;
+
+	if (model == WDColorModelRGB)
+		model = WDColorModelHSB;
+	else
+	if (model == WDColorModelHSB)
+		model = WDColorModelLab;
+	else
+	if (model == WDColorModelLab)
+		model = WDColorModelLCH;
+	else
+	if (model == WDColorModelLCH)
+		model = WDColorModelRGB;
+
+	[self setColorModel:model];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -12,38 +12,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <UIKit/UIKit.h>
-
-@class WDColorIndicator;
-//@class WDColor;
 #import "WDColor.h"
 
-typedef enum {
-	WDColorSliderModeHue,
-	WDColorSliderModeSaturation,
-	WDColorSliderModeBrightness,
-	WDColorSliderModeRed,
-	WDColorSliderModeGreen,
-	WDColorSliderModeBlue,
-	WDColorSliderModeAlpha,
-	WDColorSliderModeRedBalance,
-	WDColorSliderModeGreenBalance,
-	WDColorSliderModeBlueBalance
-} WDColorSliderMode;
-
+////////////////////////////////////////////////////////////////////////////////
 @interface WDColorSlider : UIControl
-{
-	WDColor             *color_;
-	float               value_;
 
-	WDColorIndicator    *indicator_;
-	BOOL                reversed_;
-}
-
-@property (nonatomic, assign) int componentIndex;
-
-@property (nonatomic, readonly) float floatValue;
 @property (nonatomic, strong) id color;
+@property (nonatomic, assign) float minValue;
+@property (nonatomic, assign) float maxValue;
+
+- (float) floatValue;
+- (void) setFloatValue:(float)value;
+/*
+*/
+@property (nonatomic, assign) int componentIndex;
+@property (nonatomic, assign) BOOL dynamicTrackGradient;
+@property (nonatomic, assign) BOOL dynamicIndicatorColor;
 @property (nonatomic, assign) BOOL reversed;
-@property (nonatomic, strong, readonly) WDColorIndicator *indicator;
 
 @end
+////////////////////////////////////////////////////////////////////////////////
+
+

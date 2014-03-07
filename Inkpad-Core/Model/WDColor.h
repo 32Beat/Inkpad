@@ -66,11 +66,6 @@ WDColorType;
 	
 	Within our definitions there is technically no such thing
 	as an Lab space. Lab has XYZ interpretation reference.
-	Note that historically XYZ has been understood as an RGB space 
-	with virtual primaries and gamma of 1.0. Applying some 
-	reasonable gamma to XYZ will result in nicely controllable,
-	but hard to reproduce RGB colors, very useable as workingspace.
-	
 	Strictly XYZ is only valid if it includes an illuminant reference. 
 	Once that becomes relevant, methods will be created to ensure 
 	it will always be clear what is used.
@@ -125,7 +120,6 @@ WDColorSpace;
 
 
 // Typed query
-/*
 - (CGFloat) rgb_R;
 - (CGFloat) rgb_G;
 - (CGFloat) rgb_B;
@@ -133,7 +127,7 @@ WDColorSpace;
 - (CGFloat) hsb_H;
 - (CGFloat) hsb_S;
 - (CGFloat) hsb_B;
-
+/*
 - (CGFloat) xyz_X;
 - (CGFloat) xyz_Y;
 - (CGFloat) xyz_Z;

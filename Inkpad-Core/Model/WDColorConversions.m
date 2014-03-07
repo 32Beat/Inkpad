@@ -14,6 +14,7 @@
 
 #import "WDColorConversions.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct _RGB
@@ -71,7 +72,13 @@ static inline void _LCH_Lab_1 (double L, double C, double H, _Lab *lab);
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
+#pragma mark Glue
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Following routines translate between WDColor components 
+	and the required internal values. WDColor components are 
+	currenly normalized.
+*/
 
 void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *hsb)
 { _RGB_HSB_1(r, g, b, (_HSB *)hsb); }
@@ -86,16 +93,50 @@ void XYZtoSRGB(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb)
 { _XYZ_sRGB_1(x, y, z, (_RGB *)rgb); }
 
 void XYZtoLAB(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *lab)
-{ _XYZ_Lab_1(X, Y, Z, (_Lab *)lab); }
+{
+	_XYZ_Lab_1(X, Y, Z, (_Lab *)lab);
+	lab[2] += 120.0;
+	lab[1] += 120.0;
+	lab[2] /= 240.0;
+	lab[1] /= 240.0;
+	lab[0] /= 100.0;
+}
 
 void LABtoXYZ(CGFloat L, CGFloat a, CGFloat b, CGFloat *xyz)
-{ _Lab_XYZ_1(L, a, b, (_XYZ *)xyz); }
+{
+	L *= 100.0;
+	a *= 240.0;
+	b *= 240.0;
+	a -= 120.0;
+	b -= 120.0;
+	_Lab_XYZ_1(L, a, b, (_XYZ *)xyz);
+}
 
 void LABtoLCH(CGFloat L, CGFloat a, CGFloat b, CGFloat *lch)
-{ _Lab_LCH_1(L, a, b, (_LCH *)lch); }
+{
+	L *= 100.0;
+	a *= 240.0;
+	b *= 240.0;
+	a -= 120.0;
+	b -= 120.0;
+	_Lab_LCH_1(L, a, b, (_LCH *)lch);
+	lch[0] /= 100.0;
+	lch[1] /= 120.0;
+	lch[2] /= 360.0;
+}
 
 void LCHtoLAB(CGFloat L, CGFloat C, CGFloat H, CGFloat *lab)
-{ _LCH_Lab_1(L, C, H, (_Lab *)lab); }
+{
+	L *= 100.0;
+	C *= 120.0;
+	H *= 360.0;
+	_LCH_Lab_1(L, C, H, (_Lab *)lab);
+	lab[2] += 120.0;
+	lab[1] += 120.0;
+	lab[2] /= 240.0;
+	lab[1] /= 240.0;
+	lab[0] /= 100.0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -220,7 +261,7 @@ void _sRGB_XYZ_1 (double R, double G, double B, _XYZ *xyz)
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline double linear_to_srgb(double v)
-{ return v <= 0.00304 ? 12.92*v : 1.055*pow(v, (1.0/2.4))-0.055; }
+{ return v>0.00304 ? 1.055*pow(v, (1.0/2.4))-0.055 : v>0.0 ? 12.92*v : 0.0; }
 
 void _XYZ_sRGB_1 (double X, double Y, double Z, _RGB *rgb)
 {
@@ -231,29 +272,25 @@ void _XYZ_sRGB_1 (double X, double Y, double Z, _RGB *rgb)
 	double g = -0.9692*X + 1.8760*Y + 0.0416*Z;
 	double b = +0.0556*X - 0.2040*Y + 1.0570*Z;
 
-	rgb->R = linear_to_srgb(r);
-	rgb->G = linear_to_srgb(g);
-	rgb->B = linear_to_srgb(b);
+	r = linear_to_srgb(r);
+	g = linear_to_srgb(g);
+	b = linear_to_srgb(b);
 
 	// Rudimentary hue-preserving clipping test
-	double max = rgb->R;
-	if (max < rgb->G) max = rgb->G;
-	if (max < rgb->B) max = rgb->B;
+	double max = r;
+	if (max < g) max = g;
+	if (max < b) max = b;
+
 	if (max > 1.0)
 	{
-
-		rgb->R /= max;
-		rgb->G /= max;
-		rgb->B /= max;
+		r /= max;
+		g /= max;
+		b /= max;
 	}
-/*
-	double min = rgb->R;
-	if (min > rgb->G) min = rgb->G;
-	if (min > rgb->B) min = rgb->B;*/
 
-	if (rgb->R < 0.0) rgb->R = 0.0;
-	if (rgb->G < 0.0) rgb->G = 0.0;
-	if (rgb->B < 0.0) rgb->B = 0.0;
+	rgb->R = r;
+	rgb->G = g;
+	rgb->B = b;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

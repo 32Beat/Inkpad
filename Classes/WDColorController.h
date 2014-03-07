@@ -31,8 +31,9 @@
 typedef enum
 {
 	WDColorModelRGB = WDColorTypeRGB,
-	WDColorModelHSB = WDColorTypeLCH,
-	WDColorModelLab = WDColorTypeLab
+	WDColorModelHSB = WDColorTypeHSB,
+	WDColorModelLab = WDColorTypeLab,
+	WDColorModelLCH = WDColorTypeLCH
 }
 WDColorModel;
 
