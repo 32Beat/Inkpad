@@ -73,6 +73,8 @@
 		(R.size, NO, [UIScreen mainScreen].scale);
 		CGContextRef ctx = UIGraphicsGetCurrentContext();
 
+		CGContextClearRect(ctx, R);
+
 		// Keep drawing away from edge or it will influence shadow
 		CGContextAddEllipseInRect(ctx, CGRectInset(R, 1, 1));
 		CGContextClip(ctx);

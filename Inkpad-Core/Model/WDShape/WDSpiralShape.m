@@ -34,6 +34,33 @@
 { return WDCreateCGPathRefWithNodes([self bezierNodes], NO); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	Defines radius and tangent function for spirals
+	
+	The following tangent approximation works fine:
+	return (spiralRadius(a+0.0001) - spiralRadius(a-0.0001)) / 0.0002;
+*/
+
+#define kB 0.30634896253003 // ln((1+sqrt(5))/2)/M_PI_2
+
+double spiralRadius1(double a)
+{ return exp(kB*a); }
+double spiralTangent1(double a)
+{ return exp(kB*a)*kB; }
+
+
+double spiralRadius(double a, double m)
+//{ return pow(1.6180339887499, a/M_PI_2); } // (1.0+sqrt(5.0))/2.0
+{ return a / M_PI_2; }
+
+double spiralTangent(double a, double m)
+//{ return 1 / M_PI_2; }
+{
+	return (
+	spiralRadius(a+0.0001, m) -
+	spiralRadius(a-0.0001, m))/0.0002;
+}
+
 
 - (id) bezierNodesWithShapeInRect:(CGRect)R
 {
@@ -42,23 +69,31 @@
 
 	NSMutableArray *nodes = [NSMutableArray array];
 
-	long total = 2 + 199*mValue*mValue;
+	// 81 anchors = origin + 10 rotations with 8 anchors
+	long total = 2 + 8*3*mValue*mValue;
 
 	double maxAngle = M_PI_4 * (total-1);
-	D.x /= maxAngle;
-	D.y /= maxAngle;
+	double maxRadius = spiralRadius(maxAngle, mValue);
+	D.x /= maxRadius;
+	D.y /= maxRadius;
 
 	for (long n=0; n!=total; n++)
 	{
 		CGPoint A, B, C;
 
+		// Angle
 		double a = n * M_PI_4;
-		A.x = M.x + D.x * a * cos(a);
-		A.y = M.y + D.y * a * sin(a);
 
-		// Derivative
-		double dx = D.x * (cos(a) - a * sin(a));
-		double dy = D.y * (a * cos(a) + sin(a));
+		// Radius
+		double f0 = spiralRadius(a, mValue);
+		A.x = M.x + D.x * f0 * cos(a);
+		A.y = M.y + D.y * f0 * sin(a);
+
+		// Tangent
+		double f1 = spiralTangent(a, mValue);
+		double dx = D.x * (f1*cos(a) - f0*sin(a));
+		double dy = D.y * (f0*cos(a) + f1*sin(a));
+
 		// Handlesize
 		dx *= (kWDShapeCircleFactor/2);
 		dy *= (kWDShapeCircleFactor/2);

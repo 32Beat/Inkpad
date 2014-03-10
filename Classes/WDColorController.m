@@ -59,7 +59,7 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	// set up connections
 	[self setSliderAction:@selector(adjustColor:)
 		forControlEvents:
-		//	UIControlEventTouchDown |
+			UIControlEventTouchDown |
 			UIControlEventTouchDragInside |
 			UIControlEventTouchDragOutside];
 
@@ -145,8 +145,14 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 
 - (void) updateViewWithColorModel:(WDColorModel)model
 {
+	// setTrackGradient will undo dynamicTrack 
+	[mSlider0 setDynamicTrackGradient:YES];
+	[mSlider2 setDynamicTrackGradient:YES];
+
 	if (model == WDColorModelLCH)
 	{
+		[mSlider2 setTrackGradient:[WDColor hueGradientLCH]];
+
 		component0Name_.text = @"L";
 		component1Name_.text = @"C";
 		component2Name_.text = @"H";
@@ -165,6 +171,8 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	else
 	if (model == WDColorModelHSB)
 	{
+		[mSlider0 setTrackGradient:[WDColor hueGradientHSB]];
+		
 		component0Name_.text = @"H";
 		component1Name_.text = @"S";
 		component2Name_.text = @"B";

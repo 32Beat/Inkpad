@@ -19,14 +19,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface  WDColorSlider ()
-{
-	float mValue;
-}
 
 // Indicator management
 @property (nonatomic, weak) WDColorIndicator *indicator;
-- (void) _updateIndicatorColor;
-- (void) _updateIndicatorPosition;
+- (void) prepareIndicator;
+- (void) updateIndicator;
+- (void) updateIndicatorColor;
+- (void) updateIndicatorPosition;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +33,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDColorSlider
+////////////////////////////////////////////////////////////////////////////////
+
+@synthesize color = mColor;
+@synthesize value = mValue;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 + (Class) layerClass
@@ -48,6 +52,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setTrackGradient:(NSArray *)colors
+{
+	[self _setTrackGradient:colors];
+	[self setDynamicTrackGradient:NO];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _setTrackGradient:(NSArray *)colors
 {
 	NSMutableArray *cgColors = [NSMutableArray new];
 
@@ -78,7 +90,7 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGColorRef) defaultPattern
+- (CGColorRef) defaultBackgroundPattern
 {
 	static UIColor *gPatternColor = nil;
 	if (gPatternColor == nil)
@@ -109,22 +121,11 @@
 - (void) awakeFromNib
 {
 	self.opaque = NO;
-	[self prepareTrack];
-	[self prepareIndicator];
-
 	self.minValue = 0.0;
 	self.maxValue = 1.0;
-}
 
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) prepareIndicator
-{
-	self.dynamicIndicatorColor = YES;
-
-	self.indicator = [WDColorIndicator colorIndicator];
-	self.indicator.center = WDCenterOfRect([self bounds]);
-	[self addSubview:self.indicator];
+	[self prepareTrack];
+	[self prepareIndicator];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +148,7 @@
 	self.dynamicTrackGradient = YES;
 
 	// Set checkerboard background
-	self.gradientLayer.backgroundColor = self.defaultPattern;
+	self.gradientLayer.backgroundColor = self.defaultBackgroundPattern;
 	self.gradientLayer.cornerRadius = 0.5*self.bounds.size.height;
 	self.gradientLayer.startPoint = (CGPoint){ 0.0, 0.0 };
 	self.gradientLayer.endPoint = (CGPoint){ 1.0, 0.0 };
@@ -169,40 +170,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL) pointInside:(CGPoint)point withEvent:(UIEvent *)event
-{
-	CGRect bounds = CGRectInset(self.bounds, -10, -10);
-	return CGRectContainsPoint(bounds, point);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) setColor:(WDColor *)color
 {
-	_color = color;
-	self.floatValue = [color componentAtIndex:self.componentIndex];
+	mColor = color;
+
+	// NOTE: currently assumes component is normalized
+	mValue = [color componentAtIndex:self.componentIndex];
+
+	[self updateIndicator];
 
 	// Update trackGradient if necessary
 	if (self.dynamicTrackGradient)
-		[self setTrackGradient:
+		[self _setTrackGradient:
 		[color gradientForComponentAtIndex:self.componentIndex]];
 
-	if (self.reversed)
-	{ color = [color colorWithAlphaComponent:(1.0f - color.alpha)]; }
-	else
-	if (color.type == WDColorTypeHSB)
-	{
-		if (self.componentIndex == 0)
-		{
-			color = [WDColor colorWithHue:color.hue
-			saturation:1 brightness:1 alpha:1];
-		}
-	}
-
-	// Update indicatorColor if necessary
-	if (self.dynamicIndicatorColor)
-	{ [self.indicator setColor:color]; }
-	[self _updateIndicatorPosition];
 	[self setNeedsDisplay];
 }
 
@@ -220,16 +201,29 @@
 - (CGRect) trackingRect
 { return CGRectInset(self.bounds, self.bounds.size.height/2.0, 0); }
 
-- (float) indicatorCenterX_
-{
-	CGRect trackRect = self.trackingRect;
-	return CGRectGetMinX(trackRect) + mValue * CGRectGetWidth(trackRect);
-}
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) value
+{ return self.minValue + mValue * (self.maxValue - self.minValue); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) setValue:(float)value
-{ mValue = value; }
+{
+	mValue = (self.maxValue <= self.minValue) ? 0.5 :
+	(value - self.minValue) / (self.maxValue - self.minValue);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) _setValue:(float)value
+{
+	if (mValue != value)
+	{
+		mValue = value;
+		[self updateIndicatorPosition];
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,6 +240,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (CGFloat) locationForValue:(float)value
+{
+	CGRect trackRect = self.trackingRect;
+	CGFloat X = CGRectGetMinX(trackRect) + value * CGRectGetWidth(trackRect);
+	return round(X);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (float) valueForLocation:(CGPoint)pt
 {
 	CGRect trackRect = self.trackingRect;
@@ -257,41 +260,112 @@
 	return value;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) valueForTouch:(UITouch *)touch
+{ return [self valueForLocation:[touch locationInView:self]]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) pointInside:(CGPoint)point withEvent:(UIEvent *)event
+{
+	return CGRectContainsPoint(self.bounds, point);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (BOOL) beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	CGPoint pt = [touch locationInView:self];
-	
-	[self setValue:[self valueForLocation:pt]];
-	[self _updateIndicatorPosition];
-	
+	[self _setValue:[self valueForTouch:touch]];
 	return [super beginTrackingWithTouch:touch withEvent:event];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (BOOL) continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	CGPoint pt = [touch locationInView:self];
-
-	[self setValue:[self valueForLocation:pt]];
-	[self _updateIndicatorPosition];
-	
+	[self _setValue:[self valueForTouch:touch]];
 	return [super continueTrackingWithTouch:touch withEvent:event];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) _updateIndicatorColor
+- (void) endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
 {
-	// Update indicatorColor if necessary
-	if (self.dynamicIndicatorColor)
-	{ [self.indicator setColor:self.color]; }
+	[self _setValue:[self valueForTouch:touch]];
+	[super endTrackingWithTouch:touch withEvent:event];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) _updateIndicatorPosition
+- (void)cancelTrackingWithEvent:(UIEvent *)event
 {
-	self.indicator.center =
-	CGPointMake([self indicatorCenterX_], self.indicator.center.y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Indicator Management
+////////////////////////////////////////////////////////////////////////////////
+/*
+	prepareIndicator
+	----------------
+	Create a  color indicator subview
+	
+	Note that the indicator ivar is weak. Assigning the colorindicator 
+	to self.indicator prior to adding as subview seems to result in 
+	a prematurely released ivar on 64bit system.
+*/
+
+- (void) prepareIndicator
+{
+	self.dynamicIndicatorColor = YES;
+
+	// Assign strong before weak
+	WDColorIndicator *indicator = [WDColorIndicator colorIndicator];
+	indicator.center = WDCenterOfRect([self bounds]);
+	indicator.center = WDRoundPoint(indicator.center);
+	[self addSubview:indicator];
+	self.indicator = indicator;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateIndicator
+{
+	// Update indicatorColor if necessary
+	if (self.dynamicIndicatorColor)
+	{ [self updateIndicatorColor]; }
+	[self updateIndicatorPosition];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateIndicatorColor
+{
+	WDColor *color = self.color;
+
+	if (color.type == WDColorTypeHSB)
+	{
+		if (self.componentIndex == 0)
+		{ color = [WDColor colorWithH:color.hsb_H S:100.0 B:100.0]; }
+	}
+	else
+	if (color.type == WDColorTypeLCH)
+	{
+		if (self.componentIndex == 2)
+		{ color = [WDColor colorWithL:100.0 C:100.0 H:color.lch_H]; }
+	}
+
+	[self.indicator setColor:color];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateIndicatorPosition
+{
+	CGPoint P = self.indicator.center;
+	P.x = [self locationForValue:mValue];
+	self.indicator.center = P;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

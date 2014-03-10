@@ -19,7 +19,7 @@ void HSVtoRGB(CGFloat h, CGFloat s, CGFloat v, CGFloat *rgb);
 void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *hsv);
 
 void SRGBtoXYZ(CGFloat r, CGFloat g, CGFloat b, CGFloat *xyz);
-void XYZtoSRGB(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb);
+void XYZtoSRGB(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *rgb);
 
 void XYZtoLAB(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *lab);
 void LABtoXYZ(CGFloat L, CGFloat a, CGFloat b, CGFloat *xyz);

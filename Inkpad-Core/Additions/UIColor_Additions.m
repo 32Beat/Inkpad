@@ -150,7 +150,7 @@
 {
 	CGFloat cmp[4];
 	[self getHSBA:cmp];
-	cmp[3] = bri;
+	cmp[2] = bri;
 	return [UIColor colorWithHue:cmp[0]
 	saturation:cmp[1] brightness:cmp[2] alpha:cmp[3]];
 }

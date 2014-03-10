@@ -18,6 +18,7 @@
 @interface WDColorSlider : UIControl
 
 @property (nonatomic, strong) id color;
+@property (nonatomic, assign) float value;
 @property (nonatomic, assign) float minValue;
 @property (nonatomic, assign) float maxValue;
 
@@ -28,7 +29,8 @@
 @property (nonatomic, assign) int componentIndex;
 @property (nonatomic, assign) BOOL dynamicTrackGradient;
 @property (nonatomic, assign) BOOL dynamicIndicatorColor;
-@property (nonatomic, assign) BOOL reversed;
+
+- (void) setTrackGradient:(NSArray *)colors;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

@@ -105,8 +105,8 @@ WDColorSpace;
 
 // Raw properties
 - (WDColorType) type;
-- (CGFloat) componentAtIndex:(int)index;
 - (void) getComponents:(CGFloat *)cmp;
+- (CGFloat) componentAtIndex:(int)index;
 
 // Synchronisation with UIColor
 - (CGFloat) red;
@@ -142,14 +142,24 @@ WDColorSpace;
 
 
 
-+ (WDColor *) colorWithRGBA:(const CGFloat *)cmp;
-+ (WDColor *) colorWithHSBA:(const CGFloat *)cmp;
+
 + (WDColor *) colorWithType:(WDColorType)type components:(const CGFloat *)cmp;
 - (WDColor *) initWithType:(WDColorType)type components:(const CGFloat *)cmp;
 
 - (WDColor *) colorWithColorType:(WDColorType)colorType;
-- (WDColor *) colorWithComponentValue:(CGFloat)value atIndex:(int)index;
 - (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
+- (WDColor *) colorWithComponentValue:(CGFloat)value atIndex:(int)index;
+
++ (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B;
++ (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B alpha:(CGFloat)alpha;
++ (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B;
++ (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B alpha:(CGFloat)alpha;
+
++ (WDColor *) colorWithL:(CGFloat)L a:(CGFloat)a b:(CGFloat)b;
++ (WDColor *) colorWithL:(CGFloat)L a:(CGFloat)a b:(CGFloat)b alpha:(CGFloat)alpha;
++ (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H;
++ (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H alpha:(CGFloat)alpha;
+
 
 + (WDColor *) colorWithWhite:(CGFloat)white
 				alpha:(CGFloat)alpha;
@@ -173,18 +183,18 @@ WDColorSpace;
 + (WDColor *) colorWithData:(NSData *)data;
 - (NSData *) colorData;
 
-
++ (NSArray *) hueGradientHSB;
++ (NSArray *) hueGradientLCH;
 - (NSArray *) gradientForComponentAtIndex:(int)index;
 
 
 - (UIColor *) UIColor;
-- (UIColor *) opaqueUIColor;
-
 - (CGColorRef) CGColor;
-- (CGColorRef) opaqueCGColor;
 
 - (BOOL) visible;
 - (void) set;
+- (void) setFill;
+- (void) setStroke;
 - (void) glSet;
 
 - (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment;
