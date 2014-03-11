@@ -103,23 +103,27 @@ WDColorSpace;
 	UIColor *mUIColor;
 }
 
+// Default initializer
++ (WDColor *) colorWithType:(WDColorType)type components:(const CGFloat *)cmp;
+- (WDColor *) initWithType:(WDColorType)type components:(const CGFloat *)cmp;
+
 // Raw properties
 - (WDColorType) type;
 - (void) getComponents:(CGFloat *)cmp;
 - (CGFloat) componentAtIndex:(int)index;
 
-// Synchronisation with UIColor
-- (CGFloat) red;
-- (CGFloat) green;
-- (CGFloat) blue;
-- (CGFloat) alpha;
+// Alterhative initializers (expanded values)
++ (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B;
++ (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B alpha:(CGFloat)alpha;
++ (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B;
++ (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B alpha:(CGFloat)alpha;
 
-- (CGFloat) hue;
-- (CGFloat) saturation;
-- (CGFloat) brightness;
++ (WDColor *) colorWithL:(CGFloat)L a:(CGFloat)a b:(CGFloat)b;
++ (WDColor *) colorWithL:(CGFloat)L a:(CGFloat)a b:(CGFloat)b alpha:(CGFloat)alpha;
++ (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H;
++ (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H alpha:(CGFloat)alpha;
 
-
-// Typed query
+// Typed query (expanded values)
 - (CGFloat) rgb_R;
 - (CGFloat) rgb_G;
 - (CGFloat) rgb_B;
@@ -141,26 +145,7 @@ WDColorSpace;
 - (CGFloat) lch_H;
 
 
-
-
-+ (WDColor *) colorWithType:(WDColorType)type components:(const CGFloat *)cmp;
-- (WDColor *) initWithType:(WDColorType)type components:(const CGFloat *)cmp;
-
-- (WDColor *) colorWithColorType:(WDColorType)colorType;
-- (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
-- (WDColor *) colorWithComponentValue:(CGFloat)value atIndex:(int)index;
-
-+ (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B;
-+ (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B alpha:(CGFloat)alpha;
-+ (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B;
-+ (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B alpha:(CGFloat)alpha;
-
-+ (WDColor *) colorWithL:(CGFloat)L a:(CGFloat)a b:(CGFloat)b;
-+ (WDColor *) colorWithL:(CGFloat)L a:(CGFloat)a b:(CGFloat)b alpha:(CGFloat)alpha;
-+ (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H;
-+ (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H alpha:(CGFloat)alpha;
-
-
+// UIKit equivalents
 + (WDColor *) colorWithWhite:(CGFloat)white
 				alpha:(CGFloat)alpha;
 + (WDColor *) colorWithRed:(CGFloat)red
@@ -172,36 +157,6 @@ WDColorSpace;
 				brightness:(CGFloat)brightness
 				alpha:(CGFloat)alpha;
 
-+ (WDColor *) randomColor;
-+ (WDColor *) colorWithRandomHue;
-+ (WDColor *) colorWithUIColor:(UIColor *)color;
-
-
-+ (WDColor *) colorWithDictionary:(NSDictionary *)dict;
-- (NSDictionary *) dictionary;
-
-+ (WDColor *) colorWithData:(NSData *)data;
-- (NSData *) colorData;
-
-+ (NSArray *) hueGradientHSB;
-+ (NSArray *) hueGradientLCH;
-- (NSArray *) gradientForComponentAtIndex:(int)index;
-
-
-- (UIColor *) UIColor;
-- (CGColorRef) CGColor;
-
-- (BOOL) visible;
-- (void) set;
-- (void) setFill;
-- (void) setStroke;
-- (void) glSet;
-
-- (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment;
-- (WDColor *) colorBalanceRed:(float)rShift green:(float)gShift blue:(float)bShift;
-- (WDColor *) adjustHue:(float)hShift saturation:(float)sShift brightness:(float)bShift;
-- (WDColor *) inverted;
-
 + (WDColor *) blackColor;
 + (WDColor *) grayColor;
 + (WDColor *) whiteColor;
@@ -212,10 +167,60 @@ WDColorSpace;
 + (WDColor *) yellowColor;
 + (WDColor *) blueColor;
 
+// Synchronisation with UIColor
+- (CGFloat) red;
+- (CGFloat) green;
+- (CGFloat) blue;
+- (CGFloat) alpha;
+
+- (CGFloat) hue;
+- (CGFloat) saturation;
+- (CGFloat) brightness;
+
+- (void) set;
+- (void) setFill;
+- (void) setStroke;
+
+// Convenience additions
+- (void) glSet; 	// glColor4f
+- (BOOL) visible; 	// cmp[3] != 0.0
+
+// Miscellaneous
++ (WDColor *) randomColor;
++ (WDColor *) colorWithRandomHue;
++ (WDColor *) colorWithUIColor:(UIColor *)color;
+
+// Conversions
+- (WDColor *) colorWithColorType:(WDColorType)colorType;
+- (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
+- (WDColor *) colorWithComponentValue:(CGFloat)value atIndex:(int)index;
+- (UIColor *) UIColor;
+- (CGColorRef) CGColor;
+
+// Gradients
++ (NSArray *) hueGradientHSB;
++ (NSArray *) hueGradientLCH;
+- (NSArray *) gradientForComponentAtIndex:(int)index;
+
+
+// Old
++ (WDColor *) colorWithDictionary:(NSDictionary *)dict;
+- (NSDictionary *) dictionary;
+
++ (WDColor *) colorWithData:(NSData *)data;
+- (NSData *) colorData;
+
+- (WDColor *) adjustColor:(WDColor * (^)(WDColor *color))adjustment;
+- (WDColor *) colorBalanceRed:(float)rShift green:(float)gShift blue:(float)bShift;
+- (WDColor *) adjustHue:(float)hShift saturation:(float)sShift brightness:(float)bShift;
+- (WDColor *) inverted;
+
 - (NSString *) hexValue;
 
 - (WDColor *) blendedColorWithFraction:(float)fraction ofColor:(WDColor *)color;
-@end
 
+////////////////////////////////////////////////////////////////////////////////
+@end
+////////////////////////////////////////////////////////////////////////////////
 
 

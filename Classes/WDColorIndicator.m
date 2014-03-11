@@ -41,7 +41,7 @@
 	{
 		self.opaque = NO;
 
-		self.layer.cornerRadius = CGRectGetWidth(self.bounds) / 2.0f;
+		self.layer.cornerRadius = CGRectGetHeight(self.bounds) / 2.0f;
 		self.layer.borderWidth = 3;
 		self.layer.borderColor = self.defaultBorderColor;
 		self.layer.backgroundColor = self.defaultBackgroundColor;
@@ -75,7 +75,7 @@
 
 		CGContextClearRect(ctx, R);
 
-		// Keep drawing away from edge or it will influence shadow
+		// Keep away from edge or it will influence shadow
 		CGContextAddEllipseInRect(ctx, CGRectInset(R, 1, 1));
 		CGContextClip(ctx);
 
@@ -148,11 +148,6 @@
 		CGContextFillPath(ctx);
 	}
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
-{ return NO; }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

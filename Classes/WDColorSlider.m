@@ -170,6 +170,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+- (void) setComponentIndex:(int)index
+{
+	_componentIndex = index;
+	self.indicator.showsAlpha = (index == 3);
+	[self setNeedsDisplay];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 - (void) setColor:(WDColor *)color
 {
 	mColor = color;
@@ -186,20 +195,6 @@
 
 	[self setNeedsDisplay];
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setComponentIndex:(int)index
-{
-	_componentIndex = index;
-	self.indicator.showsAlpha = (index == 3);
-	[self setNeedsDisplay];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) trackingRect
-{ return CGRectInset(self.bounds, self.bounds.size.height/2.0, 0); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -231,20 +226,20 @@
 { return self.minValue + mValue * (self.maxValue - self.minValue); }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
-- (void) setFloatValue:(float)value
-{
-	mValue = (self.maxValue <= self.minValue) ? 0.5 :
-	(value - self.minValue) / (self.maxValue - self.minValue);
-}
+- (CGRect) trackingRect
+{ return CGRectInset(self.bounds, self.bounds.size.height/2.0, 0); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGFloat) locationForValue:(float)value
+- (CGPoint) locationForValue:(float)value
 {
 	CGRect trackRect = self.trackingRect;
-	CGFloat X = CGRectGetMinX(trackRect) + value * CGRectGetWidth(trackRect);
-	return round(X);
+	CGFloat x = CGRectGetMinX(trackRect) + value * CGRectGetWidth(trackRect);
+	CGFloat y = CGRectGetMidY(trackRect);
+	return (CGPoint){ round(x), round(y) };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,12 +247,8 @@
 - (float) valueForLocation:(CGPoint)pt
 {
 	CGRect trackRect = self.trackingRect;
-	float value;
-	
-	value = (pt.x - CGRectGetMinX(trackRect)) / CGRectGetWidth(trackRect);
-	value = WDClamp(0.0f, 1.0f, value);
-
-	return value;
+	float value = (pt.x - CGRectGetMinX(trackRect)) / CGRectGetWidth(trackRect);
+	return WDClamp(0.0f, 1.0f, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,11 +257,10 @@
 { return [self valueForLocation:[touch locationInView:self]]; }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Overwrite hittest in order to ignore indicator hits
 
-- (BOOL) pointInside:(CGPoint)point withEvent:(UIEvent *)event
-{
-	return CGRectContainsPoint(self.bounds, point);
-}
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+{ return [self pointInside:point withEvent:event] ? self : nil; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -341,32 +331,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateIndicatorColor
-{
-	WDColor *color = self.color;
-
-	if (color.type == WDColorTypeHSB)
-	{
-		if (self.componentIndex == 0)
-		{ color = [WDColor colorWithH:color.hsb_H S:100.0 B:100.0]; }
-	}
-	else
-	if (color.type == WDColorTypeLCH)
-	{
-		if (self.componentIndex == 2)
-		{ color = [WDColor colorWithL:100.0 C:100.0 H:color.lch_H]; }
-	}
-
-	[self.indicator setColor:color];
-}
+{ [self.indicator setColor:self.color]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateIndicatorPosition
-{
-	CGPoint P = self.indicator.center;
-	P.x = [self locationForValue:mValue];
-	self.indicator.center = P;
-}
+{ self.indicator.center = [self locationForValue:mValue]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

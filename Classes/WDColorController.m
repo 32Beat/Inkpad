@@ -85,62 +85,103 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateViewWithColor:(WDColor *)color
 {
-	// Update sliders
-	[mSlider0 setColor:color];
-	[mSlider1 setColor:color];
-	[mSlider2 setColor:color];
+	color = [color colorWithColorType:mColorModel];
+
+	// Update value labels
+	if (color.type == WDColorModelLCH)
+	{
+		[mSlider0 setColor:color];
+		[mSlider1 setColor:color];
+		[mSlider2 setColor:color];
+		[self updateValuesWithLCH:color];
+	}
+	else
+	if (color.type == WDColorModelLab)
+	{
+		[mSlider0 setColor:color];
+		[mSlider1 setColor:color];
+		[mSlider2 setColor:color];
+		[self updateValuesWithLab:color];
+	}
+	else
+	if (color.type == WDColorModelHSB)
+	{
+		[mSlider0 setColor:[WDColor colorWithH:color.hsb_H S:100.0 B:100.0]];
+		[mSlider1 setColor:color];
+		[mSlider2 setColor:color];
+		[self updateValuesWithHSB:color];
+	}
+	else
+	{
+		[mSlider0 setColor:color];
+		[mSlider1 setColor:color];
+		[mSlider2 setColor:color];
+		[self updateValuesWithRGB:color];
+	}
+
 	[mSlider3 setColor:color];
+	alphaValue_.text =
+	[NSString stringWithFormat:@"%d%%", (int)round(color.alpha * 100)];
 
 	// Update colorwell
 	[mColorWell setPainter:color];
-
-	// Update value labels
-	if (mColorModel == WDColorModelLCH)
-	{
-		component0Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.lch_L)];
-		component1Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.lch_C)];
-		component2Value_.text =
-		[NSString stringWithFormat:@"%d°", (int) round(color.lch_H)];
-	}
-	else
-	if (mColorModel == WDColorModelLab)
-	{
-		component0Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.lab_L)];
-		component1Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.lab_a)];
-		component2Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.lab_b)];
-	}
-	else
-	if (mColorModel == WDColorModelHSB)
-	{
-		component0Value_.text =
-		[NSString stringWithFormat:@"%d°", (int) round(color.hsb_H)];
-		component1Value_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.hsb_S)];
-		component2Value_.text =
-		[NSString stringWithFormat:@"%d%%", (int) round(color.hsb_B)];
-	}
-	else
-	{
-		component0Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.red * 255)];
-		component1Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.green * 255)];
-		component2Value_.text =
-		[NSString stringWithFormat:@"%d", (int) round(color.blue * 255)];
-	}
-	
-	alphaValue_.text =
-	[NSString stringWithFormat:@"%d%%", (int) round(color.alpha * 100)];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateValuesWithLCH:(WDColor *)color
+{
+	component0Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(color.lch_L)];
+	component1Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(color.lch_C)];
+	component2Value_.text =
+	[NSString stringWithFormat:@"%d°", (int)round(color.lch_H)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateValuesWithLab:(WDColor *)color
+{
+	component0Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(color.lab_L)];
+	component1Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(color.lab_a)];
+	component2Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(color.lab_b)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateValuesWithHSB:(WDColor *)color
+{
+	component0Value_.text =
+	[NSString stringWithFormat:@"%d°", (int)round(color.hsb_H)];
+	component1Value_.text =
+	[NSString stringWithFormat:@"%d%%", (int)round(color.hsb_S)];
+	component2Value_.text =
+	[NSString stringWithFormat:@"%d%%", (int)round(color.hsb_B)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateValuesWithRGB:(WDColor *)color
+{
+	component0Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(255*color.rgb_R)];
+	component1Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(255*color.rgb_G)];
+	component2Value_.text =
+	[NSString stringWithFormat:@"%d", (int)round(255*color.rgb_B)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateViewWithColorModel:(WDColorModel)model
@@ -188,8 +229,7 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 		[mColorModelButton setTitle:@"RGB" forState:UIControlStateNormal];
 	}
 
-	[self updateViewWithColor:
-	[[self color] colorWithColorType:model]];
+	[self updateViewWithColor:self.color];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,8 +258,7 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	if (mColor != color)
 	{
 		mColor = color;
-		[self updateViewWithColor:
-		[[self color] colorWithColorType:mColorModel]];
+		[self updateViewWithColor:color];
 	}
 }
 

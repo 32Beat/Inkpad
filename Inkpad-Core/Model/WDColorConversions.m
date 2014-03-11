@@ -95,46 +95,46 @@ void XYZtoSRGB(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb)
 void XYZtoLAB(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *lab)
 {
 	_XYZ_Lab_1(X, Y, Z, (_Lab *)lab);
-	lab[2] += 120.0;
-	lab[1] += 120.0;
-	lab[2] /= 240.0;
-	lab[1] /= 240.0;
+	lab[2] += 150.0;
+	lab[1] += 150.0;
+	lab[2] /= 300.0;
+	lab[1] /= 300.0;
 	lab[0] /= 100.0;
 }
 
 void LABtoXYZ(CGFloat L, CGFloat a, CGFloat b, CGFloat *xyz)
 {
 	L *= 100.0;
-	a *= 240.0;
-	b *= 240.0;
-	a -= 120.0;
-	b -= 120.0;
+	a *= 300.0;
+	b *= 300.0;
+	a -= 150.0;
+	b -= 150.0;
 	_Lab_XYZ_1(L, a, b, (_XYZ *)xyz);
 }
 
 void LABtoLCH(CGFloat L, CGFloat a, CGFloat b, CGFloat *lch)
 {
 	L *= 100.0;
-	a *= 240.0;
-	b *= 240.0;
-	a -= 120.0;
-	b -= 120.0;
+	a *= 300.0;
+	b *= 300.0;
+	a -= 150.0;
+	b -= 150.0;
 	_Lab_LCH_1(L, a, b, (_LCH *)lch);
 	lch[0] /= 100.0;
-	lch[1] /= 120.0;
+	lch[1] /= 150.0;
 	lch[2] /= 360.0;
 }
 
 void LCHtoLAB(CGFloat L, CGFloat C, CGFloat H, CGFloat *lab)
 {
 	L *= 100.0;
-	C *= 120.0;
+	C *= 150.0;
 	H *= 360.0;
 	_LCH_Lab_1(L, C, H, (_Lab *)lab);
-	lab[2] += 120.0;
-	lab[1] += 120.0;
-	lab[2] /= 240.0;
-	lab[1] /= 240.0;
+	lab[2] += 150.0;
+	lab[1] += 150.0;
+	lab[2] /= 300.0;
+	lab[1] /= 300.0;
 	lab[0] /= 100.0;
 }
 

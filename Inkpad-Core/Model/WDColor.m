@@ -383,6 +383,7 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 {
 	static const CGFloat L = 100.0;
 	static const CGFloat C = 100.0;
+	// Actual range of C may exceed 120...
 
 	static NSArray *gHueGradient = nil;
 	if (gHueGradient == nil)
@@ -709,14 +710,14 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 {
 	CGFloat cmp[4];
 	[self getLAB:cmp];
-	return cmp[1] * 240 - 120;
+	return cmp[1] * 300 - 150;
 }
 
 - (CGFloat) lab_b
 {
 	CGFloat cmp[4];
 	[self getLAB:cmp];
-	return cmp[2] * 240 - 120;
+	return cmp[2] * 300 - 150;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -732,7 +733,7 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 {
 	CGFloat cmp[4];
 	[self getLCH:cmp];
-	return cmp[1] * 120;
+	return cmp[1] * 150;
 }
 
 - (CGFloat) lch_H

@@ -23,7 +23,6 @@
 @property (nonatomic, assign) float maxValue;
 
 - (float) floatValue;
-- (void) setFloatValue:(float)value;
 /*
 */
 @property (nonatomic, assign) int componentIndex;
