@@ -12,13 +12,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #import <UIKit/UIKit.h>
-#import "WDColor.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColorIndicator
+	----------------
+	Sliderknob for WDColorSlider 
+	
+	
+*/
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDColorIndicator : UIView // TODO: change to CALayer
 
-@property (nonatomic, strong) WDColor *color;
-@property (nonatomic, assign) BOOL showsAlpha;
+@property (nonatomic, strong) id color;
 
 + (WDColorIndicator *) colorIndicator;
 

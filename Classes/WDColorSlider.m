@@ -19,6 +19,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 @interface  WDColorSlider ()
+{
+	CGFloat mValue;
+}
+
+- (void) setValue:(CGFloat)value;
+
+// Track management
+- (void) prepareTrack;
+- (void) prepareBorder;
+- (void) updateTrack;
 
 // Indicator management
 @property (nonatomic, weak) WDColorIndicator *indicator;
@@ -26,6 +36,9 @@
 - (void) updateIndicator;
 - (void) updateIndicatorColor;
 - (void) updateIndicatorPosition;
+
+- (id) indicatorColor;
+- (CGPoint) indicatorPosition;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,8 +49,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 @synthesize color = mColor;
-@synthesize value = mValue;
 
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
 
 + (Class) layerClass
@@ -51,15 +65,187 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setTrackGradient:(NSArray *)colors
+- (void) awakeFromNib
 {
-	[self _setTrackGradient:colors];
-	[self setDynamicTrackGradient:NO];
+	self.opaque = NO;
+	[self prepareTrack];
+	[self prepareIndicator];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) _setTrackGradient:(NSArray *)colors
+- (void) setColor:(WDColor *)color
+{
+	mColor = color;
+	mValue = [color componentAtIndex:self.componentIndex];
+
+	[self updateTrack];
+	[self updateIndicator];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setValue:(CGFloat)value
+{
+	mValue = WDClamp(0.0, 1.0, value);
+	[self updateIndicatorPosition];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) floatValue
+{ return mValue; }
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGRect) trackingRect
+{ return CGRectInset(self.bounds, self.bounds.size.height/2.0, 0); }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) locationForValue:(float)value
+{
+	CGRect trackRect = self.trackingRect;
+	CGFloat x = CGRectGetMinX(trackRect) + value * CGRectGetWidth(trackRect);
+	CGFloat y = CGRectGetMidY(trackRect);
+	return (CGPoint){ round(x), round(y) };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) valueForLocation:(CGPoint)pt
+{
+	CGRect trackRect = self.trackingRect;
+	return (pt.x - CGRectGetMinX(trackRect)) / CGRectGetWidth(trackRect);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (float) valueForTouch:(UITouch *)touch
+{ return [self valueForLocation:[touch locationInView:self]]; }
+
+////////////////////////////////////////////////////////////////////////////////
+// Overwrite hittest in order to ignore indicator hits
+
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+{ return [self pointInside:point withEvent:event] ? self : nil; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
+{
+	[self setValue:[self valueForTouch:touch]];
+	return [super beginTrackingWithTouch:touch withEvent:event];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL) continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
+{
+	[self setValue:[self valueForTouch:touch]];
+	return [super continueTrackingWithTouch:touch withEvent:event];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
+{
+	[self setValue:[self valueForTouch:touch]];
+	[super endTrackingWithTouch:touch withEvent:event];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void)cancelTrackingWithEvent:(UIEvent *)event
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Track Management
+////////////////////////////////////////////////////////////////////////////////
+/*
+	prepareTrack
+	------------
+	Prepare backing layer to display gradients
+	
+	Backinglayer can't display both gradient and border, 
+	because border will be drawn over any content including indicator image. 
+	We therefore use an additional layer to draw border, suggesting we might 
+	as well draw the entire track in this layer.
+	
+	A sublayer however will mean implicit animations, and the border can
+	only be a simple stroke.
+*/
+
+- (void) prepareTrack
+{
+	self.dynamicTrackGradient = YES;
+
+	// Set checkerboard background
+	self.gradientLayer.backgroundColor = self.trackBackgroundPattern;
+	self.gradientLayer.cornerRadius = 0.5*self.bounds.size.height;
+	self.gradientLayer.startPoint = (CGPoint){ 0.0, 0.0 };
+	self.gradientLayer.endPoint = (CGPoint){ 1.0, 0.0 };
+
+	[self prepareBorder];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) prepareBorder
+{
+	CALayer *border = [CALayer layer];
+	border.frame = [self bounds];
+	border.cornerRadius = 0.5*self.bounds.size.height;
+	border.borderColor = self.trackBorderColor;
+	border.borderWidth = 1.0;
+	[self.layer addSublayer:border];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGColorRef) trackBackgroundPattern
+{
+	static UIColor *gPatternColor = nil;
+	if (gPatternColor == nil)
+	{
+		gPatternColor = [[UIColor alloc]
+		initWithPatternImage:[UIImage checkerBoardPattern]];
+	}
+
+	return gPatternColor.CGColor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGColorRef) trackBorderColor
+{
+	static UIColor *gBorderColor = nil;
+	if (gBorderColor == nil)
+	{
+		gBorderColor = [[UIColor alloc]
+		initWithWhite:0.0 alpha:0.1];
+	}
+
+	return gBorderColor.CGColor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) updateTrack
+{
+	// Update trackGradient if necessary
+	if (self.dynamicTrackGradient)
+		[self setTrackGradient:
+		[self.color gradientForComponentAtIndex:self.componentIndex]];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) setTrackGradient:(NSArray *)colors
 {
 	NSMutableArray *cgColors = [NSMutableArray new];
 
@@ -90,207 +276,6 @@
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-- (CGColorRef) defaultBackgroundPattern
-{
-	static UIColor *gPatternColor = nil;
-	if (gPatternColor == nil)
-	{
-		gPatternColor = [[UIColor alloc]
-		initWithPatternImage:[UIImage checkerBoardPattern]];
-	}
-
-	return gPatternColor.CGColor;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGColorRef) defaultBorderColor
-{
-	static UIColor *gBorderColor = nil;
-	if (gBorderColor == nil)
-	{
-		gBorderColor = [[UIColor alloc]
-		initWithWhite:0.0 alpha:0.1];
-	}
-
-	return gBorderColor.CGColor;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) awakeFromNib
-{
-	self.opaque = NO;
-	self.minValue = 0.0;
-	self.maxValue = 1.0;
-
-	[self prepareTrack];
-	[self prepareIndicator];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-	prepareTrack
-	------------
-	Prepare backing layer to display gradients
-	
-	Backinglayer can't display both gradient and border, 
-	because border will be drawn over any content including indicator image. 
-	We therefore use an additional layer to draw border, suggesting we might 
-	as well draw the entire track in this layer.
-	
-	A sublayer however will mean implicit animations, and the border can
-	only be a simple stroke.
-*/
-
-- (void) prepareTrack
-{
-	self.dynamicTrackGradient = YES;
-
-	// Set checkerboard background
-	self.gradientLayer.backgroundColor = self.defaultBackgroundPattern;
-	self.gradientLayer.cornerRadius = 0.5*self.bounds.size.height;
-	self.gradientLayer.startPoint = (CGPoint){ 0.0, 0.0 };
-	self.gradientLayer.endPoint = (CGPoint){ 1.0, 0.0 };
-
-	[self prepareBorder];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) prepareBorder
-{
-	CALayer *border = [CALayer layer];
-	border.frame = [self bounds];
-	border.cornerRadius = 0.5*self.bounds.size.height;
-	border.borderColor = self.defaultBorderColor;
-	border.borderWidth = 1.0;
-	[self.layer addSublayer:border];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setComponentIndex:(int)index
-{
-	_componentIndex = index;
-	self.indicator.showsAlpha = (index == 3);
-	[self setNeedsDisplay];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setColor:(WDColor *)color
-{
-	mColor = color;
-
-	// NOTE: currently assumes component is normalized
-	mValue = [color componentAtIndex:self.componentIndex];
-
-	[self updateIndicator];
-
-	// Update trackGradient if necessary
-	if (self.dynamicTrackGradient)
-		[self _setTrackGradient:
-		[color gradientForComponentAtIndex:self.componentIndex]];
-
-	[self setNeedsDisplay];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (float) value
-{ return self.minValue + mValue * (self.maxValue - self.minValue); }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) setValue:(float)value
-{
-	mValue = (self.maxValue <= self.minValue) ? 0.5 :
-	(value - self.minValue) / (self.maxValue - self.minValue);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) _setValue:(float)value
-{
-	if (mValue != value)
-	{
-		mValue = value;
-		[self updateIndicatorPosition];
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (float) floatValue
-{ return self.minValue + mValue * (self.maxValue - self.minValue); }
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGRect) trackingRect
-{ return CGRectInset(self.bounds, self.bounds.size.height/2.0, 0); }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGPoint) locationForValue:(float)value
-{
-	CGRect trackRect = self.trackingRect;
-	CGFloat x = CGRectGetMinX(trackRect) + value * CGRectGetWidth(trackRect);
-	CGFloat y = CGRectGetMidY(trackRect);
-	return (CGPoint){ round(x), round(y) };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (float) valueForLocation:(CGPoint)pt
-{
-	CGRect trackRect = self.trackingRect;
-	float value = (pt.x - CGRectGetMinX(trackRect)) / CGRectGetWidth(trackRect);
-	return WDClamp(0.0f, 1.0f, value);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (float) valueForTouch:(UITouch *)touch
-{ return [self valueForLocation:[touch locationInView:self]]; }
-
-////////////////////////////////////////////////////////////////////////////////
-// Overwrite hittest in order to ignore indicator hits
-
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
-{ return [self pointInside:point withEvent:event] ? self : nil; }
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (BOOL) beginTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
-{
-	[self _setValue:[self valueForTouch:touch]];
-	return [super beginTrackingWithTouch:touch withEvent:event];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (BOOL) continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
-{
-	[self _setValue:[self valueForTouch:touch]];
-	return [super continueTrackingWithTouch:touch withEvent:event];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void) endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event
-{
-	[self _setValue:[self valueForTouch:touch]];
-	[super endTrackingWithTouch:touch withEvent:event];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (void)cancelTrackingWithEvent:(UIEvent *)event
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -331,12 +316,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateIndicatorColor
-{ [self.indicator setColor:self.color]; }
+{ [self.indicator setColor:[self indicatorColor]]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) updateIndicatorPosition
-{ self.indicator.center = [self locationForValue:mValue]; }
+{ [self.indicator setCenter:[self indicatorPosition]]; }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (id) indicatorColor
+{
+	return self.componentIndex == 3 ? self.color :
+	[self.color colorWithAlphaComponent:1.0];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGPoint) indicatorPosition
+{ return [self locationForValue:mValue]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

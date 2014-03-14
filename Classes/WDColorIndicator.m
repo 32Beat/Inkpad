@@ -125,11 +125,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setColor:(WDColor *)color
+- (void) setColor:(id)color
 {
-	if (self.showsAlpha == NO)
-	{ color = [color colorWithAlphaComponent:1.0]; }
-
 	_color = color;
 
 	// Force layer redraw
@@ -143,11 +140,17 @@
 	if (self.color != nil)
 	{
 		CGRect bounds = CGRectInset(self.bounds, 1, 1);
-		CGContextSetFillColorWithColor(ctx, self.color.CGColor);
+		CGContextSetFillColorWithColor(ctx, [self.color CGColor]);
 		CGContextAddEllipseInRect(ctx, bounds);
 		CGContextFillPath(ctx);
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// superview hitTest should prevent this from being called
+
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
+{ return NO; }
 
 ////////////////////////////////////////////////////////////////////////////////
 @end

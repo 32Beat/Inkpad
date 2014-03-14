@@ -186,13 +186,14 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 
 - (void) updateViewWithColorModel:(WDColorModel)model
 {
-	// setTrackGradient will undo dynamicTrack 
+	// Reset track dynamics
 	[mSlider0 setDynamicTrackGradient:YES];
 	[mSlider2 setDynamicTrackGradient:YES];
 
 	if (model == WDColorModelLCH)
 	{
 		[mSlider2 setTrackGradient:[WDColor hueGradientLCH]];
+		[mSlider2 setDynamicTrackGradient:NO];
 
 		component0Name_.text = @"L";
 		component1Name_.text = @"C";
@@ -213,7 +214,8 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	if (model == WDColorModelHSB)
 	{
 		[mSlider0 setTrackGradient:[WDColor hueGradientHSB]];
-		
+		[mSlider0 setDynamicTrackGradient:NO];
+
 		component0Name_.text = @"H";
 		component1Name_.text = @"S";
 		component2Name_.text = @"B";

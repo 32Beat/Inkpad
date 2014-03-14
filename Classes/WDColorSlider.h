@@ -18,14 +18,11 @@
 @interface WDColorSlider : UIControl
 
 @property (nonatomic, strong) id color;
-@property (nonatomic, assign) float value;
-@property (nonatomic, assign) float minValue;
-@property (nonatomic, assign) float maxValue;
+@property (nonatomic, readonly) float floatValue;
 
-- (float) floatValue;
-/*
-*/
+// Options
 @property (nonatomic, assign) int componentIndex;
+@property (nonatomic, assign) BOOL showsAlpha;
 @property (nonatomic, assign) BOOL dynamicTrackGradient;
 @property (nonatomic, assign) BOOL dynamicIndicatorColor;
 
