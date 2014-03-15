@@ -319,6 +319,7 @@
 		BE2ACC98189AFF6600EC91EC /* WDRectangleShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC94189AFF6600EC91EC /* WDRectangleShape.m */; };
 		BE2ACC99189AFF6600EC91EC /* WDShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2ACC96189AFF6600EC91EC /* WDShape.m */; };
 		BE2C2744189FE17A0077A97C /* WDHeartShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE2C2743189FE17A0077A97C /* WDHeartShape.m */; };
+		BE3247BF18D48C810055BADA /* ColorList.csv in Resources */ = {isa = PBXBuildFile; fileRef = BE3247BE18D48C810055BADA /* ColorList.csv */; };
 		BE404D0818B0F5CF00D67C5F /* WDStyleOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D0718B0F5CF00D67C5F /* WDStyleOptions.m */; };
 		BE404D1618B1488F00D67C5F /* WDBlendOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D1318B1488F00D67C5F /* WDBlendOptions.m */; };
 		BE404D1718B1488F00D67C5F /* WDShadowOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE404D1518B1488F00D67C5F /* WDShadowOptions.m */; };
@@ -334,7 +335,6 @@
 		BE76D46B18B4079F00E7E993 /* WDStrokeOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE76D46A18B4079F00E7E993 /* WDStrokeOptions.m */; };
 		BE84FC6418A3C7510025D495 /* CGPathShapes.c in Sources */ = {isa = PBXBuildFile; fileRef = BE84FC6218A3C7510025D495 /* CGPathShapes.c */; };
 		BE8AC40E18B2C36D008F9C41 /* WDFrameOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE8AC40D18B2C36D008F9C41 /* WDFrameOptions.m */; };
-		BE8BC9A318D31486006A9A7F /* ColorList.csv in Resources */ = {isa = PBXBuildFile; fileRef = BE8BC9A218D31486006A9A7F /* ColorList.csv */; };
 		BEB2A76918BB99B200C4037C /* WDFillOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEB2A76818BB99B200C4037C /* WDFillOptions.m */; };
 		BEBD9A0C189EA43D00386302 /* WDShapeOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */; };
 		BEC5BD5418C9014E003E51B2 /* WDColorConversions.m in Sources */ = {isa = PBXBuildFile; fileRef = BEC5BD5318C9014E003E51B2 /* WDColorConversions.m */; };
@@ -835,6 +835,7 @@
 		BE2ACC96189AFF6600EC91EC /* WDShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDShape.m; sourceTree = "<group>"; };
 		BE2C2742189FE17A0077A97C /* WDHeartShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDHeartShape.h; sourceTree = "<group>"; };
 		BE2C2743189FE17A0077A97C /* WDHeartShape.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDHeartShape.m; sourceTree = "<group>"; };
+		BE3247BE18D48C810055BADA /* ColorList.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ColorList.csv; sourceTree = "<group>"; };
 		BE404D0618B0F5CF00D67C5F /* WDStyleOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDStyleOptions.h; sourceTree = "<group>"; };
 		BE404D0718B0F5CF00D67C5F /* WDStyleOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDStyleOptions.m; sourceTree = "<group>"; };
 		BE404D1218B1488F00D67C5F /* WDBlendOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDBlendOptions.h; sourceTree = "<group>"; };
@@ -864,7 +865,6 @@
 		BE84FC6318A3C7510025D495 /* CGPathShapes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CGPathShapes.h; sourceTree = "<group>"; };
 		BE8AC40C18B2C36D008F9C41 /* WDFrameOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDFrameOptions.h; sourceTree = "<group>"; };
 		BE8AC40D18B2C36D008F9C41 /* WDFrameOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDFrameOptions.m; sourceTree = "<group>"; };
-		BE8BC9A218D31486006A9A7F /* ColorList.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ColorList.csv; path = ../../../../../../../Desktop/ColorList.csv; sourceTree = "<group>"; };
 		BEB2A76718BB99B200C4037C /* WDFillOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDFillOptions.h; sourceTree = "<group>"; };
 		BEB2A76818BB99B200C4037C /* WDFillOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDFillOptions.m; sourceTree = "<group>"; };
 		BEBD9A0B189EA43D00386302 /* WDShapeOptions.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = WDShapeOptions.xib; sourceTree = "<group>"; };
@@ -950,7 +950,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				BE8BC9A218D31486006A9A7F /* ColorList.csv */,
+				BE3247BE18D48C810055BADA /* ColorList.csv */,
 				6B8F091517FCE1DB00BB6F7E /* en.lproj */,
 				6BC96745183149E300F46191 /* es.lproj */,
 				F43A1D69183557770032933E /* fr.lproj */,
@@ -1828,7 +1828,6 @@
 			files = (
 				6BCD52A0123FFFED002FCB27 /* album.png in Resources */,
 				6BCD52A6123FFFED002FCB27 /* gear.png in Resources */,
-				BE8BC9A318D31486006A9A7F /* ColorList.csv in Resources */,
 				6BCD52B0123FFFED002FCB27 /* pivot.png in Resources */,
 				6BCD52B2123FFFED002FCB27 /* redo.png in Resources */,
 				6BCD52BA123FFFED002FCB27 /* textCenter.png in Resources */,
@@ -1965,6 +1964,7 @@
 				6B219C77150EDC1700761F18 /* rotate@2x.png in Resources */,
 				6B219C7F150EEB2900761F18 /* line@2x.png in Resources */,
 				6B95752B183C52940094B7D5 /* Localizable.strings in Resources */,
+				BE3247BF18D48C810055BADA /* ColorList.csv in Resources */,
 				6B219C81150EEB2900761F18 /* polygon@2x.png in Resources */,
 				6B219C83150EEB2900761F18 /* star@2x.png in Resources */,
 				6B219C87150EEC5700761F18 /* oval@2x.png in Resources */,
