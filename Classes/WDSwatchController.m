@@ -23,9 +23,36 @@ NSString *WDSwatches = @"WDSwatches";
 NSString *WDSwatchAdded = @"WDSwatchAdded";
 NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 
-#define kSwatchDimension     42
-#define kSwatchesPerRow      8
+#define kSwatchDimensionX     42
+#define kSwatchDimensionY     42
+#define kSwatchesPerRow      7
 #define kSwatchSpacing       4
+
+
+@interface WDSwatch : WDColor
+{
+	NSString *mName;
+}
++ (id) swatchWithName:(id)name color:(id)color;
+- (id) name;
+@end
+
+
+@implementation WDSwatch
++ (id) swatchWithName:(id)name color:(WDColor *)color
+{
+	WDSwatch *S = [WDSwatch new];
+	S->mName = name;
+	S->mType = color.type;
+	[color getComponents:S->mComponent];
+	return S;
+}
+
+- (id)name { return mName; }
+@end
+
+
+
 
 @implementation WDSwatchController
 
@@ -63,7 +90,48 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	return self;  
 }
 
+
+
 - (NSMutableArray *) loadSwitches:(BOOL *)shouldSave
+{
+	NSStringEncoding encoding;
+	NSError *error = nil;
+
+	NSURL *listURL =
+	[[NSBundle mainBundle] URLForResource:@"ColorList" withExtension:@"csv"];
+	NSString *listStr =
+	[NSString stringWithContentsOfURL:listURL usedEncoding:&encoding error:&error];
+
+	NSArray *items = [listStr componentsSeparatedByString:@", \n"];
+
+	if (items && items.count)
+	{
+		NSMutableArray *swatches = [NSMutableArray array];
+
+		for (NSString *itemStr in items)
+		{
+			NSArray *components = [itemStr componentsSeparatedByString:@", "];
+
+			NSString *name = [components[0] stringByTrimmingCharactersInSet:
+			[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			CGFloat L = [components[1] floatValue];
+			CGFloat a = [components[2] floatValue];
+			CGFloat b = [components[3] floatValue];
+
+			[swatches addObject:
+			[WDSwatch swatchWithName:name
+			color:[WDColor colorWithL:L a:a b:b]]];
+		}
+
+		return swatches;
+	}
+
+	return nil;
+}
+ 
+
+
+- (NSMutableArray *) _loadSwitches:(BOOL *)shouldSave
 {
 	NSMutableArray *loadedSwatches;
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -162,9 +230,9 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 
 - (CGSize) preferredContentSize
 {
-	float       width = kSwatchesPerRow * (kSwatchDimension + kSwatchSpacing) + kSwatchSpacing;
+	float       width = kSwatchesPerRow * (kSwatchDimensionX + kSwatchSpacing) + kSwatchSpacing;
 	NSUInteger  numRows = (self.swatches.count / kSwatchesPerRow) + 2;
-	float       height = numRows * (kSwatchDimension + kSwatchSpacing) + kSwatchSpacing;
+	float       height = numRows * (kSwatchDimensionY + kSwatchSpacing) + kSwatchSpacing;
 	
 	return CGSizeMake(width, height);
 }
@@ -177,7 +245,7 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
 	flowLayout.minimumLineSpacing = kSwatchSpacing;
 	flowLayout.minimumInteritemSpacing = kSwatchSpacing;
-	flowLayout.itemSize = CGSizeMake(kSwatchDimension, kSwatchDimension);
+	flowLayout.itemSize = CGSizeMake(kSwatchDimensionX, kSwatchDimensionY);
 	flowLayout.sectionInset = UIEdgeInsetsMake(kSwatchSpacing, kSwatchSpacing, kSwatchSpacing, kSwatchSpacing);
 	
 	collectionView_ = [[UICollectionView alloc] initWithFrame:frame collectionViewLayout:flowLayout];
@@ -198,7 +266,7 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	modeSegment_ = [[UISegmentedControl alloc] initWithItems:labels];
 	
 	CGRect frame = modeSegment_.frame;
-	frame.size.width =  kSwatchesPerRow * (kSwatchDimension + kSwatchSpacing) - (2 * kSwatchSpacing);
+	frame.size.width =  kSwatchesPerRow * (kSwatchDimensionX + kSwatchSpacing) - (2 * kSwatchSpacing);
 	modeSegment_.frame = frame;
 	modeSegment_.selectedSegmentIndex = [[NSUserDefaults standardUserDefaults] integerForKey:WDSwatchPanelModeKey];
 	
@@ -314,6 +382,7 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 {
 	WDSwatchCell *swatchCell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cellID" forIndexPath:indexPath];
 	swatchCell.swatch = (self.swatches)[indexPath.item];
+	[swatchCell setTitle:[(self.swatches)[indexPath.item] name]];
 	return swatchCell;
 }
 

@@ -17,8 +17,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 @interface WDColorSlider : UIControl
 
-@property (nonatomic, strong) id color;
-@property (nonatomic, readonly) float floatValue;
+- (void) setColor:(id)color;
+- (float) floatValue;
 
 // Options
 @property (nonatomic, assign) int componentIndex;

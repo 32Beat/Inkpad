@@ -13,12 +13,17 @@
 
 @protocol WDPathPainter;
 
-@interface WDSwatchCell : UICollectionViewCell {
+@interface WDSwatchCell : UICollectionViewCell
+{
     UIView          *highlightView;
     UIImageView     *selectedIndicator_;
+
+	UILabel *mNameLabel;
 }
 
 @property (nonatomic, strong) id<WDPathPainter> swatch;
 @property (nonatomic, assign) BOOL shouldShowSelectionIndicator;
+
+- (void) setTitle:(NSString *)text;
 
 @end

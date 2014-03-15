@@ -18,6 +18,34 @@
 @synthesize swatch = swatch_;
 @synthesize shouldShowSelectionIndicator;
 
+
+- (UILabel *) nameLabel
+{
+	if (mNameLabel == nil)
+	{
+		CGFloat fontSize = [UIFont smallSystemFontSize];
+
+		CGRect frame = self.bounds;
+		frame.origin.y += frame.size.height-fontSize;
+		frame.size.height = fontSize;
+
+		mNameLabel = [[UILabel alloc] initWithFrame:frame];
+		mNameLabel.textAlignment = NSTextAlignmentCenter;
+		mNameLabel.font = [UIFont systemFontOfSize:fontSize];
+		mNameLabel.backgroundColor = [UIColor whiteColor];
+
+		[self.contentView addSubview:mNameLabel];
+	}
+
+	return mNameLabel;
+}
+
+- (void) setTitle:(NSString *)text
+{
+	self.nameLabel.text = text;
+    [self setNeedsDisplay];
+}
+
 - (void) setSwatch:(id<WDPathPainter>)swatch
 {
     if ([swatch isEqual:swatch_]) {
@@ -32,7 +60,7 @@
     UIGraphicsEndImageContext();
     
     self.layer.contents = (id) image.CGImage;
-    
+
     [self setNeedsDisplay];
 }
 
