@@ -298,6 +298,12 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 - (void) setStroke
 { [[self UIColor] setStroke]; }
 
+- (void) setFillColorInContext:(CGContextRef)ctx
+{ CGContextSetFillColorWithColor(ctx, self.CGColor); }
+
+- (void) setStrokeColorInContext:(CGContextRef)ctx
+{ CGContextSetStrokeColorWithColor(ctx, self.CGColor); }
+
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////
@@ -1045,11 +1051,16 @@ double WDRandomHue(void)
 - (void) drawSwatchInRect:(CGRect)rect
 {
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
-	WDDrawTransparencyDiamondInRect(ctx, rect);
+	if (self.alpha < 1.0)
+	{ WDDrawTransparencyDiamondInRect(ctx, rect); }
 	
-	[self set];
+	CGContextSetFillColorWithColor(ctx, self.CGColor);
 	CGContextFillRect(ctx, rect);
 }
+
+
+
+
 
 - (void) drawEyedropperSwatchInRect:(CGRect)rect
 {

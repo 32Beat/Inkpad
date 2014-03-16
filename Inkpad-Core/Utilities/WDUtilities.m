@@ -53,26 +53,23 @@ void WDDrawCheckersInRect(CGContextRef ctx, CGRect dest, int size)
 	CGContextRestoreGState(ctx);
 }
 
-void WDDrawTransparencyDiamondInRect(CGContextRef ctx, CGRect dest)
+void WDDrawTransparencyDiamondInRect(CGContextRef ctx, CGRect R)
 {
-	float minX = CGRectGetMinX(dest);
-	float maxX = CGRectGetMaxX(dest);
-	float minY = CGRectGetMinY(dest);
-	float maxY = CGRectGetMaxY(dest);
+	float minX = CGRectGetMinX(R);
+	float maxX = CGRectGetMaxX(R);
+	float minY = CGRectGetMinY(R);
+	float maxY = CGRectGetMaxY(R);
 	
 	// preserve the existing color
 	CGContextSaveGState(ctx);
 
 	CGContextSetFillColorWithColor(ctx, [UIColor whiteColor].CGColor);
-	CGContextFillRect(ctx, dest);
+	CGContextFillRect(ctx, R);
 	
-	CGMutablePathRef path = CGPathCreateMutable();
-	CGPathMoveToPoint(path, NULL, minX, minY);
-	CGPathAddLineToPoint(path, NULL, maxX, minY);
-	CGPathAddLineToPoint(path, NULL, minX, maxY);
-	CGPathCloseSubpath(path);
-	CGContextAddPath(ctx, path);
-	CGPathRelease(path);
+	CGContextMoveToPoint(ctx, minX, minY);
+	CGContextAddLineToPoint(ctx, maxX, minY);
+	CGContextAddLineToPoint(ctx, minX, maxY);
+	CGContextClosePath(ctx);
 
 	CGContextSetFillColorWithColor(ctx, [UIColor blackColor].CGColor);
 	CGContextFillPath(ctx);

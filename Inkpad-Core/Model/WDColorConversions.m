@@ -70,6 +70,39 @@ static inline void _Lab_XYZ_1 (double L, double a, double b, _XYZ *xyz);
 static inline void _Lab_LCH_1 (double L, double a, double b, _LCH *lch);
 static inline void _LCH_Lab_1 (double L, double C, double H, _Lab *lab);
 
+static inline void _XYZ_pXYZ_1 (double X, double Y, double Z, _XYZ *xyz);
+static inline void _pXYZ_XYZ_1 (double X, double Y, double Z, _XYZ *xyz);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline double _RGB_Min(const _RGB *rgb)
+{
+	double min = rgb->R;
+	if (min > rgb->G) min = rgb->G;
+	if (min > rgb->B) min = rgb->B;
+	return min;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline double _RGB_Max(const _RGB *rgb)
+{
+	double max = rgb->R;
+	if (max < rgb->G) max = rgb->G;
+	if (max < rgb->B) max = rgb->B;
+	return max;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline _Lab _Lab_Blend(const _Lab *lab1, const _Lab *lab2, double m) 
+{
+	return (_Lab){
+	lab1->L + m * (lab2->L - lab1->L),
+	lab1->a + m * (lab2->a - lab1->a),
+	lab1->b + m * (lab2->b - lab1->b) };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Glue
@@ -89,8 +122,32 @@ void HSVtoRGB(CGFloat h, CGFloat s, CGFloat b, CGFloat *rgb)
 void SRGBtoXYZ(CGFloat r, CGFloat g, CGFloat b, CGFloat *xyz)
 { _sRGB_XYZ_1(r, g, b, (_XYZ *)xyz); }
 
+
 void XYZtoSRGB(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb)
-{ _XYZ_sRGB_1(x, y, z, (_RGB *)rgb); }
+{
+	_XYZ_sRGB_1(x, y, z, (_RGB *)rgb);
+
+	double max = _RGB_Max((_RGB *)rgb);
+	if (max > 1.0)
+	{
+		// Simple hue-preserving clipping adjustment
+		rgb[0] /= max;
+		rgb[1] /= max;
+		rgb[2] /= max;
+	}
+	
+	double min = _RGB_Min((_RGB *)rgb);
+	if (min < 0.0)
+	{
+		double k = 0.2 + 0.8 * sqrt(log2(y+1));
+		double m = (0.0-k) / (min - k);
+				
+		rgb[0] = k + (rgb[0]-k) * m;
+		rgb[1] = k + (rgb[1]-k) * m;
+		rgb[2] = k + (rgb[2]-k) * m;
+	}
+}
+
 
 void XYZtoLAB(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *lab)
 {
@@ -137,6 +194,14 @@ void LCHtoLAB(CGFloat L, CGFloat C, CGFloat H, CGFloat *lab)
 	lab[1] /= 300.0;
 	lab[0] /= 100.0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void XYZtoPXYZ(CGFloat x, CGFloat y, CGFloat z, CGFloat *xyz)
+{ _XYZ_pXYZ_1(x, y, z, (_XYZ *)xyz); }
+
+void PXYZtoXYZ(CGFloat x, CGFloat y, CGFloat z, CGFloat *xyz)
+{ _pXYZ_XYZ_1(x, y, z, (_XYZ *)xyz); }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -241,8 +306,13 @@ void _HSB_RGB_1 (double H, double S, double B, _RGB *rgb)
 #pragma mark -
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline double srgb_to_linear(double v)
+static inline double _srgb_to_linear(double v)
 { return v <= 0.03928 ? v/12.92 : pow((v+0.055)/1.055, 2.4); }
+
+static inline double srgb_to_linear(double v)
+{ return v < 0.0 ? -_srgb_to_linear(-v) : _srgb_to_linear(v); }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void _sRGB_XYZ_1 (double R, double G, double B, _XYZ *xyz)
 {
@@ -260,8 +330,13 @@ void _sRGB_XYZ_1 (double R, double G, double B, _XYZ *xyz)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline double _linear_to_srgb(double v)
+{ return v <= 0.00304 ? v*12.92 : 1.055*pow(v, (1.0/2.4))-0.055; }
+
 static inline double linear_to_srgb(double v)
-{ return v>0.00304 ? 1.055*pow(v, (1.0/2.4))-0.055 : v>0.0 ? 12.92*v : 0.0; }
+{ return v < 0 ? -_linear_to_srgb(-v) : _linear_to_srgb(v); }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void _XYZ_sRGB_1 (double X, double Y, double Z, _RGB *rgb)
 {
@@ -275,18 +350,6 @@ void _XYZ_sRGB_1 (double X, double Y, double Z, _RGB *rgb)
 	r = linear_to_srgb(r);
 	g = linear_to_srgb(g);
 	b = linear_to_srgb(b);
-
-	// Rudimentary hue-preserving clipping test
-	double max = r;
-	if (max < g) max = g;
-	if (max < b) max = b;
-
-	if (max > 1.0)
-	{
-		r /= max;
-		g /= max;
-		b /= max;
-	}
 
 	rgb->R = r;
 	rgb->G = g;
@@ -371,8 +434,36 @@ void _LCH_Lab_1 (double L, double C, double H, _Lab *lab)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////
 
+static inline double _ComputeY2L(double Y)
+{ return sqrt(log2(Y+1)); }
 
+static inline double _ComputeL2Y(double L)
+{ return pow(2.0, L*L)-1.0; }
+
+static inline double ComputeY2L(double Y)
+{ return Y < 0.0 ? -_ComputeY2L(-Y) : _ComputeY2L(Y); } 
+
+static inline double ComputeL2Y(double L)
+{ return L < 0.0 ? -_ComputeL2Y(-L) : _ComputeL2Y(L); } 
+
+void _XYZ_pXYZ_1 (double X, double Y, double Z, _XYZ *xyz)
+{
+	xyz->X = ComputeY2L(X);
+	xyz->Y = ComputeY2L(Y);
+	xyz->Z = ComputeY2L(Z);
+}
+
+void _pXYZ_XYZ_1 (double X, double Y, double Z, _XYZ *xyz)
+{
+	xyz->X = ComputeL2Y(X);
+	xyz->Y = ComputeL2Y(Y);
+	xyz->Z = ComputeL2Y(Z);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 
 

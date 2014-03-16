@@ -27,5 +27,8 @@ void LABtoXYZ(CGFloat L, CGFloat a, CGFloat b, CGFloat *xyz);
 void LABtoLCH(CGFloat L, CGFloat a, CGFloat b, CGFloat *lch);
 void LCHtoLAB(CGFloat L, CGFloat C, CGFloat H, CGFloat *lab);
 
+void XYZtoPXYZ(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *xyz);
+void PXYZtoXYZ(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *xyz);
+
 ////////////////////////////////////////////////////////////////////////////////
 
