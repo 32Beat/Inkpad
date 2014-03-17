@@ -103,16 +103,45 @@ WDColorSpace;
 	UIColor *mUIColor;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Default initializer
 + (WDColor *) colorWithType:(WDColorType)type components:(const CGFloat *)cmp;
 - (WDColor *) initWithType:(WDColorType)type components:(const CGFloat *)cmp;
 
+////////////////////////////////////////////////////////////////////////////////
 // Raw properties
 - (WDColorType) type;
 - (void) getComponents:(CGFloat *)cmp;
 - (CGFloat) componentAtIndex:(int)index;
 
-// Alterhative initializers (expanded values)
+////////////////////////////////////////////////////////////////////////////////
+/*
+	WDColor stores components as unlimited normalized values,
+	following are the ranges that are mapped to [0.0 ... 1.0] internally.
+	
+	Range RGB
+	R,G,B = [0.0 ... 1.0]
+	
+	Range HSB
+	H = [0.0 ... 360.0]
+	S = [0.0 ... 100.0]
+	B = [0.0 ... 100.0]
+
+	Range Lab
+	L = [0.0 ... 100.0]
+	a = [-150.0 ... +150.0]
+	b = [-150.0 ... +150.0]
+
+	Range LCH
+	L = [0.0 ... 100.0]
+	C = [0.0 ... 150.0]
+	H = [0.0 ... 360.0]
+	
+	alpha always is [0.0 ... 1.0]
+*/
+////////////////////////////////////////////////////////////////////////////////
+// Alternative initializers (expanded values)
+
 + (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B;
 + (WDColor *) colorWithR:(CGFloat)R G:(CGFloat)G B:(CGFloat)B alpha:(CGFloat)alpha;
 + (WDColor *) colorWithH:(CGFloat)H S:(CGFloat)S B:(CGFloat)B;
@@ -123,7 +152,9 @@ WDColorSpace;
 + (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H;
 + (WDColor *) colorWithL:(CGFloat)L C:(CGFloat)C H:(CGFloat)H alpha:(CGFloat)alpha;
 
+////////////////////////////////////////////////////////////////////////////////
 // Typed query (expanded values)
+
 - (CGFloat) rgb_R;
 - (CGFloat) rgb_G;
 - (CGFloat) rgb_B;
@@ -144,8 +175,8 @@ WDColorSpace;
 - (CGFloat) lch_C;
 - (CGFloat) lch_H;
 
-
-// UIKit equivalents
+////////////////////////////////////////////////////////////////////////////////
+// UIKit equivalents (normalized values)
 + (WDColor *) colorWithWhite:(CGFloat)white
 				alpha:(CGFloat)alpha;
 + (WDColor *) colorWithRed:(CGFloat)red
@@ -167,7 +198,8 @@ WDColorSpace;
 + (WDColor *) yellowColor;
 + (WDColor *) blueColor;
 
-// Synchronisation with UIColor
+////////////////////////////////////////////////////////////////////////////////
+// Synchronisation with UIColor (normalized values)
 - (CGFloat) red;
 - (CGFloat) green;
 - (CGFloat) blue;
@@ -181,15 +213,18 @@ WDColorSpace;
 - (void) setFill;
 - (void) setStroke;
 
+////////////////////////////////////////////////////////////////////////////////
 // Convenience additions
 - (void) glSet; 	// glColor4f
 - (BOOL) visible; 	// cmp[3] != 0.0
 
+////////////////////////////////////////////////////////////////////////////////
 // Miscellaneous
 + (WDColor *) randomColor;
 + (WDColor *) colorWithRandomHue;
 + (WDColor *) colorWithUIColor:(UIColor *)color;
 
+////////////////////////////////////////////////////////////////////////////////
 // Conversions
 - (WDColor *) colorWithColorType:(WDColorType)colorType;
 - (WDColor *) colorWithAlphaComponent:(CGFloat)alpha;
@@ -197,12 +232,13 @@ WDColorSpace;
 - (UIColor *) UIColor;
 - (CGColorRef) CGColor;
 
+////////////////////////////////////////////////////////////////////////////////
 // Gradients
 + (NSArray *) hueGradientHSB;
 + (NSArray *) hueGradientLCH;
 - (NSArray *) gradientForComponentAtIndex:(int)index;
 
-
+////////////////////////////////////////////////////////////////////////////////
 // Old
 + (WDColor *) colorWithDictionary:(NSDictionary *)dict;
 - (NSDictionary *) dictionary;

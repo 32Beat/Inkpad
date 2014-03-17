@@ -92,8 +92,11 @@
 
 - (void) setValue:(CGFloat)value
 {
-	mValue = WDClamp(0.0, 1.0, value);
-	[self updateIndicatorPosition];
+	if (mValue != value)
+	{
+		mValue = value;
+		[self updateIndicatorPosition];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +111,12 @@
 - (CGPoint) locationForValue:(float)value
 {
 	CGRect trackRect = self.trackingRect;
-	CGFloat x = CGRectGetMinX(trackRect) + value * CGRectGetWidth(trackRect);
+	CGFloat x = CGRectGetMinX(trackRect); 
 	CGFloat y = CGRectGetMidY(trackRect);
+	
+	value = WDClamp(0.0, 1.0, value);
+	x += value * CGRectGetWidth(trackRect);
+	
 	return (CGPoint){ round(x), round(y) };
 }
 
@@ -118,7 +125,8 @@
 - (float) valueForLocation:(CGPoint)pt
 {
 	CGRect trackRect = self.trackingRect;
-	return (pt.x - CGRectGetMinX(trackRect)) / CGRectGetWidth(trackRect);
+	float value = (pt.x - CGRectGetMinX(trackRect)) / CGRectGetWidth(trackRect);
+	return WDClamp(0.0, 1.0, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -166,8 +166,8 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 {
 	CGFloat cmp[4] = {
 		(L / 100.0),
-		(a / 240.0) + 0.5,
-		(b / 240.0) + 0.5,
+		(a / 300.0) + 0.5,
+		(b / 300.0) + 0.5,
 		alpha };
 
 	return [self colorWithType:WDColorTypeLab components:cmp];
@@ -182,11 +182,106 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 {
 	CGFloat cmp[4] = {
 		L / 100.0,
-		C / 120.0,
+		C / 150.0,
 		H / 360.0,
 		alpha };
 
 	return [self colorWithType:WDColorTypeLCH components:cmp];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Extended Value Getters
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) rgb_R
+{
+	CGFloat cmp[4];
+	[self getRGB:cmp];
+	return cmp[0];
+}
+
+- (CGFloat) rgb_G
+{
+	CGFloat cmp[4];
+	[self getRGB:cmp];
+	return cmp[1];
+}
+
+- (CGFloat) rgb_B
+{
+	CGFloat cmp[4];
+	[self getRGB:cmp];
+	return cmp[2];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) hsb_H
+{
+	CGFloat cmp[4];
+	[self getHSB:cmp];
+	return cmp[0] * 360.0;
+}
+
+- (CGFloat) hsb_S
+{
+	CGFloat cmp[4];
+	[self getHSB:cmp];
+	return cmp[1] * 100.0;
+}
+
+- (CGFloat) hsb_B
+{
+	CGFloat cmp[4];
+	[self getHSB:cmp];
+	return cmp[2] * 100.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) lab_L
+{
+	CGFloat cmp[4];
+	[self getLAB:cmp];
+	return cmp[0] * 100;
+}
+
+- (CGFloat) lab_a
+{
+	CGFloat cmp[4];
+	[self getLAB:cmp];
+	return cmp[1] * 300 - 150;
+}
+
+- (CGFloat) lab_b
+{
+	CGFloat cmp[4];
+	[self getLAB:cmp];
+	return cmp[2] * 300 - 150;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGFloat) lch_L
+{
+	CGFloat cmp[4];
+	[self getLCH:cmp];
+	return cmp[0] * 100;
+}
+
+- (CGFloat) lch_C
+{
+	CGFloat cmp[4];
+	[self getLCH:cmp];
+	return cmp[1] * 150;
+}
+
+- (CGFloat) lch_H
+{
+	CGFloat cmp[4];
+	[self getLCH:cmp];
+	return cmp[2] * 360;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -652,101 +747,6 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 		case WDColorTypeLCH:
 			break;
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark Converted properties
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) rgb_R
-{
-	CGFloat cmp[4];
-	[self getRGB:cmp];
-	return cmp[0];
-}
-
-- (CGFloat) rgb_G
-{
-	CGFloat cmp[4];
-	[self getRGB:cmp];
-	return cmp[1];
-}
-
-- (CGFloat) rgb_B
-{
-	CGFloat cmp[4];
-	[self getRGB:cmp];
-	return cmp[2];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) hsb_H
-{
-	CGFloat cmp[4];
-	[self getHSB:cmp];
-	return cmp[0] * 360.0;
-}
-
-- (CGFloat) hsb_S
-{
-	CGFloat cmp[4];
-	[self getHSB:cmp];
-	return cmp[1] * 100.0;
-}
-
-- (CGFloat) hsb_B
-{
-	CGFloat cmp[4];
-	[self getHSB:cmp];
-	return cmp[2] * 100.0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) lab_L
-{
-	CGFloat cmp[4];
-	[self getLAB:cmp];
-	return cmp[0] * 100;
-}
-
-- (CGFloat) lab_a
-{
-	CGFloat cmp[4];
-	[self getLAB:cmp];
-	return cmp[1] * 300 - 150;
-}
-
-- (CGFloat) lab_b
-{
-	CGFloat cmp[4];
-	[self getLAB:cmp];
-	return cmp[2] * 300 - 150;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (CGFloat) lch_L
-{
-	CGFloat cmp[4];
-	[self getLCH:cmp];
-	return cmp[0] * 100;
-}
-
-- (CGFloat) lch_C
-{
-	CGFloat cmp[4];
-	[self getLCH:cmp];
-	return cmp[1] * 150;
-}
-
-- (CGFloat) lch_H
-{
-	CGFloat cmp[4];
-	[self getLCH:cmp];
-	return cmp[2] * 360;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
