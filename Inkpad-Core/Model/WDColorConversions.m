@@ -104,6 +104,49 @@ static inline _Lab _Lab_Blend(const _Lab *lab1, const _Lab *lab2, double m)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
+	sRGB_ClipGamut
+	--------------
+	Hue preserving gamut clipping
+*/
+
+static double _linear_to_srgb(double v);
+
+void sRGB_TestGamut(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb)
+{
+	// Negative coordinates means oversaturated color:
+	// reduce chroma while preserving luminance
+	double min = _RGB_Min((_RGB *)rgb);
+	if (min < 0.0)
+	{
+		// Compute equivalent gray
+		double k = _linear_to_srgb(y);		
+		// Compute chroma reduction
+		double m = (0.0-k) / (min-k);
+		// Reduce chroma
+		rgb[0] = k + (rgb[0]-k) * m;
+		rgb[1] = k + (rgb[1]-k) * m;
+		rgb[2] = k + (rgb[2]-k) * m;
+	}
+
+	// Color is too bright: reduce chroma and luminance 
+	double max = _RGB_Max((_RGB *)rgb);
+	if (max > 1.0)
+	{
+		// Compute equivalent gray 
+		double k = _linear_to_srgb(y);
+		// Reduce luminance to preserve some chroma
+		k *= 0.5;
+		// Compute reduction
+		double m = (1.0-k) / (max-k);
+		// Reduce chroma+luminance
+		rgb[0] = k + (rgb[0]-k) * m;
+		rgb[1] = k + (rgb[1]-k) * m;
+		rgb[2] = k + (rgb[2]-k) * m;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Glue
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,32 +165,12 @@ void HSVtoRGB(CGFloat h, CGFloat s, CGFloat b, CGFloat *rgb)
 void SRGBtoXYZ(CGFloat r, CGFloat g, CGFloat b, CGFloat *xyz)
 { _sRGB_XYZ_1(r, g, b, (_XYZ *)xyz); }
 
-
 void XYZtoSRGB(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb)
 {
 	_XYZ_sRGB_1(x, y, z, (_RGB *)rgb);
-
-	double max = _RGB_Max((_RGB *)rgb);
-	if (max > 1.0)
-	{
-		// Simple hue-preserving clipping adjustment
-		rgb[0] /= max;
-		rgb[1] /= max;
-		rgb[2] /= max;
-	}
-	
-	double min = _RGB_Min((_RGB *)rgb);
-	if (min < 0.0)
-	{
-		double k = 0.2 + 0.8 * sqrt(log2(y+1));
-		double m = (0.0-k) / (min - k);
-				
-		rgb[0] = k + (rgb[0]-k) * m;
-		rgb[1] = k + (rgb[1]-k) * m;
-		rgb[2] = k + (rgb[2]-k) * m;
-	}
+	// rgb result may be out-of-range
+	sRGB_TestGamut(x, y, z, rgb);
 }
-
 
 void XYZtoLAB(CGFloat X, CGFloat Y, CGFloat Z, CGFloat *lab)
 {
