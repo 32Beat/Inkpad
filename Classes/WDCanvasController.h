@@ -71,6 +71,10 @@ enum {
 	WDShadowController  *shadowController_;
 	WDStrokeController  *strokeController_;
 	WDFillController    *fillController_;
+	
+	
+	UINavigationController *mColorLibraryNavigator;
+	
 	WDSwatchController  *swatchController_;
 	WDLayerController   *layerController_;
 	

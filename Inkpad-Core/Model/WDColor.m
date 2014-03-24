@@ -77,6 +77,9 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 		@(mComponent[2]),
 		@(mComponent[3])];
 	[coder encodeObject:cmp forKey:WDColorComponentsKey];
+	
+	// Also encode as legacy HSB for backward compatibility
+	[self encodeWithCoder0:coder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +117,19 @@ NSString *const WDAlphaKey = @"WDAlphaKey";
 			mComponent[3] = [[cmp objectAtIndex:3] doubleValue];
 		}
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Encode for legacy support
+
+- (void) encodeWithCoder0:(NSCoder *)coder
+{
+	CGFloat cmp[4];
+	[self getHSB:cmp];
+	[coder encodeFloat:cmp[0] forKey:WDHueKey];
+	[coder encodeFloat:cmp[1] forKey:WDSaturationKey];
+	[coder encodeFloat:cmp[2] forKey:WDBrightnessKey];
+	[coder encodeFloat:cmp[3] forKey:WDAlphaKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1051,13 +1067,17 @@ double WDRandomHue(void)
 - (void) drawSwatchInRect:(CGRect)rect
 {
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
+	[self drawSwatchInRect:rect context:ctx];
+}
+
+- (void) drawSwatchInRect:(CGRect)rect context:(CGContextRef)ctx
+{
 	if (self.alpha < 1.0)
 	{ WDDrawTransparencyDiamondInRect(ctx, rect); }
 	
 	CGContextSetFillColorWithColor(ctx, self.CGColor);
 	CGContextFillRect(ctx, rect);
 }
-
 
 
 

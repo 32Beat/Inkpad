@@ -312,6 +312,7 @@
 		BE0D612D18B6A336005191EA /* UIColor_Additions.m in Sources */ = {isa = PBXBuildFile; fileRef = BE0D612C18B6A336005191EA /* UIColor_Additions.m */; };
 		BE0D613318B6B606005191EA /* WDBlendOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE0D613218B6B606005191EA /* WDBlendOptionsController.m */; };
 		BE0D613618B6B88F005191EA /* BlendOptions.xib in Resources */ = {isa = PBXBuildFile; fileRef = BE0D613418B6B88F005191EA /* BlendOptions.xib */; };
+		BE1D392E18E0B25F00841E1F /* WDColorLibraryController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE1D392D18E0B25F00841E1F /* WDColorLibraryController.m */; };
 		BE1FA89818944A68004B805E /* WDGLVertexBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */; };
 		BE28681E189E688F00F0594C /* WDShapeOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = BE28681D189E688F00F0594C /* WDShapeOptionsController.m */; };
 		BE28E3ED189EC9CD00FD4542 /* WDStarShape.m in Sources */ = {isa = PBXBuildFile; fileRef = BE28E3EB189EC9CD00FD4542 /* WDStarShape.m */; };
@@ -821,6 +822,8 @@
 		BE0D613118B6B606005191EA /* WDBlendOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDBlendOptionsController.h; sourceTree = "<group>"; };
 		BE0D613218B6B606005191EA /* WDBlendOptionsController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDBlendOptionsController.m; sourceTree = "<group>"; };
 		BE0D613518B6B88F005191EA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/BlendOptions.xib; sourceTree = "<group>"; };
+		BE1D392C18E0B25F00841E1F /* WDColorLibraryController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDColorLibraryController.h; sourceTree = "<group>"; };
+		BE1D392D18E0B25F00841E1F /* WDColorLibraryController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WDColorLibraryController.m; sourceTree = "<group>"; };
 		BE1FA89618944A68004B805E /* WDGLVertexBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = WDGLVertexBuffer.c; sourceTree = "<group>"; };
 		BE1FA89718944A68004B805E /* WDGLVertexBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDGLVertexBuffer.h; sourceTree = "<group>"; };
 		BE28681C189E688F00F0594C /* WDShapeOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WDShapeOptionsController.h; sourceTree = "<group>"; };
@@ -1528,6 +1531,8 @@
 				6B308FB913B56B58000665C3 /* WDColorBalanceController.m */,
 				6BF0C078125E8345009BB05C /* WDColorController.h */,
 				6BF0C079125E8345009BB05C /* WDColorController.m */,
+				BE1D392C18E0B25F00841E1F /* WDColorLibraryController.h */,
+				BE1D392D18E0B25F00841E1F /* WDColorLibraryController.m */,
 				BED8A82E18BCA48100774649 /* WDDashController.h */,
 				BED8A82F18BCA48100774649 /* WDDashController.m */,
 				6B1E328A126CA0D900E89FA1 /* WDExportController.h */,
@@ -2024,6 +2029,7 @@
 				6BCD535612400017002FCB27 /* WDThumbnailView.m in Sources */,
 				BE8AC40E18B2C36D008F9C41 /* WDFrameOptions.m in Sources */,
 				BE2C2744189FE17A0077A97C /* WDHeartShape.m in Sources */,
+				BE1D392E18E0B25F00841E1F /* WDColorLibraryController.m in Sources */,
 				6B6DC1A212403DA000A98FCE /* WDBlockingView.m in Sources */,
 				6B197E121243611E006C5C3A /* WDSettingsController.m in Sources */,
 				6BD34C7C124826D00040C383 /* WDLayerController.m in Sources */,

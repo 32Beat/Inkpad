@@ -105,7 +105,7 @@ static inline _Lab _Lab_Blend(const _Lab *lab1, const _Lab *lab2, double m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	sRGB_ClipGamut
+	sRGB_TestGamut
 	--------------
 	Hue preserving gamut clipping
 */
@@ -136,7 +136,7 @@ void sRGB_TestGamut(CGFloat x, CGFloat y, CGFloat z, CGFloat *rgb)
 		// Compute equivalent gray 
 		double k = _linear_to_srgb(y);
 		// Reduce luminance to preserve some chroma
-		k *= 0.5;
+		k *= 0.75;
 		// Compute reduction
 		double m = (1.0-k) / (max-k);
 		// Reduce chroma+luminance

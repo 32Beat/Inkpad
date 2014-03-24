@@ -44,6 +44,8 @@
 #import "WDTextController.h"
 #import "WDToolManager.h"
 #import "WDUtilities.h"
+#import "WDColorLibraryController.h"
+
 #import "UIBarButtonItem+Additions.h"
 
 #define kMaxDisplayableFilename     18
@@ -849,16 +851,25 @@
 		[self hidePopovers];
 		return;
 	}
-	
-	if (!swatchController_) {
+/*	
+	if (!swatchController_) 
+	{
+		
 		swatchController_ = [[WDSwatchController alloc] initWithNibName:nil bundle:nil];
 		swatchController_.drawingController = self.drawingController;
 	}
 	
 	UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:swatchController_];
 	navController.toolbarHidden = NO;
+*/
+	if (mColorLibraryNavigator == nil)
+	{
+		mColorLibraryNavigator = [[UINavigationController alloc] 
+		initWithRootViewController:[WDColorLibraryController new]];
+		mColorLibraryNavigator.toolbarHidden = NO;
+	}
 	
-	[self runPopoverWithController:navController from:((WDButton *)sender).barButtonItem];
+	[self runPopoverWithController:mColorLibraryNavigator from:((WDButton *)sender).barButtonItem];
 }
 
 - (void) showLayers:(id)sender
@@ -873,7 +884,8 @@
 		layerController_.drawing = self.drawing;
 	}
 	
-	UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:layerController_];
+	UINavigationController *navController = 
+	[[UINavigationController alloc] initWithRootViewController:layerController_];
 	navController.toolbarHidden = NO;
 	
 	[self runPopoverWithController:navController from:sender];
@@ -881,7 +893,9 @@
 
 - (void) showHueAndSaturation:(id)sender
 {
-	if ([self shouldDismissPopoverForClassController:[WDHueSaturationController class] insideNavController:YES]) {
+	if ([self shouldDismissPopoverForClassController:
+		[WDHueSaturationController class] insideNavController:YES]) 
+	{
 		[self hidePopovers];
 		return;
 	}

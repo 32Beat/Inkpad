@@ -193,7 +193,7 @@ NSString *const WDColorModelDefault = @"WDColorSpaceDefault";
 	if (model == WDColorModelLCH)
 	{
 		[mSlider2 setTrackGradient:[WDColor hueGradientLCH]];
-		[mSlider2 setDynamicTrackGradient:NO];
+		//[mSlider2 setDynamicTrackGradient:NO];
 
 		component0Name_.text = @"L";
 		component1Name_.text = @"C";

@@ -23,22 +23,25 @@ NSString *WDSwatches = @"WDSwatches";
 NSString *WDSwatchAdded = @"WDSwatchAdded";
 NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 
-#define kSwatchDimensionX     42
-#define kSwatchDimensionY     42
-#define kSwatchesPerRow      7
-#define kSwatchSpacing       4
+#define kSwatchDimensionX 	44
+#define kSwatchDimensionY 	44
+#define kSwatchesPerRow 	7
+#define kSwatchSpacing 		4
 
 
 @interface WDSwatch : WDColor
 {
 	NSString *mName;
 }
+
 + (id) swatchWithName:(id)name color:(id)color;
 - (id) name;
+
 @end
 
 
 @implementation WDSwatch
+
 + (id) swatchWithName:(id)name color:(WDColor *)color
 {
 	WDSwatch *S = [WDSwatch new];
@@ -49,6 +52,7 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 }
 
 - (id)name { return mName; }
+
 @end
 
 
@@ -102,7 +106,7 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	NSString *listStr =
 	[NSString stringWithContentsOfURL:listURL usedEncoding:&encoding error:&error];
 
-	NSArray *items = [listStr componentsSeparatedByString:@", \n"];
+	NSArray *items = [listStr componentsSeparatedByString:@"\n"];
 
 	if (items && items.count)
 	{
@@ -111,16 +115,18 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 		for (NSString *itemStr in items)
 		{
 			NSArray *components = [itemStr componentsSeparatedByString:@", "];
+			if (components.count >= 4)
+			{
+				NSString *name = [components[0] stringByTrimmingCharactersInSet:
+				[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+				CGFloat L = [components[1] floatValue];
+				CGFloat a = [components[2] floatValue];
+				CGFloat b = [components[3] floatValue];
 
-			NSString *name = [components[0] stringByTrimmingCharactersInSet:
-			[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			CGFloat L = [components[1] floatValue];
-			CGFloat a = [components[2] floatValue];
-			CGFloat b = [components[3] floatValue];
-
-			[swatches addObject:
-			[WDSwatch swatchWithName:name
-			color:[WDColor colorWithL:L a:a b:b]]];
+				[swatches addObject:
+				[WDSwatch swatchWithName:name
+				color:[WDColor colorWithL:L a:a b:b]]];
+			}
 		}
 
 		return swatches;
@@ -313,10 +319,11 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	if (editing) {
 		self.title = NSLocalizedString(@"Select Swatches", @"Select Swatches");
 		
-		if (!deleteItem_) {
-			deleteItem_ = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash
-																		target:self
-																		action:@selector(deleteSwatches:)];
+		if (!deleteItem_) 
+		{
+			deleteItem_ = [[UIBarButtonItem alloc] 
+			initWithBarButtonSystemItem:UIBarButtonSystemItemTrash
+			target:self action:@selector(deleteSwatches:)];
 		}
 		
 		deleteItem_.enabled = NO;
@@ -373,17 +380,31 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	}
 }
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section;
+////////////////////////////////////////////////////////////////////////////////
+// DataSource
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView 
+	numberOfItemsInSection:(NSInteger)section;
 {
 	return self.swatches.count;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath;
+////////////////////////////////////////////////////////////////////////////////
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView 
+	cellForItemAtIndexPath:(NSIndexPath *)indexPath;
 {
-	WDSwatchCell *swatchCell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cellID" forIndexPath:indexPath];
+	WDSwatchCell *swatchCell = 
+	[collectionView dequeueReusableCellWithReuseIdentifier:@"cellID" forIndexPath:indexPath];
+	
 	swatchCell.swatch = (self.swatches)[indexPath.item];
-	[swatchCell setTitle:[(self.swatches)[indexPath.item] name]];
+	swatchCell.title = [(self.swatches)[indexPath.item] name];
+
 	return swatchCell;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 @end
+////////////////////////////////////////////////////////////////////////////////
+
+
