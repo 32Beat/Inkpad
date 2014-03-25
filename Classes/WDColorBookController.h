@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDColorLibraryController.h
+	WDColorBookController.h
 	Inkpad
 
 	This Source Code Form is subject to the terms of the Mozilla Public
@@ -19,21 +19,23 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
-	WDColorLibraryController
+	WDColorBookController
 	------------------------
-	ViewController for selecting a colorbook from a table view
+	ViewController for showing/selecting a colorswatches in a collectionview
 */
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////////////
-@interface WDColorLibraryController : UIViewController 
-<UITableViewDelegate, UITableViewDataSource>
+@interface WDColorBookController : UICollectionViewController 
+<UICollectionViewDelegate, UICollectionViewDataSource>
 {
-	NSArray *mColorBooks;
-	UITableView *mTableView;
+	NSArray *mColors;
+	UICollectionView *mCollectionView;
 }
+
+- (id) initWithData:(NSData *)data;
 
 @end
 ////////////////////////////////////////////////////////////////////////////////

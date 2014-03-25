@@ -19,11 +19,12 @@
     UIImageView     *selectedIndicator_;
 
 	UILabel *mNameLabel;
+	id mColor;
 }
 
 @property (nonatomic, strong) id<WDPathPainter> swatch;
 @property (nonatomic, assign) BOOL shouldShowSelectionIndicator;
 
 - (void) setTitle:(NSString *)text;
-
+- (void) setColor:(id)color;
 @end

@@ -847,7 +847,7 @@
 
 - (void) showSwatches:(id)sender
 {
-	if ([self shouldDismissPopoverForClassController:[WDSwatchController class] insideNavController:YES]) {
+	if ([self shouldDismissPopoverForClassController:[WDColorLibraryController class] insideNavController:YES]) {
 		[self hidePopovers];
 		return;
 	}
