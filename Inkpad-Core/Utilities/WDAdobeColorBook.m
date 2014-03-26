@@ -191,6 +191,26 @@ NSString *AdobeColorBookData_FetchDescription(const Byte *dataPtr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+uint16_t AdobeColorBookData_FetchPageSize(const Byte *dataPtr)
+{ 
+	if (ColorBookData_ValidHeader(dataPtr))
+	{
+		dataPtr += 4;
+		dataPtr += 2;
+		dataPtr += 2;
+		dataPtr = ColorBookData_SkipString(dataPtr);
+		dataPtr = ColorBookData_SkipString(dataPtr);
+		dataPtr = ColorBookData_SkipString(dataPtr);
+		dataPtr = ColorBookData_SkipString(dataPtr);
+		dataPtr += 2;
+		return ColorBookData_FetchUInt16(dataPtr);
+	}
+	
+	return nil;	
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 NSArray *AdobeColorBookData_FetchColors(const Byte *dataPtr)
 {
 	if (ColorBookData_ValidHeader(dataPtr))
@@ -214,6 +234,80 @@ NSArray *AdobeColorBookData_FetchColors(const Byte *dataPtr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+NSString *const WDAdobeColorBookIDKey = @"AdobeColorBookID";
+NSString *const WDAdobeColorBookNameKey = @"AdobeColorBookName";
+NSString *const WDAdobeColorBookPrefixKey = @"AdobeColorBookPrefix";
+NSString *const WDAdobeColorBookPostfixKey = @"AdobeColorBookPostfix";
+NSString *const WDAdobeColorBookDescriptionKey = @"AdobeColorBookDescription";
+NSString *const WDAdobeColorBookColorCountKey = @"AdobeColorBookColorCount";
+NSString *const WDAdobeColorBookPageSizeKey = @"AdobeColorBookPageSize";
+NSString *const WDAdobeColorBookKeyIndexKey = @"AdobeColorBookKeyIndex";
+NSString *const WDAdobeColorBookColorTypeKey = @"AdobeColorBookColorType";
+NSString *const WDAdobeColorBookColorListKey = @"AdobeColorBookColorList";
+
+////////////////////////////////////////////////////////////////////////////////
+
+NSDictionary *AdobeColorBookCreate(NSData *data)
+{
+	const Byte *dataPtr = [data bytes];
+	if (!ColorBookData_ValidHeader(dataPtr)) return nil;
+
+	// Skip header
+	dataPtr += 4;
+	dataPtr += 2;
+	
+	// Adobe BookID 
+	uint16_t bookID = ColorBookData_FetchUInt16(dataPtr); 
+	dataPtr += 2;
+	
+	// Name, Prefix, Postfix, Description
+	NSString *name = ColorBookData_FetchString(dataPtr); 
+	dataPtr = ColorBookData_SkipString(dataPtr);
+	NSString *prefix = ColorBookData_FetchString(dataPtr); 
+	dataPtr = ColorBookData_SkipString(dataPtr);
+	NSString *postfix = ColorBookData_FetchString(dataPtr); 
+	dataPtr = ColorBookData_SkipString(dataPtr);
+	NSString *description = ColorBookData_FetchString(dataPtr); 
+	dataPtr = ColorBookData_SkipString(dataPtr);
+	
+	// Count, pageSize, keyIndex, colorType
+	uint16_t colorCount = ColorBookData_FetchUInt16(dataPtr); 
+	dataPtr += 2;
+	uint16_t pageSize = ColorBookData_FetchUInt16(dataPtr); 
+	dataPtr += 2;
+	uint16_t keyIndex = ColorBookData_FetchUInt16(dataPtr); 
+	dataPtr += 2;
+	uint16_t colorType = ColorBookData_FetchUInt16(dataPtr); 
+	dataPtr += 2;
+	
+	NSArray *colorList = ColorBookData_FetchList(dataPtr, colorCount);
+	
+	// setValue:forKey:
+	return @{
+		WDAdobeColorBookIDKey : @(bookID), 
+		WDAdobeColorBookNameKey : name,
+		WDAdobeColorBookPrefixKey : prefix,
+		WDAdobeColorBookPostfixKey : postfix,
+		WDAdobeColorBookDescriptionKey : description,
+		WDAdobeColorBookColorCountKey : @(colorCount),
+		WDAdobeColorBookPageSizeKey : @(pageSize),
+		WDAdobeColorBookKeyIndexKey : @(keyIndex),
+		WDAdobeColorBookColorTypeKey : @(colorType),
+		WDAdobeColorBookColorListKey : colorList
+	};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int AdobeColorBookGetColorType(NSDictionary *colorBook)
+{ return [[colorBook valueForKey:WDAdobeColorBookColorTypeKey] intValue]; }
+
+bool AdobeColorBookIsLabColor(NSDictionary *colorBook)
+{ return AdobeColorBookGetColorType(colorBook) == 7; }
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 
 

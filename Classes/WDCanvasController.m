@@ -869,8 +869,17 @@
 		mColorLibraryNavigator.toolbarHidden = NO;
 	}
 	
-	[self runPopoverWithController:mColorLibraryNavigator from:((WDButton *)sender).barButtonItem];
+	[self runPopoverWithController:mColorLibraryNavigator 
+	from:((WDButton *)sender).barButtonItem];
 }
+
+- (void) colorLibrary:(WDColorLibraryController *)colorLibrary 
+			didSelectColor:(WDColor *)color
+{
+	
+}
+
+
 
 - (void) showLayers:(id)sender
 {

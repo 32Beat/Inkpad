@@ -33,6 +33,7 @@
 {
 	NSArray *mColors;
 	UICollectionView *mCollectionView;
+	uint16_t mPageSize;
 }
 
 - (id) initWithData:(NSData *)data;

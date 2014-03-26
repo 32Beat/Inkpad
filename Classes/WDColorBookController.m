@@ -22,7 +22,13 @@
 
 - (id) initWithData:(NSData *)data
 {
-	self = [super initWithCollectionViewLayout:[UICollectionViewFlowLayout new]];
+	UICollectionViewFlowLayout *flowLayout = [UICollectionViewFlowLayout new];
+	flowLayout.minimumLineSpacing = 5.0;
+	flowLayout.minimumInteritemSpacing = 5.0;
+	flowLayout.sectionInset = (UIEdgeInsets){ 5, 5, 5, 5 };
+	flowLayout.itemSize = (CGSize){ 45, 45 };
+	
+	self = [super initWithCollectionViewLayout:flowLayout];
 	if (self != nil)
 	{
 		if ([self prepareSwatches:data.bytes])
@@ -43,6 +49,7 @@
 - (BOOL) prepareSwatches:(const Byte *)dataPtr
 {
 	mColors = AdobeColorBookData_FetchColors(dataPtr);	
+	mPageSize = AdobeColorBookData_FetchPageSize(dataPtr);
 	
 	return mColors != nil;
 }
@@ -51,6 +58,7 @@
 
 - (BOOL) prepareCollectionView
 {
+	self.collectionView.backgroundColor = [UIColor colorWithWhite:0.95 alpha:1.0];
 	self.collectionView.dataSource = self;
 	self.collectionView.delegate = self;
 	self.collectionView.autoresizingMask = 
@@ -60,6 +68,27 @@
 	[self.collectionView registerClass:[WDSwatchCell class] forCellWithReuseIdentifier:@"ColorSwatch"];
 	
 	return YES;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+#pragma mark
+////////////////////////////////////////////////////////////////////////////////
+
+- (CGSize) preferredContentSize
+{
+	UICollectionViewFlowLayout *flowLayout = 
+	(UICollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
+	CGSize size = flowLayout.itemSize;
+
+	size.width += flowLayout.minimumInteritemSpacing;
+	size.width *= mPageSize;
+	size.width += flowLayout.minimumInteritemSpacing;
+
+	size.height += flowLayout.minimumLineSpacing;
+	size.height *= mColors.count;
+	size.height += flowLayout.minimumInteritemSpacing;
+	
+	return size;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

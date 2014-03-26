@@ -60,7 +60,6 @@
 		if (name == nil)
 		{ name = [bookURL lastPathComponent]; }
 		
-		
 		name = [name stringByReplacingOccurrencesOfString:@".acb" withString:@""];
 */
 		NSData *data = [NSData dataWithContentsOfURL:bookURL];
