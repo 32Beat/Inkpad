@@ -15,6 +15,10 @@
 #import "WDAdobeColorBook.h"
 #import "WDSwatchController.h"
 #import "WDSwatchCell.h"
+#import "UIBarButtonItem+Additions.h"
+
+
+NSString *const WDSwatchModeKey = @"WDSwatchMode";
 
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDColorBookController
@@ -92,6 +96,39 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray *) toolbarItems
+{
+	NSArray *items = @[
+	[UIBarButtonItem flexibleItem],
+	[UIBarButtonItem segmentedControlWithLocalizedLabels:
+	@[@"Shadow", @"Stroke", @"Fill"]],
+	[UIBarButtonItem flexibleItem]];
+	
+	UISegmentedControl *item = (UISegmentedControl *)[items[1] customView];
+	
+	[item addTarget:self action:@selector(didAdjustSegment:)
+		forControlEvents:UIControlEventValueChanged];
+	
+	[item setSelectedSegmentIndex:
+		[[NSUserDefaults standardUserDefaults] 
+		integerForKey:WDSwatchModeKey]];
+	
+	return items;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (IBAction) didAdjustSegment:(id)sender
+{
+	UISegmentedControl *item = (UISegmentedControl *)sender;
+	
+	// Save NSUserDefault
+	[[NSUserDefaults standardUserDefaults] 
+		setInteger:item.selectedSegmentIndex forKey:WDSwatchModeKey];	
+}
+
+////////////////////////////////////////////////////////////////////////////////
 #pragma mark
 ////////////////////////////////////////////////////////////////////////////////
 // DataSource
@@ -122,6 +159,19 @@
 	}
 	
 	return swatchCell;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) collectionView:(UICollectionView *)collectionView 
+	didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+	WDSwatchCell *swatchCell = (WDSwatchCell *) 
+	[self collectionView:collectionView cellForItemAtIndexPath:indexPath];
+	if (swatchCell != nil)
+	{
+		
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

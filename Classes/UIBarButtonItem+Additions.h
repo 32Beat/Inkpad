@@ -15,5 +15,7 @@
 
 + (UIBarButtonItem *) flexibleItem;
 + (UIBarButtonItem *) fixedItemWithWidth:(float)width;
++ (UIBarButtonItem *) segmentedControlWithLabels:(NSArray *)labels;
++ (UIBarButtonItem *) segmentedControlWithLocalizedLabels:(NSArray *)labels;
 
 @end

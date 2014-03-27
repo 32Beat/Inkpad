@@ -265,6 +265,8 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	self.view = collectionView_;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 - (NSArray *) toolbarItems
 {
 	NSArray *labels = @[NSLocalizedString(@"Shadow", @"Shadow"),
