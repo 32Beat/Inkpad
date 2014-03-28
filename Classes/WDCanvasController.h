@@ -73,7 +73,7 @@ enum {
 	WDFillController    *fillController_;
 	
 	
-	UINavigationController *mColorLibraryNavigator;
+	UINavigationController *mColorNavigator;
 	
 	WDSwatchController  *swatchController_;
 	WDLayerController   *layerController_;

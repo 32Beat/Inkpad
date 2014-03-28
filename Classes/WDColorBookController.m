@@ -20,6 +20,10 @@
 
 NSString *const WDSwatchModeKey = @"WDSwatchMode";
 
+@protocol WDColorBookProtocol
+- (void) colorBook:(id)colorBook didSelectColor:(id)color;
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 @implementation WDColorBookController
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,11 +126,17 @@ NSString *const WDSwatchModeKey = @"WDSwatchMode";
 - (IBAction) didAdjustSegment:(id)sender
 {
 	UISegmentedControl *item = (UISegmentedControl *)sender;
-	
+		
 	// Save NSUserDefault
 	[[NSUserDefaults standardUserDefaults] 
 		setInteger:item.selectedSegmentIndex forKey:WDSwatchModeKey];	
+	
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+- (int) applyMode
+{ return [[NSUserDefaults standardUserDefaults] integerForKey:WDSwatchModeKey]; }
 
 ////////////////////////////////////////////////////////////////////////////////
 #pragma mark
@@ -140,7 +150,8 @@ NSString *const WDSwatchModeKey = @"WDSwatchMode";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView 
+	cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
 	WDSwatchCell *swatchCell = 
 	[collectionView dequeueReusableCellWithReuseIdentifier:@"ColorSwatch"
@@ -154,8 +165,8 @@ NSString *const WDSwatchModeKey = @"WDSwatchMode";
 		CGFloat a = ((NSString *)stringComponents[2]).floatValue;
 		CGFloat b = ((NSString *)stringComponents[3]).floatValue;
 		
-		swatchCell.title = stringComponents[0];
 		swatchCell.color = [WDColor colorWithL:L a:a b:b];
+		swatchCell.title = stringComponents[0];
 	}
 	
 	return swatchCell;
@@ -170,7 +181,8 @@ NSString *const WDSwatchModeKey = @"WDSwatchMode";
 	[self collectionView:collectionView cellForItemAtIndexPath:indexPath];
 	if (swatchCell != nil)
 	{
-		
+		id navigatorOwner = self.navigationController.delegate;
+		[navigatorOwner colorBook:self didSelectColor:swatchCell.color];
 	}
 }
 

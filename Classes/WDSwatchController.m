@@ -399,7 +399,7 @@ NSString *WDSwatchPanelModeKey = @"WDSwatchPanelModeKey";
 	WDSwatchCell *swatchCell = 
 	[collectionView dequeueReusableCellWithReuseIdentifier:@"cellID" forIndexPath:indexPath];
 	
-	swatchCell.swatch = (self.swatches)[indexPath.item];
+	swatchCell.color = [(self.swatches)[indexPath.item] color];
 	swatchCell.title = [(self.swatches)[indexPath.item] name];
 
 	return swatchCell;

@@ -22,9 +22,12 @@
 	id mColor;
 }
 
-@property (nonatomic, strong) id<WDPathPainter> swatch;
+//@property (nonatomic, strong) id<WDPathPainter> swatch;
 @property (nonatomic, assign) BOOL shouldShowSelectionIndicator;
 
+
+@property (nonatomic, strong) id color;
+
 - (void) setTitle:(NSString *)text;
-- (void) setColor:(id)color;
+
 @end

@@ -45,6 +45,7 @@
 #import "WDToolManager.h"
 #import "WDUtilities.h"
 #import "WDColorLibraryController.h"
+#import "WDColorBookController.h"
 
 #import "UIBarButtonItem+Additions.h"
 
@@ -862,23 +863,32 @@
 	UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:swatchController_];
 	navController.toolbarHidden = NO;
 */
-	if (mColorLibraryNavigator == nil)
+	if (mColorNavigator == nil)
 	{
-		mColorLibraryNavigator = [[UINavigationController alloc] 
+		mColorNavigator = [[UINavigationController alloc] 
 		initWithRootViewController:[WDColorLibraryController new]];
-		mColorLibraryNavigator.toolbarHidden = NO;
+		mColorNavigator.delegate = self;
+		mColorNavigator.toolbarHidden = NO;
 	}
 	
-	[self runPopoverWithController:mColorLibraryNavigator 
+	[self runPopoverWithController:mColorNavigator 
 	from:((WDButton *)sender).barButtonItem];
 }
 
-- (void) colorLibrary:(WDColorLibraryController *)colorLibrary 
-			didSelectColor:(WDColor *)color
+////////////////////////////////////////////////////////////////////////////////
+
+- (void) colorBook:(WDColorBookController *)colorBook 
+	didSelectColor:(WDColor *)color
 {
+	int mode = [colorBook applyMode];	
 	
+	switch(mode)
+	{
+		
+	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 
 - (void) showLayers:(id)sender

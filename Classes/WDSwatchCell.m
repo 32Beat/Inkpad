@@ -17,36 +17,6 @@
 @implementation WDSwatchCell
 ////////////////////////////////////////////////////////////////////////////////
 
-@synthesize swatch = swatch_;
-@synthesize shouldShowSelectionIndicator;
-
-////////////////////////////////////////////////////////////////////////////////
-
-- (UILabel *) nameLabel
-{
-	if (mNameLabel == nil)
-	{
-		CGFloat fontSize = [UIFont smallSystemFontSize];
-
-		CGRect frame = self.bounds;
-		frame.origin.y += frame.size.height-fontSize;
-		frame.size.height = fontSize;
-
-		mNameLabel = [[UILabel alloc] initWithFrame:frame];
-		mNameLabel.font = [UIFont systemFontOfSize:fontSize];
-		mNameLabel.textAlignment = NSTextAlignmentCenter;
-		mNameLabel.lineBreakMode = NSLineBreakByTruncatingMiddle;
-		mNameLabel.backgroundColor = [UIColor whiteColor];
-		//mNameLabel.adjustsFontSizeToFitWidth = YES;
-		
-		[self.contentView addSubview:mNameLabel];
-	}
-
-	return mNameLabel;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 - (void) setTitle:(NSString *)text
 {
 	self.nameLabel.text = text;
@@ -54,30 +24,47 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setColor:(id)color
+- (UILabel *) nameLabel
 {
-	mColor = color;
+	if (mNameLabel == nil)
+	{ 
+		[self.contentView addSubview:
+		(mNameLabel = [self createNameLabel])]; 
+	}
+
+	return mNameLabel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-- (void) setSwatch:(id<WDPathPainter>)swatch
+- (UILabel *) createNameLabel
 {
-	if (![swatch isEqual:swatch_]) 
-	{
-		swatch_ = swatch;
-		[self setNeedsDisplay];
-	}
+	CGFloat fontSize = [UIFont smallSystemFontSize];
+
+	CGRect frame = self.bounds;
+	frame.origin.y += frame.size.height-fontSize;
+	frame.size.height = fontSize;
+
+	UILabel *nameLabel = [[UILabel alloc] initWithFrame:frame];
+	nameLabel.font = [UIFont systemFontOfSize:fontSize];
+	nameLabel.textAlignment = NSTextAlignmentCenter;
+	nameLabel.lineBreakMode = NSLineBreakByTruncatingMiddle;
+	nameLabel.backgroundColor = [UIColor whiteColor];
+	//nameLabel = YES;
+
+	return nameLabel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void) drawRect:(CGRect)R
 {
-	[mColor drawSwatchInRect:self.bounds];
+	[self.color drawSwatchInRect:self.bounds];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+@synthesize shouldShowSelectionIndicator;
 
 - (void) setSelected:(BOOL)flag
 {
@@ -121,16 +108,6 @@
 		self.layer.borderColor = nil;
 		self.layer.borderWidth = 0.0;
 	}
-/*
-	if (highlighted) {
-		highlightView = [[UIView alloc] initWithFrame:self.bounds];
-		highlightView.backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.25f];
-		[self insertSubview:highlightView atIndex:0];
-	} else {
-		[highlightView removeFromSuperview];
-		highlightView = nil;
-	}
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////

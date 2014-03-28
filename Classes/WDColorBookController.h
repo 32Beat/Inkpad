@@ -36,6 +36,8 @@
 	uint16_t mPageSize;
 }
 
+@property (nonatomic, readonly) int applyMode;
+
 - (id) initWithData:(NSData *)data;
 
 @end
